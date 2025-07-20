@@ -172,6 +172,11 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
+      {/* Portfolio Section - Moved after Services */}
+      <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <Portfolio />
+      </section>
+
       {/* Differentials Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="container mx-auto">
@@ -195,52 +200,132 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Process Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-16">
-            Nosso <span className="text-gradient">Processo</span>
-          </h2>
+      {/* Process Section - Creative Design */}
+      <section className="relative py-32 px-4 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/3 to-secondary/3 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+        
+        <div className="container mx-auto relative z-10">
+          <div className="text-center mb-20">
+            <h2 className="font-sora font-bold text-4xl md:text-6xl mb-6">
+              Nosso <span className="text-gradient">Processo</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Uma metodologia comprovada que transforma ideias em soluções de sucesso
+            </p>
+          </div>
           
-          <div className="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
-            <div className="glass-card text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl group-hover:scale-110 transition-transform">
-                1
-              </div>
-              <h3 className="font-sora font-semibold text-lg mb-3">Diagnóstico</h3>
-              <p className="text-muted-foreground text-sm">
-                Entendemos seu negócio e identificamos oportunidades
-              </p>
-            </div>
+          {/* Process Steps - Creative Timeline */}
+          <div className="relative max-w-6xl mx-auto">
+            {/* Central connecting line */}
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-primary via-secondary to-primary opacity-30 hidden lg:block"></div>
             
-            <div className="glass-card text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl group-hover:scale-110 transition-transform">
-                2
+            {/* Step 1 */}
+            <div className="flex items-center mb-24 relative">
+              <div className="lg:w-1/2 lg:pr-12 w-full">
+                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl">
+                  <div className="flex items-center mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg">
+                      01
+                    </div>
+                    <div className="ml-6">
+                      <h3 className="font-sora font-bold text-2xl mb-2">Diagnóstico Profundo</h3>
+                      <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground text-lg leading-relaxed">
+                    Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.
+                  </p>
+                </div>
               </div>
-              <h3 className="font-sora font-semibold text-lg mb-3">Planejamento</h3>
-              <p className="text-muted-foreground text-sm">
-                Definimos estratégia e escolhemos as melhores tecnologias
-              </p>
+              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full shadow-lg border-4 border-background"></div>
+              <div className="lg:w-1/2 lg:pl-12 hidden lg:block">
+                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
+                  <div className="text-6xl opacity-20 text-primary">🔍</div>
+                </div>
+              </div>
             </div>
-            
-            <div className="glass-card text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl group-hover:scale-110 transition-transform">
-                3
+
+            {/* Step 2 */}
+            <div className="flex items-center mb-24 relative lg:flex-row-reverse">
+              <div className="lg:w-1/2 lg:pl-12 w-full">
+                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl">
+                  <div className="flex items-center mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg">
+                      02
+                    </div>
+                    <div className="ml-6">
+                      <h3 className="font-sora font-bold text-2xl mb-2">Estratégia Inteligente</h3>
+                      <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full"></div>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground text-lg leading-relaxed">
+                    Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos um roadmap detalhado. Cada decisão é pensada para maximizar ROI e escalabilidade.
+                  </p>
+                </div>
               </div>
-              <h3 className="font-sora font-semibold text-lg mb-3">Desenvolvimento</h3>
-              <p className="text-muted-foreground text-sm">
-                Criamos a solução com acompanhamento em tempo real
-              </p>
+              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-secondary rounded-full shadow-lg border-4 border-background"></div>
+              <div className="lg:w-1/2 lg:pr-12 hidden lg:block">
+                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-secondary/10 to-primary/10 border border-secondary/20">
+                  <div className="text-6xl opacity-20 text-secondary">🎯</div>
+                </div>
+              </div>
             </div>
-            
-            <div className="glass-card text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl group-hover:scale-110 transition-transform">
-                4
+
+            {/* Step 3 */}
+            <div className="flex items-center mb-24 relative">
+              <div className="lg:w-1/2 lg:pr-12 w-full">
+                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl">
+                  <div className="flex items-center mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg">
+                      03
+                    </div>
+                    <div className="ml-6">
+                      <h3 className="font-sora font-bold text-2xl mb-2">Desenvolvimento Ágil</h3>
+                      <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground text-lg leading-relaxed">
+                    Construímos sua solução com acompanhamento em tempo real. Entregas incrementais garantem que você veja o progresso e possa ajustar o rumo quando necessário.
+                  </p>
+                </div>
               </div>
-              <h3 className="font-sora font-semibold text-lg mb-3">Entrega</h3>
-              <p className="text-muted-foreground text-sm">
-                Lançamos sua solução e oferecemos suporte contínuo
-              </p>
+              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full shadow-lg border-4 border-background"></div>
+              <div className="lg:w-1/2 lg:pl-12 hidden lg:block">
+                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
+                  <div className="text-6xl opacity-20 text-primary">⚡</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="flex items-center relative lg:flex-row-reverse">
+              <div className="lg:w-1/2 lg:pl-12 w-full">
+                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl">
+                  <div className="flex items-center mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg">
+                      04
+                    </div>
+                    <div className="ml-6">
+                      <h3 className="font-sora font-bold text-2xl mb-2">Lançamento & Crescimento</h3>
+                      <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full"></div>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground text-lg leading-relaxed">
+                    Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.
+                  </p>
+                </div>
+              </div>
+              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-secondary rounded-full shadow-lg border-4 border-background"></div>
+              <div className="lg:w-1/2 lg:pr-12 hidden lg:block">
+                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-secondary/10 to-primary/10 border border-secondary/20">
+                  <div className="text-6xl opacity-20 text-secondary">🚀</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -293,10 +378,6 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Portfolio Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
-        <Portfolio />
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4">

@@ -200,51 +200,108 @@ const Parcerias: React.FC = () => {
         </div>
       </section>
 
-      {/* Process Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-16">
-            Como <span className="text-gradient">Funciona</span>
-          </h2>
+      {/* Portfolio Section - Moved after Services */}
+      <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <Portfolio />
+      </section>
+
+      {/* Process Section - Creative Design */}
+      <section className="relative py-32 px-4 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 right-1/4 w-64 h-64 bg-secondary/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 left-1/4 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-secondary/3 to-primary/3 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+        
+        <div className="container mx-auto relative z-10">
+          <div className="text-center mb-20">
+            <h2 className="font-sora font-bold text-4xl md:text-6xl mb-6">
+              Como <span className="text-gradient">Funciona</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Um processo simples e transparente para escalar sua agência
+            </p>
+          </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="glass-card text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl group-hover:scale-110 transition-transform">
-                1
+          {/* Process Steps - Creative horizontal flow */}
+          <div className="relative max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-3 gap-12">
+              {/* Step 1 */}
+              <div className="relative">
+                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl text-center">
+                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
+                      01
+                    </div>
+                  </div>
+                  <div className="pt-12">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-4xl">
+                      📋
+                    </div>
+                    <h3 className="font-sora font-bold text-2xl mb-4">Apresente o Projeto</h3>
+                    <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4"></div>
+                    <p className="text-muted-foreground text-lg leading-relaxed">
+                      Compartilhe os detalhes do projeto do seu cliente conosco. Analisamos requisitos, objetivos e expectativas para criar a proposta ideal.
+                    </p>
+                  </div>
+                </div>
+                {/* Arrow */}
+                <div className="hidden lg:block absolute top-1/2 -right-6 transform -translate-y-1/2 text-primary text-3xl">
+                  →
+                </div>
               </div>
-              <h3 className="font-sora font-semibold text-lg mb-3">Apresente o Projeto</h3>
-              <p className="text-muted-foreground text-sm">
-                Compartilhe os detalhes do projeto do seu cliente conosco
-              </p>
-            </div>
-            
-            <div className="glass-card text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl group-hover:scale-110 transition-transform">
-                2
+
+              {/* Step 2 */}
+              <div className="relative">
+                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl text-center">
+                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                    <div className="w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
+                      02
+                    </div>
+                  </div>
+                  <div className="pt-12">
+                    <div className="w-20 h-20 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-4xl">
+                      💡
+                    </div>
+                    <h3 className="font-sora font-bold text-2xl mb-4">Receba Proposta</h3>
+                    <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto mb-4"></div>
+                    <p className="text-muted-foreground text-lg leading-relaxed">
+                      Elaboramos cronograma detalhado, valores transparentes e especificações técnicas completas. Tudo personalizado para o projeto específico.
+                    </p>
+                  </div>
+                </div>
+                {/* Arrow */}
+                <div className="hidden lg:block absolute top-1/2 -right-6 transform -translate-y-1/2 text-secondary text-3xl">
+                  →
+                </div>
               </div>
-              <h3 className="font-sora font-semibold text-lg mb-3">Receba Proposta</h3>
-              <p className="text-muted-foreground text-sm">
-                Elaboramos cronograma, valores e especificações técnicas
-              </p>
-            </div>
-            
-            <div className="glass-card text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl group-hover:scale-110 transition-transform">
-                3
+
+              {/* Step 3 */}
+              <div className="relative">
+                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl text-center">
+                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
+                      03
+                    </div>
+                  </div>
+                  <div className="pt-12">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-4xl">
+                      🚀
+                    </div>
+                    <h3 className="font-sora font-bold text-2xl mb-4">Entregamos Pronto</h3>
+                    <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4"></div>
+                    <p className="text-muted-foreground text-lg leading-relaxed">
+                      Você recebe o projeto finalizado com qualidade Notkode. Suporte completo durante a entrega e implementação para garantir o sucesso.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <h3 className="font-sora font-semibold text-lg mb-3">Entregamos Pronto</h3>
-              <p className="text-muted-foreground text-sm">
-                Você recebe o projeto finalizado com qualidade Notkode
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Portfolio Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
-        <Portfolio />
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4">
