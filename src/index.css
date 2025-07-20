@@ -19,32 +19,32 @@
     
     /* Shadcn Theme Colors - Light Mode */
     --background: 0 0% 100%;
-    --foreground: 228 61% 11%;
+    --foreground: 228 43% 10%;
     
     --card: 0 0% 100%;
-    --card-foreground: 228 61% 11%;
+    --card-foreground: 228 43% 10%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 228 61% 11%;
+    --popover-foreground: 228 43% 10%;
     
     --primary: 190 100% 59%;
     --primary-foreground: 228 43% 10%;
     
     --secondary: 184 62% 71%;
-    --secondary-foreground: 228 61% 11%;
+    --secondary-foreground: 228 43% 10%;
     
     --muted: 0 0% 96%;
     --muted-foreground: 216 6% 46%;
     
     --accent: 184 62% 71%;
-    --accent-foreground: 228 61% 11%;
+    --accent-foreground: 228 43% 10%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 189 71% 58%;
+    --ring: 190 100% 59%;
     
     --radius: 1rem;
     
@@ -100,8 +100,7 @@
 
   body {
     @apply bg-background text-foreground font-inter;
-    /* Start with dark theme */
-    @apply dark;
+    /* Remove default dark class - let ThemeContext handle it */
   }
   
   h1, h2, h3, h4, h5, h6 {
