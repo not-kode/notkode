@@ -3,6 +3,7 @@ import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
+
 const Empresas: React.FC = () => {
   const {
     t
@@ -11,6 +12,7 @@ const Empresas: React.FC = () => {
   const ballRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [ballProgress, setBallProgress] = useState(0);
+
   const services = [{
     icon: Building,
     title: t('empresas.services.internal'),
@@ -44,6 +46,7 @@ const Empresas: React.FC = () => {
     title: t('empresas.services.ecommerce'),
     description: 'Lojas virtuais otimizadas para conversão'
   }];
+
   const differentials = [{
     icon: Target,
     title: t('empresas.differential.experience'),
@@ -61,6 +64,7 @@ const Empresas: React.FC = () => {
     title: 'Especialistas em Inteligência Artificial',
     description: 'Dominamos as mais avançadas tecnologias de IA para criar soluções inteligentes'
   }];
+
   const processSteps = [{
     title: "Diagnóstico Profundo",
     description: "Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.",
@@ -78,19 +82,22 @@ const Empresas: React.FC = () => {
     description: "Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.",
     icon: "🚀"
   }];
+
   useEffect(() => {
     const handleScroll = () => {
       if (!processRef.current || !ballRef.current) return;
+      
       const rect = processRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       const elementTop = rect.top;
       const elementHeight = rect.height;
 
-      // Calculate scroll progress through the element
-      const startOffset = windowHeight * 0.8;
+      // Calculate scroll progress through the element with delayed start
+      const startOffset = windowHeight * 0.6; // Changed from 0.8 to 0.6 to start ball later
       const endOffset = windowHeight * 0.2;
       const scrollStart = elementTop - startOffset;
       const scrollEnd = elementTop - endOffset + elementHeight;
+      
       let progress = 0;
       if (scrollStart > 0) {
         progress = 0;
@@ -99,6 +106,7 @@ const Empresas: React.FC = () => {
       } else {
         progress = Math.abs(scrollStart) / (Math.abs(scrollStart) + Math.abs(scrollEnd));
       }
+      
       setBallProgress(progress);
 
       // Determine active step based on precise ball position
@@ -108,8 +116,9 @@ const Empresas: React.FC = () => {
       // Check which dot the ball is closest to
       let nearestStep = -1;
       let minDistance = Infinity;
+      
       processSteps.forEach((_, index) => {
-        const dotPosition = 15 + index / (processSteps.length - 1) * 65; // Dot positions
+        const dotPosition = 15 + (index / (processSteps.length - 1)) * 65; // Dot positions
         const distance = Math.abs(ballPosition - dotPosition);
         if (distance < minDistance) {
           minDistance = distance;
@@ -124,11 +133,13 @@ const Empresas: React.FC = () => {
         setActiveStep(-1); // No step is active when ball is between dots
       }
     };
+
     window.addEventListener('scroll', handleScroll);
     handleScroll(); // Initial call
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
   return <div className="min-h-screen">
       {/* Hero Section - Mais criativo */}
       <section className="relative hero-gradient py-20 px-8 overflow-hidden">
@@ -396,7 +407,6 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-
       {/* CTA Section */}
       <section className="py-20 px-8">
         <div className="container mx-auto text-center">
@@ -413,4 +423,5 @@ const Empresas: React.FC = () => {
       </section>
     </div>;
 };
+
 export default Empresas;
