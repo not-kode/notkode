@@ -84,9 +84,9 @@ const Portfolio: React.FC = () => {
   }, [selectedCategory]);
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+    <section className="py-20 px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
       <div className="container mx-auto">
-        <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-4">
+        <h2 className="font-sora font-bold text-4xl text-center mb-4">
           Nosso <span className="text-gradient">Portfólio</span>
         </h2>
         <p className="text-xl text-muted-foreground text-center mb-12 max-w-3xl mx-auto">
@@ -96,11 +96,11 @@ const Portfolio: React.FC = () => {
         {/* Filter Section */}
         <div className="mb-12 max-w-4xl mx-auto">
           <div className="text-center mb-6">
-            <h3 className="font-sora font-semibold text-lg text-foreground mb-4">Filtrar por Categoria</h3>
+            <h3 className="font-sora font-semibold text-xl text-foreground mb-4">Filtrar por Categoria</h3>
             <div className="flex justify-center gap-2 overflow-x-auto pb-2">
               <button
                 onClick={() => setSelectedCategory('')}
-                className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${
+                className={`px-4 py-2 text-base font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${
                   !selectedCategory 
                     ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30' 
                     : 'bg-background/50 backdrop-blur hover:bg-primary/10'
@@ -112,7 +112,7 @@ const Portfolio: React.FC = () => {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${
+                  className={`px-4 py-2 text-base font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${
                     selectedCategory === category 
                       ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30' 
                       : 'bg-background/50 backdrop-blur hover:bg-primary/10'
@@ -153,20 +153,20 @@ const Portfolio: React.FC = () => {
                 </div>
 
                 {/* Description */}
-                <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                <p className="text-muted-foreground text-base mb-4 leading-relaxed">
                   {project.description}
                 </p>
 
                 {/* Technologies */}
                 <div className="mb-6">
-                  <h4 className="font-semibold text-sm mb-2 text-primary">
+                  <h4 className="font-semibold text-base mb-2 text-primary">
                     Tecnologias utilizadas:
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {project.technologies.split(', ').map((tech, techIndex) => (
                       <span 
                         key={techIndex}
-                        className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20"
+                        className="px-3 py-1 bg-primary/10 text-primary text-base font-medium rounded-full border border-primary/20"
                       >
                         {tech}
                       </span>
@@ -180,7 +180,7 @@ const Portfolio: React.FC = () => {
                     href={project.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors font-semibold text-sm group-hover:scale-105 transition-transform"
+                    className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors font-semibold text-base group-hover:scale-105 transition-transform"
                   >
                     <span>Ver projeto</span>
                     <ExternalLink className="w-4 h-4" />
@@ -191,7 +191,7 @@ const Portfolio: React.FC = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <p className="text-muted-foreground">Nenhum projeto encontrado com os filtros selecionados.</p>
+              <p className="text-muted-foreground text-base">Nenhum projeto encontrado com os filtros selecionados.</p>
             </div>
           )}
         </div>

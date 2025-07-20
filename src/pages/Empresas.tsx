@@ -59,7 +59,7 @@ const Empresas: React.FC = () => {
   }];
   return <div className="min-h-screen">
       {/* Hero Section - Mais criativo */}
-      <section className="relative hero-gradient py-24 px-4 overflow-hidden">
+      <section className="relative hero-gradient py-20 px-8 overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
@@ -76,7 +76,7 @@ const Empresas: React.FC = () => {
             </div>
             
             {/* Main Title */}
-            <h1 className="font-sora font-bold text-4xl md:text-6xl lg:text-7xl mb-8 animate-fade-in-up leading-tight">
+            <h1 className="font-sora font-bold text-4xl md:text-5xl lg:text-6xl mb-8 animate-fade-in-up leading-tight">
               Desenvolvemos tecnologia{' '}
               <span className="text-gradient">sobre medida</span> que acelera sua empresa em{' '}
               <span className="text-gradient">tempo recorde</span>
@@ -87,16 +87,16 @@ const Empresas: React.FC = () => {
             
             {/* CTA Button - Preenchido e destacado */}
             <div className="animate-fade-in-up">
-            <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
+            <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
             </div>
           </div>
         </div>
       </section>
 
       {/* Services Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-8">
         <div className="container mx-auto">
-          <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-16">
+          <h2 className="font-sora font-bold text-4xl text-center mb-16">
             <span className="text-gradient">{t('empresas.services.title')}</span>
           </h2>
           
@@ -105,10 +105,10 @@ const Empresas: React.FC = () => {
                 <div className="flex items-center justify-center mb-4">
                   <service.icon className="w-10 h-10 text-primary group-hover:scale-110 transition-transform" />
                 </div>
-                <h3 className="font-sora font-semibold text-lg mb-3 text-center min-h-[56px] flex items-center justify-center">
+                <h3 className="font-sora font-semibold text-xl mb-3 text-center min-h-[56px] flex items-center justify-center">
                   {service.title}
                 </h3>
-                <p className="text-muted-foreground text-center text-sm">
+                <p className="text-muted-foreground text-center text-base">
                   {service.description}
                 </p>
               </div>)}
@@ -117,14 +117,14 @@ const Empresas: React.FC = () => {
       </section>
 
       {/* Portfolio Section - Moved after Services */}
-      <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+      <section className="py-20 px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
         <Portfolio />
       </section>
 
       {/* Differentials Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+      <section className="py-20 px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="container mx-auto">
-          <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-8">
+          <h2 className="font-sora font-bold text-4xl text-center mb-8">
             Nossa <span className="text-gradient">Receita</span> para o Sucesso
           </h2>
           <p className="text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto">
@@ -139,9 +139,9 @@ const Empresas: React.FC = () => {
                 <div key={index} className="glass-card group relative">
                   <div className="flex items-center mb-4">
                     <differential.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
-                    <h3 className="font-sora font-semibold text-lg">{differential.title}</h3>
+                    <h3 className="font-sora font-semibold text-xl">{differential.title}</h3>
                   </div>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-base">
                     {differential.description}
                   </p>
                   {/* Plus symbol on the right of all items except the last one */}
@@ -202,7 +202,7 @@ const Empresas: React.FC = () => {
       </section>
 
       {/* Process Section - Creative Design */}
-      <section className="relative py-32 px-4 overflow-hidden">
+      <section className="relative py-20 px-8 overflow-hidden">
         {/* Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-10 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
@@ -212,7 +212,7 @@ const Empresas: React.FC = () => {
         
         <div className="container mx-auto relative z-10">
           <div className="text-center mb-20">
-            <h2 className="font-sora font-bold text-4xl md:text-6xl mb-6">
+            <h2 className="font-sora font-bold text-4xl mb-6">
               Nosso <span className="text-gradient">Processo</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -333,9 +333,9 @@ const Empresas: React.FC = () => {
       </section>
 
       {/* Success Numbers */}
-      <section className="py-20 px-4 bg-gradient-to-br from-secondary/5 to-primary/5">
+      <section className="py-20 px-8 bg-gradient-to-br from-secondary/5 to-primary/5">
         <div className="container mx-auto">
-          <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-16">
+          <h2 className="font-sora font-bold text-4xl text-center mb-16">
             Resultados <span className="text-gradient">Comprovados</span>
           </h2>
           
@@ -381,16 +381,16 @@ const Empresas: React.FC = () => {
 
 
       {/* CTA Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-8">
         <div className="container mx-auto text-center">
           <div className="glass-card max-w-3xl mx-auto">
-            <h2 className="font-sora font-bold text-3xl md:text-4xl mb-6">
+            <h2 className="font-sora font-bold text-4xl mb-6">
               Pronto para <span className="text-gradient">acelerar</span> sua empresa?
             </h2>
             <p className="text-xl text-muted-foreground mb-8">
               Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso.
             </p>
-            <WhatsAppButton text="Entrar em Contato" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
+            <WhatsAppButton text="Entrar em Contato" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
           </div>
         </div>
       </section>
