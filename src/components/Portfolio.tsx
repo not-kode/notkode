@@ -103,9 +103,16 @@ const Portfolio: React.FC = () => {
                 <h4 className="font-semibold text-sm mb-2 text-primary">
                   Tecnologias utilizadas:
                 </h4>
-                <p className="text-xs text-muted-foreground">
-                  {project.technologies}
-                </p>
+                <div className="flex flex-wrap gap-2">
+                  {project.technologies.split(', ').map((tech, techIndex) => (
+                    <span 
+                      key={techIndex}
+                      className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               {/* Link */}
