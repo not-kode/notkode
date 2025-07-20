@@ -109,10 +109,20 @@ const Empresas: React.FC = () => {
 
       setBallProgress(progress);
 
-      // Determine active step based on progress
-      const stepProgress = progress * (processSteps.length - 1);
-      const currentStep = Math.round(stepProgress);
-      setActiveStep(currentStep);
+      // Determine active step based on precise ball position
+      // Each step represents 25% of the progress (4 steps = 100%)
+      const stepProgress = progress * processSteps.length;
+      const currentStep = Math.floor(stepProgress);
+      
+      // Only show icon when ball is close to the dot (within ±10% of step position)
+      const stepPosition = stepProgress - currentStep;
+      const isNearDot = stepPosition >= 0.4 && stepPosition <= 0.6; // Ball is near the center of the step
+      
+      if (isNearDot && currentStep < processSteps.length) {
+        setActiveStep(currentStep);
+      } else {
+        setActiveStep(-1); // No step is active when ball is between dots
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -291,60 +301,60 @@ const Empresas: React.FC = () => {
             {/* Rolling Ball */}
             <div 
               ref={ballRef}
-              className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-primary to-secondary rounded-full shadow-lg border-2 border-white z-20 hidden lg:block transition-all duration-300 ease-out"
+              className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-primary to-secondary rounded-full shadow-lg border-2 border-white z-20 hidden lg:block transition-all duration-100 ease-linear"
               style={{
-                top: `${ballProgress * 80}%`,
-                transform: `translateX(-50%) rotate(${ballProgress * 720}deg)`,
+                top: `${Math.min(ballProgress * 85, 85)}%`,
+                transform: `translateX(-50%) rotate(${ballProgress * 1440}deg)`,
                 boxShadow: '0 4px 20px rgba(0,0,0,0.2), 0 0 20px rgba(59, 130, 246, 0.5)'
               }}
             ></div>
             
             {processSteps.map((step, index) => {
-              const isActive = activeStep >= index;
+              const isActive = activeStep === index; // Only exact match, not >=
               const isLeft = index % 2 === 0;
+              const stepPosition = (index / (processSteps.length - 1)) * 85; // Match ball position calculation
               
               return (
                 <div key={index} className="flex items-center mb-24 relative">
                   {/* Step Dot */}
-                  <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${
-                    isActive ? 'bg-primary scale-110' : 'bg-muted'
-                  }`}></div>
+                  <div 
+                    className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-300 ${
+                      isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'
+                    }`}
+                    style={{ top: `${stepPosition}%` }}
+                  ></div>
                   
                   {/* Content Container - Only title and icon number */}
-                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} ${
-                    isActive ? 'animate-fade-in-up' : 'opacity-50'
+                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} transition-opacity duration-300 ${
+                    isActive ? 'opacity-100' : 'opacity-40'
                   }`}>
-                    <div className={`glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl transform ${
+                    <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${
                       isActive 
-                        ? isLeft 
-                          ? 'translate-x-0 opacity-100' 
-                          : 'translate-x-0 opacity-100'
-                        : isLeft
-                          ? '-translate-x-20 opacity-60'
-                          : 'translate-x-20 opacity-60'
-                    } transition-all duration-700 ease-out`}>
+                        ? 'translate-x-0 opacity-100 scale-100' 
+                        : 'opacity-70 scale-95'
+                    }`}>
                       <div className="flex items-center mb-6">
                         <div className={`w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg ${
-                          isActive ? 'animate-pulse' : ''
+                          isActive ? 'animate-pulse shadow-primary/50' : ''
                         }`}>
                           {String(index + 1).padStart(2, '0')}
                         </div>
                         <div className="ml-6">
                           <h3 className="font-sora font-bold text-xl mb-2">{step.title}</h3>
-                          <div className={`w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500 ${
-                            isActive ? 'scale-x-100' : 'scale-x-0'
+                          <div className={`w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300 ${
+                            isActive ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-50'
                           }`}></div>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Icon Container with Description - Only appears when active */}
+                  {/* Icon Container with Description - Only appears when ball is exactly on dot */}
                   {isActive && (
                     <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-12' : 'pr-12'} animate-fade-in-up`}>
-                      <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 transition-all duration-700 scale-100 rotate-0">
+                      <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 transition-all duration-300 scale-100 rotate-0 shadow-lg shadow-primary/10">
                         <div className="flex items-center mb-4">
-                          <div className="text-6xl opacity-60 mr-4">
+                          <div className="text-6xl opacity-80 mr-4 animate-bounce">
                             {step.icon}
                           </div>
                           <div className="flex-1">
