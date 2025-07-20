@@ -76,7 +76,7 @@ const Empresas: React.FC = () => {
             </div>
             
             {/* Main Title */}
-            <h1 className="font-sora font-bold text-4xl md:text-5xl lg:text-6xl mb-8 animate-fade-in-up leading-tight">
+            <h1 className="font-sora font-bold text-3xl mb-8 animate-fade-in-up leading-tight">
               Desenvolvemos tecnologia{' '}
               <span className="text-gradient">sobre medida</span> que acelera sua empresa em{' '}
               <span className="text-gradient">tempo recorde</span>
