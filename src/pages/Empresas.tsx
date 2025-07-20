@@ -242,8 +242,8 @@ const Empresas: React.FC = () => {
               </div>
               <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full shadow-lg border-4 border-background"></div>
               <div className="lg:w-1/2 lg:pl-12 hidden lg:block">
-                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
-                  <div className="text-6xl opacity-20 text-primary mb-4">🔍</div>
+                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center">
+                  <div className="text-6xl opacity-20 text-primary mr-6">🔍</div>
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.
                   </p>
@@ -264,15 +264,15 @@ const Empresas: React.FC = () => {
                       <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full"></div>
                     </div>
                   </div>
-                  <p className="text-muted-foreground text-lg leading-relaxed">
-                    Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos um roadmap detalhado. Cada decisão é pensada para maximizar ROI e escalabilidade.
-                  </p>
                 </div>
               </div>
               <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-secondary rounded-full shadow-lg border-4 border-background"></div>
               <div className="lg:w-1/2 lg:pr-12 hidden lg:block">
-                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-secondary/10 to-primary/10 border border-secondary/20">
-                  <div className="text-6xl opacity-20 text-secondary">🎯</div>
+                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-secondary/10 to-primary/10 border border-secondary/20 flex items-center">
+                  <div className="text-6xl opacity-20 text-secondary mr-6">🎯</div>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos um roadmap detalhado. Cada decisão é pensada para maximizar ROI e escalabilidade.
+                  </p>
                 </div>
               </div>
             </div>
@@ -290,15 +290,15 @@ const Empresas: React.FC = () => {
                       <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
                     </div>
                   </div>
-                  <p className="text-muted-foreground text-lg leading-relaxed">
-                    Construímos sua solução com acompanhamento em tempo real. Entregas incrementais garantem que você veja o progresso e possa ajustar o rumo quando necessário.
-                  </p>
                 </div>
               </div>
               <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full shadow-lg border-4 border-background"></div>
               <div className="lg:w-1/2 lg:pl-12 hidden lg:block">
-                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
-                  <div className="text-6xl opacity-20 text-primary">⚡</div>
+                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center">
+                  <div className="text-6xl opacity-20 text-primary mr-6">⚡</div>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Construímos sua solução com acompanhamento em tempo real. Entregas incrementais garantem que você veja o progresso e possa ajustar o rumo quando necessário.
+                  </p>
                 </div>
               </div>
             </div>
@@ -316,15 +316,15 @@ const Empresas: React.FC = () => {
                       <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full"></div>
                     </div>
                   </div>
-                  <p className="text-muted-foreground text-lg leading-relaxed">
-                    Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.
-                  </p>
                 </div>
               </div>
               <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-secondary rounded-full shadow-lg border-4 border-background"></div>
               <div className="lg:w-1/2 lg:pr-12 hidden lg:block">
-                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-secondary/10 to-primary/10 border border-secondary/20">
-                  <div className="text-6xl opacity-20 text-secondary">🚀</div>
+                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-secondary/10 to-primary/10 border border-secondary/20 flex items-center">
+                  <div className="text-6xl opacity-20 text-secondary mr-6">🚀</div>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.
+                  </p>
                 </div>
               </div>
             </div>
