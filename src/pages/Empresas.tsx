@@ -134,48 +134,24 @@ const Empresas: React.FC = () => {
           {/* Recipe Formula */}
           <div className="max-w-6xl mx-auto">
             {/* Individual Ingredients */}
-            <div className="flex flex-col gap-8 mb-12">
-              {/* Group items in pairs */}
-              {Array.from({ length: Math.ceil(differentials.length / 2) }, (_, pairIndex) => {
-                const startIndex = pairIndex * 2;
-                const pair = differentials.slice(startIndex, startIndex + 2);
-                const isLastPair = pairIndex === Math.ceil(differentials.length / 2) - 1;
-                
-                return (
-                  <div key={pairIndex} className="flex flex-col items-center">
-                    <div className="grid md:grid-cols-2 gap-6 w-full max-w-4xl">
-                      {pair.map((differential, indexInPair) => {
-                        const globalIndex = startIndex + indexInPair;
-                        return (
-                          <div key={globalIndex} className="glass-card group relative">
-                            <div className="flex items-center mb-4">
-                              <differential.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
-                              <h3 className="font-sora font-semibold text-lg">{differential.title}</h3>
-                            </div>
-                            <p className="text-muted-foreground text-sm">
-                              {differential.description}
-                            </p>
-                            {/* Plus symbol between items in the same pair */}
-                            {indexInPair === 0 && pair.length === 2 && (
-                              <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-lg hidden md:flex">
-                                +
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {/* Plus symbol between pairs (not after the last pair) */}
-                    {!isLastPair && (
-                      <div className="flex justify-center my-6">
-                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-2xl">
-                          +
-                        </div>
-                      </div>
-                    )}
+            <div className="grid md:grid-cols-2 gap-6 mb-12">
+              {differentials.map((differential, index) => (
+                <div key={index} className="glass-card group relative">
+                  <div className="flex items-center mb-4">
+                    <differential.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
+                    <h3 className="font-sora font-semibold text-lg">{differential.title}</h3>
                   </div>
-                );
-              })}
+                  <p className="text-muted-foreground text-sm">
+                    {differential.description}
+                  </p>
+                  {/* Plus symbol on the right of all items except the last one */}
+                  {index < differentials.length - 1 && (
+                    <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-lg hidden md:flex">
+                      +
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
 
             {/* Equals Symbol */}
