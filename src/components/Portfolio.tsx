@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -97,7 +98,7 @@ const Portfolio: React.FC = () => {
         <div className="mb-12 max-w-4xl mx-auto">
           <div className="text-center mb-6">
             <h3 className="font-sora font-semibold text-xl text-foreground mb-4">Filtrar por Categoria</h3>
-            <div className="flex justify-center gap-2 overflow-x-auto pb-2">
+            <div className="flex justify-center gap-2 flex-wrap pb-2">
               <button
                 onClick={() => setSelectedCategory('')}
                 className={`px-4 py-2 text-base font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${
