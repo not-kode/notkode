@@ -289,8 +289,8 @@ const Empresas: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* Description for Mobile/Tablet - shown on hover */}
-                      <div className="lg:hidden opacity-0 group-hover:opacity-100 transition-all duration-300 mt-4 transform translate-y-4 group-hover:translate-y-0">
+                      {/* Description for Mobile/Tablet - shown when active */}
+                      <div className={`lg:hidden transition-all duration-500 mt-4 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                         <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-2xl p-6">
                           <div className="flex items-center mb-3">
                             <div className="text-4xl opacity-80 mr-3">
