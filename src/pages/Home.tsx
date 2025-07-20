@@ -8,26 +8,36 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background">
-        {/* Noise Texture Overlay */}
-        <div className="absolute inset-0 opacity-30" 
+      {/* Animated Magical Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-background">
+        {/* Noise Texture for Liquid Glass Effect */}
+        <div className="absolute inset-0 opacity-40" 
              style={{
-               backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-               backgroundSize: '180px 180px',
-               mixBlendMode: 'overlay'
+               backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`,
+               backgroundSize: '200px 200px',
+               mixBlendMode: 'soft-light'
              }}>
         </div>
         
-        {/* Floating Circles */}
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-full blur-xl animate-[float_6s_ease-in-out_infinite]"></div>
-        <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-secondary/15 rounded-full blur-lg animate-[float_8s_ease-in-out_infinite_reverse] animation-delay-1000"></div>
-        <div className="absolute top-1/2 left-3/4 w-40 h-40 bg-accent/8 rounded-full blur-2xl animate-[float_10s_ease-in-out_infinite] animation-delay-2000"></div>
-        <div className="absolute top-1/6 right-1/6 w-20 h-20 bg-primary/20 rounded-full blur-md animate-[float_7s_ease-in-out_infinite] animation-delay-3000"></div>
-        <div className="absolute bottom-1/4 left-1/6 w-28 h-28 bg-secondary/12 rounded-full blur-lg animate-[float_9s_ease-in-out_infinite_reverse] animation-delay-4000"></div>
+        {/* Large Magical Floating Circles */}
+        <div className="absolute -top-20 -left-20 w-80 h-80 bg-gradient-to-br from-primary/20 to-secondary/10 rounded-full blur-3xl animate-[float_8s_ease-in-out_infinite]"></div>
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-gradient-to-tl from-secondary/25 to-accent/15 rounded-full blur-3xl animate-[float_12s_ease-in-out_infinite_reverse] animation-delay-2000"></div>
+        <div className="absolute top-10 right-10 w-72 h-72 bg-gradient-to-br from-accent/15 to-primary/20 rounded-full blur-2xl animate-[float_10s_ease-in-out_infinite] animation-delay-4000"></div>
+        <div className="absolute bottom-10 left-10 w-64 h-64 bg-gradient-to-tr from-primary/30 to-secondary/20 rounded-full blur-2xl animate-[float_14s_ease-in-out_infinite_reverse] animation-delay-6000"></div>
         
-        {/* Glass morphism overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/5 to-transparent backdrop-blur-[1px]"></div>
+        {/* Medium Floating Elements */}
+        <div className="absolute top-1/3 left-1/3 w-48 h-48 bg-gradient-to-r from-primary/15 to-transparent rounded-full blur-xl animate-[float_9s_ease-in-out_infinite] animation-delay-1000"></div>
+        <div className="absolute bottom-1/3 right-1/3 w-56 h-56 bg-gradient-to-l from-secondary/20 to-transparent rounded-full blur-xl animate-[float_11s_ease-in-out_infinite_reverse] animation-delay-3000"></div>
+        
+        {/* Smaller Accent Circles */}
+        <div className="absolute top-20 left-1/2 w-32 h-32 bg-primary/25 rounded-full blur-lg animate-[float_7s_ease-in-out_infinite] animation-delay-500"></div>
+        <div className="absolute bottom-20 right-1/4 w-40 h-40 bg-secondary/20 rounded-full blur-lg animate-[float_13s_ease-in-out_infinite_reverse] animation-delay-7000"></div>
+        
+        {/* Magical Glow Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 animate-pulse"></div>
+        
+        {/* Glass morphism layers */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-background/10 to-transparent backdrop-blur-[0.5px]"></div>
       </div>
 
       <div className="container mx-auto max-w-4xl text-center relative z-10">
