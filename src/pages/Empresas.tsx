@@ -238,15 +238,15 @@ const Empresas: React.FC = () => {
                       <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
                     </div>
                   </div>
-                  <p className="text-muted-foreground text-lg leading-relaxed">
-                    Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.
-                  </p>
                 </div>
               </div>
               <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full shadow-lg border-4 border-background"></div>
               <div className="lg:w-1/2 lg:pl-12 hidden lg:block">
                 <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
-                  <div className="text-6xl opacity-20 text-primary">🔍</div>
+                  <div className="text-6xl opacity-20 text-primary mb-4">🔍</div>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.
+                  </p>
                 </div>
               </div>
             </div>
