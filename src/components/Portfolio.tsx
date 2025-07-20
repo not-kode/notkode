@@ -83,7 +83,6 @@ const Portfolio: React.FC = () => {
     });
   }, [selectedCategory]);
 
-
   return (
     <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
       <div className="container mx-auto">
@@ -95,38 +94,33 @@ const Portfolio: React.FC = () => {
         </p>
 
         {/* Filter Section */}
-        <div className="mb-12 max-w-2xl mx-auto">
-          {/* Category Filter with Liquid Glass Effect */}
-          <div className="backdrop-blur-xl bg-background/20 shadow-xl rounded-3xl">
-            <div className="p-6">
-              <div className="text-center mb-4">
-                <h3 className="font-sora font-semibold text-lg text-foreground">Filtrar por Categoria</h3>
-              </div>
-              <div className="flex flex-wrap justify-center gap-2">
+        <div className="mb-12 max-w-4xl mx-auto">
+          <div className="text-center mb-6">
+            <h3 className="font-sora font-semibold text-lg text-foreground mb-4">Filtrar por Categoria</h3>
+            <div className="flex justify-center gap-2 overflow-x-auto pb-2">
+              <button
+                onClick={() => setSelectedCategory('')}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${
+                  !selectedCategory 
+                    ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30' 
+                    : 'bg-background/50 backdrop-blur hover:bg-primary/10'
+                }`}
+              >
+                Todas as Categorias
+              </button>
+              {categories.map(category => (
                 <button
-                  onClick={() => setSelectedCategory('')}
-                  className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 ${
-                    !selectedCategory 
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 whitespace-nowrap ${
+                    selectedCategory === category 
                       ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30' 
                       : 'bg-background/50 backdrop-blur hover:bg-primary/10'
                   }`}
                 >
-                  Todas as Categorias
+                  {category}
                 </button>
-                {categories.map(category => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 ${
-                      selectedCategory === category 
-                        ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30' 
-                        : 'bg-background/50 backdrop-blur hover:bg-primary/10'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
