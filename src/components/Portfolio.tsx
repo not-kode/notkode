@@ -97,18 +97,18 @@ const Portfolio: React.FC = () => {
         {/* Filter Section */}
         <div className="mb-12 max-w-2xl mx-auto">
           {/* Category Filter with Liquid Glass Effect */}
-          <div className="glass-card backdrop-blur-xl bg-background/30 border border-white/20 shadow-2xl">
+          <div className="backdrop-blur-xl bg-background/20 shadow-xl rounded-3xl">
             <div className="p-6">
               <div className="text-center mb-4">
                 <h3 className="font-sora font-semibold text-lg text-foreground">Filtrar por Categoria</h3>
               </div>
-              <div className="flex flex-wrap justify-center gap-3">
+              <div className="flex flex-wrap justify-center gap-2">
                 <button
                   onClick={() => setSelectedCategory('')}
-                  className={`px-6 py-3 font-medium rounded-full border-2 transition-all duration-300 transform hover:scale-105 ${
+                  className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 ${
                     !selectedCategory 
-                      ? 'bg-gradient-to-r from-primary to-secondary text-white border-transparent shadow-lg shadow-primary/30' 
-                      : 'bg-background/50 backdrop-blur border-border hover:border-primary/50 hover:bg-primary/10'
+                      ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30' 
+                      : 'bg-background/50 backdrop-blur hover:bg-primary/10'
                   }`}
                 >
                   Todas as Categorias
@@ -117,10 +117,10 @@ const Portfolio: React.FC = () => {
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`px-6 py-3 font-medium rounded-full border-2 transition-all duration-300 transform hover:scale-105 ${
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 transform hover:scale-105 ${
                       selectedCategory === category 
-                        ? 'bg-gradient-to-r from-primary to-secondary text-white border-transparent shadow-lg shadow-primary/30' 
-                        : 'bg-background/50 backdrop-blur border-border hover:border-primary/50 hover:bg-primary/10'
+                        ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30' 
+                        : 'bg-background/50 backdrop-blur hover:bg-primary/10'
                     }`}
                   >
                     {category}
