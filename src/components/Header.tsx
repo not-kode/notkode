@@ -36,68 +36,71 @@ const Header: React.FC = () => {
 
   return (
     <header className="glass-header h-16 border-b border-white/10">
-      <div className="container mx-auto px-4 h-full flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2 group">
-          <img 
-            src={theme === 'dark' ? '/lovable-uploads/6beced90-2174-433f-9c99-a27a4e5372e8.png' : '/lovable-uploads/73ba0359-0a2c-4f33-b272-c06f14465ceb.png'}
-            alt="Notkode"
-            className="h-8 w-auto group-hover:scale-105 transition-transform"
-          />
-        </Link>
+      <div className="container mx-auto px-4 h-full flex items-center justify-center">
+        {/* Centralized Navigation Group with Glass Effect */}
+        <div className="glass-card flex items-center space-x-6 px-6 py-2">
+          {/* Logo */}
+          <Link to="/" className="flex items-center group">
+            <img 
+              src={theme === 'dark' ? '/lovable-uploads/6beced90-2174-433f-9c99-a27a4e5372e8.png' : '/lovable-uploads/73ba0359-0a2c-4f33-b272-c06f14465ceb.png'}
+              alt="Notkode"
+              className="h-6 w-auto group-hover:scale-105 transition-transform"
+            />
+          </Link>
 
-        {/* Navigation Menu - Hidden on mobile */}
-        <nav className="hidden md:flex items-center">
-          <div className="nav-menu flex items-center space-x-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  isActive(item.path.split('#')[0])
-                    ? 'bg-primary/20 text-primary'
-                    : 'text-foreground/80 hover:text-primary hover:bg-primary/10'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+          {/* Navigation Menu */}
+          <nav className="hidden md:flex items-center">
+            <div className="flex items-center space-x-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                    isActive(item.path.split('#')[0])
+                      ? 'bg-primary/20 text-primary'
+                      : 'text-foreground/80 hover:text-primary hover:bg-primary/10'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </nav>
+
+          {/* Controls Section */}
+          <div className="flex items-center space-x-2">
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="lang-selector h-8 px-2">
+                  <Globe className="w-3 h-3 mr-1" />
+                  <span className="text-xs">{language.toUpperCase()}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="glass">
+                <DropdownMenuItem onClick={() => setLanguage('pt')}>
+                  Português (BR)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage('en')}>
+                  English
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Theme Toggle */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={toggleTheme}
+              className="glass-button w-8 h-8 p-0"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-3 h-3" />
+              ) : (
+                <Moon className="w-3 h-3" />
+              )}
+            </Button>
           </div>
-        </nav>
-
-        {/* Right Section */}
-        <div className="flex items-center space-x-3">
-          {/* Language Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="lang-selector">
-                <Globe className="w-4 h-4 mr-1" />
-                {language.toUpperCase()}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass">
-              <DropdownMenuItem onClick={() => setLanguage('pt')}>
-                Português (BR)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('en')}>
-                English
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Theme Toggle */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={toggleTheme}
-            className="glass-button w-10 h-10 p-0"
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4" />
-            ) : (
-              <Moon className="w-4 h-4" />
-            )}
-          </Button>
         </div>
       </div>
 
