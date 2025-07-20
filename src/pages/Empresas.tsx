@@ -57,9 +57,9 @@ const Empresas: React.FC = () => {
     title: t('empresas.differential.value'),
     description: 'Priorizamos entregas que impactam diretamente nos seus resultados'
   }, {
-    icon: Brain,
-    title: t('empresas.differential.knowledge'),
-    description: 'Combinamos conhecimento técnico com experiência em negócios'
+    icon: Bot,
+    title: 'Especialistas em Inteligência Artificial',
+    description: 'Dominamos as mais avançadas tecnologias de IA para criar soluções inteligentes'
   }];
   return <div className="min-h-screen">
       {/* Hero Section - Mais criativo */}
@@ -139,7 +139,7 @@ const Empresas: React.FC = () => {
           <div className="max-w-6xl mx-auto">
             {/* Individual Ingredients */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {differentials.slice(0, 5).map((differential, index) => (
+              {differentials.map((differential, index) => (
                 <div key={index} className="glass-card group relative">
                   <div className="flex items-center mb-4">
                     <differential.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
