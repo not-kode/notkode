@@ -86,13 +86,13 @@ const Portfolio: React.FC = () => {
                     {project.category}
                   </span>
                 </div>
-                <div className="text-right ml-4 flex-shrink-0 space-y-2">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20 flex-shrink-0 whitespace-nowrap">
+                <div className="flex flex-col items-end gap-2 ml-4">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20 whitespace-nowrap">
                     <span>🚀</span>
                     <span>{t('language') === 'pt' ? 'Lançamento do Projeto:' : 'Project Launch:'}</span>
                     <span className="font-semibold">{project.year}</span>
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20 whitespace-nowrap">
                     <span>💸</span>
                     <span>{t('language') === 'pt' ? 'Faturamento:' : 'Revenue:'}</span>
                     <span className="font-semibold">{project.revenue}</span>
