@@ -1,107 +1,71 @@
 import React from 'react';
-import { 
-  Building, 
-  Rocket, 
-  Bot, 
-  Workflow, 
-  Figma, 
-  Smartphone, 
-  ShoppingCart, 
-  Globe,
-  CheckCircle,
-  Target,
-  Zap,
-  Brain,
-  TrendingUp,
-  Award,
-  Sparkles,
-  ArrowRight
-} from 'lucide-react';
+import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
-
 const Empresas: React.FC = () => {
-  const { t } = useLanguage();
-
-  const services = [
-    {
-      icon: Building,
-      title: t('empresas.services.internal'),
-      description: 'Sistemas de gestão, CRM, ERP e ferramentas específicas para seu negócio'
-    },
-    {
-      icon: Rocket,
-      title: t('empresas.services.saas'),
-      description: 'Plataformas escaláveis para comercializar como produto'
-    },
-    {
-      icon: Bot,
-      title: t('empresas.services.ai'),
-      description: 'Chatbots inteligentes e assistentes virtuais personalizados'
-    },
-    {
-      icon: Workflow,
-      title: t('empresas.services.automation'),
-      description: 'Automação de processos e integrações entre sistemas'
-    },
-    {
-      icon: Figma,
-      title: t('empresas.services.figma'),
-      description: 'Prototipagem e design de interfaces antes do desenvolvimento'
-    },
-    {
-      icon: Globe,
-      title: t('empresas.services.websites'),
-      description: 'Sites institucionais e aplicações web responsivas'
-    },
-    {
-      icon: Smartphone,
-      title: t('empresas.services.mobile'),
-      description: 'Apps nativos e híbridos para iOS e Android'
-    },
-    {
-      icon: ShoppingCart,
-      title: t('empresas.services.ecommerce'),
-      description: 'Lojas virtuais otimizadas para conversão'
-    }
-  ];
-
-  const differentials = [
-    {
-      icon: Target,
-      title: t('empresas.differential.experience'),
-      description: 'Mais de 3 anos desenvolvendo soluções que geram resultados reais'
-    },
-    {
-      icon: CheckCircle,
-      title: t('empresas.differential.diagnosis'),
-      description: 'Analisamos seu negócio para identificar as melhores oportunidades'
-    },
-    {
-      icon: Zap,
-      title: t('empresas.differential.tools'),
-      description: 'Escolhemos as tecnologias ideais para cada tipo de projeto'
-    },
-    {
-      icon: TrendingUp,
-      title: t('empresas.differential.value'),
-      description: 'Priorizamos entregas que impactam diretamente nos seus resultados'
-    },
-    {
-      icon: Brain,
-      title: t('empresas.differential.knowledge'),
-      description: 'Combinamos conhecimento técnico com experiência em negócios'
-    },
-    {
-      icon: Bot,
-      title: 'Especialistas em Inteligência Artificial',
-      description: 'Dominamos as mais avançadas tecnologias de IA para criar soluções inteligentes'
-    }
-  ];
-
-  return (
-    <div className="min-h-screen">
+  const {
+    t
+  } = useLanguage();
+  const services = [{
+    icon: Building,
+    title: t('empresas.services.internal'),
+    description: 'Sistemas de gestão, CRM, ERP e ferramentas específicas para seu negócio'
+  }, {
+    icon: Rocket,
+    title: t('empresas.services.saas'),
+    description: 'Plataformas escaláveis para comercializar como produto'
+  }, {
+    icon: Bot,
+    title: t('empresas.services.ai'),
+    description: 'Chatbots inteligentes e assistentes virtuais personalizados'
+  }, {
+    icon: Workflow,
+    title: t('empresas.services.automation'),
+    description: 'Automação de processos e integrações entre sistemas'
+  }, {
+    icon: Figma,
+    title: t('empresas.services.figma'),
+    description: 'Prototipagem e design de interfaces antes do desenvolvimento'
+  }, {
+    icon: Globe,
+    title: t('empresas.services.websites'),
+    description: 'Sites institucionais e aplicações web responsivas'
+  }, {
+    icon: Smartphone,
+    title: t('empresas.services.mobile'),
+    description: 'Apps nativos e híbridos para iOS e Android'
+  }, {
+    icon: ShoppingCart,
+    title: t('empresas.services.ecommerce'),
+    description: 'Lojas virtuais otimizadas para conversão'
+  }];
+  const differentials = [{
+    icon: Target,
+    title: t('empresas.differential.experience'),
+    description: 'Mais de 3 anos desenvolvendo soluções que geram resultados reais'
+  }, {
+    icon: CheckCircle,
+    title: t('empresas.differential.diagnosis'),
+    description: 'Analisamos seu negócio para identificar as melhores oportunidades'
+  }, {
+    icon: Zap,
+    title: t('empresas.differential.tools'),
+    description: 'Escolhemos as tecnologias ideais para cada tipo de projeto'
+  }, {
+    icon: TrendingUp,
+    title: t('empresas.differential.value'),
+    description: 'Priorizamos entregas que impactam diretamente nos seus resultados'
+  }, {
+    icon: Brain,
+    title: t('empresas.differential.knowledge'),
+    description: 'Combinamos conhecimento técnico com experiência em negócios'
+  }, {
+    icon: Bot,
+    title: 'Especialistas em Inteligência Artificial',
+    description: 'Dominamos as mais avançadas tecnologias de IA para criar soluções inteligentes'
+  }];
+  return <div className="min-h-screen">
       {/* Hero Section - Mais criativo */}
       <section className="relative hero-gradient py-24 px-4 overflow-hidden">
         {/* Background decorative elements */}
@@ -127,16 +91,11 @@ const Empresas: React.FC = () => {
             </h1>
             
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 animate-fade-in-up max-w-3xl mx-auto leading-relaxed">
-              Transformamos ideias complexas em soluções simples que impulsionam o crescimento do seu negócio
-            </p>
+            
             
             {/* CTA Button - Preenchido e destacado */}
             <div className="animate-fade-in-up">
-            <WhatsAppButton 
-              text="Acelerar Minha Empresa"
-              className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0"
-            />
+            <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
             </div>
           </div>
         </div>
@@ -150,8 +109,7 @@ const Empresas: React.FC = () => {
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map((service, index) => (
-              <div key={index} className="glass-card group hover:scale-105">
+            {services.map((service, index) => <div key={index} className="glass-card group hover:scale-105">
                 <div className="flex items-center justify-center mb-4">
                   <service.icon className="w-10 h-10 text-primary group-hover:scale-110 transition-transform" />
                 </div>
@@ -161,8 +119,7 @@ const Empresas: React.FC = () => {
                 <p className="text-muted-foreground text-center text-sm">
                   {service.description}
                 </p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -180,8 +137,7 @@ const Empresas: React.FC = () => {
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {differentials.map((differential, index) => (
-              <div key={index} className="glass-card group">
+            {differentials.map((differential, index) => <div key={index} className="glass-card group">
                 <div className="flex items-center mb-4">
                   <differential.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
                   <h3 className="font-sora font-semibold text-lg">{differential.title}</h3>
@@ -189,8 +145,7 @@ const Empresas: React.FC = () => {
                 <p className="text-muted-foreground text-sm">
                   {differential.description}
                 </p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -384,15 +339,10 @@ const Empresas: React.FC = () => {
             <p className="text-xl text-muted-foreground mb-8">
               Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso.
             </p>
-            <WhatsAppButton 
-              text="Entrar em Contato"
-              className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" 
-            />
+            <WhatsAppButton text="Entrar em Contato" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default Empresas;
