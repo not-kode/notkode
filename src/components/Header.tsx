@@ -40,7 +40,7 @@ const Header: React.FC = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 group">
           <img 
-            src={theme === 'dark' ? '/logo-dark.png' : '/logo-light.png'}
+            src={theme === 'dark' ? '/lovable-uploads/4a4eb7de-ae89-4685-a4bf-338864e5c5bb.png' : '/lovable-uploads/a97f81a7-0a6b-470d-8708-68f23ab8f500.png'}
             alt="Notkode"
             className="h-8 w-auto group-hover:scale-105 transition-transform"
           />
