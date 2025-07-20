@@ -81,18 +81,19 @@ const Portfolio: React.FC = () => {
               {/* Project Header */}
               <div className="flex items-start justify-between mb-6 border-b border-border/20 pb-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-3 mb-2">
-                    <h3 className="font-sora font-bold text-xl leading-tight flex-1 min-w-0">{project.name}</h3>
-                    <span className="px-3 py-1.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 whitespace-nowrap">
-                      {project.category}
-                    </span>
-                  </div>
+                  <h3 className="font-sora font-bold text-xl leading-tight mb-2">{project.name}</h3>
+                  <span className="px-3 py-1.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 inline-block">
+                    {project.category}
+                  </span>
                 </div>
-                <div className="text-right ml-4 flex-shrink-0">
-                  <div className="text-sm text-muted-foreground font-medium mb-1">{project.year}</div>
-                  <div className="font-semibold text-green-500">
-                    <span className="text-xs text-muted-foreground block mb-0.5">{t('language') === 'pt' ? 'Faturamento' : 'Revenue'}</span>
-                    <span className="text-sm">{project.revenue}</span>
+                <div className="text-right ml-4 flex-shrink-0 space-y-2">
+                  <div className="text-sm text-muted-foreground font-medium">
+                    <span className="block text-xs mb-0.5">{t('language') === 'pt' ? 'Lançamento do Projeto' : 'Project Launch'}</span>
+                    {project.year}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-semibold text-green-500">
+                    <span className="text-xs text-muted-foreground">{t('language') === 'pt' ? 'Faturamento:' : 'Revenue:'}</span>
+                    <span>{project.revenue}</span>
                   </div>
                 </div>
               </div>
