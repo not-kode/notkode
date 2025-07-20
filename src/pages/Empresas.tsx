@@ -110,16 +110,26 @@ const Empresas: React.FC = () => {
       setBallProgress(progress);
 
       // Determine active step based on precise ball position
-      // Each step represents 25% of the progress (4 steps = 100%)
-      const stepProgress = progress * processSteps.length;
-      const currentStep = Math.floor(stepProgress);
+      // Ball travels from 8% to 83% (75% range), dots are at 15% to 80% (65% range)
+      const ballPosition = 8 + (progress * 75); // Ball position from 8% to 83%
       
-      // Only show icon when ball is close to the dot (within ±10% of step position)
-      const stepPosition = stepProgress - currentStep;
-      const isNearDot = stepPosition >= 0.4 && stepPosition <= 0.6; // Ball is near the center of the step
+      // Check which dot the ball is closest to
+      let nearestStep = -1;
+      let minDistance = Infinity;
       
-      if (isNearDot && currentStep < processSteps.length) {
-        setActiveStep(currentStep);
+      processSteps.forEach((_, index) => {
+        const dotPosition = 15 + (index / (processSteps.length - 1)) * 65; // Dot positions
+        const distance = Math.abs(ballPosition - dotPosition);
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestStep = index;
+        }
+      });
+      
+      // Only activate if ball is very close to the dot (within 3% distance)
+      if (minDistance <= 3 && nearestStep >= 0) {
+        setActiveStep(nearestStep);
       } else {
         setActiveStep(-1); // No step is active when ball is between dots
       }
@@ -295,15 +305,15 @@ const Empresas: React.FC = () => {
           
           {/* Interactive Process Timeline */}
           <div className="relative max-w-6xl mx-auto">
-            {/* Central connecting line */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block"></div>
+            {/* Central connecting line - extended with padding */}
+            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{ height: 'calc(100% - 4rem)' }}></div>
             
             {/* Rolling Ball */}
             <div 
               ref={ballRef}
               className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-primary to-secondary rounded-full shadow-lg border-2 border-white z-20 hidden lg:block transition-all duration-100 ease-linear"
               style={{
-                top: `${Math.min(ballProgress * 85, 85)}%`,
+                top: `${8 + (ballProgress * 75)}%`, // Start 8% from top, travel 75% of height
                 transform: `translateX(-50%) rotate(${ballProgress * 1440}deg)`,
                 boxShadow: '0 4px 20px rgba(0,0,0,0.2), 0 0 20px rgba(59, 130, 246, 0.5)'
               }}
@@ -312,7 +322,7 @@ const Empresas: React.FC = () => {
             {processSteps.map((step, index) => {
               const isActive = activeStep === index; // Only exact match, not >=
               const isLeft = index % 2 === 0;
-              const stepPosition = (index / (processSteps.length - 1)) * 85; // Match ball position calculation
+              const stepPosition = 15 + (index / (processSteps.length - 1)) * 65; // Start at 15%, end at 80%
               
               return (
                 <div key={index} className="flex items-center mb-24 relative">
