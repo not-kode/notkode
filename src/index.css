@@ -167,7 +167,7 @@
   
   /* Portfolio Project Card */
   .portfolio-card {
-    @apply glass-card hover:bg-primary/5 hover:border-primary/30 group;
+    @apply glass-card hover:bg-primary/5 hover:border-primary/30;
   }
 }
 

@@ -166,7 +166,7 @@ const SobreNos: React.FC = () => {
           
           <div className="grid lg:grid-cols-2 gap-8">
             {portfolio.map((project, index) => (
-              <div key={index} className="portfolio-card">
+              <div key={index} className="portfolio-card group">
                 {/* Project Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div>
