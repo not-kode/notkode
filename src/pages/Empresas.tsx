@@ -182,9 +182,6 @@ const Empresas: React.FC = () => {
                   <Award className="w-12 h-12 text-secondary mx-2" />
                   <Bot className="w-12 h-12 text-primary ml-4" />
                 </div>
-                <h3 className="font-sora font-bold text-2xl md:text-3xl mb-4">
-                  <span className="text-gradient">Conhecimento em Negócios + Desenvolvimento + IA</span>
-                </h3>
                 <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
                   A fórmula perfeita que entrega soluções tecnológicas que realmente impactam seus resultados, 
                   da forma que sua empresa precisa, em tempo recorde.
