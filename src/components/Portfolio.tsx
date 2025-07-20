@@ -1,9 +1,13 @@
-import React from 'react';
-import { ExternalLink } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ExternalLink, Filter, X } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Portfolio: React.FC = () => {
   const { t } = useLanguage();
+  
+  // Filter states
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>([]);
 
   const portfolio = [
     {
@@ -68,75 +72,215 @@ const Portfolio: React.FC = () => {
     }
   ];
 
+  // Extract unique categories and technologies
+  const categories = useMemo(() => {
+    return Array.from(new Set(portfolio.map(project => project.category)));
+  }, []);
+
+  const allTechnologies = useMemo(() => {
+    const techSet = new Set<string>();
+    portfolio.forEach(project => {
+      project.technologies.split(', ').forEach(tech => techSet.add(tech.trim()));
+    });
+    return Array.from(techSet).sort();
+  }, []);
+
+  // Filter portfolio based on selected filters
+  const filteredPortfolio = useMemo(() => {
+    return portfolio.filter(project => {
+      const categoryMatch = !selectedCategory || project.category === selectedCategory;
+      const techMatch = selectedTechnologies.length === 0 || 
+        selectedTechnologies.every(tech => project.technologies.includes(tech));
+      return categoryMatch && techMatch;
+    });
+  }, [selectedCategory, selectedTechnologies]);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedCategory('');
+    setSelectedTechnologies([]);
+  };
+
+  // Toggle technology filter
+  const toggleTechnology = (tech: string) => {
+    setSelectedTechnologies(prev => 
+      prev.includes(tech) 
+        ? prev.filter(t => t !== tech)
+        : [...prev, tech]
+    );
+  };
+
   return (
-    <section id="portfolio" className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+    <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
       <div className="container mx-auto">
-        <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-16">
-          <span className="text-gradient">Portfolio de Sucesso</span>
+        <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-4">
+          Nosso <span className="text-gradient">Portfólio</span>
         </h2>
-        
-        <div className="grid lg:grid-cols-2 gap-8">
-          {portfolio.map((project, index) => (
-            <div key={index} className="portfolio-card group hover:scale-105 transition-all duration-300">
-              {/* Project Header */}
-              <div className="flex items-start justify-between mb-6 border-b border-border/20 pb-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-sora font-bold text-xl leading-tight mb-2">{project.name}</h3>
-                  <span className="px-3 py-1.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 inline-block">
-                    {project.category}
-                  </span>
-                </div>
-                <div className="flex flex-col items-end gap-2 ml-4">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20 whitespace-nowrap">
-                    <span>🚀</span>
-                    <span>{t('language') === 'pt' ? 'Lançamento do Projeto:' : 'Project Launch:'}</span>
-                    <span className="font-semibold">{project.year}</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20 whitespace-nowrap">
-                    <span>💸</span>
-                    <span>{t('language') === 'pt' ? 'Faturamento:' : 'Revenue:'}</span>
-                    <span className="font-semibold">{project.revenue}</span>
-                  </div>
-                </div>
-              </div>
+        <p className="text-xl text-muted-foreground text-center mb-12 max-w-3xl mx-auto">
+          Projetos que entregamos resultados extraordinários para nossos clientes
+        </p>
 
-              {/* Description */}
-              <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-                {project.description}
-              </p>
+        {/* Filter Section */}
+        <div className="mb-8 max-w-4xl mx-auto">
+          <div className="flex items-center gap-4 mb-4">
+            <Filter className="w-5 h-5 text-primary" />
+            <h3 className="font-sora font-semibold text-lg">Filtros</h3>
+            {(selectedCategory || selectedTechnologies.length > 0) && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Limpar Filtros
+              </button>
+            )}
+          </div>
 
-              {/* Technologies */}
-              <div className="mb-6">
-                <h4 className="font-semibold text-sm mb-2 text-primary">
-                  Tecnologias utilizadas:
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {project.technologies.split(', ').map((tech, techIndex) => (
-                    <span 
-                      key={techIndex}
-                      className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Link */}
-              <div className="flex items-center justify-between">
-                <a 
-                  href={project.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors font-semibold text-sm group-hover:scale-105 transition-transform"
+          {/* Category Filter */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Categoria:</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCategory('')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                  !selectedCategory 
+                    ? 'bg-primary text-white border-primary' 
+                    : 'bg-background border-border hover:border-primary'
+                }`}
+              >
+                Todas
+              </button>
+              {categories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                    selectedCategory === category 
+                      ? 'bg-primary text-white border-primary' 
+                      : 'bg-background border-border hover:border-primary'
+                  }`}
                 >
-                  <span>Ver projeto</span>
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-                <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${project.gradient} opacity-60`}></div>
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Technology Filter */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2">Tecnologias:</label>
+            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+              {allTechnologies.map(tech => (
+                <button
+                  key={tech}
+                  onClick={() => toggleTechnology(tech)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                    selectedTechnologies.includes(tech)
+                      ? 'bg-secondary text-white border-secondary' 
+                      : 'bg-background border-border hover:border-secondary'
+                  }`}
+                >
+                  {tech}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Active Filters Display */}
+          {(selectedCategory || selectedTechnologies.length > 0) && (
+            <div className="mb-4 p-3 bg-background/50 rounded-lg border">
+              <p className="text-sm text-muted-foreground mb-2">Filtros ativos:</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedCategory && (
+                  <span className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                    Categoria: {selectedCategory}
+                    <button onClick={() => setSelectedCategory('')}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {selectedTechnologies.map(tech => (
+                  <span key={tech} className="flex items-center gap-1 px-2 py-1 bg-secondary/10 text-secondary text-xs rounded-full">
+                    {tech}
+                    <button onClick={() => toggleTechnology(tech)}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
               </div>
             </div>
-          ))}
+          )}
+        </div>
+
+        {/* Portfolio Grid */}
+        <div className="grid lg:grid-cols-2 gap-8">
+          {filteredPortfolio.length > 0 ? (
+            filteredPortfolio.map((project, index) => (
+              <div key={index} className="portfolio-card group hover:scale-105 transition-all duration-300">
+                {/* Project Header */}
+                <div className="flex items-start justify-between mb-6 border-b border-border/20 pb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-sora font-bold text-xl leading-tight mb-2">{project.name}</h3>
+                    <span className="px-3 py-1.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 inline-block">
+                      {project.category}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 ml-4">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20 whitespace-nowrap">
+                      <span>🚀</span>
+                      <span>{t('language') === 'pt' ? 'Lançamento do Projeto:' : 'Project Launch:'}</span>
+                      <span className="font-semibold">{project.year}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20 whitespace-nowrap">
+                      <span>💸</span>
+                      <span>{t('language') === 'pt' ? 'Faturamento:' : 'Revenue:'}</span>
+                      <span className="font-semibold">{project.revenue}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                  {project.description}
+                </p>
+
+                {/* Technologies */}
+                <div className="mb-6">
+                  <h4 className="font-semibold text-sm mb-2 text-primary">
+                    Tecnologias utilizadas:
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {project.technologies.split(', ').map((tech, techIndex) => (
+                      <span 
+                        key={techIndex}
+                        className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Link */}
+                <div className="flex items-center justify-between">
+                  <a 
+                    href={project.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors font-semibold text-sm group-hover:scale-105 transition-transform"
+                  >
+                    <span>Ver projeto</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                  <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${project.gradient} opacity-60`}></div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">Nenhum projeto encontrado com os filtros selecionados.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>
