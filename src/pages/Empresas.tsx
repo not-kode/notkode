@@ -4,7 +4,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
 const Empresas: React.FC = () => {
-  const { t } = useLanguage();
+  const {
+    t
+  } = useLanguage();
   const processRef = useRef<HTMLDivElement>(null);
   const ballRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -59,45 +61,36 @@ const Empresas: React.FC = () => {
     title: 'Especialistas em Inteligência Artificial',
     description: 'Dominamos as mais avançadas tecnologias de IA para criar soluções inteligentes'
   }];
-
-  const processSteps = [
-    {
-      title: "Diagnóstico Profundo",
-      description: "Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.",
-      icon: "🔍"
-    },
-    {
-      title: "Estratégia Inteligente", 
-      description: "Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos um roadmap detalhado. Cada decisão é pensada para maximizar ROI e escalabilidade.",
-      icon: "🎯"
-    },
-    {
-      title: "Desenvolvimento Ágil",
-      description: "Construímos sua solução com acompanhamento em tempo real. Entregas incrementais garantem que você veja o progresso e possa ajustar o rumo quando necessário.", 
-      icon: "⚡"
-    },
-    {
-      title: "Lançamento & Crescimento",
-      description: "Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.",
-      icon: "🚀"
-    }
-  ];
-
+  const processSteps = [{
+    title: "Diagnóstico Profundo",
+    description: "Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.",
+    icon: "🔍"
+  }, {
+    title: "Estratégia Inteligente",
+    description: "Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos um roadmap detalhado. Cada decisão é pensada para maximizar ROI e escalabilidade.",
+    icon: "🎯"
+  }, {
+    title: "Desenvolvimento Ágil",
+    description: "Construímos sua solução com acompanhamento em tempo real. Entregas incrementais garantem que você veja o progresso e possa ajustar o rumo quando necessário.",
+    icon: "⚡"
+  }, {
+    title: "Lançamento & Crescimento",
+    description: "Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.",
+    icon: "🚀"
+  }];
   useEffect(() => {
     const handleScroll = () => {
       if (!processRef.current || !ballRef.current) return;
-
       const rect = processRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       const elementTop = rect.top;
       const elementHeight = rect.height;
-      
+
       // Calculate scroll progress through the element
       const startOffset = windowHeight * 0.8;
       const endOffset = windowHeight * 0.2;
       const scrollStart = elementTop - startOffset;
       const scrollEnd = elementTop - endOffset + elementHeight;
-      
       let progress = 0;
       if (scrollStart > 0) {
         progress = 0;
@@ -106,27 +99,24 @@ const Empresas: React.FC = () => {
       } else {
         progress = Math.abs(scrollStart) / (Math.abs(scrollStart) + Math.abs(scrollEnd));
       }
-
       setBallProgress(progress);
 
       // Determine active step based on precise ball position
       // Ball travels from 8% to 83% (75% range), dots are at 15% to 80% (65% range)
-      const ballPosition = 8 + (progress * 75); // Ball position from 8% to 83%
-      
+      const ballPosition = 8 + progress * 75; // Ball position from 8% to 83%
+
       // Check which dot the ball is closest to
       let nearestStep = -1;
       let minDistance = Infinity;
-      
       processSteps.forEach((_, index) => {
-        const dotPosition = 15 + (index / (processSteps.length - 1)) * 65; // Dot positions
+        const dotPosition = 15 + index / (processSteps.length - 1) * 65; // Dot positions
         const distance = Math.abs(ballPosition - dotPosition);
-        
         if (distance < minDistance) {
           minDistance = distance;
           nearestStep = index;
         }
       });
-      
+
       // Only activate if ball is very close to the dot (within 3% distance)
       if (minDistance <= 3 && nearestStep >= 0) {
         setActiveStep(nearestStep);
@@ -134,13 +124,11 @@ const Empresas: React.FC = () => {
         setActiveStep(-1); // No step is active when ball is between dots
       }
     };
-
     window.addEventListener('scroll', handleScroll);
     handleScroll(); // Initial call
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
   return <div className="min-h-screen">
       {/* Hero Section - Mais criativo */}
       <section className="relative hero-gradient py-20 px-8 overflow-hidden">
@@ -219,8 +207,7 @@ const Empresas: React.FC = () => {
           <div className="max-w-6xl mx-auto">
             {/* Individual Ingredients */}
             <div className="grid md:grid-cols-2 gap-6 mb-12">
-              {differentials.map((differential, index) => (
-                <div key={index} className="glass-card group relative">
+              {differentials.map((differential, index) => <div key={index} className="glass-card group relative">
                   <div className="flex items-center mb-4">
                     <differential.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
                     <h3 className="font-sora font-semibold text-xl">{differential.title}</h3>
@@ -229,13 +216,10 @@ const Empresas: React.FC = () => {
                     {differential.description}
                   </p>
                   {/* Plus symbol on the right of all items except the last one */}
-                  {index < differentials.length - 1 && (
-                    <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-lg hidden md:flex">
+                  {index < differentials.length - 1 && <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-lg hidden md:flex">
                       +
-                    </div>
-                  )}
-                </div>
-              ))}
+                    </div>}
+                </div>)}
             </div>
 
             {/* Equals Symbol */}
@@ -304,64 +288,48 @@ const Empresas: React.FC = () => {
           </div>
           
           {/* Interactive Process Timeline */}
-          <div className="relative max-w-6xl mx-auto">
+          <div className="relative max-w-6xl mx-auto my-[50px]">
             {/* Central connecting line - extended with padding */}
-            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{ height: 'calc(100% - 4rem)' }}></div>
+            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{
+            height: 'calc(100% - 4rem)'
+          }}></div>
             
             {/* Rolling Ball */}
-            <div 
-              ref={ballRef}
-              className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-primary to-secondary rounded-full shadow-lg border-2 border-white z-20 hidden lg:block transition-all duration-100 ease-linear"
-              style={{
-                top: `${8 + (ballProgress * 75)}%`, // Start 8% from top, travel 75% of height
-                transform: `translateX(-50%) rotate(${ballProgress * 1440}deg)`,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.2), 0 0 20px rgba(59, 130, 246, 0.5)'
-              }}
-            ></div>
+            <div ref={ballRef} className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-primary to-secondary rounded-full shadow-lg border-2 border-white z-20 hidden lg:block transition-all duration-100 ease-linear" style={{
+            top: `${8 + ballProgress * 75}%`,
+            // Start 8% from top, travel 75% of height
+            transform: `translateX(-50%) rotate(${ballProgress * 1440}deg)`,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2), 0 0 20px rgba(59, 130, 246, 0.5)'
+          }}></div>
             
             {processSteps.map((step, index) => {
-              const isActive = activeStep === index; // Only exact match, not >=
-              const isLeft = index % 2 === 0;
-              const stepPosition = 15 + (index / (processSteps.length - 1)) * 65; // Start at 15%, end at 80%
-              
-              return (
-                <div key={index} className="flex items-center mb-24 relative">
+            const isActive = activeStep === index; // Only exact match, not >=
+            const isLeft = index % 2 === 0;
+            const stepPosition = 15 + index / (processSteps.length - 1) * 65; // Start at 15%, end at 80%
+
+            return <div key={index} className="flex items-center mb-24 relative">
                   {/* Step Dot */}
-                  <div 
-                    className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-300 ${
-                      isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'
-                    }`}
-                    style={{ top: `${stepPosition}%` }}
-                  ></div>
+                  <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-300 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`} style={{
+                top: `${stepPosition}%`
+              }}></div>
                   
                   {/* Content Container - Only title and icon number */}
-                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} transition-opacity duration-300 ${
-                    isActive ? 'opacity-100' : 'opacity-40'
-                  }`}>
-                    <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${
-                      isActive 
-                        ? 'translate-x-0 opacity-100 scale-100' 
-                        : 'opacity-70 scale-95'
-                    }`}>
+                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-40'}`}>
+                    <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${isActive ? 'translate-x-0 opacity-100 scale-100' : 'opacity-70 scale-95'}`}>
                       <div className="flex items-center mb-6">
-                        <div className={`w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg ${
-                          isActive ? 'animate-pulse shadow-primary/50' : ''
-                        }`}>
+                        <div className={`w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg ${isActive ? 'animate-pulse shadow-primary/50' : ''}`}>
                           {String(index + 1).padStart(2, '0')}
                         </div>
                         <div className="ml-6">
                           <h3 className="font-sora font-bold text-xl mb-2">{step.title}</h3>
-                          <div className={`w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300 ${
-                            isActive ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-50'
-                          }`}></div>
+                          <div className={`w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-300 ${isActive ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-50'}`}></div>
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Icon Container with Description - Only appears when ball is exactly on dot */}
-                  {isActive && (
-                    <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-12' : 'pr-12'} animate-fade-in-up`}>
+                  {isActive && <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-12' : 'pr-12'} animate-fade-in-up`}>
                       <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 transition-all duration-300 scale-100 rotate-0 shadow-lg shadow-primary/10">
                         <div className="flex items-center mb-4">
                           <div className="text-6xl opacity-80 mr-4 animate-bounce">
@@ -374,11 +342,9 @@ const Empresas: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                    </div>}
+                </div>;
+          })}
           </div>
         </div>
       </section>
