@@ -13,7 +13,9 @@ import {
   Zap,
   Brain,
   TrendingUp,
-  Award
+  Award,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
@@ -94,14 +96,51 @@ const Empresas: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="hero-gradient py-20 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="font-sora font-bold text-4xl md:text-6xl mb-8 animate-fade-in-up max-w-5xl mx-auto">
-            <span className="text-gradient">{t('empresas.hero.title')}</span>
-          </h1>
-          <div className="animate-fade-in-up">
-            <WhatsAppButton className="text-lg px-8 py-4" />
+      {/* Hero Section - Mais criativo */}
+      <section className="relative hero-gradient py-24 px-4 overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-40 h-40 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-primary/5 rounded-full blur-2xl animate-pulse delay-500"></div>
+        </div>
+        
+        <div className="container mx-auto relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center glass-card px-4 py-2 mb-8 animate-fade-in-up">
+              <Sparkles className="w-4 h-4 text-primary mr-2" />
+              <span className="text-sm font-medium text-primary">Soluções Tecnológicas Sob Medida</span>
+            </div>
+            
+            {/* Main Title */}
+            <h1 className="font-sora font-bold text-4xl md:text-6xl lg:text-7xl mb-8 animate-fade-in-up leading-tight">
+              Independente de qual o seu{' '}
+              <span className="text-gradient relative">
+                desafio
+                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary rounded-full opacity-50"></div>
+              </span>
+              , desenvolvemos tecnologia{' '}
+              <span className="text-gradient">sobre medida</span> que acelera sua empresa em{' '}
+              <span className="text-gradient">tempo recorde</span>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="text-xl md:text-2xl text-muted-foreground mb-12 animate-fade-in-up max-w-3xl mx-auto leading-relaxed">
+              Transformamos ideias complexas em soluções simples que impulsionam o crescimento do seu negócio
+            </p>
+            
+            {/* CTA Button - Preenchido e destacado */}
+            <div className="animate-fade-in-up">
+              <WhatsAppButton 
+                className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0"
+              >
+                <span className="flex items-center">
+                  Acelerar Minha Empresa
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </span>
+              </WhatsAppButton>
+            </div>
           </div>
         </div>
       </section>
@@ -262,7 +301,7 @@ const Empresas: React.FC = () => {
             <p className="text-xl text-muted-foreground mb-8">
               Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso.
             </p>
-            <WhatsAppButton className="text-lg px-8 py-4" />
+            <WhatsAppButton className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
           </div>
         </div>
       </section>

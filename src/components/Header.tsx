@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Moon, Sun, Globe } from 'lucide-react';
@@ -17,8 +18,16 @@ const Header: React.FC = () => {
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
-
-  const navItems = [
+  
+  // Check if user is on empresas or parcerias pages
+  const isOnEmpresasOrParcerias = location.pathname === '/empresas' || location.pathname === '/parcerias';
+  
+  // Define navigation items based on current page
+  const navItems = isOnEmpresasOrParcerias ? [
+    { path: '/sobre-nos#portfolio', label: 'Portfolio' },
+    { path: '/sobre-nos', label: t('nav.sobre') },
+    { path: '/blog', label: t('nav.blog') },
+  ] : [
     { path: '/empresas', label: t('nav.empresas') },
     { path: '/parcerias', label: t('nav.parcerias') },
     { path: '/sobre-nos', label: t('nav.sobre') },
@@ -30,12 +39,11 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 h-full flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2 group">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-            <span className="text-white font-bold text-sm">N</span>
-          </div>
-          <span className="font-sora font-bold text-xl text-gradient group-hover:scale-105 transition-transform">
-            Notkode
-          </span>
+          <img 
+            src={theme === 'dark' ? '/logo-dark.png' : '/logo-light.png'}
+            alt="Notkode"
+            className="h-8 w-auto group-hover:scale-105 transition-transform"
+          />
         </Link>
 
         {/* Navigation Menu - Hidden on mobile */}
@@ -46,7 +54,7 @@ const Header: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  isActive(item.path)
+                  isActive(item.path.split('#')[0])
                     ? 'bg-primary/20 text-primary'
                     : 'text-foreground/80 hover:text-primary hover:bg-primary/10'
                 }`}

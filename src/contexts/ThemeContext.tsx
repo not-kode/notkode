@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Theme = 'dark' | 'light';
@@ -12,25 +13,27 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Default to dark mode as specified in PRD
-    const stored = localStorage.getItem('notkode-theme');
-    return (stored as Theme) || 'dark';
+    // Check localStorage first, then default to dark
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('notkode-theme');
+      return (stored as Theme) || 'dark';
+    }
+    return 'dark';
   });
 
   useEffect(() => {
-    localStorage.setItem('notkode-theme', theme);
-    
-    // Apply theme to document
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('notkode-theme', theme);
+      
+      // Apply theme to document
+      const root = document.documentElement;
+      root.classList.remove('dark', 'light');
+      root.classList.add(theme);
     }
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
   };
 
   return (
