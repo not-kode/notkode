@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -186,7 +185,6 @@ const Portfolio: React.FC = () => {
                     <span>Ver projeto</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
-                  <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${project.gradient} opacity-60`}></div>
                 </div>
               </div>
             ))
