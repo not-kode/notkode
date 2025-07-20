@@ -162,49 +162,6 @@ const Empresas: React.FC = () => {
               ))}
             </div>
 
-            {/* Equals Symbol */}
-            <div className="flex justify-center mb-8">
-              <div className="glass-card px-8 py-4">
-                <div className="text-4xl font-bold text-primary text-center">=</div>
-              </div>
-            </div>
-
-            {/* Final Result */}
-            <div className="glass-card max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
-              {/* Background decoration */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-3xl"></div>
-              <div className="absolute top-4 right-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-4 left-4 w-16 h-16 bg-secondary/10 rounded-full blur-xl"></div>
-              
-              <div className="relative z-10 p-8">
-                <div className="flex items-center justify-center mb-6">
-                  <Brain className="w-12 h-12 text-primary mr-4" />
-                  <Award className="w-12 h-12 text-secondary mx-2" />
-                  <Bot className="w-12 h-12 text-primary ml-4" />
-                </div>
-                <h3 className="font-sora font-bold text-2xl md:text-3xl mb-4">
-                  <span className="text-gradient">Conhecimento em Negócios + Desenvolvimento + IA</span>
-                </h3>
-                <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
-                  A fórmula perfeita que entrega soluções tecnológicas que realmente impactam seus resultados, 
-                  da forma que sua empresa precisa, em tempo recorde.
-                </p>
-                <div className="flex flex-wrap justify-center gap-4 text-sm">
-                  <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
-                    <CheckCircle className="w-4 h-4 text-primary mr-2" />
-                    <span>Solução Sob Medida</span>
-                  </div>
-                  <div className="flex items-center bg-secondary/10 px-4 py-2 rounded-full">
-                    <Zap className="w-4 h-4 text-secondary mr-2" />
-                    <span>Tempo Recorde</span>
-                  </div>
-                  <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
-                    <TrendingUp className="w-4 h-4 text-primary mr-2" />
-                    <span>Resultados Garantidos</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
