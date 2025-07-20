@@ -18,6 +18,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sora: ['Sora', 'sans-serif'],
+				inter: ['Inter', 'system-ui', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -61,6 +65,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				notkode: {
+					primary: 'hsl(var(--notkode-primary))',
+					secondary: 'hsl(var(--notkode-secondary))',
+					'light-gray': 'hsl(var(--notkode-light-gray))',
+					'dark-gray': 'hsl(var(--notkode-dark-gray))',
+					'deep-navy': 'hsl(var(--notkode-deep-navy))'
 				}
 			},
 			borderRadius: {

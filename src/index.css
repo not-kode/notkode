@@ -1,97 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Notkode Design System - Liquid Glass Theme */
 
 @layer base {
   :root {
+    /* Notkode Brand Colors - HSL values */
+    --notkode-primary: 189 71% 58%; /* #4bd2e5 */
+    --notkode-secondary: 184 62% 71%; /* #8ee2e5 */
+    --notkode-light-gray: 0 0% 90%; /* #e6e6e6 */
+    --notkode-dark-gray: 216 6% 26%; /* #41434a */
+    --notkode-deep-navy: 228 61% 11%; /* #131520 */
+    
+    /* Shadcn Theme Colors - Light Mode */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --foreground: 228 61% 11%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 228 61% 11%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --popover-foreground: 228 61% 11%;
+    
+    --primary: 189 71% 58%;
+    --primary-foreground: 228 61% 11%;
+    
+    --secondary: 184 62% 71%;
+    --secondary-foreground: 228 61% 11%;
+    
+    --muted: 0 0% 96%;
+    --muted-foreground: 216 6% 46%;
+    
+    --accent: 184 62% 71%;
+    --accent-foreground: 228 61% 11%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 189 71% 58%;
+    
+    --radius: 1rem;
+    
+    /* Glass Morphism Variables */
+    --glass-bg: 0 0% 100% / 0.1;
+    --glass-border: 0 0% 100% / 0.2;
+    --glass-backdrop-blur: 16px;
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Dark Theme - Default */
+    --background: 228 61% 11%;
+    --foreground: 0 0% 90%;
+    
+    --card: 228 61% 11%;
+    --card-foreground: 0 0% 90%;
+    
+    --popover: 228 61% 11%;
+    --popover-foreground: 0 0% 90%;
+    
+    --primary: 189 71% 58%;
+    --primary-foreground: 228 61% 11%;
+    
+    --secondary: 184 62% 71%;
+    --secondary-foreground: 228 61% 11%;
+    
+    --muted: 216 6% 26%;
+    --muted-foreground: 0 0% 70%;
+    
+    --accent: 184 62% 71%;
+    --accent-foreground: 228 61% 11%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 216 6% 26%;
+    --input: 216 6% 26%;
+    --ring: 189 71% 58%;
+    
+    /* Dark Glass Morphism */
+    --glass-bg: 228 61% 11% / 0.1;
+    --glass-border: 0 0% 100% / 0.1;
+    --glass-backdrop-blur: 16px;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
+}
 }
 
 @layer base {
@@ -100,6 +99,110 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
+    /* Default to dark mode */
+    @apply dark;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sora;
+  }
+}
+
+@layer components {
+  /* Liquid Glass Effects */
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--glass-backdrop-blur));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-shadow);
+  }
+  
+  .glass-card {
+    @apply glass rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+  }
+  
+  .glass-header {
+    @apply glass fixed top-0 left-0 right-0 z-50 transition-all duration-300;
+  }
+  
+  .glass-button {
+    @apply glass rounded-full px-6 py-3 transition-all duration-300 hover:scale-105 hover:brightness-110;
+  }
+  
+  /* WhatsApp Button */
+  .whatsapp-button {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    @apply glass-button text-white font-semibold shadow-lg hover:shadow-2xl;
+  }
+  
+  /* Selection Cards */
+  .selection-card {
+    @apply glass-card cursor-pointer hover:bg-primary/10 hover:border-primary/30;
+  }
+  
+  /* Navigation Menu */
+  .nav-menu {
+    @apply glass rounded-full px-8 py-2;
+  }
+  
+  /* Hero Section */
+  .hero-gradient {
+    background: linear-gradient(135deg, 
+      hsl(var(--background)) 0%, 
+      hsl(var(--primary)) / 0.05 50%, 
+      hsl(var(--secondary)) / 0.05 100%
+    );
+  }
+  
+  /* Language Selector */
+  .lang-selector {
+    @apply glass rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 hover:bg-primary/10;
+  }
+  
+  /* Blog Card */
+  .blog-card {
+    @apply glass-card hover:bg-card/50 hover:border-primary/20;
+  }
+  
+  /* Portfolio Project Card */
+  .portfolio-card {
+    @apply glass-card hover:bg-primary/5 hover:border-primary/30 group;
+  }
+}
+
+@layer utilities {
+  /* Custom animations for liquid glass */
+  .animate-glass-float {
+    animation: glass-float 6s ease-in-out infinite;
+  }
+  
+  @keyframes glass-float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
+  }
+  
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Text gradient */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
