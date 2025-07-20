@@ -310,7 +310,7 @@ const Empresas: React.FC = () => {
                     isActive ? 'bg-primary scale-110' : 'bg-muted'
                   }`}></div>
                   
-                  {/* Content Container */}
+                  {/* Content Container - Only title and icon number */}
                   <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} ${
                     isActive ? 'animate-fade-in-up' : 'opacity-50'
                   }`}>
@@ -336,24 +336,26 @@ const Empresas: React.FC = () => {
                           }`}></div>
                         </div>
                       </div>
-                      <p className="text-muted-foreground text-base leading-relaxed">
-                        {step.description}
-                      </p>
                     </div>
                   </div>
                   
-                  {/* Decorative Icon Side */}
-                  <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-12' : 'pr-12'} ${
-                    isActive ? 'animate-fade-in-up' : 'opacity-30'
-                  }`}>
-                    <div className={`glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center justify-center transition-all duration-700 ${
-                      isActive ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
-                    }`}>
-                      <div className="text-6xl opacity-60 transition-all duration-500">
-                        {step.icon}
+                  {/* Icon Container with Description - Only appears when active */}
+                  {isActive && (
+                    <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-12' : 'pr-12'} animate-fade-in-up`}>
+                      <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 transition-all duration-700 scale-100 rotate-0">
+                        <div className="flex items-center mb-4">
+                          <div className="text-6xl opacity-60 mr-4">
+                            {step.icon}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-muted-foreground text-base leading-relaxed">
+                              {step.description}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
