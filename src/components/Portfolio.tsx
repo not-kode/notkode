@@ -1,13 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { ExternalLink, Filter, X } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Portfolio: React.FC = () => {
   const { t } = useLanguage();
   
-  // Filter states
+  // Filter state - only category
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>([]);
 
   const portfolio = [
     {
@@ -72,43 +71,18 @@ const Portfolio: React.FC = () => {
     }
   ];
 
-  // Extract unique categories and technologies
+  // Extract unique categories
   const categories = useMemo(() => {
     return Array.from(new Set(portfolio.map(project => project.category)));
   }, []);
 
-  const allTechnologies = useMemo(() => {
-    const techSet = new Set<string>();
-    portfolio.forEach(project => {
-      project.technologies.split(', ').forEach(tech => techSet.add(tech.trim()));
-    });
-    return Array.from(techSet).sort();
-  }, []);
-
-  // Filter portfolio based on selected filters
+  // Filter portfolio based on selected category only
   const filteredPortfolio = useMemo(() => {
     return portfolio.filter(project => {
-      const categoryMatch = !selectedCategory || project.category === selectedCategory;
-      const techMatch = selectedTechnologies.length === 0 || 
-        selectedTechnologies.every(tech => project.technologies.includes(tech));
-      return categoryMatch && techMatch;
+      return !selectedCategory || project.category === selectedCategory;
     });
-  }, [selectedCategory, selectedTechnologies]);
+  }, [selectedCategory]);
 
-  // Clear all filters
-  const clearFilters = () => {
-    setSelectedCategory('');
-    setSelectedTechnologies([]);
-  };
-
-  // Toggle technology filter
-  const toggleTechnology = (tech: string) => {
-    setSelectedTechnologies(prev => 
-      prev.includes(tech) 
-        ? prev.filter(t => t !== tech)
-        : [...prev, tech]
-    );
-  };
 
   return (
     <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
@@ -121,95 +95,40 @@ const Portfolio: React.FC = () => {
         </p>
 
         {/* Filter Section */}
-        <div className="mb-8 max-w-4xl mx-auto">
-          <div className="flex items-center gap-4 mb-4">
-            <Filter className="w-5 h-5 text-primary" />
-            <h3 className="font-sora font-semibold text-lg">Filtros</h3>
-            {(selectedCategory || selectedTechnologies.length > 0) && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                <X className="w-4 h-4" />
-                Limpar Filtros
-              </button>
-            )}
-          </div>
-
-          {/* Category Filter */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Categoria:</label>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
-                  !selectedCategory 
-                    ? 'bg-primary text-white border-primary' 
-                    : 'bg-background border-border hover:border-primary'
-                }`}
-              >
-                Todas
-              </button>
-              {categories.map(category => (
+        <div className="mb-12 max-w-2xl mx-auto">
+          {/* Category Filter with Liquid Glass Effect */}
+          <div className="glass-card backdrop-blur-xl bg-background/30 border border-white/20 shadow-2xl">
+            <div className="p-6">
+              <div className="text-center mb-4">
+                <h3 className="font-sora font-semibold text-lg text-foreground">Filtrar por Categoria</h3>
+              </div>
+              <div className="flex flex-wrap justify-center gap-3">
                 <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
-                    selectedCategory === category 
-                      ? 'bg-primary text-white border-primary' 
-                      : 'bg-background border-border hover:border-primary'
+                  onClick={() => setSelectedCategory('')}
+                  className={`px-6 py-3 font-medium rounded-full border-2 transition-all duration-300 transform hover:scale-105 ${
+                    !selectedCategory 
+                      ? 'bg-gradient-to-r from-primary to-secondary text-white border-transparent shadow-lg shadow-primary/30' 
+                      : 'bg-background/50 backdrop-blur border-border hover:border-primary/50 hover:bg-primary/10'
                   }`}
                 >
-                  {category}
+                  Todas as Categorias
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Technology Filter */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Tecnologias:</label>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-              {allTechnologies.map(tech => (
-                <button
-                  key={tech}
-                  onClick={() => toggleTechnology(tech)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
-                    selectedTechnologies.includes(tech)
-                      ? 'bg-secondary text-white border-secondary' 
-                      : 'bg-background border-border hover:border-secondary'
-                  }`}
-                >
-                  {tech}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Active Filters Display */}
-          {(selectedCategory || selectedTechnologies.length > 0) && (
-            <div className="mb-4 p-3 bg-background/50 rounded-lg border">
-              <p className="text-sm text-muted-foreground mb-2">Filtros ativos:</p>
-              <div className="flex flex-wrap gap-2">
-                {selectedCategory && (
-                  <span className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-                    Categoria: {selectedCategory}
-                    <button onClick={() => setSelectedCategory('')}>
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {selectedTechnologies.map(tech => (
-                  <span key={tech} className="flex items-center gap-1 px-2 py-1 bg-secondary/10 text-secondary text-xs rounded-full">
-                    {tech}
-                    <button onClick={() => toggleTechnology(tech)}>
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
+                {categories.map(category => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-6 py-3 font-medium rounded-full border-2 transition-all duration-300 transform hover:scale-105 ${
+                      selectedCategory === category 
+                        ? 'bg-gradient-to-r from-primary to-secondary text-white border-transparent shadow-lg shadow-primary/30' 
+                        : 'bg-background/50 backdrop-blur border-border hover:border-primary/50 hover:bg-primary/10'
+                    }`}
+                  >
+                    {category}
+                  </button>
                 ))}
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Portfolio Grid */}
