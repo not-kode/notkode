@@ -95,11 +95,26 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'float': {
+					'0%, 100%': { 
+						transform: 'translateY(0px) translateX(0px) scale(1)' 
+					},
+					'25%': { 
+						transform: 'translateY(-15px) translateX(10px) scale(1.05)' 
+					},
+					'50%': { 
+						transform: 'translateY(-20px) translateX(-5px) scale(0.95)' 
+					},
+					'75%': { 
+						transform: 'translateY(-10px) translateX(-10px) scale(1.02)' 
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 6s ease-in-out infinite'
 			}
 		}
 	},
