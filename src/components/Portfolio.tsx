@@ -80,9 +80,13 @@ const Portfolio: React.FC = () => {
             <div key={index} className="portfolio-card group hover:scale-105 transition-all duration-300">
               {/* Project Header */}
               <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="font-sora font-bold text-xl mb-1">{project.name}</h3>
-                  <span className="text-sm text-primary font-semibold">{project.category}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-sora font-bold text-xl">{project.name}</h3>
+                    <span className="px-3 py-1 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 ml-3">
+                      {project.category}
+                    </span>
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">{project.year}</div>
