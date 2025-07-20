@@ -90,27 +90,11 @@ const Empresas: React.FC = () => {
       const elementTop = rect.top;
       const elementHeight = rect.height;
 
-      // Calculate scroll progress through the element
-      const startOffset = windowHeight * 0.7; // When to start activating steps
-      const endOffset = windowHeight * 0.3; // When to finish activating steps
-      const scrollStart = elementTop - startOffset;
-      const scrollEnd = elementTop - endOffset + elementHeight;
+      // Calculate which step should be active based on scroll position
+      const scrollProgress = Math.max(0, Math.min(1, (windowHeight * 0.7 - elementTop) / (elementHeight * 0.8)));
+      const stepIndex = Math.min(Math.floor(scrollProgress * processSteps.length), processSteps.length - 1);
       
-      let progress = 0;
-      if (scrollStart > 0) {
-        progress = 0;
-      } else if (scrollEnd < 0) {
-        progress = 1;
-      } else {
-        progress = Math.abs(scrollStart) / (Math.abs(scrollStart) + Math.abs(scrollEnd));
-      }
-
-      // Determine active step based on scroll progress
-      // Divide progress into equal segments for each step
-      const stepProgress = progress * processSteps.length;
-      const currentStep = Math.min(Math.floor(stepProgress), processSteps.length - 1);
-      
-      setActiveStep(currentStep);
+      setActiveStep(stepIndex);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -288,12 +272,12 @@ const Empresas: React.FC = () => {
             const isActive = activeStep >= index;
             const isLeft = index % 2 === 0;
 
-            return <div key={index} className="flex items-center mb-24 relative">
+            return <div key={index} className="flex items-center mb-24 relative group">
                   {/* Step Dot */}
                   <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`}></div>
                   
                   {/* Content Container */}
-                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'}`}>
+                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
                     <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${isActive ? 'translate-x-0 opacity-100 scale-100' : 'opacity-70 scale-95'}`}>
                       <div className="flex items-center mb-6">
                         <div className={`w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg ${isActive ? 'animate-pulse shadow-primary/50' : ''}`}>
@@ -304,10 +288,26 @@ const Empresas: React.FC = () => {
                           <div className={`w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500 ${isActive ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-50'}`}></div>
                         </div>
                       </div>
+                      
+                      {/* Description for Mobile/Tablet - shown on hover */}
+                      <div className="lg:hidden opacity-0 group-hover:opacity-100 transition-all duration-300 mt-4 transform translate-y-4 group-hover:translate-y-0">
+                        <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-2xl p-6">
+                          <div className="flex items-center mb-3">
+                            <div className="text-4xl opacity-80 mr-3">
+                              {step.icon}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-muted-foreground text-sm leading-relaxed">
+                                {step.description}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Description Container */}
+                  {/* Description Container - Desktop only */}
                   <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-12' : 'pr-12'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
                     <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 shadow-lg shadow-primary/10">
                       <div className="flex items-center mb-4">
