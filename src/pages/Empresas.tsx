@@ -121,12 +121,7 @@ const Empresas: React.FC = () => {
             
             {/* Main Title */}
             <h1 className="font-sora font-bold text-4xl md:text-6xl lg:text-7xl mb-8 animate-fade-in-up leading-tight">
-              Independente de qual o seu{' '}
-              <span className="text-gradient relative">
-                desafio
-                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary rounded-full opacity-50"></div>
-              </span>
-              , desenvolvemos tecnologia{' '}
+              Desenvolvemos tecnologia{' '}
               <span className="text-gradient">sobre medida</span> que acelera sua empresa em{' '}
               <span className="text-gradient">tempo recorde</span>
             </h1>
