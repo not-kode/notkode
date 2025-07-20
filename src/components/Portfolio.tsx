@@ -87,9 +87,10 @@ const Portfolio: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-right ml-4 flex-shrink-0 space-y-2">
-                  <div className="text-sm text-muted-foreground font-medium">
-                    <span className="block text-xs mb-0.5">{t('language') === 'pt' ? 'Lançamento do Projeto' : 'Project Launch'}</span>
-                    {project.year}
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20">
+                    <span>🚀</span>
+                    <span>{t('language') === 'pt' ? 'Lançamento do Projeto:' : 'Project Launch:'}</span>
+                    <span className="font-semibold">{project.year}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm font-semibold text-green-500">
                     <span className="text-xs text-muted-foreground">{t('language') === 'pt' ? 'Faturamento:' : 'Revenue:'}</span>
