@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import Portfolio from '@/components/Portfolio';
 
 const Empresas: React.FC = () => {
   const { t } = useLanguage();
@@ -286,6 +287,9 @@ const Empresas: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Portfolio Section */}
+      <Portfolio />
 
       {/* CTA Section */}
       <section className="py-20 px-4">
