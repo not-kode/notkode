@@ -49,13 +49,9 @@ const Empresas: React.FC = () => {
     title: t('empresas.differential.diagnosis'),
     description: 'Analisamos seu negócio para identificar as melhores oportunidades'
   }, {
-    icon: Zap,
-    title: t('empresas.differential.tools'),
-    description: 'Escolhemos as tecnologias ideais para cada tipo de projeto'
-  }, {
     icon: TrendingUp,
-    title: t('empresas.differential.value'),
-    description: 'Priorizamos entregas que impactam diretamente nos seus resultados'
+    title: 'Foco em entregar valor rapidamente',
+    description: 'Escolhemos as tecnologias ideais para cada tipo de projeto, acelerando o tempo das entregas que impactam diretamente nos seus resultados'
   }, {
     icon: Bot,
     title: 'Especialistas em Inteligência Artificial',
