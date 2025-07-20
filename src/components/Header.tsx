@@ -35,7 +35,7 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-transparent">
+    <header className="fixed top-0 left-0 right-0 z-50 h-16">
       <div className="container mx-auto px-4 h-full flex items-center justify-center pt-4">
         <div className="glass rounded-full flex items-center space-x-6 px-8 py-3 transition-all duration-300 hover:scale-105">{/* Centralized Navigation Group with Glass Effect */}
           {/* Logo */}
