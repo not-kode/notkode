@@ -86,7 +86,10 @@ const Portfolio: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">{project.year}</div>
-                  <div className="font-semibold text-green-500">{project.revenue}</div>
+                  <div className="font-semibold text-green-500">
+                    <span className="text-xs text-muted-foreground block">Faturamento / Revenue</span>
+                    {project.revenue}
+                  </div>
                 </div>
               </div>
 
