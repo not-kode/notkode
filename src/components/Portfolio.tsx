@@ -87,7 +87,7 @@ const Portfolio: React.FC = () => {
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">{project.year}</div>
                   <div className="font-semibold text-green-500">
-                    <span className="text-xs text-muted-foreground block">{t('portfolio.revenue')}</span>
+                    <span className="text-xs text-muted-foreground block">{t('language') === 'pt' ? 'Faturamento' : 'Revenue'}</span>
                     {project.revenue}
                   </div>
                 </div>
