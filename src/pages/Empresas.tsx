@@ -132,14 +132,10 @@ const Empresas: React.FC = () => {
             
             {/* CTA Button - Preenchido e destacado */}
             <div className="animate-fade-in-up">
-              <WhatsAppButton 
-                className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0"
-              >
-                <span className="flex items-center">
-                  Acelerar Minha Empresa
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </span>
-              </WhatsAppButton>
+            <WhatsAppButton 
+              text="Acelerar Minha Empresa"
+              className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0"
+            />
             </div>
           </div>
         </div>
@@ -301,7 +297,10 @@ const Empresas: React.FC = () => {
             <p className="text-xl text-muted-foreground mb-8">
               Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso.
             </p>
-            <WhatsAppButton className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
+            <WhatsAppButton 
+              text="Entrar em Contato"
+              className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" 
+            />
           </div>
         </div>
       </section>

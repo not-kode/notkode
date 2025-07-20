@@ -122,13 +122,9 @@ const Parcerias: React.FC = () => {
             {/* CTA Button - Preenchido e destacado */}
             <div className="animate-fade-in-up">
               <WhatsAppButton 
+                text="Quero Ser Parceiro"
                 className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0"
-              >
-                <span className="flex items-center">
-                  Quero Ser Parceiro
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </span>
-              </WhatsAppButton>
+              />
             </div>
             
             {/* Stats */}
