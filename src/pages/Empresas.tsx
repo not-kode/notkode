@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
 const Empresas: React.FC = () => {
-  const {
-    t
-  } = useLanguage();
+  const { t } = useLanguage();
+  const processRef = useRef<HTMLDivElement>(null);
+  const ballRef = useRef<HTMLDivElement>(null);
+  const [activeStep, setActiveStep] = useState(0);
+  const [ballProgress, setBallProgress] = useState(0);
   const services = [{
     icon: Building,
     title: t('empresas.services.internal'),
@@ -57,6 +59,68 @@ const Empresas: React.FC = () => {
     title: 'Especialistas em Inteligência Artificial',
     description: 'Dominamos as mais avançadas tecnologias de IA para criar soluções inteligentes'
   }];
+
+  const processSteps = [
+    {
+      title: "Diagnóstico Profundo",
+      description: "Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.",
+      icon: "🔍"
+    },
+    {
+      title: "Estratégia Inteligente", 
+      description: "Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos um roadmap detalhado. Cada decisão é pensada para maximizar ROI e escalabilidade.",
+      icon: "🎯"
+    },
+    {
+      title: "Desenvolvimento Ágil",
+      description: "Construímos sua solução com acompanhamento em tempo real. Entregas incrementais garantem que você veja o progresso e possa ajustar o rumo quando necessário.", 
+      icon: "⚡"
+    },
+    {
+      title: "Lançamento & Crescimento",
+      description: "Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.",
+      icon: "🚀"
+    }
+  ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!processRef.current || !ballRef.current) return;
+
+      const rect = processRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const elementTop = rect.top;
+      const elementHeight = rect.height;
+      
+      // Calculate scroll progress through the element
+      const startOffset = windowHeight * 0.8;
+      const endOffset = windowHeight * 0.2;
+      const scrollStart = elementTop - startOffset;
+      const scrollEnd = elementTop - endOffset + elementHeight;
+      
+      let progress = 0;
+      if (scrollStart > 0) {
+        progress = 0;
+      } else if (scrollEnd < 0) {
+        progress = 1;
+      } else {
+        progress = Math.abs(scrollStart) / (Math.abs(scrollStart) + Math.abs(scrollEnd));
+      }
+
+      setBallProgress(progress);
+
+      // Determine active step based on progress
+      const stepProgress = progress * (processSteps.length - 1);
+      const currentStep = Math.round(stepProgress);
+      setActiveStep(currentStep);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial call
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return <div className="min-h-screen">
       {/* Hero Section - Mais criativo */}
       <section className="relative hero-gradient py-20 px-8 overflow-hidden">
@@ -201,13 +265,12 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Process Section - Creative Design */}
-      <section className="relative py-20 px-8 overflow-hidden">
+      {/* Process Section - Interactive Timeline */}
+      <section ref={processRef} className="relative py-20 px-8 overflow-hidden min-h-screen">
         {/* Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-10 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/3 to-secondary/3 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
         
         <div className="container mx-auto relative z-10">
@@ -220,114 +283,80 @@ const Empresas: React.FC = () => {
             </p>
           </div>
           
-          {/* Process Steps - Creative Timeline */}
+          {/* Interactive Process Timeline */}
           <div className="relative max-w-6xl mx-auto">
             {/* Central connecting line */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-primary via-secondary to-primary opacity-30 hidden lg:block"></div>
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block"></div>
             
-            {/* Step 1 */}
-            <div className="flex items-center mb-24 relative">
-              <div className="lg:w-1/2 lg:pr-12 w-full">
-                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl">
-                  <div className="flex items-center mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg">
-                      01
+            {/* Rolling Ball */}
+            <div 
+              ref={ballRef}
+              className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-gradient-to-br from-primary to-secondary rounded-full shadow-lg border-2 border-white z-20 hidden lg:block transition-all duration-300 ease-out"
+              style={{
+                top: `${ballProgress * 80}%`,
+                transform: `translateX(-50%) rotate(${ballProgress * 720}deg)`,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.2), 0 0 20px rgba(59, 130, 246, 0.5)'
+              }}
+            ></div>
+            
+            {processSteps.map((step, index) => {
+              const isActive = activeStep >= index;
+              const isLeft = index % 2 === 0;
+              
+              return (
+                <div key={index} className="flex items-center mb-24 relative">
+                  {/* Step Dot */}
+                  <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${
+                    isActive ? 'bg-primary scale-110' : 'bg-muted'
+                  }`}></div>
+                  
+                  {/* Content Container */}
+                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} ${
+                    isActive ? 'animate-fade-in-up' : 'opacity-50'
+                  }`}>
+                    <div className={`glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl transform ${
+                      isActive 
+                        ? isLeft 
+                          ? 'translate-x-0 opacity-100' 
+                          : 'translate-x-0 opacity-100'
+                        : isLeft
+                          ? '-translate-x-20 opacity-60'
+                          : 'translate-x-20 opacity-60'
+                    } transition-all duration-700 ease-out`}>
+                      <div className="flex items-center mb-6">
+                        <div className={`w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg ${
+                          isActive ? 'animate-pulse' : ''
+                        }`}>
+                          {String(index + 1).padStart(2, '0')}
+                        </div>
+                        <div className="ml-6">
+                          <h3 className="font-sora font-bold text-xl mb-2">{step.title}</h3>
+                          <div className={`w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500 ${
+                            isActive ? 'scale-x-100' : 'scale-x-0'
+                          }`}></div>
+                        </div>
+                      </div>
+                      <p className="text-muted-foreground text-base leading-relaxed">
+                        {step.description}
+                      </p>
                     </div>
-                    <div className="ml-6">
-                      <h3 className="font-sora font-bold text-2xl mb-2">Diagnóstico Profundo</h3>
-                      <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
+                  </div>
+                  
+                  {/* Decorative Icon Side */}
+                  <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-12' : 'pr-12'} ${
+                    isActive ? 'animate-fade-in-up' : 'opacity-30'
+                  }`}>
+                    <div className={`glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center justify-center transition-all duration-700 ${
+                      isActive ? 'scale-100 rotate-0' : 'scale-75 rotate-12'
+                    }`}>
+                      <div className="text-6xl opacity-60 transition-all duration-500">
+                        {step.icon}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full shadow-lg border-4 border-background"></div>
-              <div className="lg:w-1/2 lg:pl-12 hidden lg:block">
-                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center">
-                  <div className="text-6xl opacity-20 text-primary mr-6">🔍</div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="flex items-center mb-24 relative lg:flex-row-reverse">
-              <div className="lg:w-1/2 lg:pl-12 w-full">
-                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl">
-                  <div className="flex items-center mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg">
-                      02
-                    </div>
-                    <div className="ml-6">
-                      <h3 className="font-sora font-bold text-2xl mb-2">Estratégia Inteligente</h3>
-                      <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-secondary rounded-full shadow-lg border-4 border-background"></div>
-              <div className="lg:w-1/2 lg:pr-12 hidden lg:block">
-                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-secondary/10 to-primary/10 border border-secondary/20 flex items-center">
-                  <div className="text-6xl opacity-20 text-secondary mr-6">🎯</div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos um roadmap detalhado. Cada decisão é pensada para maximizar ROI e escalabilidade.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="flex items-center mb-24 relative">
-              <div className="lg:w-1/2 lg:pr-12 w-full">
-                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl">
-                  <div className="flex items-center mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg">
-                      03
-                    </div>
-                    <div className="ml-6">
-                      <h3 className="font-sora font-bold text-2xl mb-2">Desenvolvimento Ágil</h3>
-                      <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full shadow-lg border-4 border-background"></div>
-              <div className="lg:w-1/2 lg:pl-12 hidden lg:block">
-                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 flex items-center">
-                  <div className="text-6xl opacity-20 text-primary mr-6">⚡</div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Construímos sua solução com acompanhamento em tempo real. Entregas incrementais garantem que você veja o progresso e possa ajustar o rumo quando necessário.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 4 */}
-            <div className="flex items-center relative lg:flex-row-reverse">
-              <div className="lg:w-1/2 lg:pl-12 w-full">
-                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl">
-                  <div className="flex items-center mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg">
-                      04
-                    </div>
-                    <div className="ml-6">
-                      <h3 className="font-sora font-bold text-2xl mb-2">Lançamento & Crescimento</h3>
-                      <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-secondary rounded-full shadow-lg border-4 border-background"></div>
-              <div className="lg:w-1/2 lg:pr-12 hidden lg:block">
-                <div className="glass rounded-3xl p-8 bg-gradient-to-br from-secondary/10 to-primary/10 border border-secondary/20 flex items-center">
-                  <div className="text-6xl opacity-20 text-secondary mr-6">🚀</div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.
-                  </p>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
