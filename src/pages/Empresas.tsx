@@ -92,6 +92,11 @@ const Empresas: React.FC = () => {
       icon: Brain,
       title: t('empresas.differential.knowledge'),
       description: 'Combinamos conhecimento técnico com experiência em negócios'
+    },
+    {
+      icon: Bot,
+      title: 'Especialistas em Inteligência Artificial',
+      description: 'Dominamos as mais avançadas tecnologias de IA para criar soluções inteligentes'
     }
   ];
 
@@ -289,7 +294,9 @@ const Empresas: React.FC = () => {
       </section>
 
       {/* Portfolio Section */}
-      <Portfolio />
+      <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <Portfolio />
+      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4">

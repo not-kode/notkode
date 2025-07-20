@@ -131,6 +131,14 @@ const SobreNos: React.FC = () => {
                 <div>
                   <h3 className="font-sora font-bold text-xl">Camila Tonelotto</h3>
                   <p className="text-primary font-semibold">{t('sobre.camila.role')}</p>
+                  <a 
+                    href="https://www.linkedin.com/in/gregoriocamila/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    LinkedIn
+                  </a>
                 </div>
               </div>
               <p className="text-muted-foreground">
@@ -147,6 +155,14 @@ const SobreNos: React.FC = () => {
                 <div>
                   <h3 className="font-sora font-bold text-xl">Matheus Tonelotto</h3>
                   <p className="text-primary font-semibold">{t('sobre.matheus.role')}</p>
+                  <a 
+                    href="https://www.linkedin.com/in/matheustonelotto/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    LinkedIn
+                  </a>
                 </div>
               </div>
               <p className="text-muted-foreground">

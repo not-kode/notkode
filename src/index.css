@@ -11,11 +11,11 @@
 @layer base {
   :root {
     /* Notkode Brand Colors - HSL values */
-    --notkode-primary: 189 71% 58%; /* #4bd2e5 */
+    --notkode-primary: 190 100% 59%; /* #32E5FF */
     --notkode-secondary: 184 62% 71%; /* #8ee2e5 */
     --notkode-light-gray: 0 0% 90%; /* #e6e6e6 */
     --notkode-dark-gray: 216 6% 26%; /* #41434a */
-    --notkode-deep-navy: 228 61% 11%; /* #131520 */
+    --notkode-deep-navy: 228 43% 10%; /* #131520 */
     
     /* Shadcn Theme Colors - Light Mode */
     --background: 0 0% 100%;
@@ -27,8 +27,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 228 61% 11%;
     
-    --primary: 189 71% 58%;
-    --primary-foreground: 228 61% 11%;
+    --primary: 190 100% 59%;
+    --primary-foreground: 228 43% 10%;
     
     --secondary: 184 62% 71%;
     --secondary-foreground: 228 61% 11%;
@@ -57,36 +57,36 @@
 
   .dark {
     /* Dark Theme - Default */
-    --background: 228 61% 11%;
+    --background: 228 43% 10%;
     --foreground: 0 0% 90%;
     
-    --card: 228 61% 11%;
+    --card: 228 43% 10%;
     --card-foreground: 0 0% 90%;
     
-    --popover: 228 61% 11%;
+    --popover: 228 43% 10%;
     --popover-foreground: 0 0% 90%;
     
-    --primary: 189 71% 58%;
-    --primary-foreground: 228 61% 11%;
+    --primary: 190 100% 59%;
+    --primary-foreground: 228 43% 10%;
     
     --secondary: 184 62% 71%;
-    --secondary-foreground: 228 61% 11%;
+    --secondary-foreground: 228 43% 10%;
     
     --muted: 216 6% 26%;
     --muted-foreground: 0 0% 70%;
     
     --accent: 184 62% 71%;
-    --accent-foreground: 228 61% 11%;
+    --accent-foreground: 228 43% 10%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     
     --border: 216 6% 26%;
     --input: 216 6% 26%;
-    --ring: 189 71% 58%;
+    --ring: 190 100% 59%;
     
     /* Dark Glass Morphism */
-    --glass-bg: 228 61% 11% / 0.1;
+    --glass-bg: 228 43% 10% / 0.1;
     --glass-border: 0 0% 100% / 0.1;
     --glass-backdrop-blur: 16px;
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);

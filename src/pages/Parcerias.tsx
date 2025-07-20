@@ -48,6 +48,11 @@ const Parcerias: React.FC = () => {
       icon: Lightbulb,
       title: t('parcerias.benefits.expertise'),
       description: 'Acesso a expertise em IA, no-code e tecnologias de ponta'
+    },
+    {
+      icon: Bot,
+      title: 'Especialistas em Inteligência Artificial',
+      description: 'Equipe especializada nas mais avançadas tecnologias de IA e automação'
     }
   ];
 
@@ -237,7 +242,9 @@ const Parcerias: React.FC = () => {
       </section>
 
       {/* Portfolio Section */}
-      <Portfolio />
+      <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <Portfolio />
+      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4">
