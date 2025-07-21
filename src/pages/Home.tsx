@@ -60,7 +60,7 @@ const Home: React.FC = () => {
             </p>
             
             {/* Options inside terminal */}
-            <div className="grid md:grid-cols-2 gap-3 md:gap-4">
+            <div className="grid md:grid-cols-2 gap-8">
               {/* Empresas Option */}
               <Link 
                 to="/companies" 
