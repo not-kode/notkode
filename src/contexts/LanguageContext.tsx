@@ -338,23 +338,23 @@ const translations = {
       record_time: "Tempo Recorde",
       guaranteed_results: "Resultados Garantidos",
       step1: {
-        title: "Análise e Planejamento",
-        description: "Mapeamento detalhado das suas necessidades e definição da estratégia mais eficaz"
+        title: "Análise Estratégica",
+        description: "Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos como a solução desejada vai impactar diretamente nos resultados."
       },
       step2: {
-        title: "Design e Prototipagem", 
-        description: "Criação de protótipos visuais para validação antes do desenvolvimento"
+        title: "Estratégia Inteligente", 
+        description: "Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos nosso plano de ação onde cada decisão é pensada para obter o melhor tempo de entrega possível e maximizar o retorno do seu investimento."
       },
       step3: {
         title: "Desenvolvimento Ágil",
-        description: "Implementação utilizando as melhores tecnologias No-Code e IA"
+        description: "Ao utilizar as abordagens mais modernas, construímos sua solução em tempo recorde. Entregas incrementais permitem o seu acompanhamento em tempo real, garantindo que você veja o progresso e possa ajustar o rumo quando necessário."
       },
       step4: {
-        title: "Testes e Validação",
-        description: "Testes rigorosos para garantir qualidade e performance otimizada"
+        title: "Lançamento & Crescimento",
+        description: "Hora de decolar! Nossa estratégia de lançamento (go-live), conta com suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso, tudo pensado para que sua nova solução inicie seu ciclo com o pé direito."
       },
       step5: {
-        description: "O resultado é uma solução robusta, escalável e perfeitamente alinhada com seus objetivos de negócio"
+        description: "A fórmula perfeita que entrega uma soluções tecnológica que realmente faz a diferença, da forma que sua empresa precisa, em tempo recorde."
       }
     },
     // Portfolio
@@ -748,23 +748,23 @@ const translations = {
       record_time: "Record Time",
       guaranteed_results: "Guaranteed Results",
       step1: {
-        title: "Analysis and Planning",
-        description: "Detailed mapping of your needs and definition of the most effective strategy"
+        title: "Strategic Analysis",
+        description: "We dive deep into your business to understand challenges, opportunities and objectives. We map current processes and identify how the desired solution will directly impact results."
       },
       step2: {
-        title: "Design and Prototyping", 
-        description: "Creation of visual prototypes for validation before development"
+        title: "Smart Strategy", 
+        description: "We define the ideal architecture, choose the most suitable technologies and create our action plan where each decision is designed to achieve the best delivery time possible and maximize your investment return."
       },
       step3: {
         title: "Agile Development",
-        description: "Implementation using the best No-Code and AI technologies"
+        description: "Using the most modern approaches, we build your solution in record time. Incremental deliveries allow you to track in real time, ensuring you see progress and can adjust course when needed."
       },
       step4: {
-        title: "Testing and Validation",
-        description: "Rigorous testing to ensure quality and optimized performance"
+        title: "Launch & Growth",
+        description: "Time to take off! Our go-live strategy features continuous support, performance monitoring and improvements based on real usage data, all designed so your new solution starts its cycle on the right foot."
       },
       step5: {
-        description: "The result is a robust, scalable solution perfectly aligned with your business objectives"
+        description: "The perfect formula that delivers a technological solution that really makes a difference, the way your company needs, in record time."
       }
     },
     // Portfolio
