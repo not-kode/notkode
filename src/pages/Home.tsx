@@ -45,10 +45,22 @@ const Home: React.FC = () => {
           sob medida
         </h1>
         
-        {/* Subtitle */}
-        <p className="text-xl md:text-2xl text-muted-foreground mb-16 max-w-3xl mx-auto leading-relaxed">
-          Escolha como podemos ajudar você a crescer
-        </p>
+        {/* Subtitle - Console Style */}
+        <div className="mb-16 max-w-3xl mx-auto">
+          <div className="bg-notkode-deep-navy/90 border border-primary/30 rounded-lg p-4 backdrop-blur-sm">
+            <div className="flex items-center mb-2">
+              <div className="flex space-x-1 mr-3">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              </div>
+              <span className="text-xs text-muted-foreground font-mono">terminal</span>
+            </div>
+            <p className="font-mono text-lg md:text-xl text-primary/90 leading-relaxed">
+              <span className="text-secondary">$</span> echo "Escolha como podemos ajudar você a crescer"
+            </p>
+          </div>
+        </div>
         
         {/* Options */}
         <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto mb-12">
