@@ -13,7 +13,7 @@ const Portfolio: React.FC = () => {
     {
       name: "AutoAgentes",
       category: "SaaS (Desenvolvimento de software)",
-      description: "SaaS de criação de Agentes de IA, focado em permitir com que donos de pequenas e médias empresas possam automatizar o atendimento dos clientes no whatsapp, substituindo a contratação de funcionários humanos e tornando sua empresa mais eficiente.",
+      description: "portfolio.autoagentes.description",
       revenue: "+70 mil reais",
       year: "2025",
       technologies: "WeWeb, Xano, ASAAS, Posthog, OpenAI, Anthropic (Claude), n8n, Sendgrid, MegaAPI",
@@ -23,7 +23,7 @@ const Portfolio: React.FC = () => {
     {
       name: "Ativa Clientes",
       category: "SaaS (Desenvolvimento de software)",
-      description: "SaaS focado em permitir com que donos de pequenas e médias empresas aumentassem o resultado obtido através de campanhas (envios em massa) realizadas por e-mail e Whatsapp. A grande sacada deste produto é que todo o conteúdo enviado, é 100% personalizado pela IA da Ativa Clientes utilizando o contexto daquele respectivo contato, fazendo com que cada e-mail ou whatsapp seja muito mais relevante pela ótica do cliente.",
+      description: "portfolio.ativa.description",
       revenue: "+40 mil reais",
       year: "2024",
       technologies: "WeWeb, Xano, Stripe, Posthog, OpenAI, Gemini, Postmark, APIBrasil",
@@ -33,7 +33,7 @@ const Portfolio: React.FC = () => {
     {
       name: "ZapInside",
       category: "SaaS (Desenvolvimento de software)",
-      description: "E se você pudesse ver tudo o que acontece nas conversas de WhatsApp do seu time que realiza atendimentos? É este desafio que este SaaS resolve, as conversas do WhatsApp revelam tudo o que você precisa saber sobre seus leads e sua equipe de vendas ou de atendimento. A gente analisa tudo pra você — e entrega insights acionáveis de forma clara, rápida e prática. Tudo com IA e zero esforço manual.",
+      description: "portfolio.zapinside.description",
       revenue: "+2 mil reais",
       year: "2025",
       technologies: "WeWeb, Xano, ASAAS, Posthog, OpenAI, Anthropic (Claude), MegaApi",
@@ -43,7 +43,7 @@ const Portfolio: React.FC = () => {
     {
       name: "Noodrops",
       category: "E-commerce",
-      description: "E-commerce destinado a comercialização das Smart Pills da Noodrops, a opção perfeita pra você cuidar do seu cérebro, seja com performance, seja com saúde cerebral. Somos a Smart Pill Nº1 no Brasil, a mais querida e mais recomendada.",
+      description: "portfolio.noodrops.description",
       revenue: "+80 mil reais / mês",
       year: "2023",
       technologies: "WooCommerce, Wordpress, GA4, Pagar.me, Yampi, Voxuy, Microsoft Clarity",
@@ -53,7 +53,7 @@ const Portfolio: React.FC = () => {
     {
       name: "Loss Prevention",
       category: "Website",
-      description: "Empresa de consultoria com mais de 20 anos de mercado, onde realizamos em colaboração com o time da Loss Prevention, toda a modernização do processo comercial: incluindo o desenvolvimento do novo site, estruturação de todo o processo comercial no AirTable com o envio de e-mail em massa já integrado no Sendgrid, garantindo um servidor de envio de e-mail focado em performance. Foi automatizado via formulário e n8n, quando o lead preenche o formulário de interesse o envio das condições dos respectivo curso e coleta automática da inscrição (venda) para o aluno.",
+      description: "portfolio.loss.description",
       revenue: "+100 mil reais / mês",
       year: "2023",
       technologies: "Framer, GA4, Typeform, AirTable, SendGrid, n8n",
@@ -63,7 +63,7 @@ const Portfolio: React.FC = () => {
     {
       name: "Solojet",
       category: "Website",
-      description: "A Solojet Aviação é o único grupo de aviação executiva no Brasil que oferece uma solução completa, desde a venda e compartilhamento de aeronaves até gestão e manutenção especializada. O embaixador da Solojet é Álvaro Garnero: empresário, apresentador de televisão, investidor e administrador de empresas brasileiro. A quatro mãos projetamos todo o novo site para garantir que independente da linha de produto ou serviço desejada, o cliente agora encontra facilmente as respostas que busca e consegue facilmente entrar em contato para prosseguir na sua jornada de compra com baixo esforço. Ao demonstrar interesse o lead preenche o formulário e a integração desenvolvida leva seus dados para o RD Station, avisando o responsável para realizar o atendimento da venda com o lead já triado.",
+      description: "portfolio.solojet.description",
       revenue: "Empresa multinacional de médio porte",
       year: "2024",
       technologies: "WeWeb, Google Maps API (GCP), Google Sheets, PostHog, RD Station, n8n",
@@ -107,7 +107,7 @@ const Portfolio: React.FC = () => {
                     : 'bg-background/50 backdrop-blur hover:bg-primary/10'
                 }`}
               >
-                Todas as Categorias
+                {t('portfolio.filters.all')}
               </button>
               {categories.map(category => (
                 <button
@@ -119,7 +119,7 @@ const Portfolio: React.FC = () => {
                       : 'bg-background/50 backdrop-blur hover:bg-primary/10'
                   }`}
                 >
-                  {category}
+                  {t(`category.${category.toLowerCase().includes('saas') ? 'saas' : category.toLowerCase() === 'e-commerce' ? 'ecommerce' : 'website'}`)}
                 </button>
               ))}
             </div>
@@ -136,18 +136,18 @@ const Portfolio: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-sora font-bold text-xl leading-tight mb-2">{project.name}</h3>
                     <span className="px-3 py-1.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 inline-block">
-                      {project.category}
+                      {t(`category.${project.category.toLowerCase().includes('saas') ? 'saas' : project.category.toLowerCase() === 'e-commerce' ? 'ecommerce' : 'website'}`)}
                     </span>
                   </div>
                   <div className="flex flex-col items-end gap-2 ml-4">
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20 whitespace-nowrap">
                       <span>🚀</span>
-                      <span>{t('language') === 'pt' ? 'Lançamento do Projeto:' : 'Project Launch:'}</span>
+                      <span>{t('common.launch')}:</span>
                       <span className="font-semibold">{project.year}</span>
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20 whitespace-nowrap">
                       <span>💸</span>
-                      <span>{t('language') === 'pt' ? 'Faturamento:' : 'Revenue:'}</span>
+                      <span>{t('common.revenue')}:</span>
                       <span className="font-semibold">{project.revenue}</span>
                     </div>
                   </div>
@@ -155,13 +155,13 @@ const Portfolio: React.FC = () => {
 
                 {/* Description */}
                 <p className="text-muted-foreground text-base mb-4 leading-relaxed">
-                  {project.description}
+                  {t(project.description)}
                 </p>
 
                 {/* Technologies */}
                 <div className="mb-6">
                   <h4 className="font-semibold text-base mb-2 text-primary">
-                    Tecnologias utilizadas:
+                    {t('common.technologies')}:
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {project.technologies.split(', ').map((tech, techIndex) => (

@@ -164,6 +164,22 @@ const translations = {
     'common.category': 'Categoria',
     'common.description': 'Descrição',
     'common.link': 'Link do projeto',
+    
+    // Portfolio Projects
+    'portfolio.autoagentes.description': 'SaaS de criação de Agentes de IA, focado em permitir com que donos de pequenas e médias empresas possam automatizar o atendimento dos clientes no whatsapp, substituindo a contratação de funcionários humanos e tornando sua empresa mais eficiente.',
+    'portfolio.ativa.description': 'SaaS focado em permitir com que donos de pequenas e médias empresas aumentassem o resultado obtido através de campanhas (envios em massa) realizadas por e-mail e Whatsapp. A grande sacada deste produto é que todo o conteúdo enviado, é 100% personalizado pela IA da Ativa Clientes utilizando o contexto daquele respectivo contato, fazendo com que cada e-mail ou whatsapp seja muito mais relevante pela ótica do cliente.',
+    'portfolio.zapinside.description': 'E se você pudesse ver tudo o que acontece nas conversas de WhatsApp do seu time que realiza atendimentos? É este desafio que este SaaS resolve, as conversas do WhatsApp revelam tudo o que você precisa saber sobre seus leads e sua equipe de vendas ou de atendimento. A gente analisa tudo pra você — e entrega insights acionáveis de forma clara, rápida e prática. Tudo com IA e zero esforço manual.',
+    'portfolio.noodrops.description': 'E-commerce destinado a comercialização das Smart Pills da Noodrops, a opção perfeita pra você cuidar do seu cérebro, seja com performance, seja com saúde cerebral. Somos a Smart Pill Nº1 no Brasil, a mais querida e mais recomendada.',
+    'portfolio.loss.description': 'Empresa de consultoria com mais de 20 anos de mercado, onde realizamos em colaboração com o time da Loss Prevention, toda a modernização do processo comercial: incluindo o desenvolvimento do novo site, estruturação de todo o processo comercial no AirTable com o envio de e-mail em massa já integrado no Sendgrid, garantindo um servidor de envio de e-mail focado em performance. Foi automatizado via formulário e n8n, quando o lead preenche o formulário de interesse o envio das condições dos respectivo curso e coleta automática da inscrição (venda) para o aluno.',
+    'portfolio.solojet.description': 'A Solojet Aviação é o único grupo de aviação executiva no Brasil que oferece uma solução completa, desde a venda e compartilhamento de aeronaves até gestão e manutenção especializada. O embaixador da Solojet é Álvaro Garnero: empresário, apresentador de televisão, investidor e administrador de empresas brasileiro. A quatro mãos projetamos todo o novo site para garantir que independente da linha de produto ou serviço desejada, o cliente agora encontra facilmente as respostas que busca e consegue facilmente entrar em contato para prosseguir na sua jornada de compra com baixo esforço. Ao demonstrar interesse o lead preenche o formulário e a integração desenvolvida leva seus dados para o RD Station, avisando o responsável para realizar o atendimento da venda com o lead já triado.',
+    
+    // Categories
+    'category.saas': 'SaaS (Desenvolvimento de software)',
+    'category.ecommerce': 'E-commerce',
+    'category.website': 'Website',
+    
+    // Common Labels
+    'common.launch': 'Lançamento do Projeto',
   },
   en: {
     // Navigation
@@ -318,6 +334,22 @@ const translations = {
     'common.category': 'Category',
     'common.description': 'Description',
     'common.link': 'Project link',
+    
+    // Portfolio Projects
+    'portfolio.autoagentes.description': 'AI Agents creation SaaS, focused on enabling small and medium business owners to automate customer service on WhatsApp, replacing the hiring of human employees and making their company more efficient.',
+    'portfolio.ativa.description': 'SaaS focused on enabling small and medium business owners to increase results through mass campaigns conducted via email and WhatsApp. The great advantage of this product is that all content sent is 100% personalized by Ativa Clientes AI using the context of that respective contact, making each email or WhatsApp much more relevant from the customer\'s perspective.',
+    'portfolio.zapinside.description': 'What if you could see everything that happens in your team\'s WhatsApp conversations that handle customer service? This is the challenge this SaaS solves. WhatsApp conversations reveal everything you need to know about your leads and your sales or customer service team. We analyze everything for you — and deliver actionable insights in a clear, fast and practical way. All with AI and zero manual effort.',
+    'portfolio.noodrops.description': 'E-commerce dedicated to commercializing Noodrops Smart Pills, the perfect option for you to take care of your brain, whether for performance or brain health. We are the #1 Smart Pill in Brazil, the most loved and most recommended.',
+    'portfolio.loss.description': 'Consulting company with more than 20 years in the market, where we carried out in collaboration with the Loss Prevention team, the complete modernization of the commercial process: including the development of the new website, structuring the entire commercial process in AirTable with mass email sending already integrated with Sendgrid, ensuring an email sending server focused on performance. It was automated via form and n8n, when the lead fills out the interest form, the conditions of the respective course are automatically sent and automatic collection of enrollment (sale) for the student.',
+    'portfolio.solojet.description': 'Solojet Aviação is the only executive aviation group in Brazil that offers a complete solution, from the sale and sharing of aircraft to specialized management and maintenance. Solojet\'s ambassador is Álvaro Garnero: businessman, television presenter, investor and Brazilian business administrator. Together we designed the entire new website to ensure that regardless of the desired product or service line, the customer now easily finds the answers they seek and can easily get in touch to proceed on their purchasing journey with low effort. When showing interest, the lead fills out the form and the developed integration takes their data to RD Station, notifying the person responsible for handling the sale with the lead already qualified.',
+    
+    // Categories
+    'category.saas': 'SaaS (Software Development)',
+    'category.ecommerce': 'E-commerce',
+    'category.website': 'Website',
+    
+    // Common Labels
+    'common.launch': 'Project Launch',
   }
 };
 
