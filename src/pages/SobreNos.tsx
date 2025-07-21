@@ -23,10 +23,14 @@ const SobreNos: React.FC = () => {
       {/* Hero Section */}
       <section className="py-12 md:py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="inline-block glass rounded-full px-6 py-2 mb-6 animate-magical-pulse">
-            <span className="text-gradient font-medium text-sm">
-              • {t('about.hero.badge')}
-            </span>
+          <div className="relative inline-block mb-8 animate-fade-in-up">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
+            <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
+              <div className="flex items-center">
+                <span className="inline-block w-2 h-2 bg-primary rounded-full mr-3 animate-pulse"></span>
+                <span className="text-sm font-medium text-primary/90 tracking-wide font-mono">{t('about.hero.badge')}</span>
+              </div>
+            </div>
           </div>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 md:mb-12 max-w-3xl mx-auto leading-relaxed">
             {t('about.hero.description')}
