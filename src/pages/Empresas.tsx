@@ -421,7 +421,7 @@ const Empresas: React.FC = () => {
                         </div>
                         <div className="flex-1">
                           <p className="text-muted-foreground text-base leading-relaxed">
-                            {step.description}
+                            {t(step.description)}
                           </p>
                         </div>
                       </div>
@@ -468,7 +468,7 @@ const Empresas: React.FC = () => {
               </div>
             </div>
             
-            <WhatsAppButton text="Entrar em Contato" className="bg-white text-primary px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-white/25 hover:scale-105 transition-all duration-300 border-0 hover:bg-white/90" />
+            <WhatsAppButton text={t('common.contact')} className="bg-white text-primary px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-white/25 hover:scale-105 transition-all duration-300 border-0 hover:bg-white/90" />
           </div>
         </div>
       </section>
