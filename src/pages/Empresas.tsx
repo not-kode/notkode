@@ -18,7 +18,7 @@ const Empresas: React.FC = () => {
     },
     {
       text: "Atendimento mega atencioso, atentos a cada detalhe e ideia, sempre com contrapontos lógicos e eficientes. O projeto foi entregue dentro do prazo e a qualidade foi perfeita. Indico com toda certeza.",
-      author: "Rodrigo Nascimento",
+      author: "Rodrigo Nascimento", 
       company: "LTS Corretagem de Seguros"
     },
     {
@@ -394,13 +394,13 @@ const Empresas: React.FC = () => {
               }
 
               return (
-                <div key={index} className="flex items-center mb-32 relative group px-6">
+                <div key={index} className="flex items-center mb-32 relative group px-8">
                   {/* Step Dot */}
                   <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`}></div>
                   
                   {/* Content Container */}
-                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-16' : 'lg:pl-16 lg:ml-auto'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
-                    <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${isActive ? 'translate-x-0 opacity-100 scale-100' : 'opacity-70 scale-95'}`}>
+                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-24' : 'lg:pl-24 lg:ml-auto'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
+                    <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${isActive ? 'translate-x-0 opacity-100 scale-100' : 'opacity-70 scale-95'} ${isLeft ? 'translate-x-12' : '-translate-x-12'}`}>
                       <div className="flex items-center mb-6">
                         <div className={`w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg ${isActive ? 'animate-pulse shadow-primary/50' : ''}`}>
                           {String(index + 1).padStart(2, '0')}
@@ -430,8 +430,8 @@ const Empresas: React.FC = () => {
                   </div>
                   
                   {/* Description Container - Desktop only */}
-                  <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-20' : 'pr-20'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                    <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 shadow-lg shadow-primary/10 transform translate-x-8">
+                  <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-24' : 'pr-24'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+                    <div className={`glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 shadow-lg shadow-primary/10 transform ${isLeft ? 'translate-x-16' : '-translate-x-16'}`}>
                       <div className="flex items-center mb-4">
                         <div className="text-6xl opacity-80 mr-4">
                           {step.icon}
