@@ -12,27 +12,27 @@ const Empresas: React.FC = () => {
 
   const testimonials = [
     {
-      text: "A Notkode foi primordial para o rápido lançamento do meu projeto. Desde o primeiro contato com a Camila, tive uma atenção fora da curva, desde a negociação, durante o projeto e a entrega do site em si. Altíssima qualidade, técnica, agilidade e seriedade. Recomendo fortemente!",
+      text: "testimonial.bruno.text",
       author: "Bruno Coimbra",
       company: "Azure Assessoria de Investimentos"
     },
     {
-      text: "Atendimento mega atencioso, atentos a cada detalhe e ideia, sempre com contrapontos lógicos e eficientes. O projeto foi entregue dentro do prazo e a qualidade foi perfeita. Indico com toda certeza.",
+      text: "testimonial.rodrigo.text",
       author: "Rodrigo Nascimento", 
       company: "LTS Corretagem de Seguros"
     },
     {
-      text: "Gostei muito de todo o processo, foi tudo muito profissional e podemos transformar rapidamente as ideias que tinha em realidade. Estou muito feliz com o resultado.",
+      text: "testimonial.fernando.text",
       author: "Fernando Freitas",
       company: "Mark Tech"
     },
     {
-      text: "A NotKode foi fundamental para o lançamento da ZapInside. Em pouco tempo já haviamos começado a desenvolver a ideia e em três semanas já estavamos recebendo o primeiro cliente. Super recomendo para todos os empreendedores que precisarem colocar usa ideia no ar!",
+      text: "testimonial.giovanna.text",
       author: "Giovanna Pretti",
       company: "ZapInside"
     },
     {
-      text: "Depois que você atinge os primeiros 10 mil de faturamento com o seu SaaS, você precisa ir melhorando todo o seu funil, desde o site até o produto, para poder continuar crescendo e obtendo um bom LTV. A Notkode foi fundamental para otimizar toda a jornada do cliente e desenvolver o software ideal para conseguirmos superar o nosso desafio.",
+      text: "testimonial.walter.text",
       author: "Walter Neto",
       company: "AutoAgentes"
     }
@@ -281,9 +281,9 @@ const Empresas: React.FC = () => {
                         <Quote className="w-8 h-8 text-primary opacity-60" />
                       </div>
                       
-                      <p className="text-muted-foreground text-base mb-6 leading-relaxed">
-                        "{testimonial.text}"
-                      </p>
+                       <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+                         "{t(testimonial.text)}"
+                       </p>
                       
                       <div className="flex items-center justify-between">
                         <div>

@@ -178,6 +178,13 @@ const translations = {
     'category.ecommerce': 'E-commerce',
     'category.website': 'Website',
     
+    // Testimonials
+    'testimonial.bruno.text': 'A Notkode foi primordial para o rápido lançamento do meu projeto. Desde o primeiro contato com a Camila, tive uma atenção fora da curva, desde a negociação, durante o projeto e a entrega do site em si. Altíssima qualidade, técnica, agilidade e seriedade. Recomendo fortemente!',
+    'testimonial.rodrigo.text': 'Atendimento mega atencioso, atentos a cada detalhe e ideia, sempre com contrapontos lógicos e eficientes. O projeto foi entregue dentro do prazo e a qualidade foi perfeita. Indico com toda certeza.',
+    'testimonial.fernando.text': 'Gostei muito de todo o processo, foi tudo muito profissional e podemos transformar rapidamente as ideias que tinha em realidade. Estou muito feliz com o resultado.',
+    'testimonial.giovanna.text': 'A NotKode foi fundamental para o lançamento da ZapInside. Em pouco tempo já haviamos começado a desenvolver a ideia e em três semanas já estavamos recebendo o primeiro cliente. Super recomendo para todos os empreendedores que precisarem colocar usa ideia no ar!',
+    'testimonial.walter.text': 'Depois que você atinge os primeiros 10 mil de faturamento com o seu SaaS, você precisa ir melhorando todo o seu funil, desde o site até o produto, para poder continuar crescendo e obtendo um bom LTV. A Notkode foi fundamental para otimizar toda a jornada do cliente e desenvolver o software ideal para conseguirmos superar o nosso desafio.',
+    
     // Common Labels
     'common.launch': 'Lançamento do Projeto',
   },
@@ -347,6 +354,13 @@ const translations = {
     'category.saas': 'SaaS (Software Development)',
     'category.ecommerce': 'E-commerce',
     'category.website': 'Website',
+    
+    // Testimonials
+    'testimonial.bruno.text': 'Notkode was essential for the rapid launch of my project. From the first contact with Camila, I had extraordinary attention, from negotiation, during the project and the delivery of the website itself. Highest quality, technical expertise, agility and seriousness. I highly recommend!',
+    'testimonial.rodrigo.text': 'Extremely attentive service, attentive to every detail and idea, always with logical and efficient counterpoints. The project was delivered on time and the quality was perfect. I definitely recommend.',
+    'testimonial.fernando.text': 'I really liked the whole process, everything was very professional and we were able to quickly transform the ideas I had into reality. I am very happy with the result.',
+    'testimonial.giovanna.text': 'NotKode was fundamental for the launch of ZapInside. In a short time we had already started developing the idea and in three weeks we were already receiving our first client. I highly recommend it to all entrepreneurs who need to get their idea off the ground!',
+    'testimonial.walter.text': 'After you reach the first 10 thousand in revenue with your SaaS, you need to improve your entire funnel, from the website to the product, to be able to continue growing and getting a good LTV. Notkode was fundamental to optimize the entire customer journey and develop the ideal software for us to overcome our challenge.',
     
     // Common Labels
     'common.launch': 'Project Launch',
