@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Users, 
@@ -35,11 +34,6 @@ const Parcerias: React.FC = () => {
       icon: Users,
       title: 'Ofereça mais serviços aos seus clientes',
       description: 'Agregue os nossos serviços ao seu portfolio, oferecendo soluções completas sem precisar contratar desenvolvedores ou designers internos'
-    },
-    {
-      icon: TrendingUp,
-      title: 'Margem de lucro sem overhead',
-      description: 'Margens atrativas sem investimento em infraestrutura ou equipe'
     },
     {
       icon: Bot,
@@ -170,7 +164,7 @@ const Parcerias: React.FC = () => {
             Vantagens exclusivas que transformam sua agência em uma operação completa
           </p>
           
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {benefits.map((benefit, index) => (
               <div key={index} className="glass-card group hover:scale-105">
                 <div className="flex items-center mb-4">
@@ -186,7 +180,14 @@ const Parcerias: React.FC = () => {
         </div>
       </section>
 
-      {/* Services Section - Reordered before Portfolio */}
+      {/* Portfolio Section - Moved before Services */}
+      <section id="portfolio" className="py-20 bg-background">
+        <div className="px-8">
+          <Portfolio />
+        </div>
+      </section>
+
+      {/* Services Section - Moved after Portfolio */}
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
@@ -211,13 +212,6 @@ const Parcerias: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Portfolio Section - Reordered after Services */}
-      <section id="portfolio" className="py-20 bg-background">
-        <div className="px-8">
-          <Portfolio />
         </div>
       </section>
 
