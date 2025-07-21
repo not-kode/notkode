@@ -204,7 +204,7 @@ const Empresas: React.FC = () => {
       </section>
 
       {/* Portfolio Section - Moved after Services */}
-      <section className="py-20 px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
+      <section id="portfolio" className="py-20 px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
         <Portfolio />
       </section>
 

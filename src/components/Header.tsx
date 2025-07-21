@@ -22,9 +22,18 @@ const Header: React.FC = () => {
   // Check if user is on empresas or parcerias pages
   const isOnEmpresasOrParcerias = location.pathname === '/empresas' || location.pathname === '/parcerias';
   
+  // Handle portfolio click
+  const handlePortfolioClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const portfolioSection = document.getElementById('portfolio');
+    if (portfolioSection) {
+      portfolioSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
   // Define navigation items based on current page
   const navItems = isOnEmpresasOrParcerias ? [
-    { path: '/sobre-nos#portfolio', label: 'Portfolio' },
+    { path: '/sobre-nos#portfolio', label: 'Portfolio', onClick: handlePortfolioClick },
     { path: '/sobre-nos', label: t('nav.sobre') },
     { path: '/blog', label: t('nav.blog') },
   ] : [
@@ -37,7 +46,7 @@ const Header: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-16">
       <div className="container mx-auto px-4 h-full flex items-center justify-center pt-4">
-        <div className="glass rounded-full flex items-center space-x-6 px-8 py-3 transition-all duration-300 hover:scale-105">{/* Centralized Navigation Group with Glass Effect */}
+        <div className="glass rounded-full flex items-center space-x-6 px-8 py-3 transition-all duration-300 hover:scale-105">
           {/* Logo */}
           <Link to="/" className="flex items-center group">
             <img 
@@ -54,6 +63,7 @@ const Header: React.FC = () => {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={item.onClick}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300 ${
                     isActive(item.path.split('#')[0])
                       ? 'bg-primary/20 text-primary'
@@ -119,7 +129,7 @@ const Header: React.FC = () => {
           <DropdownMenuContent align="end" className="glass w-48">
             {navItems.map((item) => (
               <DropdownMenuItem key={item.path} asChild>
-                <Link to={item.path} className="w-full">
+                <Link to={item.path} onClick={item.onClick} className="w-full">
                   {item.label}
                 </Link>
               </DropdownMenuItem>
