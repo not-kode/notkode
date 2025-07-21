@@ -9,6 +9,13 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden pt-20 pb-8 md:pt-16 md:pb-16">
+      {/* Pattern Background */}
+      <div className="absolute inset-0 opacity-30" style={{
+        backgroundImage: 'url(/lovable-uploads/459ff3f4-6202-469d-b8e5-fb2c5a1cc2e7.png)',
+        backgroundSize: '200px 200px',
+        backgroundRepeat: 'repeat'
+      }}></div>
+      
       {/* Animated Magical Background */}
       <div className="absolute inset-0">
         {/* Noise Texture for Liquid Glass Effect */}
