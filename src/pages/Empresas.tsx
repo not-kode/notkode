@@ -1,6 +1,5 @@
-
 import React, { useEffect, useRef, useState } from 'react';
-import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight, Star, Quote, Users, ThumbsUp, Calendar } from 'lucide-react';
+import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight, Star, Quote, Users, ThumbsUp, Calendar, DollarSign, Shield, Headphones } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
@@ -73,41 +72,56 @@ const Empresas: React.FC = () => {
     description: 'Lojas virtuais otimizadas para conversão'
   }];
 
-  const differentials = [{
-    icon: Target,
-    title: t('empresas.differential.experience'),
-    description: 'Mais de 3 anos desenvolvendo soluções que geram resultados reais'
-  }, {
-    icon: CheckCircle,
-    title: t('empresas.differential.diagnosis'),
-    description: 'Analisamos seu negócio para identificar as melhores oportunidades'
-  }, {
-    icon: TrendingUp,
-    title: 'Foco em entregar valor rapidamente',
-    description: 'Escolhemos as tecnologias ideais para cada tipo de projeto, acelerando o tempo das entregas que impactam diretamente nos seus resultados'
-  }, {
-    icon: Bot,
-    title: 'Especialistas em Inteligência Artificial',
-    description: 'Dominamos as mais avançadas tecnologias de IA para criar soluções inteligentes'
-  }];
+  const whyChooseUs = [
+    {
+      icon: DollarSign,
+      title: "Custo-Benefício",
+      description: "Projetos entregues em até 50% menos tempo, com economia de até 60% comparado ao desenvolvimento tradicional."
+    },
+    {
+      icon: Bot,
+      title: "Especialistas em Inteligência Artificial",
+      description: "Trabalhamos com IA muito antes dela estar no hype (na moda), dominamos as mais avançadas tecnologias de IA para criar soluções realmente inteligentes."
+    },
+    {
+      icon: Shield,
+      title: "Escalabilidade",
+      description: "Soluções que crescem junto com seu negócio, contando com protocolos de segurança avançados e atualizações automáticas."
+    },
+    {
+      icon: Headphones,
+      title: "Suporte Dedicado",
+      description: "Acompanhamento completo durante e após o desenvolvimento. Estamos a uma mensagem de distância, com canal de contato 100% disponível. Precisou? É só nos chamar no Whatsapp!"
+    }
+  ];
 
-  const processSteps = [{
-    title: "Diagnóstico Profundo",
-    description: "Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos pontos de melhoria que impactarão diretamente nos resultados.",
-    icon: "🔍"
-  }, {
-    title: "Estratégia Inteligente",
-    description: "Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos um roadmap detalhado. Cada decisão é pensada para maximizar ROI e escalabilidade.",
-    icon: "🎯"
-  }, {
-    title: "Desenvolvimento Ágil",
-    description: "Construímos sua solução com acompanhamento em tempo real. Entregas incrementais garantem que você veja o progresso e possa ajustar o rumo quando necessário.",
-    icon: "⚡"
-  }, {
-    title: "Lançamento & Crescimento",
-    description: "Implantamos sua solução com estratégia de lançamento. Oferecemos suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso.",
-    icon: "🚀"
-  }];
+  const processSteps = [
+    {
+      title: "Diagnóstico do Negócio",
+      description: "Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos como a solução desejada vai impactar diretamente nos resultados.",
+      icon: "🔍"
+    },
+    {
+      title: "Estratégia Inteligente",
+      description: "Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos nosso plano de ação onde cada decisão é pensada para obter o melhor tempo de entrega possível e maximizar o retorno do seu investimento.",
+      icon: "🎯"
+    },
+    {
+      title: "Desenvolvimento Ágil",
+      description: "Ao utilizar as abordagens mais modernas, construímos sua solução em tempo recorde. Entregas incrementais permitem o seu acompanhamento em tempo real, garantindo que você veja o progresso e possa ajustar o rumo quando necessário.",
+      icon: "⚡"
+    },
+    {
+      title: "Lançamento & Crescimento",
+      description: "Hora de decolar! Nossa estratégia de lançamento (go-live), conta com suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso, tudo pensado para que sua nova solução inicie seu ciclo com o pé direito.",
+      icon: "🚀"
+    },
+    {
+      title: "=",
+      description: "A fórmula perfeita que entrega soluções tecnológicas que realmente impactam seus resultados, da forma que sua empresa precisa, em tempo recorde.",
+      icon: "="
+    }
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -225,85 +239,28 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Differentials Section */}
+      {/* Why Choose Us Section */}
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
-            Nossa <span className="text-gradient">Receita</span> para o Sucesso
+            Por que escolher a <span className="text-gradient">NotKode?</span>
           </h2>
           <p className="text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto">
-            A combinação perfeita de elementos que transformam desafios em resultados extraordinários
+            Desenvolvemos soluções modernas que oferecem vantagens reais para seu negócio
           </p>
           
-          {/* Recipe Formula */}
-          <div className="max-w-6xl mx-auto">
-            {/* Individual Ingredients */}
-            <div className="grid md:grid-cols-2 gap-6 mb-12">
-              {differentials.map((differential, index) => (
-                <div key={index} className="glass-card group relative">
-                  <div className="flex items-center mb-4">
-                    <differential.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
-                    <h3 className="font-sora font-semibold text-xl">{differential.title}</h3>
-                  </div>
-                  <p className="text-muted-foreground text-base">
-                    {differential.description}
-                  </p>
-                  {/* Plus symbol on the right of all items except the last one */}
-                  {index < differentials.length - 1 && (
-                    <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-lg hidden md:flex">
-                      +
-                    </div>
-                  )}
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {whyChooseUs.map((item, index) => (
+              <div key={index} className="glass-card group hover:scale-105">
+                <div className="flex items-center mb-4">
+                  <item.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
+                  <h3 className="font-sora font-semibold text-xl">{item.title}</h3>
                 </div>
-              ))}
-            </div>
-
-            {/* Vertical Equals Symbol */}
-            <div className="flex justify-center mb-8">
-              <div className="glass-card px-8 py-6">
-                <div className="text-4xl font-bold text-primary text-center flex flex-col items-center">
-                  <div className="w-1 h-6 bg-primary rounded-full mb-2"></div>
-                  <div className="w-1 h-6 bg-primary rounded-full"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Final Result */}
-            <div className="glass-card max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
-              {/* Background decoration */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-3xl"></div>
-              <div className="absolute top-4 right-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-4 left-4 w-16 h-16 bg-secondary/10 rounded-full blur-xl"></div>
-              
-              <div className="relative z-10 p-8">
-                <div className="flex items-center justify-center mb-6">
-                  <Brain className="w-12 h-12 text-primary mr-4" />
-                  <Award className="w-12 h-12 text-secondary mx-2" />
-                  <Bot className="w-12 h-12 text-primary ml-4" />
-                </div>
-                <h3 className="font-sora font-bold text-2xl md:text-3xl mb-4">
-                  <span className="text-gradient">Conhecimento em Negócios + Desenvolvimento + IA</span>
-                </h3>
-                <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
-                  A fórmula perfeita que entrega soluções tecnológicas que realmente impactam seus resultados, 
-                  da forma que sua empresa precisa, em tempo recorde.
+                <p className="text-muted-foreground text-base">
+                  {item.description}
                 </p>
-                <div className="flex flex-wrap justify-center gap-4 text-sm">
-                  <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
-                    <CheckCircle className="w-4 h-4 text-primary mr-2" />
-                    <span>Solução Sob Medida</span>
-                  </div>
-                  <div className="flex items-center bg-secondary/10 px-4 py-2 rounded-full">
-                    <Zap className="w-4 h-4 text-secondary mr-2" />
-                    <span>Tempo Recorde</span>
-                  </div>
-                  <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
-                    <TrendingUp className="w-4 h-4 text-primary mr-2" />
-                    <span>Resultados Garantidos</span>
-                  </div>
-                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -373,10 +330,10 @@ const Empresas: React.FC = () => {
         <div className="container mx-auto relative z-10">
           <div className="text-center mb-20">
             <h2 className="font-sora font-bold text-4xl mb-6">
-              Nosso <span className="text-gradient">Processo</span>
+              Nosso <span className="text-gradient">Passo a Passo</span> para o Sucesso
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Uma metodologia comprovada que transforma ideias em soluções de sucesso
+              Uma metodologia validada que transforma suas ideias em soluções de sucesso
             </p>
           </div>
           
@@ -390,6 +347,51 @@ const Empresas: React.FC = () => {
             {processSteps.map((step, index) => {
               const isActive = activeStep >= index;
               const isLeft = index % 2 === 0;
+              const isEqualsStep = step.title === "=";
+
+              // Special handling for the equals step
+              if (isEqualsStep) {
+                return (
+                  <div key={index} className="flex justify-center mb-24 relative">
+                    <div className={`transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'}`}>
+                      <div className="glass-card max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
+                        {/* Background decoration */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-3xl"></div>
+                        <div className="absolute top-4 right-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl"></div>
+                        <div className="absolute bottom-4 left-4 w-16 h-16 bg-secondary/10 rounded-full blur-xl"></div>
+                        
+                        <div className="relative z-10 p-8">
+                          <div className="flex items-center justify-center mb-6">
+                            <Brain className="w-12 h-12 text-primary mr-4" />
+                            <Award className="w-12 h-12 text-secondary mx-2" />
+                            <Bot className="w-12 h-12 text-primary ml-4" />
+                          </div>
+                          <h3 className="font-sora font-bold text-2xl md:text-3xl mb-4">
+                            <span className="text-gradient">Conhecimento em Negócios + Desenvolvimento + IA</span>
+                          </h3>
+                          <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
+                            {step.description}
+                          </p>
+                          <div className="flex flex-wrap justify-center gap-4 text-sm">
+                            <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
+                              <CheckCircle className="w-4 h-4 text-primary mr-2" />
+                              <span>Solução Sob Medida</span>
+                            </div>
+                            <div className="flex items-center bg-secondary/10 px-4 py-2 rounded-full">
+                              <Zap className="w-4 h-4 text-secondary mr-2" />
+                              <span>Tempo Recorde</span>
+                            </div>
+                            <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
+                              <TrendingUp className="w-4 h-4 text-primary mr-2" />
+                              <span>Resultados Garantidos</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div key={index} className="flex items-center mb-24 relative group">
