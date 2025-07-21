@@ -1,12 +1,10 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Home Pattern Styles */
-@import './styles/home-pattern.css';
 
 /* Notkode Design System - Liquid Glass Theme */
 
@@ -18,6 +16,10 @@
     --notkode-light-gray: 0 0% 90%; /* #e6e6e6 */
     --notkode-dark-gray: 216 6% 26%; /* #41434a */
     --notkode-deep-navy: 228 43% 10%; /* #131520 */
+    
+    /* Pattern Background - Light Mode Only */
+    --pattern-smile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='28' fill='%2375D4D7' opacity='0.08'/%3E%3Ccircle cx='22' cy='20' r='3' fill='%2375D4D7' opacity='0.15'/%3E%3Ccircle cx='38' cy='20' r='3' fill='%2375D4D7' opacity='0.15'/%3E%3Cpath d='M18 32 Q30 42 42 32' stroke='%2375D4D7' stroke-width='2' fill='none' opacity='0.15'/%3E%3C/svg%3E");
+    --pattern-circle-n: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='28' stroke='%2375D4D7' stroke-width='2' fill='none' opacity='0.08'/%3E%3Cpath d='M20 40 L20 20 L25 25 L35 15 L40 20 L40 40' stroke='%2375D4D7' stroke-width='2' fill='none' opacity='0.12'/%3E%3C/svg%3E");
     
     /* Shadcn Theme Colors - Light Mode */
     --background: 0 0% 100%;
@@ -103,6 +105,14 @@
   body {
     @apply bg-background text-foreground font-inter;
     /* Remove default dark class - let ThemeContext handle it */
+  }
+  
+  /* Pattern Background - Only in Light Mode */
+  :root:not(.dark) body {
+    background-image: var(--pattern-smile), var(--pattern-circle-n);
+    background-position: 0 0, 80px 80px;
+    background-size: 160px 160px;
+    background-repeat: repeat;
   }
   
   h1, h2, h3, h4, h5, h6 {
