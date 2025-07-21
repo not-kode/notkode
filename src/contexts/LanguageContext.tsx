@@ -104,20 +104,20 @@ const translations = {
         title: "Por que escolher a Notkode?",
         subtitle: "Combinamos tecnologia de ponta com estratégia de negócios para entregar resultados excepcionais",
         cost_benefit: {
-          title: "Custo-Benefício Imbatível",
-          desc: "Entregamos soluções profissionais a uma fração do custo tradicional"
+          title: "Custo-Benefício",
+          desc: "Projetos entregues em até 50% menos tempo, com economia de até 60% comparado ao desenvolvimento tradicional."
         },
         ai_experts: {
-          title: "Especialistas em IA",
-          desc: "Somos pioneiros na aplicação de IA para resolver problemas reais de negócio"
+          title: "Especialistas em Inteligência Artificial",
+          desc: "Trabalhamos com IA muito antes dela estar no hype (na moda), dominamos as mais avançadas tecnologias de IA para criar soluções realmente inteligentes."
         },
         scalability: {
-          title: "Escalabilidade Garantida",
-          desc: "Suas soluções crescem junto com seu negócio sem limitações técnicas"
+          title: "Escalabilidade",
+          desc: "Soluções que crescem junto com seu negócio, contando com protocolos de segurança avançados e atualizações automáticas."
         },
         support: {
-          title: "Suporte Completo",
-          desc: "Acompanhamento contínuo para garantir o sucesso da sua implementação"
+          title: "Suporte Dedicado",
+          desc: "Acompanhamento completo durante e após o desenvolvimento. Estamos a uma mensagem de distância, com canal de contato 100% disponível. Precisou? É só nos chamar no Whatsapp!"
         }
       },
       testimonials: {
@@ -514,20 +514,20 @@ const translations = {
         title: "Why choose Notkode?",
         subtitle: "We combine cutting-edge technology with business strategy to deliver exceptional results",
         cost_benefit: {
-          title: "Unbeatable Cost-Benefit",
-          desc: "We deliver professional solutions at a fraction of traditional cost"
+          title: "Cost-Benefit",
+          desc: "Projects delivered up to 50% faster, with savings of up to 60% compared to traditional development."
         },
         ai_experts: {
-          title: "AI Specialists",
-          desc: "We are pioneers in applying AI to solve real business problems"
+          title: "Artificial Intelligence Specialists",
+          desc: "We worked with AI long before it was hype (trending), we master the most advanced AI technologies to create truly intelligent solutions."
         },
         scalability: {
-          title: "Guaranteed Scalability",
-          desc: "Your solutions grow with your business without technical limitations"
+          title: "Scalability",
+          desc: "Solutions that grow with your business, featuring advanced security protocols and automatic updates."
         },
         support: {
-          title: "Complete Support",
-          desc: "Continuous follow-up to ensure your implementation success"
+          title: "Dedicated Support",
+          desc: "Complete follow-up during and after development. We are just a message away, with 100% available contact channel. Need help? Just call us on WhatsApp!"
         }
       },
       testimonials: {
