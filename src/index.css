@@ -244,28 +244,23 @@
   @keyframes gentle-float-fade {
     0% { 
       opacity: 0;
-      transform: scale(0.1) translateX(0px) translateY(0px) rotate(0deg);
-      filter: hue-rotate(0deg) brightness(1);
+      transform: scale(0.8) translateY(20px);
     }
-    15% {
-      opacity: 0.8;
-      transform: scale(1.3) translateX(20px) translateY(-30px) rotate(10deg);
-      filter: hue-rotate(60deg) brightness(0.9);
+    25% {
+      opacity: 0.3;
+      transform: scale(1.1) translateY(-10px);
     }
     50% {
-      opacity: 1;
-      transform: scale(1) translateX(-15px) translateY(25px) rotate(-5deg);
-      filter: hue-rotate(180deg) brightness(0.7);
-    }
-    85% {
       opacity: 0.6;
-      transform: scale(1.2) translateX(30px) translateY(-20px) rotate(15deg);
-      filter: hue-rotate(300deg) brightness(0.5);
+      transform: scale(1) translateY(0px);
+    }
+    75% {
+      opacity: 0.4;
+      transform: scale(1.05) translateY(-5px);
     }
     100% { 
       opacity: 0;
-      transform: scale(0.05) translateX(0px) translateY(0px) rotate(360deg);
-      filter: hue-rotate(360deg) brightness(0.3);
+      transform: scale(0.9) translateY(15px);
     }
   }
 
