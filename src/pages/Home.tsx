@@ -8,7 +8,7 @@ const Home: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden pt-20 pb-8 md:pt-16 md:pb-16">
       {/* Animated Magical Background */}
       <div className="absolute inset-0">
         {/* Noise Texture for Liquid Glass Effect */}
@@ -39,61 +39,61 @@ const Home: React.FC = () => {
 
       <div className="container mx-auto max-w-4xl text-center relative z-10 flex-grow flex flex-col justify-center">
         {/* Main Title */}
-        <div className="font-sora font-bold text-3xl md:text-5xl lg:text-6xl mb-8 leading-tight">
+        <div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl mb-6 md:mb-8 leading-tight">
           <div className="whitespace-nowrap"><span className="text-primary">Acelere</span> seu negócio</div>
           <div className="whitespace-nowrap">com <span className="text-gradient">tecnologia</span> <span className="text-primary">sob medida</span></div>
         </div>
         
         {/* Subtitle - Console Style */}
-        <div className="mb-16 max-w-3xl mx-auto">
-          <div className="bg-notkode-deep-navy/90 border border-primary/30 rounded-lg p-6 backdrop-blur-sm">
-            <div className="flex items-center mb-4">
+        <div className="mb-8 md:mb-16 max-w-3xl mx-auto">
+          <div className="bg-notkode-deep-navy/90 border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm">
+            <div className="flex items-center mb-3 md:mb-4">
               <div className="flex space-x-1 mr-3">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full"></div>
+                <div className="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full"></div>
+                <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full"></div>
               </div>
               <span className="text-xs text-muted-foreground font-mono">terminal</span>
             </div>
-            <p className="font-mono text-lg md:text-xl text-primary/90 leading-relaxed mb-6">
+            <p className="font-mono text-base md:text-lg md:text-xl text-primary/90 leading-relaxed mb-4 md:mb-6">
               <span className="text-secondary">$</span> echo "Escolha como podemos ajudar você a crescer"
             </p>
             
             {/* Options inside terminal */}
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-3 md:gap-4">
               {/* Empresas Option */}
               <Link 
                 to="/companies" 
-                className="glass-card group hover:scale-105 transition-all duration-300 p-6 text-left bg-background/10 hover:bg-background/20"
+                className="glass-card group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left bg-background/10 hover:bg-background/20"
               >
-                <div className="flex items-center mb-3">
-                  <Building className="w-6 h-6 text-primary mr-3 group-hover:scale-110 transition-transform" />
-                  <h2 className="font-sora font-bold text-lg">Para Empresas</h2>
+                <div className="flex items-center mb-2 md:mb-3">
+                  <Building className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
+                  <h2 className="font-sora font-bold text-base md:text-lg">Para Empresas</h2>
                 </div>
-                <p className="text-muted-foreground mb-4 text-sm">
+                <p className="text-muted-foreground mb-3 md:mb-4 text-xs md:text-sm">
                   Soluções tecnológicas personalizadas para acelerar seu negócio
                 </p>
-                <div className="flex items-center text-primary font-semibold text-sm">
+                <div className="flex items-center text-primary font-semibold text-xs md:text-sm">
                   Explorar Soluções
-                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                  <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" />
                 </div>
               </Link>
               
               {/* Parcerias Option */}
               <Link 
                 to="/agencies" 
-                className="glass-card group hover:scale-105 transition-all duration-300 p-6 text-left bg-background/10 hover:bg-background/20"
+                className="glass-card group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left bg-background/10 hover:bg-background/20"
               >
-                <div className="flex items-center mb-3">
-                  <Handshake className="w-6 h-6 text-primary mr-3 group-hover:scale-110 transition-transform" />
-                  <h2 className="font-sora font-bold text-lg">Para Agências</h2>
+                <div className="flex items-center mb-2 md:mb-3">
+                  <Handshake className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
+                  <h2 className="font-sora font-bold text-base md:text-lg">Para Agências</h2>
                 </div>
-                <p className="text-muted-foreground mb-4 text-sm">
+                <p className="text-muted-foreground mb-3 md:mb-4 text-xs md:text-sm">
                   Seja nosso parceiro e ofereça desenvolvimento sem contratar equipe
                 </p>
-                <div className="flex items-center text-primary font-semibold text-sm">
+                <div className="flex items-center text-primary font-semibold text-xs md:text-sm">
                   Explorar Parceria
-                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                  <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" />
                 </div>
               </Link>
             </div>
@@ -101,11 +101,11 @@ const Home: React.FC = () => {
         </div>
 
         {/* Futuristic Neon Lovable Tag */}
-        <div className="relative inline-block">
+        <div className="relative inline-block mb-8 md:mb-0">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
-          <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
-            <p className="relative text-sm font-medium text-primary/90 tracking-wide font-mono">
-              <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
+          <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-4 md:px-6 py-2 backdrop-blur-sm">
+            <p className="relative text-xs md:text-sm font-medium text-primary/90 tracking-wide font-mono">
+              <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
               {t('home.lovable_tag')}
             </p>
           </div>
