@@ -75,7 +75,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 animate-gentle-float-fade"
         style={{
-          backgroundImage: 'url(/lovable-uploads/smiley-face.png)',
+          backgroundImage: 'url(/lovable-uploads/2e0ed293-e64d-4833-842c-b28785ba67e5.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -92,7 +92,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-20 h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 animate-gentle-float-fade"
         style={{
-          backgroundImage: 'url(/lovable-uploads/smiley-face.png)',
+          backgroundImage: 'url(/lovable-uploads/2e0ed293-e64d-4833-842c-b28785ba67e5.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -100,8 +100,9 @@ const AnimatedBackgroundImages: React.FC = () => {
           left: '25%',
           animationDelay: '5s',
           animationDuration: '13s',
-          filter: 'hue-rotate(200deg) brightness(0.25)',
-          mixBlendMode: 'darken'
+          filter: 'hue-rotate(200deg) brightness(0.6) contrast(1.5)',
+          mixBlendMode: 'multiply',
+          opacity: '0.7'
         }}
       />
       
