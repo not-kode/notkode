@@ -12,23 +12,36 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 0;
+  z-index: 1;
   opacity: 0;
   pointer-events: none;
   background-image: 
-    url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cg id='pattern-group'%3E%3C!-- Circle elements --%3E%3Ccircle cx='20' cy='20' r='8' fill='none' stroke='%2332E5FF' stroke-width='1.5' opacity='0.3'/%3E%3Ccircle cx='45' cy='45' r='4' fill='%238ee2e5' opacity='0.25'/%3E%3Ccircle cx='70' cy='25' r='6' fill='none' stroke='%2332E5FF' stroke-width='1' opacity='0.2'/%3E%3C!-- Stylized 'e' shapes --%3E%3Cpath d='M90 30 Q95 25 100 30 Q95 35 90 30 M92 30 L98 30' stroke='%2332E5FF' stroke-width='1.5' fill='none' opacity='0.3'/%3E%3Cpath d='M120 50 Q125 45 130 50 Q125 55 120 50 M122 50 L128 50' stroke='%238ee2e5' stroke-width='1' fill='none' opacity='0.25'/%3E%3C!-- 'N' logo variations --%3E%3Cpath d='M150 20 L150 40 M150 20 L165 40 M165 20 L165 40' stroke='%2332E5FF' stroke-width='2' opacity='0.3'/%3E%3C!-- Smile icon --%3E%3Ccircle cx='180' cy='80' r='10' fill='none' stroke='%238ee2e5' stroke-width='1.5' opacity='0.25'/%3E%3Cpath d='M175 85 Q180 90 185 85' stroke='%238ee2e5' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Ccircle cx='177' cy='77' r='1' fill='%238ee2e5' opacity='0.25'/%3E%3Ccircle cx='183' cy='77' r='1' fill='%238ee2e5' opacity='0.25'/%3E%3C!-- Additional scattered elements --%3E%3Ccircle cx='160' cy='120' r='3' fill='%2332E5FF' opacity='0.2'/%3E%3Cpath d='M30 80 Q35 75 40 80 Q35 85 30 80 M32 80 L38 80' stroke='%238ee2e5' stroke-width='1' fill='none' opacity='0.2'/%3E%3Ccircle cx='60' cy='100' r='5' fill='none' stroke='%2332E5FF' stroke-width='1' opacity='0.25'/%3E%3Cpath d='M100 120 L100 140 M100 120 L115 140 M115 120 L115 140' stroke='%238ee2e5' stroke-width='1.5' opacity='0.2'/%3E%3Ccircle cx='140' cy='160' r='7' fill='none' stroke='%2332E5FF' stroke-width='1' opacity='0.3'/%3E%3Cpath d='M20 150 Q25 145 30 150 Q25 155 20 150 M22 150 L28 150' stroke='%2332E5FF' stroke-width='1.5' fill='none' opacity='0.25'/%3E%3Ccircle cx='180' cy='180' r='4' fill='%238ee2e5' opacity='0.2'/%3E%3C!-- More scattered 'N' logos --%3E%3Cpath d='M50 160 L50 180 M50 160 L65 180 M65 160 L65 180' stroke='%2332E5FF' stroke-width='1.5' opacity='0.25'/%3E%3C!-- Additional smile variations --%3E%3Ccircle cx='120' cy='180' r='8' fill='none' stroke='%238ee2e5' stroke-width='1' opacity='0.2'/%3E%3Cpath d='M115 185 Q120 190 125 185' stroke='%238ee2e5' stroke-width='1' fill='none' opacity='0.2'/%3E%3Ccircle cx='117.5' cy='182' r='0.8' fill='%238ee2e5' opacity='0.2'/%3E%3Ccircle cx='122.5' cy='182' r='0.8' fill='%238ee2e5' opacity='0.2'/%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23pattern-group' x='0' y='0'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
+    url("data:image/svg+xml,%3Csvg width='150' height='150' viewBox='0 0 150 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cg id='pattern-group'%3E%3C!-- Circle elements with higher opacity --%3E%3Ccircle cx='15' cy='15' r='6' fill='none' stroke='%234BD2E5' stroke-width='1.5' opacity='0.6'/%3E%3Ccircle cx='35' cy='35' r='3' fill='%238EE2E5' opacity='0.5'/%3E%3Ccircle cx='55' cy='20' r='4' fill='none' stroke='%234BD2E5' stroke-width='1' opacity='0.4'/%3E%3C!-- Stylized 'e' shapes with better visibility --%3E%3Cpath d='M70 25 Q75 20 80 25 Q75 30 70 25 M72 25 L78 25' stroke='%234BD2E5' stroke-width='1.5' fill='none' opacity='0.6'/%3E%3Cpath d='M95 40 Q100 35 105 40 Q100 45 95 40 M97 40 L103 40' stroke='%238EE2E5' stroke-width='1.2' fill='none' opacity='0.5'/%3E%3C!-- 'N' logo variations more visible --%3E%3Cpath d='M120 15 L120 30 M120 15 L130 30 M130 15 L130 30' stroke='%234BD2E5' stroke-width='2' opacity='0.6'/%3E%3C!-- Smile icon enhanced --%3E%3Ccircle cx='140' cy='60' r='8' fill='none' stroke='%238EE2E5' stroke-width='1.5' opacity='0.5'/%3E%3Cpath d='M135 65 Q140 70 145 65' stroke='%238EE2E5' stroke-width='1.5' fill='none' opacity='0.5'/%3E%3Ccircle cx='137.5' cy='57' r='1' fill='%238EE2E5' opacity='0.5'/%3E%3Ccircle cx='142.5' cy='57' r='1' fill='%238EE2E5' opacity='0.5'/%3E%3C!-- Additional scattered elements --%3E%3Ccircle cx='130' cy='90' r='2.5' fill='%234BD2E5' opacity='0.4'/%3E%3Cpath d='M25 60 Q30 55 35 60 Q30 65 25 60 M27 60 L33 60' stroke='%238EE2E5' stroke-width='1' fill='none' opacity='0.4'/%3E%3Ccircle cx='45' cy='75' r='4' fill='none' stroke='%234BD2E5' stroke-width='1' opacity='0.5'/%3E%3Cpath d='M80 90 L80 105 M80 90 L90 105 M90 90 L90 105' stroke='%238EE2E5' stroke-width='1.5' opacity='0.4'/%3E%3Ccircle cx='110' cy='120' r='5' fill='none' stroke='%234BD2E5' stroke-width='1' opacity='0.6'/%3E%3Cpath d='M15 115 Q20 110 25 115 Q20 120 15 115 M17 115 L23 115' stroke='%234BD2E5' stroke-width='1.5' fill='none' opacity='0.5'/%3E%3Ccircle cx='140' cy='135' r='3' fill='%238EE2E5' opacity='0.4'/%3E%3C!-- More scattered 'N' logos --%3E%3Cpath d='M40 120 L40 135 M40 120 L50 135 M50 120 L50 135' stroke='%234BD2E5' stroke-width='1.5' opacity='0.5'/%3E%3C!-- Additional smile variations --%3E%3Ccircle cx='95' cy='135' r='6' fill='none' stroke='%238EE2E5' stroke-width='1' opacity='0.4'/%3E%3Cpath d='M91 140 Q95 145 99 140' stroke='%238EE2E5' stroke-width='1' fill='none' opacity='0.4'/%3E%3Ccircle cx='93' cy='137' r='0.8' fill='%238EE2E5' opacity='0.4'/%3E%3Ccircle cx='97' cy='137' r='0.8' fill='%238EE2E5' opacity='0.4'/%3E%3C!-- Extra distributed elements for better coverage --%3E%3Ccircle cx='60' cy='50' r='2' fill='%234BD2E5' opacity='0.3'/%3E%3Cpath d='M10 85 Q15 80 20 85 Q15 90 10 85 M12 85 L18 85' stroke='%238EE2E5' stroke-width='1' fill='none' opacity='0.3'/%3E%3Cpath d='M65 110 L65 125 M65 110 L75 125 M75 110 L75 125' stroke='%234BD2E5' stroke-width='1.2' opacity='0.4'/%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23pattern-group' x='0' y='0'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
   background-repeat: repeat;
   transition: opacity 0.5s ease-in-out;
 }
 
-/* Only show pattern in light mode */
-.light .home-pattern-background::before {
+/* Show pattern in light mode - using multiple selectors for better compatibility */
+.light .home-pattern-background::before,
+html.light .home-pattern-background::before,
+:root.light .home-pattern-background::before {
   opacity: 1;
+}
+
+/* Fallback: show pattern by default and hide in dark mode */
+.home-pattern-background::before {
+  opacity: 0.7;
+}
+
+.dark .home-pattern-background::before,
+html.dark .home-pattern-background::before,
+:root.dark .home-pattern-background::before {
+  opacity: 0;
 }
 
 /* Ensure all content stays above the pattern */
 .home-pattern-background > * {
   position: relative;
-  z-index: 1;
+  z-index: 10;
 }

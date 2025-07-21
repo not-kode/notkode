@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building, Handshake, ArrowRight } from 'lucide-react';
@@ -8,8 +9,8 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden pt-20 pb-8 md:pt-16 md:pb-16 home-pattern-background">
-      {/* Animated Magical Background */}
-      <div className="absolute inset-0">
+      {/* Animated Magical Background - positioned behind pattern */}
+      <div className="absolute inset-0" style={{ zIndex: 0 }}>
         {/* Noise Texture for Liquid Glass Effect */}
         <div className="absolute inset-0 opacity-20" 
              style={{
