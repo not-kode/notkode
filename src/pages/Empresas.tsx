@@ -354,7 +354,7 @@ const Empresas: React.FC = () => {
                             <Bot className="w-12 h-12 text-primary ml-4" />
                           </div>
                           <h3 className="font-sora font-bold text-2xl md:text-3xl mb-4">
-                            <span className="text-gradient">Conhecimento em Negócios + Desenvolvimento + IA</span>
+                            <span className="text-gradient">{t('process.business_knowledge_title')}</span>
                           </h3>
                           <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
                             {t(step.description)}
@@ -362,15 +362,15 @@ const Empresas: React.FC = () => {
                           <div className="flex flex-wrap justify-center gap-4 text-sm">
                             <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
                               <CheckCircle className="w-4 h-4 text-primary mr-2" />
-                              <span>Solução Sob Medida</span>
+                              <span>{t('process.custom_solution')}</span>
                             </div>
                             <div className="flex items-center bg-secondary/10 px-4 py-2 rounded-full">
                               <Zap className="w-4 h-4 text-secondary mr-2" />
-                              <span>Tempo Recorde</span>
+                              <span>{t('process.record_time')}</span>
                             </div>
                             <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
                               <TrendingUp className="w-4 h-4 text-primary mr-2" />
-                              <span>Resultados Garantidos</span>
+                              <span>{t('process.guaranteed_results')}</span>
                             </div>
                           </div>
                         </div>

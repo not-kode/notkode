@@ -209,6 +209,20 @@ const translations = {
           tag2: "Clientes Satisfeitos",
           tag3: "Crescimento Sustentável"
         }
+      },
+      cta: {
+        feature1: {
+          title: "Inovação Contínua",
+          desc: "Sempre na vanguarda das tecnologias"
+        },
+        feature2: {
+          title: "Relacionamento Duradouro",
+          desc: "Parceria de longo prazo para crescimento mútuo"
+        },
+        feature3: {
+          title: "Resultados Comprovados",
+          desc: "Track record de projetos bem-sucedidos"
+        }
       }
     },
     // About page
@@ -319,6 +333,10 @@ const translations = {
     },
     // Process steps
     process: {
+      business_knowledge_title: "Conhecimento em Negócios + Desenvolvimento + IA",
+      custom_solution: "Solução Sob Medida",
+      record_time: "Tempo Recorde",
+      guaranteed_results: "Resultados Garantidos",
       step1: {
         title: "Análise e Planejamento",
         description: "Mapeamento detalhado das suas necessidades e definição da estratégia mais eficaz"
@@ -337,6 +355,71 @@ const translations = {
       },
       step5: {
         description: "O resultado é uma solução robusta, escalável e perfeitamente alinhada com seus objetivos de negócio"
+      }
+    },
+    // Portfolio
+    portfolio: {
+      title: "Projetos de Destaque", 
+      subtitle: "Explore alguns dos projetos que tivemos o prazer de desenvolver",
+      filter_title: "Filtrar por categoria",
+      filters: {
+        all: "Todos os Projetos"
+      },
+      view_project: "Ver Projeto",
+      no_projects: "Nenhum projeto encontrado para os filtros selecionados",
+      autoagentes: {
+        description: "Plataforma SaaS que automatiza a criação e gestão de agentes de IA para empresas, facilitando a implementação de soluções inteligentes sem conhecimento técnico."
+      },
+      ativa: {
+        description: "Sistema completo de CRM e automação de vendas que integra IA para qualificação de leads e acompanhamento inteligente de clientes potenciais."
+      },
+      zapinside: {
+        description: "Ferramenta de automação que conecta WhatsApp Business com sistemas de gestão, permitindo atendimento automatizado e gestão eficiente de conversas."
+      },
+      noodrops: {
+        description: "E-commerce premium de suplementos com sistema de assinatura, integração com múltiplos gateways de pagamento e analytics avançado para otimização de conversões."
+      },
+      loss: {
+        description: "Website institucional para empresa de consultoria em prevenção de perdas, com sistema de captação de leads integrado e automação de follow-up."
+      },
+      solojet: {
+        description: "Plataforma digital para empresa de aviação executiva com sistema de cotação online, integração com mapas e automação de processos de vendas."
+      }
+    },
+    // Categories
+    category: {
+      saas: "SaaS",
+      ecommerce: "E-commerce",
+      website: "Website"
+    },
+    // Common terms
+    common: {
+      launch: "Lançamento",
+      revenue: "Receita",
+      technologies: "Tecnologias",
+      contact: "Entrar em Contato"
+    },
+    // CTA sections
+    cta: {
+      empresas: {
+        title: "Pronto para Transformar seu Negócio?",
+        subtitle: "Seja o próximo case de sucesso da nossa carteira de clientes"
+      },
+      parcerias: {
+        title: "Pronto para uma Parceria de Sucesso?",
+        subtitle: "Junte-se a nós e transforme sua agência em líder de inovação no mercado"
+      },
+      feature1: {
+        title: "Projetos Únicos",
+        desc: "Cada solução é desenvolvida especificamente para suas necessidades"
+      },
+      feature2: {
+        title: "Entrega Rápida", 
+        desc: "Metodologia ágil que garante resultados em tempo recorde"
+      },
+      feature3: {
+        title: "Suporte Dedicado",
+        desc: "Acompanhamento contínuo para garantir o sucesso do projeto"
       }
     }
   },
@@ -536,6 +619,20 @@ const translations = {
           tag2: "Satisfied Clients",
           tag3: "Sustainable Growth"
         }
+      },
+      cta: {
+        feature1: {
+          title: "Continuous Innovation",
+          desc: "Always at the forefront of technologies"
+        },
+        feature2: {
+          title: "Long-lasting Relationship",
+          desc: "Long-term partnership for mutual growth"
+        },
+        feature3: {
+          title: "Proven Results",
+          desc: "Track record of successful projects"
+        }
       }
     },
     // About page
@@ -646,6 +743,10 @@ const translations = {
     },
     // Process steps
     process: {
+      business_knowledge_title: "Business Knowledge + Development + AI",
+      custom_solution: "Custom Solution",
+      record_time: "Record Time",
+      guaranteed_results: "Guaranteed Results",
       step1: {
         title: "Analysis and Planning",
         description: "Detailed mapping of your needs and definition of the most effective strategy"
@@ -664,6 +765,71 @@ const translations = {
       },
       step5: {
         description: "The result is a robust, scalable solution perfectly aligned with your business objectives"
+      }
+    },
+    // Portfolio
+    portfolio: {
+      title: "Featured Projects", 
+      subtitle: "Explore some of the projects we have had the pleasure of developing",
+      filter_title: "Filter by category",
+      filters: {
+        all: "All Projects"
+      },
+      view_project: "View Project",
+      no_projects: "No projects found for the selected filters",
+      autoagentes: {
+        description: "SaaS platform that automates the creation and management of AI agents for companies, facilitating the implementation of intelligent solutions without technical knowledge."
+      },
+      ativa: {
+        description: "Complete CRM and sales automation system that integrates AI for lead qualification and intelligent tracking of potential clients."
+      },
+      zapinside: {
+        description: "Automation tool that connects WhatsApp Business with management systems, enabling automated customer service and efficient conversation management."
+      },
+      noodrops: {
+        description: "Premium supplement e-commerce with subscription system, integration with multiple payment gateways and advanced analytics for conversion optimization."
+      },
+      loss: {
+        description: "Institutional website for loss prevention consulting company, with integrated lead capture system and follow-up automation."
+      },
+      solojet: {
+        description: "Digital platform for executive aviation company with online quotation system, maps integration and sales process automation."
+      }
+    },
+    // Categories
+    category: {
+      saas: "SaaS",
+      ecommerce: "E-commerce",
+      website: "Website"
+    },
+    // Common terms
+    common: {
+      launch: "Launch",
+      revenue: "Revenue",
+      technologies: "Technologies",
+      contact: "Get In Touch"
+    },
+    // CTA sections
+    cta: {
+      empresas: {
+        title: "Ready to Transform Your Business?",
+        subtitle: "Be the next success case in our client portfolio"
+      },
+      parcerias: {
+        title: "Ready for a Successful Partnership?",
+        subtitle: "Join us and transform your agency into a market innovation leader"
+      },
+      feature1: {
+        title: "Unique Projects",
+        desc: "Each solution is developed specifically for your needs"
+      },
+      feature2: {
+        title: "Fast Delivery", 
+        desc: "Agile methodology that guarantees results in record time"
+      },
+      feature3: {
+        title: "Dedicated Support",
+        desc: "Continuous monitoring to ensure project success"
       }
     }
   }
