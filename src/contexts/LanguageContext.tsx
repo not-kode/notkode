@@ -91,14 +91,14 @@ const translations = {
       },
       services: {
         title: "Nossos Serviços",
-        internal: "Sistemas Internos",
-        saas: "Plataformas SaaS",
+        internal: "Software para uso interno de empresas",
+        saas: "Software para comercializar (SaaS)",
         ai: "Agentes de IA",
-        automation: "Automação",
-        figma: "Prototipagem",
-        websites: "Sites e Apps Web",
-        mobile: "Apps Mobile",
-        ecommerce: "E-commerce"
+        automation: "Automações (n8n e outras)",
+        figma: "Protótipos no Figma",
+        websites: "Websites responsivos",
+        mobile: "Aplicativos mobile",
+        ecommerce: "E-commerces"
       },
       why: {
         title: "Por que escolher a Notkode?",
@@ -501,14 +501,14 @@ const translations = {
       },
       services: {
         title: "Our Services",
-        internal: "Internal Systems",
-        saas: "SaaS Platforms",
+        internal: "Software for internal company use",
+        saas: "Software for commercialization (SaaS)",
         ai: "AI Agents",
-        automation: "Automation",
-        figma: "Prototyping",
-        websites: "Websites & Web Apps",
+        automation: "Automations (n8n and others)",
+        figma: "Figma Prototypes",
+        websites: "Responsive Websites",
         mobile: "Mobile Apps",
-        ecommerce: "E-commerce"
+        ecommerce: "E-commerces"
       },
       why: {
         title: "Why choose Notkode?",
