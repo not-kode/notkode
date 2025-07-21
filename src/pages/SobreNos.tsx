@@ -67,12 +67,12 @@ const SobreNos: React.FC = () => {
             <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-8 py-4 backdrop-blur-sm">
               <h1 className="relative text-xl md:text-2xl font-semibold text-primary/90 tracking-wide font-sora">
                 <span className="inline-block w-2 h-2 bg-primary rounded-full mr-3 animate-pulse"></span>
-                Onde ideias se transformam em soluções reais
+                {t('sobre.hero.title')}
               </h1>
             </div>
           </div>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto">
-            Nascemos em 2021 com a missão de democratizar a tecnologia, ajudando empresas e agências a crescerem sem as barreiras tradicionais do desenvolvimento.
+            {t('sobre.hero.subtitle')}
           </p>
         </div>
       </section>
@@ -111,7 +111,7 @@ const SobreNos: React.FC = () => {
       <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-16">
-            <span className="text-gradient">Quem está por trás da Notkode</span>
+            <span className="text-gradient">{t('sobre.founders.main_title')}</span>
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
@@ -251,7 +251,7 @@ const SobreNos: React.FC = () => {
             <div className="relative">
               <WhatsAppButton 
                 className="text-lg px-8 py-4 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-2xl hover:shadow-primary/25 transition-all duration-300 transform hover:scale-105" 
-                text="Falar com Nossa Equipe"
+                text={t('sobre.cta.button')}
               />
             </div>
           </div>

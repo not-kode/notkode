@@ -33,18 +33,18 @@ const Parcerias: React.FC = () => {
   const benefits = [
     {
       icon: Users,
-      title: 'Ofereça mais serviços aos seus clientes',
-      description: 'Agregue os nossos serviços ao seu portfolio, oferecendo soluções completas sem precisar contratar desenvolvedores ou designers internos'
+      title: t('parcerias.benefit1.title'),
+      description: t('parcerias.benefit1.desc')
     },
     {
       icon: Bot,
-      title: 'Especialistas em Inteligência Artificial',
-      description: 'Equipe especializada nas mais avançadas tecnologias de IA e automação'
+      title: t('parcerias.benefit2.title'),
+      description: t('parcerias.benefit2.desc')
     },
     {
       icon: Award,
-      title: 'Entrega garantida com qualidade Notkode',
-      description: 'Não corra riscos técnicos, garantimos qualidade premium da entrega e a satisfação do seu cliente com nosso track record comprovado'
+      title: t('parcerias.benefit3.title'),
+      description: t('parcerias.benefit3.desc')
     }
   ];
 
@@ -52,32 +52,32 @@ const Parcerias: React.FC = () => {
     {
       icon: Bot,
       title: t('parcerias.services.ai'),
-      description: 'Agentes conversacionais e automação inteligente'
+      description: t('parcerias.service1.desc')
     },
     {
       icon: Workflow,
       title: t('parcerias.services.automation'),
-      description: 'Integrações e automações personalizadas'
+      description: t('parcerias.service2.desc')
     },
     {
       icon: Rocket,
       title: t('parcerias.services.saas'),
-      description: 'Plataformas SaaS escaláveis e robustas'
+      description: t('parcerias.service3.desc')
     },
     {
       icon: Globe,
       title: t('parcerias.services.apps'),
-      description: 'Sites responsivos e aplicativos modernos'
+      description: t('parcerias.service4.desc')
     },
     {
       icon: ShoppingCart,
       title: t('parcerias.services.ecommerce'),
-      description: 'E-commerces otimizados para conversão'
+      description: t('parcerias.service5.desc')
     },
     {
       icon: Palette,
       title: t('parcerias.services.design'),
-      description: 'UX/UI design focado em resultados de negócio'
+      description: t('parcerias.service6.desc')
     }
   ];
 
@@ -101,19 +101,19 @@ const Parcerias: React.FC = () => {
                 <div className="flex items-center">
                   <span className="inline-block w-2 h-2 bg-primary rounded-full mr-3 animate-pulse"></span>
                   <Handshake className="w-4 h-4 text-primary mr-2" />
-                  <span className="text-sm font-medium text-primary/90 tracking-wide font-mono">Parceria Estratégica</span>
+                  <span className="text-sm font-medium text-primary/90 tracking-wide font-mono">{t('parcerias.hero.badge')}</span>
                 </div>
               </div>
             </div>
             
             {/* Main Title */}
             <h1 className="font-sora font-bold text-4xl mb-8 animate-fade-in-up leading-tight">
-              Multiplique sua receita oferecendo desenvolvimento sem contratar ninguém
+              {t('parcerias.hero.title')}
             </h1>
             
             {/* Subtitle */}
             <p className="text-xl text-muted-foreground mb-8 animate-fade-in-up max-w-3xl mx-auto leading-relaxed">
-              Torne-se uma agência completa com nossa expertise como seu braço técnico
+              {t('parcerias.hero.subtitle')}
             </p>
             
             {/* Social Proof Tags - Updated to match Empresas page */}
@@ -122,7 +122,7 @@ const Parcerias: React.FC = () => {
                 <Building className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">+50</div>
                 <span className="relative">
-                  Projetos Entregues
+                  {t('empresas.stats.projects')}
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
@@ -130,7 +130,7 @@ const Parcerias: React.FC = () => {
                 <Star className="w-4 h-4 text-secondary mr-2" />
                 <div className="text-lg font-bold text-secondary mr-2">9.8</div>
                 <span className="relative">
-                  Nota de Avaliação
+                  {t('empresas.stats.rating')}
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-secondary to-primary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
@@ -138,7 +138,7 @@ const Parcerias: React.FC = () => {
                 <Calendar className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">+4</div>
                 <span className="relative">
-                  Anos de Experiência
+                  {t('empresas.stats.experience')}
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
@@ -147,7 +147,7 @@ const Parcerias: React.FC = () => {
             {/* CTA Button */}
             <div className="animate-fade-in-up">
               <WhatsAppButton 
-                text="Quero Ser Parceiro"
+                text={t('parcerias.hero.cta')}
                 className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0"
               />
             </div>
@@ -159,10 +159,10 @@ const Parcerias: React.FC = () => {
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
-            Por que <span className="text-gradient">escolher nossa parceria?</span>
+            {t('parcerias.benefits.main_title')}
           </h2>
           <p className="text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto">
-            Vantagens exclusivas que transformam sua agência em uma operação completa
+            {t('parcerias.benefits.main_subtitle')}
           </p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -192,10 +192,10 @@ const Parcerias: React.FC = () => {
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
-            <span className="text-gradient">Serviços Disponíveis para Terceirização</span>
+            <span className="text-gradient">{t('parcerias.services.main_title')}</span>
           </h2>
           <p className="text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto">
-            Serviços completos que você pode oferecer aos seus clientes
+            {t('parcerias.services.main_subtitle')}
           </p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -228,10 +228,10 @@ const Parcerias: React.FC = () => {
         <div className="container mx-auto relative z-10">
           <div className="text-center mb-20">
             <h2 className="font-sora font-bold text-4xl mb-6">
-              Como <span className="text-gradient">Funciona</span>
+              {t('parcerias.process.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Um processo simples e transparente para escalar sua agência
+              {t('parcerias.process.subtitle')}
             </p>
           </div>
           
@@ -386,28 +386,28 @@ const Parcerias: React.FC = () => {
               <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
                 <Sparkles className="w-5 h-5 mr-3" />
                 <div>
-                  <div className="text-lg font-bold text-white">Orçamento Gratuito</div>
-                  <span className="text-white/80">Análise completa sem compromisso</span>
+                  <div className="text-lg font-bold text-white">{t('parcerias.cta.feature1.title')}</div>
+                  <span className="text-white/80">{t('parcerias.cta.feature1.desc')}</span>
                 </div>
               </div>
               <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
                 <Heart className="w-5 h-5 mr-3" />
                 <div>
-                  <div className="text-lg font-bold text-white">Consultoria Inclusa</div>
-                  <span className="text-white/80">Orientação estratégica para seu projeto</span>
+                  <div className="text-lg font-bold text-white">{t('parcerias.cta.feature2.title')}</div>
+                  <span className="text-white/80">{t('parcerias.cta.feature2.desc')}</span>
                 </div>
               </div>
               <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
                 <Zap className="w-5 h-5 mr-3" />
                 <div>
-                  <div className="text-lg font-bold text-white">Entrega Rápida</div>
-                  <span className="text-white/80">Projetos entregues em tempo recorde</span>
+                  <div className="text-lg font-bold text-white">{t('parcerias.cta.feature3.title')}</div>
+                  <span className="text-white/80">{t('parcerias.cta.feature3.desc')}</span>
                 </div>
               </div>
             </div>
             
             <WhatsAppButton 
-              text="Entrar em Contato" 
+              text={t('common.contact')}
               className="bg-white text-primary px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-white/25 hover:scale-105 transition-all duration-300 border-0 hover:bg-white/90" 
             />
           </div>
