@@ -39,7 +39,7 @@ const Home: React.FC = () => {
 
       <div className="container mx-auto max-w-4xl text-center relative z-10 flex-grow flex flex-col justify-center">
         {/* Main Title */}
-        <div className="font-sora font-bold text-2xl md:text-4xl lg:text-5xl mb-8 leading-tight">
+        <div className="font-sora font-bold text-3xl md:text-5xl lg:text-6xl mb-8 leading-tight">
           <span className="text-primary">Acelere</span> seu negócio<br />
           com <span className="text-gradient">tecnologia</span> <span className="text-primary">sob medida</span>
         </div>
