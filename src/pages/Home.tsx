@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building, Handshake, ArrowRight } from 'lucide-react';
@@ -7,7 +8,7 @@ const Home: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
       {/* Animated Magical Background */}
       <div className="absolute inset-0">
         {/* Noise Texture for Liquid Glass Effect */}
@@ -36,7 +37,7 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-muted/3 to-transparent animate-[magical-pulse_8s_ease-in-out_infinite_reverse] animation-delay-3000"></div>
       </div>
 
-      <div className="container mx-auto max-w-4xl text-center relative z-10">
+      <div className="container mx-auto max-w-4xl text-center relative z-10 flex-grow flex flex-col justify-center">
         {/* Main Title */}
         <h1 className="font-sora font-bold text-4xl md:text-6xl lg:text-7xl mb-8 leading-tight">
           Acelere seu negócio com{' '}
@@ -87,6 +88,13 @@ const Home: React.FC = () => {
             </div>
           </Link>
         </div>
+      </div>
+
+      {/* Lovable Tag */}
+      <div className="relative z-10 mt-8 mb-4 text-center">
+        <p className="text-sm text-muted-foreground/70 italic">
+          This website was 100% created using Lovable, welcome to the AI era!
+        </p>
       </div>
     </div>
   );
