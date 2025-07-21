@@ -51,7 +51,7 @@ const Home: React.FC = () => {
         </p>
         
         {/* Options */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto mb-12">
           {/* Empresas Option */}
           <Link 
             to="/empresas" 
@@ -88,13 +88,18 @@ const Home: React.FC = () => {
             </div>
           </Link>
         </div>
-      </div>
 
-      {/* Lovable Tag */}
-      <div className="relative z-10 mt-8 mb-4 text-center">
-        <p className="text-sm text-muted-foreground/70 italic">
-          This website was 100% created using Lovable, welcome to the AI era!
-        </p>
+        {/* Futuristic Neon Lovable Tag */}
+        <div className="relative inline-block">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
+          <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent rounded-full animate-[shimmer_3s_ease-in-out_infinite]"></div>
+            <p className="relative text-sm font-medium text-primary/90 tracking-wide font-mono">
+              <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
+              This website was 100% created using Lovable, welcome to the AI era!
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
