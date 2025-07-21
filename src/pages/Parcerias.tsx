@@ -394,7 +394,7 @@ const Parcerias: React.FC = () => {
             </p>
             
             {/* Three Topics */}
-            <div className="flex flex-wrap justify-center gap-6 text-sm mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-12">
               <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
                 <Sparkles className="w-5 h-5 mr-3" />
                 <div>
