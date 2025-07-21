@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from 'react';
 
 interface LanguageContextProps {
@@ -52,10 +53,15 @@ const translations = {
       contact: {
         title: "Vamos Inovar Juntos?",
         description: "Entre em contato conosco e descubra como a Notkode pode ajudar a sua empresa a alcançar novos patamares de sucesso com soluções digitais inovadoras e personalizadas."
-      },
-      footer: {
-        copyright: "© 2024 Notkode. Todos os direitos reservados."
       }
+    },
+    footer: {
+      copyright: "© 2024 Notkode. Todos os direitos reservados.",
+      rights: "Todos os direitos reservados.",
+      made_with: "Feito com",
+      by_notkode: "pela Notkode",
+      location: "São Paulo - SP, Brasil",
+      cnpj: "CNPJ: 00.000.000/0001-00"
     },
     about: {
       hero: {
@@ -184,10 +190,15 @@ const translations = {
       contact: {
         title: "Let's Innovate Together?",
         description: "Get in touch with us and discover how Notkode can help your company reach new levels of success with innovative and personalized digital solutions."
-      },
-      footer: {
-        copyright: "© 2024 Notkode. All rights reserved."
       }
+    },
+    footer: {
+      copyright: "© 2024 Notkode. All rights reserved.",
+      rights: "All rights reserved.",
+      made_with: "Made with",
+      by_notkode: "by Notkode",
+      location: "São Paulo - SP, Brazil",
+      cnpj: "CNPJ: 00.000.000/0001-00"
     },
     about: {
       hero: {
