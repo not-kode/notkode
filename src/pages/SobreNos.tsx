@@ -11,7 +11,8 @@ import {
   Users,
   Mail,
   Phone,
-  ArrowRight
+  ArrowRight,
+  Linkedin
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
@@ -21,39 +22,39 @@ const SobreNos: React.FC = () => {
 
   const timeline = [
     {
-      period: "Início de 2021",
-      title: "Os Primeiros Passos",
-      description: "Começamos nossa trajetória utilizando tecnologias consolidadas do mercado como WordPress e Figma. Era nosso ponto de partida para entender as reais necessidades dos clientes."
+      period: t('sobre.timeline.2021_start.period'),
+      title: t('sobre.timeline.2021_start.title'),
+      description: t('sobre.timeline.2021_start.desc')
     },
     {
-      period: "Meio de 2021",
-      title: "A Descoberta do No-Code",
-      description: "Percebemos o movimento revolucionário que as plataformas No-Code estavam criando globalmente. Ainda era território inexplorado - o conceito de desenvolver sem escrever código diretamente estava apenas chegando ao mercado brasileiro. Vimos uma oportunidade única."
+      period: t('sobre.timeline.2021_mid.period'),
+      title: t('sobre.timeline.2021_mid.title'),
+      description: t('sobre.timeline.2021_mid.desc')
     },
     {
-      period: "Dezembro de 2022",
-      title: "O Momento Decisivo",
-      description: "Tivemos acesso antecipado ao ChatGPT e nossa visão sobre o futuro da tecnologia mudou completamente. Era o início de uma nova era, e decidimos focar em nos tornar especialistas em aplicar Inteligência Artificial para otimizar negócios reais."
+      period: t('sobre.timeline.2022_dec.period'),
+      title: t('sobre.timeline.2022_dec.title'),
+      description: t('sobre.timeline.2022_dec.desc')
     },
     {
-      period: "Janeiro de 2023",
-      title: "Expandindo o Arsenal",
-      description: "Mapeamos intensivamente o que o mercado oferecia de mais inovador. Expandimos nosso leque de ferramentas e criamos um plano estratégico para ter o melhor arsenal tecnológico disponível para nossos clientes."
+      period: t('sobre.timeline.2023_jan.period'),
+      title: t('sobre.timeline.2023_jan.title'),
+      description: t('sobre.timeline.2023_jan.desc')
     },
     {
-      period: "Março de 2023",
-      title: "Decolagem Internacional",
-      description: "A Notkode alça voo além das fronteiras brasileiras. Começamos a atender empresas dos Estados Unidos, Canadá e Inglaterra, provando que nossa abordagem funciona em qualquer mercado."
+      period: t('sobre.timeline.2023_mar.period'),
+      title: t('sobre.timeline.2023_mar.title'),
+      description: t('sobre.timeline.2023_mar.desc')
     },
     {
-      period: "2024",
-      title: "A Era da IA",
-      description: "A Inteligência Artificial ganha força inédita no mercado. Nos consolidamos entregando desenvolvimento pautado em IA e criando Agentes de IA de todos os tipos, sempre focados em resultados concretos para nossos clientes."
+      period: t('sobre.timeline.2024.period'),
+      title: t('sobre.timeline.2024.title'),
+      description: t('sobre.timeline.2024.desc')
     },
     {
-      period: "2025",
-      title: "O Presente",
-      description: "Estamos vivendo nosso melhor momento, com uma metodologia consolidada e tecnologias de ponta. Este é o ano em que você ainda pode se tornar nosso próximo case de sucesso e transformar suas ideias em resultados reais para seu negócio."
+      period: t('sobre.timeline.2025.period'),
+      title: t('sobre.timeline.2025.title'),
+      description: t('sobre.timeline.2025.desc')
     }
   ];
 
@@ -81,7 +82,7 @@ const SobreNos: React.FC = () => {
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-16">
-            <span className="text-gradient">Nossa jornada de transformação</span>
+            <span className="text-gradient">{t('sobre.timeline.title')}</span>
           </h2>
           
           <div className="relative">
@@ -126,12 +127,12 @@ const SobreNos: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <h3 className="font-sora font-bold text-xl">Camila Tonelotto</h3>
-                  <p className="text-primary font-semibold">Maga do UX</p>
+                  <h3 className="font-sora font-bold text-xl">{t('sobre.camila.name')}</h3>
+                  <p className="text-primary font-semibold">{t('sobre.camila.title')}</p>
                 </div>
               </div>
               <p className="text-muted-foreground mb-6">
-                Desde criança, Camila sempre teve uma paixão pela arte - passava horas pintando quadros. Essa veia artística a levou naturalmente ao design, depois ao UX, e finalmente ao desenvolvimento de software. Hoje, ela lidera a Notkode com foco em criar experiências que realmente facilitam a vida dos usuários, transformando sua visão artística em valor real para os negócios.
+                {t('sobre.camila.bio')}
               </p>
               <div className="flex justify-end">
                 <a 
@@ -140,8 +141,8 @@ const SobreNos: React.FC = () => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm"
                 >
-                  <span>Se conectar no LinkedIn</span>
-                  <ExternalLink className="w-4 h-4" />
+                  <span>{t('sobre.camila.linkedin')}</span>
+                  <Linkedin className="w-4 h-4" />
                 </a>
               </div>
             </div>
@@ -157,12 +158,12 @@ const SobreNos: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <h3 className="font-sora font-bold text-xl">Matheus Tonelotto</h3>
-                  <p className="text-primary font-semibold">Nosso Estrategista</p>
+                  <h3 className="font-sora font-bold text-xl">{t('sobre.matheus.name')}</h3>
+                  <p className="text-primary font-semibold">{t('sobre.matheus.title')}</p>
                 </div>
               </div>
               <p className="text-muted-foreground mb-6">
-                Com experiência sólida em multinacionais de software e nas startups brasileiras mais bem-sucedidas, Matheus traz uma visão técnica excepcional para a empresa. Especialista em Inteligência Artificial, já liderou projetos para empresas no Canadá, Estados Unidos e Inglaterra. Ele é o estrategista por trás de cada solução, sempre focado em entregar o máximo valor no menor tempo possível.
+                {t('sobre.matheus.bio')}
               </p>
               <div className="flex justify-end">
                 <a 
@@ -171,8 +172,8 @@ const SobreNos: React.FC = () => {
                   rel="noopener noreferrer"
                   className="inline-flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm"
                 >
-                  <span>Se conectar no LinkedIn</span>
-                  <ExternalLink className="w-4 h-4" />
+                  <span>{t('sobre.matheus.linkedin')}</span>
+                  <Linkedin className="w-4 h-4" />
                 </a>
               </div>
             </div>
@@ -184,26 +185,26 @@ const SobreNos: React.FC = () => {
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl">
           <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-16">
-            <span className="text-gradient">Informações de Contato</span>
+            <span className="text-gradient">{t('sobre.contact.title')}</span>
           </h2>
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="glass-card text-center group hover:scale-105">
               <Phone className="w-8 h-8 text-primary mx-auto mb-4" />
-              <h3 className="font-sora font-bold text-lg mb-2">WhatsApp</h3>
+              <h3 className="font-sora font-bold text-lg mb-2">{t('sobre.contact.whatsapp')}</h3>
               <p className="text-muted-foreground">+55 11 95138-1254</p>
             </div>
             
             <div className="glass-card text-center group hover:scale-105">
               <Mail className="w-8 h-8 text-primary mx-auto mb-4" />
-              <h3 className="font-sora font-bold text-lg mb-2">E-mail</h3>
+              <h3 className="font-sora font-bold text-lg mb-2">{t('sobre.contact.email')}</h3>
               <p className="text-muted-foreground">camila@notkode.com.br</p>
             </div>
             
             <div className="glass-card text-center group hover:scale-105">
               <MapPin className="w-8 h-8 text-primary mx-auto mb-4" />
-              <h3 className="font-sora font-bold text-lg mb-2">Localização</h3>
-              <p className="text-muted-foreground">Zona Sul, São Paulo - SP</p>
+              <h3 className="font-sora font-bold text-lg mb-2">{t('sobre.contact.location')}</h3>
+              <p className="text-muted-foreground">{t('sobre.contact.location_value')}</p>
             </div>
           </div>
         </div>
