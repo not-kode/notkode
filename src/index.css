@@ -244,43 +244,28 @@
   @keyframes gentle-float-fade {
     0% { 
       opacity: 0;
-      transform: scale(0.3) translateX(0px) translateY(0px) rotate(0deg);
+      transform: scale(0.1) translateX(0px) translateY(0px) rotate(0deg);
       filter: hue-rotate(0deg) brightness(1);
     }
-    10% { 
-      opacity: 0.3;
-      transform: scale(0.8) translateX(10vw) translateY(-5vh) rotate(15deg);
-      filter: hue-rotate(36deg) brightness(0.8);
+    15% {
+      opacity: 0.8;
+      transform: scale(1.3) translateX(20px) translateY(-30px) rotate(10deg);
+      filter: hue-rotate(60deg) brightness(0.9);
     }
-    25% { 
-      opacity: 0.25;
-      transform: scale(1.1) translateX(25vw) translateY(-15vh) rotate(-10deg);
-      filter: hue-rotate(90deg) brightness(0.4);
+    50% {
+      opacity: 1;
+      transform: scale(1) translateX(-15px) translateY(25px) rotate(-5deg);
+      filter: hue-rotate(180deg) brightness(0.7);
     }
-    40% { 
-      opacity: 0.35;
-      transform: scale(0.9) translateX(50vw) translateY(-8vh) rotate(20deg);
-      filter: hue-rotate(144deg) brightness(0.6);
-    }
-    55% { 
-      opacity: 0.2;
-      transform: scale(1.2) translateX(75vw) translateY(10vh) rotate(-5deg);
-      filter: hue-rotate(198deg) brightness(0.3);
-    }
-    70% { 
-      opacity: 0.3;
-      transform: scale(0.8) translateX(90vw) translateY(20vh) rotate(25deg);
-      filter: hue-rotate(252deg) brightness(0.7);
-    }
-    85% { 
-      opacity: 0.15;
-      transform: scale(1.0) translateX(60vw) translateY(25vh) rotate(-15deg);
-      filter: hue-rotate(306deg) brightness(0.5);
+    85% {
+      opacity: 0.6;
+      transform: scale(1.2) translateX(30px) translateY(-20px) rotate(15deg);
+      filter: hue-rotate(300deg) brightness(0.5);
     }
     100% { 
       opacity: 0;
-      transform: scale(0.3) translateX(0px) translateY(0px) rotate(0deg);
-      filter: hue-rotate(360deg) brightness(1);
+      transform: scale(0.05) translateX(0px) translateY(0px) rotate(360deg);
+      filter: hue-rotate(360deg) brightness(0.3);
     }
   }
 
