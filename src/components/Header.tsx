@@ -30,6 +30,11 @@ const Header: React.FC = () => {
       portfolioSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  // Handle language toggle
+  const handleLanguageToggle = () => {
+    setLanguage(language === 'pt' ? 'en' : 'pt');
+  };
   
   // Define navigation items based on current page
   const navItems = isOnEmpresasOrParcerias ? [
@@ -78,23 +83,16 @@ const Header: React.FC = () => {
 
           {/* Controls Section */}
           <div className="flex items-center space-x-2">
-            {/* Language Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="lang-selector h-8 px-2">
-                  <Globe className="w-3 h-3 mr-1" />
-                  <span className="text-xs">{language.toUpperCase()}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass">
-                <DropdownMenuItem onClick={() => setLanguage('pt')}>
-                  Português (BR)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguage('en')}>
-                  English
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Direct Language Toggle */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLanguageToggle}
+              className="lang-selector h-8 px-2 hover:bg-primary/10 transition-colors"
+            >
+              <Globe className="w-3 h-3 mr-1" />
+              <span className="text-xs font-medium">{language.toUpperCase()}</span>
+            </Button>
 
             {/* Theme Toggle */}
             <Button 
