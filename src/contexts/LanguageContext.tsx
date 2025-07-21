@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from 'react';
 
 interface LanguageContextProps {
@@ -14,6 +15,23 @@ interface LanguageProviderProps {
 
 const translations = {
   pt: {
+    // Navigation
+    nav: {
+      empresas: "Empresas",
+      parcerias: "Parcerias",
+      sobre: "Sobre Nós",
+      blog: "Blog"
+    },
+    // Footer
+    footer: {
+      copyright: "© 2024 Notkode. Todos os direitos reservados.",
+      rights: "Todos os direitos reservados.",
+      made_with: "Feito com",
+      by_notkode: "pela Notkode",
+      location: "São Paulo - SP, Brasil",
+      cnpj: "CNPJ: 00.000.000/0001-00"
+    },
+    // Home page
     home: {
       title: "Notkode - Transforme sua visão em realidade com IA e No-Code",
       description: "Desenvolvimento de produtos digitais com Inteligência Artificial e No-Code. Crie soluções inovadoras e eficientes para o seu negócio.",
@@ -52,11 +70,29 @@ const translations = {
       contact: {
         title: "Vamos Inovar Juntos?",
         description: "Entre em contato conosco e descubra como a Notkode pode ajudar a sua empresa a alcançar novos patamares de sucesso com soluções digitais inovadoras e personalizadas."
-      },
-      footer: {
-        copyright: "© 2024 Notkode. Todos os direitos reservados."
       }
     },
+    // Companies page
+    empresas: {
+      hero: {
+        new_title: "Transforme sua empresa com IA e No-Code",
+        title: "Soluções digitais inteligentes para empresas que querem crescer",
+        description: "Desenvolvemos produtos digitais personalizados que automatizam processos, otimizam operações e impulsionam o crescimento do seu negócio usando as mais avançadas tecnologias de IA e No-Code.",
+        primaryButton: "Começar Agora",
+        secondaryButton: "Ver Cases de Sucesso"
+      }
+    },
+    // Agencies page
+    parcerias: {
+      hero: {
+        new_title: "Expanda sua agência com nossa parceria",
+        title: "Parceria estratégica para agências que querem oferecer mais",
+        description: "Amplie seu portfólio de serviços com soluções de IA e No-Code. Oferecemos suporte técnico completo para que sua agência possa entregar projetos inovadores e de alta qualidade aos seus clientes.",
+        primaryButton: "Tornar-se Parceiro",
+        secondaryButton: "Conhecer Benefícios"
+      }
+    },
+    // About page
     about: {
       hero: {
         badge: "Onde ideias se transformam em soluções reais",
@@ -106,15 +142,15 @@ const translations = {
         title: "Quem está por trás da Notkode",
         camila: {
           name: "Camila Tonelotto",
-          role: "CEO",
+          role: "Maga da UX",
           description: "Desde criança, Camila sempre teve uma paixão pela arte - passava horas pintando quadros. Essa veia artística a levou naturalmente ao design, depois ao UX, e finalmente ao desenvolvimento de software. Hoje, ela lidera a Notkode com foco em criar experiências que realmente facilitam a vida dos usuários, transformando sua visão artística em valor real para os negócios.",
-          linkedin: "Se conectar no LinkedIn"
+          linkedin: "Conectar no LinkedIn"
         },
         matheus: {
           name: "Matheus Tonelotto",
-          role: "CTO",
+          role: "Nosso Estrategista",
           description: "Com experiência sólida em multinacionais de software e nas startups brasileiras mais bem-sucedidas, Matheus traz uma visão técnica excepcional para a empresa. Especialista em Inteligência Artificial, já liderou projetos para empresas no Canadá, Estados Unidos e Inglaterra. Ele é o estrategista por trás de cada solução, sempre focado em entregar o máximo valor no menor tempo possível.",
-          linkedin: "Se conectar no LinkedIn"
+          linkedin: "Conectar no LinkedIn"
         }
       },
       contact: {
@@ -146,6 +182,23 @@ const translations = {
     }
   },
   en: {
+    // Navigation
+    nav: {
+      empresas: "Companies",
+      parcerias: "Partnerships",
+      sobre: "About Us",
+      blog: "Blog"
+    },
+    // Footer
+    footer: {
+      copyright: "© 2024 Notkode. All rights reserved.",
+      rights: "All rights reserved.",
+      made_with: "Made with",
+      by_notkode: "by Notkode",
+      location: "São Paulo - SP, Brazil",
+      cnpj: "CNPJ: 00.000.000/0001-00"
+    },
+    // Home page
     home: {
       title: "Notkode - Turn your vision into reality with AI and No-Code",
       description: "Digital product development with Artificial Intelligence and No-Code. Create innovative and efficient solutions for your business.",
@@ -184,11 +237,29 @@ const translations = {
       contact: {
         title: "Let's Innovate Together?",
         description: "Get in touch with us and discover how Notkode can help your company reach new levels of success with innovative and personalized digital solutions."
-      },
-      footer: {
-        copyright: "© 2024 Notkode. All rights reserved."
       }
     },
+    // Companies page
+    empresas: {
+      hero: {
+        new_title: "Transform your company with AI and No-Code",
+        title: "Smart digital solutions for companies that want to grow",
+        description: "We develop customized digital products that automate processes, optimize operations and boost your business growth using the most advanced AI and No-Code technologies.",
+        primaryButton: "Get Started",
+        secondaryButton: "See Success Cases"
+      }
+    },
+    // Agencies page
+    parcerias: {
+      hero: {
+        new_title: "Expand your agency with our partnership",
+        title: "Strategic partnership for agencies that want to offer more",
+        description: "Expand your service portfolio with AI and No-Code solutions. We offer complete technical support so your agency can deliver innovative and high-quality projects to your clients.",
+        primaryButton: "Become a Partner",
+        secondaryButton: "Learn Benefits"
+      }
+    },
+    // About page
     about: {
       hero: {
         badge: "Where ideas transform into real solutions",
@@ -238,13 +309,13 @@ const translations = {
         title: "Who's behind Notkode",
         camila: {
           name: "Camila Tonelotto",
-          role: "CEO",
+          role: "UX Wizard",
           description: "Since childhood, Camila has always had a passion for art - she spent hours painting. This artistic vein naturally led her to design, then UX, and finally software development. Today, she leads Notkode with a focus on creating experiences that truly make users' lives easier, transforming her artistic vision into real business value.",
           linkedin: "Connect on LinkedIn"
         },
         matheus: {
           name: "Matheus Tonelotto",
-          role: "CTO",
+          role: "Our Strategist",
           description: "With solid experience in software multinationals and Brazil's most successful startups, Matheus brings exceptional technical vision to the company. An Artificial Intelligence specialist, he has led projects for companies in Canada, the United States, and England. He's the strategist behind every solution, always focused on delivering maximum value in the shortest time possible.",
           linkedin: "Connect on LinkedIn"
         }
