@@ -140,20 +140,20 @@ const translations = {
         cta: "Tornar-se Parceiro Estratégico"
       },
       benefits: {
-        main_title: "Vantagens da Parceria",
-        main_subtitle: "Transforme sua agência com benefícios exclusivos que só a Notkode oferece"
+        main_title: "Por que escolher nossa parceria?",
+        main_subtitle: "Vantagens exclusivas que transformam sua agência em uma operação completa"
       },
       benefit1: {
-        title: "Suporte Técnico Completo",
-        desc: "Nossa equipe trabalha lado a lado com você durante todo o projeto"
+        title: "Ofereça mais serviços aos seus clientes",
+        desc: "Agregue os nossos serviços ao seu portfolio, oferecendo soluções completas sem precisar contratar desenvolvedores ou designers internos"
       },
       benefit2: {
-        title: "Tecnologia de Ponta",
-        desc: "Acesso às mais avançadas ferramentas de IA e No-Code do mercado"
+        title: "Especialistas em Inteligência Artificial",
+        desc: "Equipe especializada nas mais avançadas tecnologias de IA e automação"
       },
       benefit3: {
-        title: "Margens Atrativas",
-        desc: "Estrutura de comissionamento que garante lucratividade em cada projeto"
+        title: "Entrega garantida com qualidade Notkode",
+        desc: "Não corra riscos técnicos, garantimos qualidade premium da entrega e a satisfação do seu cliente com nosso track record comprovado"
       },
       services: {
         main_title: "Portfólio de Serviços",
@@ -550,20 +550,20 @@ const translations = {
         cta: "Become Strategic Partner"
       },
       benefits: {
-        main_title: "Partnership Advantages",
-        main_subtitle: "Transform your agency with exclusive benefits that only Notkode offers"
+        main_title: "Why choose our partnership?",
+        main_subtitle: "Exclusive advantages that transform your agency into a complete operation"
       },
       benefit1: {
-        title: "Complete Technical Support",
-        desc: "Our team works side by side with you throughout the entire project"
+        title: "Offer more services to your clients",
+        desc: "Add our services to your portfolio, offering complete solutions without needing to hire internal developers or designers"
       },
       benefit2: {
-        title: "Cutting-edge Technology",
-        desc: "Access to the most advanced AI and No-Code tools in the market"
+        title: "Artificial Intelligence Specialists",
+        desc: "Team specialized in the most advanced AI and automation technologies"
       },
       benefit3: {
-        title: "Attractive Margins",
-        desc: "Commission structure that guarantees profitability in every project"
+        title: "Guaranteed delivery with Notkode quality",
+        desc: "Don't take technical risks, we guarantee premium delivery quality and your client's satisfaction with our proven track record"
       },
       services: {
         main_title: "Service Portfolio",
