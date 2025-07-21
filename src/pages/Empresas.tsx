@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight, Star, Quote, Users, ThumbsUp, Calendar } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -156,28 +157,37 @@ const Empresas: React.FC = () => {
               <span className="text-gradient">tempo recorde</span>
             </h1>
             
-            {/* CTA Button - Preenchido e destacado */}
-            <div className="animate-fade-in-up mb-8">
-              <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
-            </div>
-
-            {/* Social Proof Tags - Redesigned without borders and with icons */}
-            <div className="flex flex-wrap justify-center gap-4 text-sm animate-fade-in-up">
-              <div className="flex items-center bg-primary/5 px-4 py-2 rounded-full text-muted-foreground">
+            {/* Social Proof Tags - Moved before CTA */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm animate-fade-in-up mb-8">
+              <div className="flex items-center text-muted-foreground group">
                 <Building className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">+50</div>
-                <span>Projetos Entregues</span>
+                <span className="relative">
+                  Projetos Entregues
+                  <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                </span>
               </div>
-              <div className="flex items-center bg-secondary/5 px-4 py-2 rounded-full text-muted-foreground">
+              <div className="flex items-center text-muted-foreground group">
                 <Star className="w-4 h-4 text-secondary mr-2" />
                 <div className="text-lg font-bold text-secondary mr-2">9.8</div>
-                <span>Nota de Avaliação</span>
+                <span className="relative">
+                  Nota de Avaliação
+                  <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-secondary to-primary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                </span>
               </div>
-              <div className="flex items-center bg-primary/5 px-4 py-2 rounded-full text-muted-foreground">
+              <div className="flex items-center text-muted-foreground group">
                 <Calendar className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">+4</div>
-                <span>Anos de Experiência</span>
+                <span className="relative">
+                  Anos de Experiência
+                  <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                </span>
               </div>
+            </div>
+            
+            {/* CTA Button - Moved after social proof */}
+            <div className="animate-fade-in-up">
+              <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
             </div>
           </div>
         </div>
@@ -244,10 +254,10 @@ const Empresas: React.FC = () => {
 
             {/* Vertical Equals Symbol */}
             <div className="flex justify-center mb-8">
-              <div className="glass-card px-8 py-4">
+              <div className="glass-card px-8 py-6">
                 <div className="text-4xl font-bold text-primary text-center flex flex-col items-center">
-                  <div className="w-8 h-1 bg-primary rounded-full mb-2"></div>
-                  <div className="w-8 h-1 bg-primary rounded-full"></div>
+                  <div className="w-1 h-6 bg-primary rounded-full mb-2"></div>
+                  <div className="w-1 h-6 bg-primary rounded-full"></div>
                 </div>
               </div>
             </div>
