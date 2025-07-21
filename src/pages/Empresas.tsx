@@ -430,8 +430,8 @@ const Empresas: React.FC = () => {
                   </div>
                   
                   {/* Description Container - Desktop only */}
-                  <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-16' : 'pr-16'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                    <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 shadow-lg shadow-primary/10">
+                  <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-20' : 'pr-20'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+                    <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 shadow-lg shadow-primary/10 transform translate-x-8">
                       <div className="flex items-center mb-4">
                         <div className="text-6xl opacity-80 mr-4">
                           {step.icon}
