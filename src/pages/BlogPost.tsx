@@ -185,7 +185,7 @@ const BlogPost: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="glass-card p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-center mt-4 text-muted-foreground">Carregando post...</p>
+          <p className="text-center mt-4 text-muted-foreground">{t('blog.post_loading')}</p>
         </div>
       </div>
     );
@@ -195,8 +195,8 @@ const BlogPost: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="glass-card p-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Post não encontrado</h1>
-          <p className="text-muted-foreground mb-6">O post que você procura não existe ou foi removido.</p>
+          <h1 className="text-2xl font-bold mb-4">{t('blog.post_not_found')}</h1>
+          <p className="text-muted-foreground mb-6">{t('blog.post_not_found_desc')}</p>
           <Link to="/blog">
             <Button>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -217,7 +217,7 @@ const BlogPost: React.FC = () => {
           className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Voltar ao Blog</span>
+          <span>{t('blog.back_to_blog')}</span>
         </Link>
       </div>
 

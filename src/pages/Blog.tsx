@@ -134,7 +134,7 @@ const Blog: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="glass-card p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-center mt-4 text-muted-foreground">Carregando posts...</p>
+          <p className="text-center mt-4 text-muted-foreground">{t('blog.loading')}</p>
         </div>
       </div>
     );
@@ -149,7 +149,7 @@ const Blog: React.FC = () => {
             <span className="text-gradient">{t('nav.blog')}</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Insights, tendências e conhecimento sobre tecnologia, IA e desenvolvimento no-code
+            {t('blog.subtitle')}
           </p>
         </div>
       </section>
@@ -200,7 +200,7 @@ const Blog: React.FC = () => {
           {filteredPosts.length === 0 ? (
             <div className="glass-card text-center max-w-md mx-auto">
               <p className="text-muted-foreground">
-                Nenhum post encontrado com os filtros selecionados.
+                {t('blog.no_posts')}
               </p>
             </div>
           ) : (
@@ -252,7 +252,7 @@ const Blog: React.FC = () => {
                     to={getPostUrl(post)}
                     className="flex items-center space-x-2 text-primary font-semibold group-hover:translate-x-2 transition-transform"
                   >
-                    <span>Ler mais</span>
+                    <span>{t('blog.read_more')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </article>

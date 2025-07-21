@@ -88,16 +88,16 @@ const Portfolio: React.FC = () => {
     <section className="py-20 px-8 bg-background">
       <div className="container mx-auto">
         <h2 className="font-sora font-bold text-4xl text-center mb-4">
-          Nosso <span className="text-gradient">Portfólio</span>
+          <span className="text-gradient">{t('portfolio.title')}</span>
         </h2>
         <p className="text-xl text-muted-foreground text-center mb-12 max-w-3xl mx-auto">
-          Projetos que entregamos resultados extraordinários para nossos clientes
+          {t('portfolio.subtitle')}
         </p>
 
         {/* Filter Section */}
         <div className="mb-12 max-w-4xl mx-auto">
           <div className="text-center mb-6">
-            <h3 className="font-sora font-semibold text-xl text-foreground mb-4">Filtrar por Categoria</h3>
+            <h3 className="font-sora font-semibold text-xl text-foreground mb-4">{t('portfolio.filter_title')}</h3>
             <div className="flex justify-center gap-2 flex-wrap pb-2">
               <button
                 onClick={() => setSelectedCategory('')}
@@ -183,7 +183,7 @@ const Portfolio: React.FC = () => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors font-semibold text-base group-hover:scale-105 transition-transform"
                   >
-                    <span>Ver projeto</span>
+                    <span>{t('portfolio.view_project')}</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
@@ -191,7 +191,7 @@ const Portfolio: React.FC = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <p className="text-muted-foreground text-base">Nenhum projeto encontrado com os filtros selecionados.</p>
+              <p className="text-muted-foreground text-base">{t('portfolio.no_projects')}</p>
             </div>
           )}
         </div>

@@ -213,37 +213,37 @@ const SobreNos: React.FC = () => {
       <section className="py-20 px-4 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="container mx-auto text-center">
           <h2 className="font-sora font-bold text-3xl md:text-4xl mb-8">
-            <span className="text-gradient">Pronto para transformar sua empresa?</span>
+            <span className="text-gradient">{t('cta.sobre.title')}</span>
           </h2>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
             <div className="glass-card text-center group hover:scale-105">
               <Brain className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="font-sora font-bold text-lg mb-2">Solução Completa</h3>
+              <h3 className="font-sora font-bold text-lg mb-2">{t('cta.sobre.complete')}</h3>
               <p className="text-muted-foreground text-sm">
-                Desde a concepção até a implementação, cuidamos de toda a jornada do seu projeto tecnológico.
+                {t('cta.sobre.complete_desc')}
               </p>
             </div>
             
             <div className="glass-card text-center group hover:scale-105">
               <TrendingUp className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="font-sora font-bold text-lg mb-2">Resultados Mensuráveis</h3>
+              <h3 className="font-sora font-bold text-lg mb-2">{t('cta.sobre.measurable')}</h3>
               <p className="text-muted-foreground text-sm">
-                Focamos em entregar valor real para o seu negócio, com métricas claras e resultados tangíveis.
+                {t('cta.sobre.measurable_desc')}
               </p>
             </div>
             
             <div className="glass-card text-center group hover:scale-105">
               <Users className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="font-sora font-bold text-lg mb-2">Experiência Internacional</h3>
+              <h3 className="font-sora font-bold text-lg mb-2">{t('cta.sobre.international')}</h3>
               <p className="text-muted-foreground text-sm">
-                Atendemos empresas no Brasil, Estados Unidos, Canadá e Inglaterra com a mesma excelência.
+                {t('cta.sobre.international_desc')}
               </p>
             </div>
           </div>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Seja você uma empresa buscando crescer ou uma agência querendo expandir seus serviços, estamos aqui para ajudar você a escrever o próximo capítulo da sua história de sucesso.
+            {t('cta.sobre.final_text')}
           </p>
           
           <div className="relative inline-block">

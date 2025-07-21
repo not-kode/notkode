@@ -440,10 +440,10 @@ const Empresas: React.FC = () => {
         <div className="container mx-auto text-center">
           <div className="max-w-4xl mx-auto p-8 rounded-3xl">
             <h2 className="font-sora font-bold text-4xl mb-6 text-white">
-              Pronto para <span className="text-white/90">acelerar</span> sua empresa?
+              {t('cta.empresas.title')}
             </h2>
             <p className="text-xl text-white/90 mb-12">
-              Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso.
+              {t('cta.empresas.subtitle')}
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-12">

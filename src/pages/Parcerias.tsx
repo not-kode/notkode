@@ -375,10 +375,10 @@ const Parcerias: React.FC = () => {
         <div className="container mx-auto text-center">
           <div className="max-w-4xl mx-auto p-8 rounded-3xl">
             <h2 className="font-sora font-bold text-4xl mb-6 text-white">
-              Pronto para <span className="text-white/90">escalar</span> sua agência?
+              {t('cta.parcerias.title')}
             </h2>
             <p className="text-xl text-white/90 mb-12">
-              Entre em contato conosco e descubra como podemos ajudar você a oferecer mais serviços aos seus clientes sem aumentar seus custos.
+              {t('cta.parcerias.subtitle')}
             </p>
             
             {/* Three Topics */}
