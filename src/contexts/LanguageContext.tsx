@@ -74,8 +74,8 @@ const translations = {
     // Companies page
     empresas: {
       hero: {
-        new_title: "Transforme sua empresa com IA e No-Code",
-        new_subtitle: "Soluções digitais inteligentes para empresas que querem crescer",
+        new_title: "Soluções Tecnológicas Sob Medida",
+        new_subtitle: "Desenvolvemos tecnologia que acelera sua empresa em tempo recorde",
         title: "Soluções digitais inteligentes para empresas que querem crescer",
         description: "Desenvolvemos produtos digitais personalizados que automatizam processos, otimizam operações e impulsionam o crescimento do seu negócio usando as mais avançadas tecnologias de IA e No-Code.",
         primaryButton: "Começar Agora",
@@ -484,8 +484,8 @@ const translations = {
     // Companies page
     empresas: {
       hero: {
-        new_title: "Transform your company with AI and No-Code",
-        new_subtitle: "Smart digital solutions for companies that want to grow",
+        new_title: "Custom Technology Solutions",
+        new_subtitle: "We develop technology that accelerates your company in record time",
         title: "Smart digital solutions for companies that want to grow",
         description: "We develop customized digital products that automate processes, optimize operations and boost your business growth using the most advanced AI and No-Code technologies.",
         primaryButton: "Get Started",
