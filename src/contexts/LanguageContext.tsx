@@ -131,9 +131,9 @@ const translations = {
     parcerias: {
       hero: {
         badge: "Parceria Estratégica",
-        new_title: "Expanda sua agência com nossa parceria",
+        new_title: "Multiplique sua receita terceirizando serviços de desenvolvimento",
         title: "Parceria estratégica para agências que querem oferecer mais",
-        subtitle: "Transforme sua agência em líder de inovação com nosso suporte técnico completo",
+        subtitle: "",
         description: "Amplie seu portfólio de serviços com soluções de IA e No-Code. Oferecemos suporte técnico completo para que sua agência possa entregar projetos inovadores e de alta qualidade aos seus clientes.",
         primaryButton: "Tornar-se Parceiro",
         secondaryButton: "Conhecer Benefícios",
@@ -541,9 +541,9 @@ const translations = {
     parcerias: {
       hero: {
         badge: "Strategic Partnership",
-        new_title: "Expand your agency with our partnership",
+        new_title: "Multiply your revenue by outsourcing development services",
         title: "Strategic partnership for agencies that want to offer more",
-        subtitle: "Transform your agency into an innovation leader with our complete technical support",
+        subtitle: "",
         description: "Expand your service portfolio with AI and No-Code solutions. We offer complete technical support so your agency can deliver innovative and high-quality projects to your clients.",
         primaryButton: "Become a Partner",
         secondaryButton: "Learn Benefits",
