@@ -40,9 +40,9 @@ const Home: React.FC = () => {
       <div className="container mx-auto max-w-4xl text-center relative z-10 flex-grow flex flex-col justify-center">
         {/* Main Title */}
         <h1 className="font-sora font-bold text-4xl md:text-6xl lg:text-7xl mb-8 leading-tight">
-          Acelere seu negócio com{' '}
+          <span className="text-primary">Acelere</span> seu negócio com{' '}
           <span className="text-gradient">tecnologia</span>{' '}
-          sob medida
+          <span className="text-primary">sob medida</span>
         </h1>
         
         {/* Subtitle - Console Style */}
