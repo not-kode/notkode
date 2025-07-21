@@ -40,8 +40,8 @@ const Home: React.FC = () => {
       <div className="container mx-auto max-w-4xl text-center relative z-10 flex-grow flex flex-col justify-center">
         {/* Main Title */}
         <div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl mb-6 md:mb-8 leading-tight">
-          <div className="whitespace-nowrap"><span className="text-primary">Acelere</span> seu negócio</div>
-          <div className="whitespace-nowrap">com <span className="text-gradient">tecnologia</span> <span className="text-primary">sob medida</span></div>
+          <div className="whitespace-nowrap"><span className="text-primary">{t('home.main_title_1').split(' ')[0]}</span> {t('home.main_title_1').split(' ').slice(1).join(' ')}</div>
+          <div className="whitespace-nowrap">{t('home.main_title_2').split(' ').slice(0, -2).join(' ')} <span className="text-gradient">{t('home.main_title_2').split(' ').slice(-2, -1)[0]}</span> <span className="text-primary">{t('home.main_title_2').split(' ').slice(-1)[0]}</span></div>
         </div>
         
         {/* Subtitle - Console Style */}
@@ -56,7 +56,7 @@ const Home: React.FC = () => {
               <span className="text-xs text-muted-foreground font-mono">terminal</span>
             </div>
             <p className="font-mono text-base md:text-lg md:text-xl text-primary/90 leading-relaxed mb-4 md:mb-6">
-              <span className="text-secondary">$</span> echo "Escolha como podemos ajudar você a crescer"
+              <span className="text-secondary">$</span> echo "{t('home.terminal_echo')}"
             </p>
             
             {/* Options inside terminal */}
@@ -68,13 +68,13 @@ const Home: React.FC = () => {
               >
                 <div className="flex items-center mb-2 md:mb-3">
                   <Building className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
-                  <h2 className="font-sora font-bold text-base md:text-lg">Para Empresas</h2>
+                  <h2 className="font-sora font-bold text-base md:text-lg">{t('home.companies_title')}</h2>
                 </div>
                 <p className="text-muted-foreground mb-3 md:mb-4 text-xs md:text-sm">
-                  Soluções tecnológicas personalizadas para acelerar seu negócio
+                  {t('home.companies_desc')}
                 </p>
                 <div className="flex items-center text-primary font-semibold text-xs md:text-sm">
-                  Explorar Soluções
+                  {t('home.companies_cta')}
                   <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" />
                 </div>
               </Link>
@@ -86,13 +86,13 @@ const Home: React.FC = () => {
               >
                 <div className="flex items-center mb-2 md:mb-3">
                   <Handshake className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
-                  <h2 className="font-sora font-bold text-base md:text-lg">Para Agências</h2>
+                  <h2 className="font-sora font-bold text-base md:text-lg">{t('home.agencies_title')}</h2>
                 </div>
                 <p className="text-muted-foreground mb-3 md:mb-4 text-xs md:text-sm">
-                  Seja nosso parceiro e ofereça desenvolvimento sem contratar equipe
+                  {t('home.agencies_desc')}
                 </p>
                 <div className="flex items-center text-primary font-semibold text-xs md:text-sm">
-                  Explorar Parceria
+                  {t('home.agencies_cta')}
                   <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" />
                 </div>
               </Link>
