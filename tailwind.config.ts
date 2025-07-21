@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -126,13 +127,32 @@ export default {
 						opacity: '0.7',
 						transform: 'scale(1.05)'
 					}
+				},
+				'float-with-colors': {
+					'0%, 100%': { 
+						transform: 'translateY(0px) translateX(0px) scale(1) rotate(0deg)',
+						filter: 'hue-rotate(0deg) brightness(1) saturate(1)'
+					},
+					'25%': { 
+						transform: 'translateY(-30px) translateX(20px) scale(1.1) rotate(2deg)',
+						filter: 'hue-rotate(90deg) brightness(1.2) saturate(1.1)'
+					},
+					'50%': { 
+						transform: 'translateY(-50px) translateX(-15px) scale(0.9) rotate(-1deg)',
+						filter: 'hue-rotate(180deg) brightness(0.8) saturate(0.9)'
+					},
+					'75%': { 
+						transform: 'translateY(-20px) translateX(-25px) scale(1.05) rotate(1deg)',
+						filter: 'hue-rotate(270deg) brightness(1.1) saturate(1.05)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'float': 'float 6s ease-in-out infinite',
-				'magical-pulse': 'magical-pulse 4s ease-in-out infinite'
+				'magical-pulse': 'magical-pulse 4s ease-in-out infinite',
+				'float-with-colors': 'float-with-colors 8s ease-in-out infinite'
 			}
 		}
 	},
