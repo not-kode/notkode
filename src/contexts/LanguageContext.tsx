@@ -45,6 +45,38 @@ const translations = {
     'empresas.differential.value': 'Foco em entregar valor rapidamente',
     'empresas.differential.knowledge': 'Conhecimento em negócios + desenvolvimento + IA',
     
+    // Empresas Page - Hero Section
+    'empresas.hero.new_title': 'Soluções Tecnológicas Sob Medida',
+    'empresas.hero.new_subtitle': 'Desenvolvemos tecnologia sobre medida que acelera sua empresa em tempo recorde',
+    'empresas.stats.projects': 'Projetos Entregues',
+    'empresas.stats.rating': 'Nota de Avaliação',
+    'empresas.stats.experience': 'Anos de Experiência',
+    'empresas.cta.accelerate': 'Acelerar Minha Empresa',
+    
+    // Portfolio Filters
+    'portfolio.filters.all': 'Todas as Categorias',
+    'portfolio.filters.saas': 'SaaS (Desenvolvimento de software)',
+    'portfolio.filters.ecommerce': 'E-commerce',
+    'portfolio.filters.website': 'Website',
+    
+    // Why Choose Section
+    'empresas.why.title': 'Por que escolher a NotKode?',
+    'empresas.why.subtitle': 'Desenvolvemos soluções modernas que oferecem vantagens reais para seu negócio',
+    'empresas.why.cost_benefit.title': 'Custo-Benefício',
+    'empresas.why.cost_benefit.desc': 'Projetos entregues em até 50% menos tempo, com economia de até 60% comparado ao desenvolvimento tradicional.',
+    'empresas.why.ai_experts.title': 'Especialistas em Inteligência Artificial',
+    'empresas.why.ai_experts.desc': 'Trabalhamos com IA muito antes dela estar no hype (na moda), dominamos as mais avançadas tecnologias de IA para criar soluções realmente inteligentes.',
+    'empresas.why.scalability.title': 'Escalabilidade',
+    'empresas.why.scalability.desc': 'Soluções que crescem junto com seu negócio, contando com protocolos de segurança avançados e atualizações automáticas.',
+    'empresas.why.support.title': 'Suporte Dedicado',
+    'empresas.why.support.desc': 'Acompanhamento completo durante e após o desenvolvimento. Estamos a uma mensagem de distância, com canal de contato 100% disponível. Precisou? É só nos chamar no Whatsapp!',
+    
+    // Testimonials Section
+    'empresas.testimonials.title': 'O que nossos clientes dizem',
+    
+    // Process Section
+    'empresas.process.title': 'Nosso Passo a Passo para o Sucesso',
+    
     // Parcerias Page
     'parcerias.hero.title': 'Multiplique sua receita oferecendo desenvolvimento e design sem contratar ninguém',
     'parcerias.benefits.title': 'Benefícios para Agências',
@@ -166,6 +198,38 @@ const translations = {
     'empresas.differential.tools': 'Optimized tool selection',
     'empresas.differential.value': 'Focus on delivering value quickly',
     'empresas.differential.knowledge': 'Knowledge in business + development + AI',
+    
+    // Empresas Page - Hero Section
+    'empresas.hero.new_title': 'Custom Technology Solutions',
+    'empresas.hero.new_subtitle': 'We develop custom technology that accelerates your company in record time',
+    'empresas.stats.projects': 'Delivered Projects',
+    'empresas.stats.rating': 'Rating Score',
+    'empresas.stats.experience': 'Years of Experience',
+    'empresas.cta.accelerate': 'Accelerate My Company',
+    
+    // Portfolio Filters
+    'portfolio.filters.all': 'All Categories',
+    'portfolio.filters.saas': 'SaaS (Software Development)',
+    'portfolio.filters.ecommerce': 'E-commerce',
+    'portfolio.filters.website': 'Website',
+    
+    // Why Choose Section
+    'empresas.why.title': 'Why choose NotKode?',
+    'empresas.why.subtitle': 'We develop modern solutions that offer real advantages for your business',
+    'empresas.why.cost_benefit.title': 'Cost-Benefit',
+    'empresas.why.cost_benefit.desc': 'Projects delivered up to 50% faster, with savings up to 60% compared to traditional development.',
+    'empresas.why.ai_experts.title': 'Artificial Intelligence Experts',
+    'empresas.why.ai_experts.desc': 'We worked with AI long before it was trendy, we master the most advanced AI technologies to create truly intelligent solutions.',
+    'empresas.why.scalability.title': 'Scalability',
+    'empresas.why.scalability.desc': 'Solutions that grow with your business, featuring advanced security protocols and automatic updates.',
+    'empresas.why.support.title': 'Dedicated Support',
+    'empresas.why.support.desc': 'Complete follow-up during and after development. We are just a message away, with 100% available contact channel. Need help? Just call us on WhatsApp!',
+    
+    // Testimonials Section
+    'empresas.testimonials.title': 'What our clients say',
+    
+    // Process Section
+    'empresas.process.title': 'Our Step by Step to Success',
     
     // Parcerias Page
     'parcerias.hero.title': 'Multiply your revenue by offering development and design without hiring anyone',
