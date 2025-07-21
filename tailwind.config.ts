@@ -170,6 +170,48 @@ export default {
 						transform: 'translateX(-20vw) translateY(0px) scale(1) rotate(0deg)',
 						filter: 'hue-rotate(360deg) brightness(1) saturate(1)'
 					}
+				},
+				'gentle-float-fade': {
+					'0%': { 
+						opacity: '0',
+						transform: 'scale(0.3) translateX(0px) translateY(0px) rotate(0deg)',
+						filter: 'hue-rotate(0deg) brightness(1)'
+					},
+					'10%': { 
+						opacity: '0.3',
+						transform: 'scale(0.8) translateX(10vw) translateY(-5vh) rotate(15deg)',
+						filter: 'hue-rotate(36deg) brightness(0.8)'
+					},
+					'25%': { 
+						opacity: '0.25',
+						transform: 'scale(1.1) translateX(25vw) translateY(-15vh) rotate(-10deg)',
+						filter: 'hue-rotate(90deg) brightness(0.4)'
+					},
+					'40%': { 
+						opacity: '0.35',
+						transform: 'scale(0.9) translateX(50vw) translateY(-8vh) rotate(20deg)',
+						filter: 'hue-rotate(144deg) brightness(0.6)'
+					},
+					'55%': { 
+						opacity: '0.2',
+						transform: 'scale(1.2) translateX(75vw) translateY(10vh) rotate(-5deg)',
+						filter: 'hue-rotate(198deg) brightness(0.3)'
+					},
+					'70%': { 
+						opacity: '0.3',
+						transform: 'scale(0.8) translateX(90vw) translateY(20vh) rotate(25deg)',
+						filter: 'hue-rotate(252deg) brightness(0.7)'
+					},
+					'85%': { 
+						opacity: '0.15',
+						transform: 'scale(1.0) translateX(60vw) translateY(25vh) rotate(-15deg)',
+						filter: 'hue-rotate(306deg) brightness(0.5)'
+					},
+					'100%': { 
+						opacity: '0',
+						transform: 'scale(0.3) translateX(0px) translateY(0px) rotate(0deg)',
+						filter: 'hue-rotate(360deg) brightness(1)'
+					}
 				}
 			},
 			animation: {
@@ -178,7 +220,8 @@ export default {
 				'float': 'float 6s ease-in-out infinite',
 				'magical-pulse': 'magical-pulse 4s ease-in-out infinite',
 				'float-with-colors': 'float-with-colors 8s ease-in-out infinite',
-				'float-across-screen': 'float-across-screen 15s ease-in-out infinite'
+				'float-across-screen': 'float-across-screen 15s ease-in-out infinite',
+				'gentle-float-fade': 'gentle-float-fade 15s cubic-bezier(0.4, 0, 0.2, 1) infinite'
 			}
 		}
 	},
