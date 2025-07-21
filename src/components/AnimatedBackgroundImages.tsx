@@ -16,8 +16,9 @@ const AnimatedBackgroundImages: React.FC = () => {
           left: '5%',
           animationDelay: '0s',
           animationDuration: '12s',
-          filter: 'hue-rotate(0deg) brightness(0.8)',
-          mixBlendMode: 'soft-light'
+          filter: 'hue-rotate(0deg) brightness(1.2) contrast(1.2)',
+          mixBlendMode: 'multiply',
+          opacity: '0.7'
         }}
       />
       
@@ -32,8 +33,9 @@ const AnimatedBackgroundImages: React.FC = () => {
           right: '10%',
           animationDelay: '3s',
           animationDuration: '16s',
-          filter: 'hue-rotate(180deg) brightness(0.3)',
-          mixBlendMode: 'multiply'
+          filter: 'hue-rotate(180deg) brightness(0.8) contrast(1.5)',
+          mixBlendMode: 'multiply',
+          opacity: '0.6'
         }}
       />
       
@@ -81,8 +83,9 @@ const AnimatedBackgroundImages: React.FC = () => {
           right: '20%',
           animationDelay: '2s',
           animationDuration: '15s',
-          filter: 'hue-rotate(60deg) brightness(0.7)',
-          mixBlendMode: 'soft-light'
+          filter: 'hue-rotate(60deg) brightness(1) contrast(1.3)',
+          mixBlendMode: 'multiply',
+          opacity: '0.8'
         }}
       />
       
