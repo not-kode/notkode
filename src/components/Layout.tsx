@@ -15,7 +15,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main>
+      <main className="w-full">
         {children}
       </main>
       {!isHomePage && <Footer />}

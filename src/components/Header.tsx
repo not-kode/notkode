@@ -50,18 +50,18 @@ const Header: React.FC = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-16">
-      <div className="container mx-auto px-4 h-full flex items-center justify-center pt-4">
-        <div className="glass rounded-full flex items-center space-x-6 px-8 py-3 transition-all duration-300 hover:scale-105">
+      <div className="w-full px-4 md:container md:mx-auto h-full flex items-center justify-center pt-4">
+        <div className="glass rounded-full flex items-center space-x-2 md:space-x-6 px-4 md:px-8 py-3 transition-all duration-300 hover:scale-105 max-w-full">
           {/* Logo */}
-          <Link to="/" className="flex items-center group">
+          <Link to="/" className="flex items-center group flex-shrink-0">
             <img 
               src={theme === 'dark' ? '/lovable-uploads/6beced90-2174-433f-9c99-a27a4e5372e8.png' : '/lovable-uploads/73ba0359-0a2c-4f33-b272-c06f14465ceb.png'}
               alt="Notkode"
-              className="h-6 w-auto group-hover:scale-105 transition-transform"
+              className="h-5 md:h-6 w-auto group-hover:scale-105 transition-transform"
             />
           </Link>
 
-          {/* Navigation Menu */}
+          {/* Navigation Menu - Hidden on mobile */}
           <nav className="hidden md:flex items-center">
             <div className="flex items-center space-x-1">
               {navItems.map((item) => (
@@ -82,7 +82,7 @@ const Header: React.FC = () => {
           </nav>
 
           {/* Controls Section */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 md:space-x-2 flex-shrink-0">
             {/* Direct Language Toggle */}
             <Button 
               variant="ghost" 
@@ -107,33 +107,33 @@ const Header: React.FC = () => {
                 <Moon className="w-3 h-3" />
               )}
             </Button>
+
+            {/* Mobile Navigation Dropdown */}
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-8 h-8 p-0">
+                    <span className="sr-only">Menu</span>
+                    <div className="w-4 h-4 flex flex-col justify-center items-center">
+                      <div className="w-3 h-0.5 bg-current mb-0.5"></div>
+                      <div className="w-3 h-0.5 bg-current mb-0.5"></div>
+                      <div className="w-3 h-0.5 bg-current"></div>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="glass w-48 bg-background border-border">
+                  {navItems.map((item) => (
+                    <DropdownMenuItem key={item.path} asChild>
+                      <Link to={item.path} onClick={item.onClick} className="w-full">
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Navigation - Dropdown for smaller screens */}
-      <div className="md:hidden">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="fixed top-4 right-16 z-50">
-              <span className="sr-only">Menu</span>
-              <div className="w-6 h-6 flex flex-col justify-center items-center">
-                <div className="w-4 h-0.5 bg-current mb-1"></div>
-                <div className="w-4 h-0.5 bg-current mb-1"></div>
-                <div className="w-4 h-0.5 bg-current"></div>
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass w-48">
-            {navItems.map((item) => (
-              <DropdownMenuItem key={item.path} asChild>
-                <Link to={item.path} onClick={item.onClick} className="w-full">
-                  {item.label}
-                </Link>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </header>
   );
