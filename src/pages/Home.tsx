@@ -46,7 +46,7 @@ const Home: React.FC = () => {
         
         {/* Subtitle - Console Style */}
         <div className="mb-8 md:mb-16 max-w-[1200px] mx-auto">
-          <div className="bg-notkode-deep-navy/90 border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm w-[1200px]">
+          <div className="border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm w-[1200px]" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
             <div className="flex items-center mb-3 md:mb-4">
               <div className="flex space-x-1 mr-3">
                 <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full"></div>
@@ -64,36 +64,38 @@ const Home: React.FC = () => {
               {/* Empresas Option */}
               <Link 
                 to="/companies" 
-                className="glass-card group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left bg-background/10 hover:bg-background/20"
+                className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20" 
+                style={{ backgroundColor: '#F7F5F2' }}
               >
                 <div className="flex items-center mb-2 md:mb-3">
                   <Building className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
-                  <h2 className="font-sora font-bold text-white text-[20px]">{t('home.companies_title')}</h2>
+                  <h2 className="font-sora font-bold text-[20px]" style={{ color: '#272B37' }}>{t('home.companies_title')}</h2>
                 </div>
-                <p className="mb-3 md:mb-4 text-[16px]" style={{ color: '#8A8A8A' }}>
+                <p className="mb-3 md:mb-4 text-[16px]" style={{ color: '#4D4D4D' }}>
                   {t('home.companies_desc')}
                 </p>
-                <div className="flex items-center text-primary font-semibold text-xs md:text-sm">
-                  {t('home.companies_cta')}
-                  <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" />
+                <div className="flex items-center font-semibold text-xs md:text-sm" style={{ color: '#4D4D4D' }}>
+                  <span style={{ color: '#4D4D4D' }}>{t('home.companies_cta')}</span>
+                  <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" style={{ color: '#4D4D4D' }} />
                 </div>
               </Link>
               
               {/* Parcerias Option */}
               <Link 
                 to="/agencies" 
-                className="glass-card group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left bg-background/10 hover:bg-background/20"
+                className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20"
+                style={{ backgroundColor: '#F7F5F2' }}
               >
                 <div className="flex items-center mb-2 md:mb-3">
                   <Handshake className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
-                  <h2 className="font-sora font-bold text-white text-[20px]">{t('home.agencies_title')}</h2>
+                  <h2 className="font-sora font-bold text-[20px]" style={{ color: '#272B37' }}>{t('home.agencies_title')}</h2>
                 </div>
-                <p className="mb-3 md:mb-4 text-[16px]" style={{ color: '#8A8A8A' }}>
+                <p className="mb-3 md:mb-4 text-[16px]" style={{ color: '#4D4D4D' }}>
                   {t('home.agencies_desc')}
                 </p>
-                <div className="flex items-center text-primary font-semibold text-xs md:text-sm">
-                  {t('home.agencies_cta')}
-                  <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" />
+                <div className="flex items-center font-semibold text-xs md:text-sm" style={{ color: '#4D4D4D' }}>
+                  <span style={{ color: '#4D4D4D' }}>{t('home.agencies_cta')}</span>
+                  <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" style={{ color: '#4D4D4D' }} />
                 </div>
               </Link>
             </div>
