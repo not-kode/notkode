@@ -37,7 +37,7 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-muted/3 to-transparent animate-[magical-pulse_8s_ease-in-out_infinite_reverse] animation-delay-3000"></div>
       </div>
 
-      <div className="container mx-auto max-w-4xl text-center relative z-10 flex-grow flex flex-col justify-center">
+      <div className="container mx-auto max-w-[1200px] px-8 text-center relative z-10 flex-grow flex flex-col justify-center">
         {/* Main Title */}
         <div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl mb-6 md:mb-8 leading-tight">
           <div className="whitespace-nowrap"><span className="text-primary">{t('home.main_title_1').split(' ')[0]}</span> {t('home.main_title_1').split(' ').slice(1).join(' ')}</div>
