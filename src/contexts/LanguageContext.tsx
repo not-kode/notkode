@@ -75,20 +75,140 @@ const translations = {
     empresas: {
       hero: {
         new_title: "Transforme sua empresa com IA e No-Code",
+        new_subtitle: "Soluções digitais inteligentes para empresas que querem crescer",
         title: "Soluções digitais inteligentes para empresas que querem crescer",
         description: "Desenvolvemos produtos digitais personalizados que automatizam processos, otimizam operações e impulsionam o crescimento do seu negócio usando as mais avançadas tecnologias de IA e No-Code.",
         primaryButton: "Começar Agora",
         secondaryButton: "Ver Cases de Sucesso"
+      },
+      stats: {
+        projects: "Projetos Entregues",
+        rating: "Avaliação Média",
+        experience: "Anos de Experiência"
+      },
+      cta: {
+        accelerate: "Acelerar Meu Negócio"
+      },
+      services: {
+        title: "Nossos Serviços",
+        internal: "Sistemas Internos",
+        saas: "Plataformas SaaS",
+        ai: "Agentes de IA",
+        automation: "Automação",
+        figma: "Prototipagem",
+        websites: "Sites e Apps Web",
+        mobile: "Apps Mobile",
+        ecommerce: "E-commerce"
+      },
+      why: {
+        title: "Por que escolher a Notkode?",
+        subtitle: "Combinamos tecnologia de ponta com estratégia de negócios para entregar resultados excepcionais",
+        cost_benefit: {
+          title: "Custo-Benefício Imbatível",
+          desc: "Entregamos soluções profissionais a uma fração do custo tradicional"
+        },
+        ai_experts: {
+          title: "Especialistas em IA",
+          desc: "Somos pioneiros na aplicação de IA para resolver problemas reais de negócio"
+        },
+        scalability: {
+          title: "Escalabilidade Garantida",
+          desc: "Suas soluções crescem junto com seu negócio sem limitações técnicas"
+        },
+        support: {
+          title: "Suporte Completo",
+          desc: "Acompanhamento contínuo para garantir o sucesso da sua implementação"
+        }
+      },
+      testimonials: {
+        title: "O que nossos clientes dizem"
+      },
+      process: {
+        title: "Nosso Processo Comprovado"
       }
     },
     // Agencies page
     parcerias: {
       hero: {
+        badge: "Parceria Estratégica",
         new_title: "Expanda sua agência com nossa parceria",
         title: "Parceria estratégica para agências que querem oferecer mais",
+        subtitle: "Transforme sua agência em líder de inovação com nosso suporte técnico completo",
         description: "Amplie seu portfólio de serviços com soluções de IA e No-Code. Oferecemos suporte técnico completo para que sua agência possa entregar projetos inovadores e de alta qualidade aos seus clientes.",
         primaryButton: "Tornar-se Parceiro",
-        secondaryButton: "Conhecer Benefícios"
+        secondaryButton: "Conhecer Benefícios",
+        cta: "Tornar-se Parceiro Estratégico"
+      },
+      benefits: {
+        main_title: "Vantagens da Parceria",
+        main_subtitle: "Transforme sua agência com benefícios exclusivos que só a Notkode oferece"
+      },
+      benefit1: {
+        title: "Suporte Técnico Completo",
+        desc: "Nossa equipe trabalha lado a lado com você durante todo o projeto"
+      },
+      benefit2: {
+        title: "Tecnologia de Ponta",
+        desc: "Acesso às mais avançadas ferramentas de IA e No-Code do mercado"
+      },
+      benefit3: {
+        title: "Margens Atrativas",
+        desc: "Estrutura de comissionamento que garante lucratividade em cada projeto"
+      },
+      services: {
+        main_title: "Portfólio de Serviços",
+        main_subtitle: "Amplie suas possibilidades com nossa gama completa de soluções",
+        ai: "Agentes de IA",
+        automation: "Automação de Processos",
+        saas: "Plataformas SaaS",
+        apps: "Apps e Websites",
+        ecommerce: "E-commerce",
+        design: "Design e UX"
+      },
+      service1: {
+        desc: "Chatbots inteligentes e assistentes virtuais personalizados"
+      },
+      service2: {
+        desc: "Integração e automação de sistemas e processos empresariais"
+      },
+      service3: {
+        desc: "Plataformas escaláveis para comercializar como produto"
+      },
+      service4: {
+        desc: "Aplicações web e mobile responsivas e otimizadas"
+      },
+      service5: {
+        desc: "Lojas virtuais completas com foco em conversão"
+      },
+      service6: {
+        desc: "Prototipagem e design de interfaces profissionais"
+      },
+      process: {
+        title: "Como Funciona a Parceria",
+        subtitle: "Um processo simples e eficiente para começarmos a trabalhar juntos",
+        step1: {
+          title: "Cadastro e Qualificação",
+          desc: "Análise do perfil da sua agência e definição da estrutura de parceria ideal"
+        },
+        step2: {
+          title: "Capacitação e Treinamento",
+          desc: "Workshop completo sobre nossas soluções e metodologias de vendas"
+        },
+        step3: {
+          title: "Suporte na Prospecção",
+          desc: "Materiais exclusivos e suporte ativo para apresentações e propostas"
+        },
+        step4: {
+          title: "Execução Conjunta",
+          desc: "Desenvolvimento colaborativo com nossa equipe técnica especializada"
+        },
+        result: {
+          title: "Agência + Notkode = Resultados Excepcionais",
+          desc: "A combinação perfeita entre relacionamento comercial e excelência técnica",
+          tag1: "Projetos de Sucesso",
+          tag2: "Clientes Satisfeitos",
+          tag3: "Crescimento Sustentável"
+        }
       }
     },
     // About page
@@ -178,6 +298,46 @@ const translations = {
           }
         ]
       }
+    },
+    // Testimonials
+    testimonial: {
+      bruno: {
+        text: "A Notkode transformou completamente nossa abordagem de negócios. A solução de IA que desenvolveram aumentou nossa eficiência em 300% e nos permitiu focar no que realmente importa: nossos clientes."
+      },
+      rodrigo: {
+        text: "Parceria excepcional! A equipe da Notkode entendeu perfeitamente nossas necessidades e entregou uma solução que superou todas as expectativas. Recomendo sem hesitação."
+      },
+      fernando: {
+        text: "A implementação do sistema foi surpreendentemente rápida e os resultados apareceram imediatamente. Nossa produtividade aumentou significativamente desde a primeira semana."
+      },
+      giovanna: {
+        text: "O que mais me impressiona é o suporte contínuo. Não é apenas desenvolvimento, é uma verdadeira parceria estratégica para o crescimento do nosso negócio."
+      },
+      walter: {
+        text: "A solução de automação que a Notkode criou revolucionou nossos processos. Conseguimos reduzir o tempo de resposta aos clientes em 80% e aumentar nossa capacidade de atendimento."
+      }
+    },
+    // Process steps
+    process: {
+      step1: {
+        title: "Análise e Planejamento",
+        description: "Mapeamento detalhado das suas necessidades e definição da estratégia mais eficaz"
+      },
+      step2: {
+        title: "Design e Prototipagem", 
+        description: "Criação de protótipos visuais para validação antes do desenvolvimento"
+      },
+      step3: {
+        title: "Desenvolvimento Ágil",
+        description: "Implementação utilizando as melhores tecnologias No-Code e IA"
+      },
+      step4: {
+        title: "Testes e Validação",
+        description: "Testes rigorosos para garantir qualidade e performance otimizada"
+      },
+      step5: {
+        description: "O resultado é uma solução robusta, escalável e perfeitamente alinhada com seus objetivos de negócio"
+      }
     }
   },
   en: {
@@ -242,20 +402,140 @@ const translations = {
     empresas: {
       hero: {
         new_title: "Transform your company with AI and No-Code",
+        new_subtitle: "Smart digital solutions for companies that want to grow",
         title: "Smart digital solutions for companies that want to grow",
         description: "We develop customized digital products that automate processes, optimize operations and boost your business growth using the most advanced AI and No-Code technologies.",
         primaryButton: "Get Started",
         secondaryButton: "See Success Cases"
+      },
+      stats: {
+        projects: "Projects Delivered",
+        rating: "Average Rating",
+        experience: "Years of Experience"
+      },
+      cta: {
+        accelerate: "Accelerate My Business"
+      },
+      services: {
+        title: "Our Services",
+        internal: "Internal Systems",
+        saas: "SaaS Platforms",
+        ai: "AI Agents",
+        automation: "Automation",
+        figma: "Prototyping",
+        websites: "Websites & Web Apps",
+        mobile: "Mobile Apps",
+        ecommerce: "E-commerce"
+      },
+      why: {
+        title: "Why choose Notkode?",
+        subtitle: "We combine cutting-edge technology with business strategy to deliver exceptional results",
+        cost_benefit: {
+          title: "Unbeatable Cost-Benefit",
+          desc: "We deliver professional solutions at a fraction of traditional cost"
+        },
+        ai_experts: {
+          title: "AI Specialists",
+          desc: "We are pioneers in applying AI to solve real business problems"
+        },
+        scalability: {
+          title: "Guaranteed Scalability",
+          desc: "Your solutions grow with your business without technical limitations"
+        },
+        support: {
+          title: "Complete Support",
+          desc: "Continuous follow-up to ensure your implementation success"
+        }
+      },
+      testimonials: {
+        title: "What our clients say"
+      },
+      process: {
+        title: "Our Proven Process"
       }
     },
     // Agencies page
     parcerias: {
       hero: {
+        badge: "Strategic Partnership",
         new_title: "Expand your agency with our partnership",
         title: "Strategic partnership for agencies that want to offer more",
+        subtitle: "Transform your agency into an innovation leader with our complete technical support",
         description: "Expand your service portfolio with AI and No-Code solutions. We offer complete technical support so your agency can deliver innovative and high-quality projects to your clients.",
         primaryButton: "Become a Partner",
-        secondaryButton: "Learn Benefits"
+        secondaryButton: "Learn Benefits",
+        cta: "Become Strategic Partner"
+      },
+      benefits: {
+        main_title: "Partnership Advantages",
+        main_subtitle: "Transform your agency with exclusive benefits that only Notkode offers"
+      },
+      benefit1: {
+        title: "Complete Technical Support",
+        desc: "Our team works side by side with you throughout the entire project"
+      },
+      benefit2: {
+        title: "Cutting-edge Technology",
+        desc: "Access to the most advanced AI and No-Code tools in the market"
+      },
+      benefit3: {
+        title: "Attractive Margins",
+        desc: "Commission structure that guarantees profitability in every project"
+      },
+      services: {
+        main_title: "Service Portfolio",
+        main_subtitle: "Expand your possibilities with our complete range of solutions",
+        ai: "AI Agents",
+        automation: "Process Automation",
+        saas: "SaaS Platforms",
+        apps: "Apps & Websites",
+        ecommerce: "E-commerce",
+        design: "Design & UX"
+      },
+      service1: {
+        desc: "Intelligent chatbots and personalized virtual assistants"
+      },
+      service2: {
+        desc: "Integration and automation of business systems and processes"
+      },
+      service3: {
+        desc: "Scalable platforms to commercialize as products"
+      },
+      service4: {
+        desc: "Responsive and optimized web and mobile applications"
+      },
+      service5: {
+        desc: "Complete virtual stores with focus on conversion"
+      },
+      service6: {
+        desc: "Professional interface prototyping and design"
+      },
+      process: {
+        title: "How the Partnership Works",
+        subtitle: "A simple and efficient process to start working together",
+        step1: {
+          title: "Registration and Qualification",
+          desc: "Analysis of your agency profile and definition of the ideal partnership structure"
+        },
+        step2: {
+          title: "Capacity Building and Training",
+          desc: "Complete workshop on our solutions and sales methodologies"
+        },
+        step3: {
+          title: "Prospecting Support",
+          desc: "Exclusive materials and active support for presentations and proposals"
+        },
+        step4: {
+          title: "Joint Execution",
+          desc: "Collaborative development with our specialized technical team"
+        },
+        result: {
+          title: "Agency + Notkode = Exceptional Results",
+          desc: "The perfect combination of commercial relationship and technical excellence",
+          tag1: "Successful Projects",
+          tag2: "Satisfied Clients",
+          tag3: "Sustainable Growth"
+        }
       }
     },
     // About page
@@ -344,6 +624,46 @@ const translations = {
             description: "We serve companies in Brazil, United States, Canada, and England with the same excellence."
           }
         ]
+      }
+    },
+    // Testimonials
+    testimonial: {
+      bruno: {
+        text: "Notkode completely transformed our business approach. The AI solution they developed increased our efficiency by 300% and allowed us to focus on what really matters: our customers."
+      },
+      rodrigo: {
+        text: "Exceptional partnership! The Notkode team perfectly understood our needs and delivered a solution that exceeded all expectations. I recommend without hesitation."
+      },
+      fernando: {
+        text: "The system implementation was surprisingly fast and results appeared immediately. Our productivity increased significantly from the first week."
+      },
+      giovanna: {
+        text: "What impresses me most is the continuous support. It's not just development, it's a true strategic partnership for our business growth."
+      },
+      walter: {
+        text: "The automation solution that Notkode created revolutionized our processes. We managed to reduce client response time by 80% and increase our service capacity."
+      }
+    },
+    // Process steps
+    process: {
+      step1: {
+        title: "Analysis and Planning",
+        description: "Detailed mapping of your needs and definition of the most effective strategy"
+      },
+      step2: {
+        title: "Design and Prototyping", 
+        description: "Creation of visual prototypes for validation before development"
+      },
+      step3: {
+        title: "Agile Development",
+        description: "Implementation using the best No-Code and AI technologies"
+      },
+      step4: {
+        title: "Testing and Validation",
+        description: "Rigorous testing to ensure quality and optimized performance"
+      },
+      step5: {
+        description: "The result is a robust, scalable solution perfectly aligned with your business objectives"
       }
     }
   }
