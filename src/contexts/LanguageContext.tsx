@@ -368,22 +368,22 @@ const translations = {
       view_project: "Ver Projeto",
       no_projects: "Nenhum projeto encontrado para os filtros selecionados",
       autoagentes: {
-        description: "Plataforma SaaS que automatiza a criação e gestão de agentes de IA para empresas, facilitando a implementação de soluções inteligentes sem conhecimento técnico."
+        description: "SaaS de criação de Agentes de IA, focado em permitir com que donos de pequenas e médias empresas possam automatizar o atendimento dos clientes no whatsapp, substituindo a contratação de funcionários humanos e tornando sua empresa mais eficiente."
       },
       ativa: {
-        description: "Sistema completo de CRM e automação de vendas que integra IA para qualificação de leads e acompanhamento inteligente de clientes potenciais."
+        description: "SaaS focado em permitir com que donos de pequenas e médias empresas aumentassem o resultado obtido através de campanhas (envios em massa) realizadas por e-mail e Whatsapp. A grande sacada deste produto é que todo o conteúdo enviado, é 100% personalizado pela IA da Ativa Clientes utilizando o contexto daquele respectivo contato, fazendo com que cada e-mail ou whatsapp seja muito mais relevante pela ótica do cliente."
       },
       zapinside: {
-        description: "Ferramenta de automação que conecta WhatsApp Business com sistemas de gestão, permitindo atendimento automatizado e gestão eficiente de conversas."
+        description: "E se você pudesse ver tudo o que acontece nas conversas de WhatsApp do seu time que realiza atendimentos? É este desafio que este SaaS resolve, as conversas do WhatsApp revelam tudo o que você precisa saber sobre seus leads e sua equipe de vendas ou de atendimento. A gente analisa tudo pra você — e entrega insights acionáveis de forma clara, rápida e prática. Tudo com IA e zero esforço manual."
       },
       noodrops: {
-        description: "E-commerce premium de suplementos com sistema de assinatura, integração com múltiplos gateways de pagamento e analytics avançado para otimização de conversões."
+        description: "E-commerce destinado a comercialização das Smart Pills da Noodrops, a opção perfeita pra você cuidar do seu cérebro, seja com performance, seja com saúde cerebral. Somos a Smart Pill Nº1 no Brasil, a mais querida e mais recomendada."
       },
       loss: {
-        description: "Website institucional para empresa de consultoria em prevenção de perdas, com sistema de captação de leads integrado e automação de follow-up."
+        description: "Empresa de consultoria com mais de 20 anos de mercado, onde realizamos em colaboração com o time da Loss Prevention, toda a modernização do processo comercial: incluindo o desenvolvimento do novo site, estruturação de todo o processo comercial no AirTable com o envio de e-mail em massa já integrado no Sendgrid, garantindo um servidor de envio de e-mail focado em performance. Foi automatizado via formulário e n8n, quando o lead preenche o formulário de interesse o envio das condições dos respectivo curso e coleta automática da inscrição (venda) para o aluno."
       },
       solojet: {
-        description: "Plataforma digital para empresa de aviação executiva com sistema de cotação online, integração com mapas e automação de processos de vendas."
+        description: "A Solojet Aviação é o único grupo de aviação executiva no Brasil que oferece uma solução completa, desde a venda e compartilhamento de aeronaves até gestão e manutenção especializada. O embaixador da Solojet é Álvaro Garnero: empresário, apresentador de televisão, investidor e administrador de empresas brasileiro. A quatro mãos projetamos todo o novo site para garantir que independente da linha de produto ou serviço desejada, o cliente agora encontra facilmente as respostas que busca e consegue facilmente entrar em contato para prosseguir na sua jornada de compra com baixo esforço. Ao demonstrar interesse o lead preenche o formulário e a integração desenvolvida leva seus dados para o RD Station, avisando o responsável para realizar o atendimento da venda com o lead já triado."
       }
     },
     // Categories
@@ -778,22 +778,22 @@ const translations = {
       view_project: "View Project",
       no_projects: "No projects found for the selected filters",
       autoagentes: {
-        description: "SaaS platform that automates the creation and management of AI agents for companies, facilitating the implementation of intelligent solutions without technical knowledge."
+        description: "AI Agent creation SaaS, focused on enabling small and medium business owners to automate customer service on WhatsApp, replacing the need to hire human employees and making their company more efficient."
       },
       ativa: {
-        description: "Complete CRM and sales automation system that integrates AI for lead qualification and intelligent tracking of potential clients."
+        description: "SaaS focused on enabling small and medium business owners to increase results obtained through campaigns (mass mailings) performed via email and WhatsApp. The great advantage of this product is that all content sent is 100% personalized by Ativa Clientes' AI using the context of that respective contact, making each email or WhatsApp much more relevant from the customer's perspective."
       },
       zapinside: {
-        description: "Automation tool that connects WhatsApp Business with management systems, enabling automated customer service and efficient conversation management."
+        description: "What if you could see everything that happens in your customer service team's WhatsApp conversations? This is the challenge this SaaS solves. WhatsApp conversations reveal everything you need to know about your leads and your sales or customer service team. We analyze everything for you — and deliver actionable insights clearly, quickly and practically. All with AI and zero manual effort."
       },
       noodrops: {
-        description: "Premium supplement e-commerce with subscription system, integration with multiple payment gateways and advanced analytics for conversion optimization."
+        description: "E-commerce dedicated to selling Noodrops Smart Pills, the perfect option for you to take care of your brain, whether for performance or brain health. We are the #1 Smart Pill in Brazil, the most loved and most recommended."
       },
       loss: {
-        description: "Institutional website for loss prevention consulting company, with integrated lead capture system and follow-up automation."
+        description: "Consulting company with over 20 years in the market, where we performed in collaboration with the Loss Prevention team, a complete modernization of the commercial process: including the development of the new website, structuring the entire commercial process in AirTable with mass email sending already integrated into Sendgrid, ensuring a performance-focused email sending server. It was automated via form and n8n, when the lead fills out the interest form, the conditions of the respective course are sent and automatic collection of enrollment (sale) for the student."
       },
       solojet: {
-        description: "Digital platform for executive aviation company with online quotation system, maps integration and sales process automation."
+        description: "Solojet Aviation is the only executive aviation group in Brazil that offers a complete solution, from aircraft sales and sharing to specialized management and maintenance. Solojet's ambassador is Álvaro Garnero: Brazilian businessman, television presenter, investor and business administrator. Together we designed the entire new website to ensure that regardless of the desired product line or service, the customer now easily finds the answers they seek and can easily get in touch to proceed in their purchasing journey with low effort. When showing interest, the lead fills out the form and the developed integration takes their data to RD Station, notifying the responsible person to handle the sales service with the lead already screened."
       }
     },
     // Categories
