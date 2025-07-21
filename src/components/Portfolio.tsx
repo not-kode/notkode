@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -84,7 +85,7 @@ const Portfolio: React.FC = () => {
   }, [selectedCategory]);
 
   return (
-    <section className="py-20 px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
+    <section className="py-20 px-8 bg-background">
       <div className="container mx-auto">
         <h2 className="font-sora font-bold text-4xl text-center mb-4">
           Nosso <span className="text-gradient">Portfólio</span>
