@@ -65,7 +65,7 @@ const Home: React.FC = () => {
               <Link 
                 to="/companies" 
                 className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20" 
-                style={{ backgroundColor: '#F7F5F2' }}
+                style={{ backgroundColor: '#FFFFFF' }}
               >
                 <div className="flex items-center mb-2 md:mb-3">
                   <Building className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
@@ -84,7 +84,7 @@ const Home: React.FC = () => {
               <Link 
                 to="/agencies" 
                 className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20"
-                style={{ backgroundColor: '#F7F5F2' }}
+                style={{ backgroundColor: '#FFFFFF' }}
               >
                 <div className="flex items-center mb-2 md:mb-3">
                   <Handshake className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
