@@ -63,7 +63,7 @@ const Home: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-4">
               {/* Empresas Option */}
               <Link 
-                to="/empresas" 
+                to="/companies" 
                 className="glass-card group hover:scale-105 transition-all duration-300 p-6 text-left bg-background/10 hover:bg-background/20"
               >
                 <div className="flex items-center mb-3">
@@ -81,7 +81,7 @@ const Home: React.FC = () => {
               
               {/* Parcerias Option */}
               <Link 
-                to="/parcerias" 
+                to="/agencies" 
                 className="glass-card group hover:scale-105 transition-all duration-300 p-6 text-left bg-background/10 hover:bg-background/20"
               >
                 <div className="flex items-center mb-3">

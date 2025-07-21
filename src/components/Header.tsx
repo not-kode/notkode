@@ -19,8 +19,8 @@ const Header: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
   
-  // Check if user is on empresas or parcerias pages
-  const isOnEmpresasOrParcerias = location.pathname === '/empresas' || location.pathname === '/parcerias';
+  // Check if user is on companies or agencies pages
+  const isOnCompaniesOrAgencies = location.pathname === '/companies' || location.pathname === '/agencies';
   
   // Handle portfolio click
   const handlePortfolioClick = (e: React.MouseEvent) => {
@@ -37,14 +37,14 @@ const Header: React.FC = () => {
   };
   
   // Define navigation items based on current page
-  const navItems = isOnEmpresasOrParcerias ? [
-    { path: '/sobre-nos#portfolio', label: 'Portfolio', onClick: handlePortfolioClick },
-    { path: '/sobre-nos', label: t('nav.sobre') },
+  const navItems = isOnCompaniesOrAgencies ? [
+    { path: '/about-us#portfolio', label: 'Portfolio', onClick: handlePortfolioClick },
+    { path: '/about-us', label: t('nav.sobre') },
     { path: '/blog', label: t('nav.blog') },
   ] : [
-    { path: '/empresas', label: t('nav.empresas') },
-    { path: '/parcerias', label: t('nav.parcerias') },
-    { path: '/sobre-nos', label: t('nav.sobre') },
+    { path: '/companies', label: t('nav.empresas') },
+    { path: '/agencies', label: t('nav.parcerias') },
+    { path: '/about-us', label: t('nav.sobre') },
     { path: '/blog', label: t('nav.blog') },
   ];
 
