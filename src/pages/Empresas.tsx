@@ -451,14 +451,14 @@ const Empresas: React.FC = () => {
       {/* CTA Section */}
       <section className="py-20 px-8">
         <div className="container mx-auto text-center">
-          <div className="glass-card max-w-3xl mx-auto">
-            <h2 className="font-sora font-bold text-4xl mb-6">
-              Pronto para <span className="text-gradient">acelerar</span> sua empresa?
+          <div className="max-w-3xl mx-auto p-8 bg-gradient-to-br from-primary to-secondary rounded-3xl">
+            <h2 className="font-sora font-bold text-4xl mb-6 text-white">
+              Pronto para <span className="text-white/90">acelerar</span> sua empresa?
             </h2>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-xl text-white/90 mb-8">
               Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso.
             </p>
-            <WhatsAppButton text="Entrar em Contato" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
+            <WhatsAppButton text="Entrar em Contato" className="bg-white text-primary px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-white/25 hover:scale-105 transition-all duration-300 border-0 hover:bg-white/90" />
           </div>
         </div>
       </section>
