@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight, Star, Quote } from 'lucide-react';
+import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight, Star, Quote, Users, ThumbsUp, Calendar } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
@@ -161,19 +161,22 @@ const Empresas: React.FC = () => {
               <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
             </div>
 
-            {/* Social Proof Tags */}
+            {/* Social Proof Tags - Redesigned without borders and with icons */}
             <div className="flex flex-wrap justify-center gap-4 text-sm animate-fade-in-up">
-              <div className="flex items-center glass-card px-4 py-2">
-                <div className="text-lg font-bold text-gradient mr-2">+50</div>
-                <span className="text-muted-foreground">Projetos Entregues</span>
+              <div className="flex items-center bg-primary/5 px-4 py-2 rounded-full text-muted-foreground">
+                <Building className="w-4 h-4 text-primary mr-2" />
+                <div className="text-lg font-bold text-primary mr-2">+50</div>
+                <span>Projetos Entregues</span>
               </div>
-              <div className="flex items-center glass-card px-4 py-2">
-                <div className="text-lg font-bold text-gradient mr-2">9.8</div>
-                <span className="text-muted-foreground">Nota de Avaliação</span>
+              <div className="flex items-center bg-secondary/5 px-4 py-2 rounded-full text-muted-foreground">
+                <Star className="w-4 h-4 text-secondary mr-2" />
+                <div className="text-lg font-bold text-secondary mr-2">9.8</div>
+                <span>Nota de Avaliação</span>
               </div>
-              <div className="flex items-center glass-card px-4 py-2">
-                <div className="text-lg font-bold text-gradient mr-2">+4</div>
-                <span className="text-muted-foreground">Anos de Experiência</span>
+              <div className="flex items-center bg-primary/5 px-4 py-2 rounded-full text-muted-foreground">
+                <Calendar className="w-4 h-4 text-primary mr-2" />
+                <div className="text-lg font-bold text-primary mr-2">+4</div>
+                <span>Anos de Experiência</span>
               </div>
             </div>
           </div>
@@ -203,9 +206,11 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Portfolio Section - Moved after Services */}
-      <section id="portfolio" className="py-20 px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
-        <Portfolio />
+      {/* Portfolio Section - Expanded background to 100% width */}
+      <section id="portfolio" className="py-20 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="px-8">
+          <Portfolio />
+        </div>
       </section>
 
       {/* Differentials Section */}
@@ -237,10 +242,13 @@ const Empresas: React.FC = () => {
                 </div>)}
             </div>
 
-            {/* Equals Symbol */}
+            {/* Vertical Equals Symbol */}
             <div className="flex justify-center mb-8">
               <div className="glass-card px-8 py-4">
-                <div className="text-4xl font-bold text-primary text-center">=</div>
+                <div className="text-4xl font-bold text-primary text-center flex flex-col items-center">
+                  <div className="w-8 h-1 bg-primary rounded-full mb-2"></div>
+                  <div className="w-8 h-1 bg-primary rounded-full"></div>
+                </div>
               </div>
             </div>
 
@@ -284,7 +292,61 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Process Section - Interactive Timeline */}
+      {/* Testimonials Section - Moved before Process */}
+      <section className="py-20 px-8">
+        <div className="container mx-auto">
+          <h2 className="font-sora font-bold text-4xl text-center mb-16">
+            O que nossos <span className="text-gradient">clientes dizem</span>
+          </h2>
+          
+          <div className="max-w-6xl mx-auto">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {testimonials.map((testimonial, index) => (
+                  <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <div className="glass-card h-full group hover:scale-105">
+                      <div className="flex items-center justify-center mb-4">
+                        <Quote className="w-8 h-8 text-primary opacity-60" />
+                      </div>
+                      
+                      <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+                        "{testimonial.text}"
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-sora font-semibold text-sm mb-1">
+                            {testimonial.author}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {testimonial.company}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 text-primary fill-current" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-0 md:-left-12" />
+              <CarouselNext className="right-0 md:-right-12" />
+            </Carousel>
+          </div>
+        </div>
+      </section>
+
+      {/* Process Section - Interactive Timeline - Moved after Testimonials */}
       <section ref={processRef} className="relative py-20 px-8 overflow-hidden min-h-screen">
         {/* Background Elements */}
         <div className="absolute inset-0">
@@ -365,60 +427,6 @@ const Empresas: React.FC = () => {
                   </div>
                 </div>;
           })}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20 px-8">
-        <div className="container mx-auto">
-          <h2 className="font-sora font-bold text-4xl text-center mb-16">
-            O que nossos <span className="text-gradient">clientes dizem</span>
-          </h2>
-          
-          <div className="max-w-6xl mx-auto">
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent className="-ml-4">
-                {testimonials.map((testimonial, index) => (
-                  <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                    <div className="glass-card h-full group hover:scale-105">
-                      <div className="flex items-center justify-center mb-4">
-                        <Quote className="w-8 h-8 text-primary opacity-60" />
-                      </div>
-                      
-                      <p className="text-muted-foreground text-base mb-6 leading-relaxed">
-                        "{testimonial.text}"
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-sora font-semibold text-sm mb-1">
-                            {testimonial.author}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {testimonial.company}
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 text-primary fill-current" />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-0 md:-left-12" />
-              <CarouselNext className="right-0 md:-right-12" />
-            </Carousel>
           </div>
         </div>
       </section>
