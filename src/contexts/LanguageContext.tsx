@@ -402,24 +402,24 @@ const translations = {
     // CTA sections
     cta: {
       empresas: {
-        title: "Pronto para Transformar seu Negócio?",
-        subtitle: "Seja o próximo case de sucesso da nossa carteira de clientes"
+        title: "Pronto para acelerar sua empresa?",
+        subtitle: "Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso."
       },
       parcerias: {
         title: "Pronto para uma Parceria de Sucesso?",
         subtitle: "Junte-se a nós e transforme sua agência em líder de inovação no mercado"
       },
       feature1: {
-        title: "Projetos Únicos",
-        desc: "Cada solução é desenvolvida especificamente para suas necessidades"
+        title: "Diagnóstico Gratuito",
+        desc: "Análise completa do seu negócio"
       },
       feature2: {
         title: "Entrega Rápida", 
-        desc: "Metodologia ágil que garante resultados em tempo recorde"
+        desc: "Projetos em tempo recorde"
       },
       feature3: {
         title: "Suporte Dedicado",
-        desc: "Acompanhamento contínuo para garantir o sucesso do projeto"
+        desc: "Acompanhamento total do projeto"
       }
     }
   },
@@ -812,24 +812,24 @@ const translations = {
     // CTA sections
     cta: {
       empresas: {
-        title: "Ready to Transform Your Business?",
-        subtitle: "Be the next success case in our client portfolio"
+        title: "Ready to accelerate your company?",
+        subtitle: "Contact us and discover how we can transform your idea into a successful technological solution."
       },
       parcerias: {
         title: "Ready for a Successful Partnership?",
         subtitle: "Join us and transform your agency into a market innovation leader"
       },
       feature1: {
-        title: "Unique Projects",
-        desc: "Each solution is developed specifically for your needs"
+        title: "Free Diagnosis",
+        desc: "Complete analysis of your business"
       },
       feature2: {
         title: "Fast Delivery", 
-        desc: "Agile methodology that guarantees results in record time"
+        desc: "Projects in record time"
       },
       feature3: {
         title: "Dedicated Support",
-        desc: "Continuous monitoring to ensure project success"
+        desc: "Complete project monitoring"
       }
     }
   }
