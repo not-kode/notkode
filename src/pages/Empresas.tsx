@@ -156,12 +156,25 @@ const Empresas: React.FC = () => {
               <span className="text-gradient">tempo recorde</span>
             </h1>
             
-            {/* Subtitle */}
-            
-            
             {/* CTA Button - Preenchido e destacado */}
-            <div className="animate-fade-in-up">
-            <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
+            <div className="animate-fade-in-up mb-8">
+              <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
+            </div>
+
+            {/* Social Proof Tags */}
+            <div className="flex flex-wrap justify-center gap-4 text-sm animate-fade-in-up">
+              <div className="flex items-center glass-card px-4 py-2">
+                <div className="text-lg font-bold text-gradient mr-2">+50</div>
+                <span className="text-muted-foreground">Projetos Entregues</span>
+              </div>
+              <div className="flex items-center glass-card px-4 py-2">
+                <div className="text-lg font-bold text-gradient mr-2">9.8</div>
+                <span className="text-muted-foreground">Nota de Avaliação</span>
+              </div>
+              <div className="flex items-center glass-card px-4 py-2">
+                <div className="text-lg font-bold text-gradient mr-2">+4</div>
+                <span className="text-muted-foreground">Anos de Experiência</span>
+              </div>
             </div>
           </div>
         </div>
@@ -352,44 +365,6 @@ const Empresas: React.FC = () => {
                   </div>
                 </div>;
           })}
-          </div>
-        </div>
-      </section>
-
-      {/* Success Numbers */}
-      <section className="py-20 px-8 bg-gradient-to-br from-secondary/5 to-primary/5">
-        <div className="container mx-auto">
-          <h2 className="font-sora font-bold text-4xl text-center mb-16">
-            Resultados <span className="text-gradient">Comprovados</span>
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="glass-card text-center group hover:scale-105">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">
-                +50
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Projetos Entregues
-              </div>
-            </div>
-            
-            <div className="glass-card text-center group hover:scale-105">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">
-                9.8
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Nota de Avaliação Final
-              </div>
-            </div>
-            
-            <div className="glass-card text-center group hover:scale-105">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">
-                +4
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Anos de Clientes NotKode
-              </div>
-            </div>
           </div>
         </div>
       </section>
