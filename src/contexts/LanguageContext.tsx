@@ -23,12 +23,12 @@ const translations = {
     },
     // Footer
     footer: {
-      copyright: "© 2024 Notkode. Todos os direitos reservados.",
+      copyright: "© 2025 Notkode. Todos os direitos reservados.",
       rights: "Todos os direitos reservados.",
       made_with: "Feito com",
       by_notkode: "pela Notkode",
       location: "São Paulo - SP, Brasil",
-      cnpj: "CNPJ: 00.000.000/0001-00"
+      cnpj: "CNPJ: 46.733.108/0001-94"
     },
     // Home page
     home: {
@@ -433,12 +433,12 @@ const translations = {
     },
     // Footer
     footer: {
-      copyright: "© 2024 Notkode. All rights reserved.",
+      copyright: "© 2025 Notkode. All rights reserved.",
       rights: "All rights reserved.",
       made_with: "Made with",
       by_notkode: "by Notkode",
       location: "São Paulo - SP, Brazil",
-      cnpj: "CNPJ: 00.000.000/0001-00"
+      cnpj: "CNPJ: 46.733.108/0001-94"
     },
     // Home page
     home: {
