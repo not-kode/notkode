@@ -7,6 +7,17 @@ import { CheckCircle, Globe, TrendingUp } from 'lucide-react';
 const SobreNos: React.FC = () => {
   const { t } = useLanguage();
 
+  const timelineItems = t('about.timeline.items') as Array<{
+    date: string;
+    title: string;
+    description: string;
+  }>;
+
+  const ctaFeatures = t('about.cta.features') as Array<{
+    title: string;
+    description: string;
+  }>;
+
   return (
     <div className="min-h-screen pt-20 md:pt-16 bg-background">
       {/* Hero Section */}
@@ -14,7 +25,7 @@ const SobreNos: React.FC = () => {
         <div className="container mx-auto max-w-4xl text-center">
           <div className="inline-block glass rounded-full px-6 py-2 mb-6 animate-magical-pulse">
             <span className="text-gradient font-medium text-sm">
-              {t('about.hero.badge')}
+              • {t('about.hero.badge')}
             </span>
           </div>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 md:mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -36,7 +47,7 @@ const SobreNos: React.FC = () => {
             
             {/* Timeline Items */}
             <div className="space-y-16 md:space-y-24">
-              {t('about.timeline.items').map((item: any, index: number) => (
+              {timelineItems.map((item: any, index: number) => (
                 <div key={index} className="relative flex items-start md:items-center">
                   <div className="absolute left-6 md:left-1/2 md:transform md:-translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-background z-10"></div>
                   <div className={`ml-16 md:ml-0 md:w-1/2 ${index % 2 === 0 ? 'md:pr-12' : 'md:ml-auto md:pl-12'}`}>
@@ -152,7 +163,7 @@ const SobreNos: React.FC = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {t('about.cta.features').map((feature: any, index: number) => (
+            {ctaFeatures.map((feature: any, index: number) => (
               <div key={index} className="glass-card text-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   {index === 0 && <CheckCircle className="w-8 h-8 text-primary" />}

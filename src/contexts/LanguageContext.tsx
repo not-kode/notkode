@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import React, { createContext, useContext, useState } from 'react';
 
 interface LanguageContextProps {
   language: string;
   setLanguage: (language: string) => void;
-  t: (key: string, options?: any) => string;
+  t: (key: string, options?: any) => any;
 }
 
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
@@ -60,7 +59,7 @@ const translations = {
     },
     about: {
       hero: {
-        badge: "• Onde ideias se transformam em soluções reais",
+        badge: "Onde ideias se transformam em soluções reais",
         description: "Nascemos em 2021 com a missão de democratizar a tecnologia, ajudando empresas e agências a crescerem sem as barreiras tradicionais do desenvolvimento."
       },
       timeline: {
@@ -192,7 +191,7 @@ const translations = {
     },
     about: {
       hero: {
-        badge: "• Where ideas transform into real solutions",
+        badge: "Where ideas transform into real solutions",
         description: "Founded in 2021 with the mission to democratize technology, helping companies and agencies grow without traditional development barriers."
       },
       timeline: {
@@ -281,15 +280,9 @@ const translations = {
 };
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const router = useRouter();
-  const [language, setLanguage] = useState(router.locale || 'pt');
+  const [language, setLanguage] = useState('pt');
 
-  useEffect(() => {
-    // Update the language state when the router locale changes
-    setLanguage(router.locale || 'pt');
-  }, [router.locale]);
-
-  const t = (key: string, options?: any): string => {
+  const t = (key: string, options?: any): any => {
     const keys = key.split('.');
     let value: any = translations[language as keyof typeof translations];
     for (const k of keys) {
@@ -305,16 +298,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     } else if (typeof value === 'function') {
       return value(options);
     } else {
-      return key; // Fallback to the key if translation is not a string
+      return value; // Return the value as-is if it's an array or object
     }
   };
 
   const contextValue: LanguageContextProps = {
     language,
-    setLanguage: (lang: string) => {
-      setLanguage(lang);
-      router.push(router.pathname, router.asPath, { locale: lang });
-    },
+    setLanguage,
     t,
   };
 
