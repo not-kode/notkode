@@ -185,6 +185,25 @@ const translations = {
     'testimonial.giovanna.text': 'A NotKode foi fundamental para o lançamento da ZapInside. Em pouco tempo já haviamos começado a desenvolver a ideia e em três semanas já estavamos recebendo o primeiro cliente. Super recomendo para todos os empreendedores que precisarem colocar usa ideia no ar!',
     'testimonial.walter.text': 'Depois que você atinge os primeiros 10 mil de faturamento com o seu SaaS, você precisa ir melhorando todo o seu funil, desde o site até o produto, para poder continuar crescendo e obtendo um bom LTV. A Notkode foi fundamental para otimizar toda a jornada do cliente e desenvolver o software ideal para conseguirmos superar o nosso desafio.',
     
+    // Process Steps
+    'process.step1.title': 'Diagnóstico do Negócio',
+    'process.step1.description': 'Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos como a solução desejada vai impactar diretamente nos resultados.',
+    'process.step2.title': 'Estratégia Inteligente',
+    'process.step2.description': 'Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos nosso plano de ação onde cada decisão é pensada para obter o melhor tempo de entrega possível e maximizar o retorno do seu investimento.',
+    'process.step3.title': 'Desenvolvimento Ágil',
+    'process.step3.description': 'Ao utilizar as abordagens mais modernas, construímos sua solução em tempo recorde. Entregas incrementais permitem o seu acompanhamento em tempo real, garantindo que você veja o progresso e possa ajustar o rumo quando necessário.',
+    'process.step4.title': 'Lançamento & Crescimento',
+    'process.step4.description': 'Hora de decolar! Nossa estratégia de lançamento (go-live), conta com suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso, tudo pensado para que sua nova solução inicie seu ciclo com o pé direito.',
+    'process.step5.description': 'A fórmula perfeita que entrega soluções tecnológicas que realmente impactam seus resultados, da forma que sua empresa precisa, em tempo recorde.',
+    
+    // CTA Features
+    'cta.feature1.title': 'Diagnóstico Gratuito',
+    'cta.feature1.desc': 'Análise completa do seu negócio',
+    'cta.feature2.title': 'Entrega Rápida',
+    'cta.feature2.desc': 'Projetos em tempo recorde',
+    'cta.feature3.title': 'Suporte Dedicado',
+    'cta.feature3.desc': 'Acompanhamento total do projeto',
+    
     // Common Labels
     'common.launch': 'Lançamento do Projeto',
   },
@@ -361,6 +380,25 @@ const translations = {
     'testimonial.fernando.text': 'I really liked the whole process, everything was very professional and we were able to quickly transform the ideas I had into reality. I am very happy with the result.',
     'testimonial.giovanna.text': 'NotKode was fundamental for the launch of ZapInside. In a short time we had already started developing the idea and in three weeks we were already receiving our first client. I highly recommend it to all entrepreneurs who need to get their idea off the ground!',
     'testimonial.walter.text': 'After you reach the first 10 thousand in revenue with your SaaS, you need to improve your entire funnel, from the website to the product, to be able to continue growing and getting a good LTV. Notkode was fundamental to optimize the entire customer journey and develop the ideal software for us to overcome our challenge.',
+    
+    // Process Steps
+    'process.step1.title': 'Business Diagnosis',
+    'process.step1.description': 'We dive into your business to understand challenges, opportunities and objectives. We map current processes and identify how the desired solution will directly impact results.',
+    'process.step2.title': 'Smart Strategy',
+    'process.step2.description': 'We define the ideal architecture, choose the most suitable technologies and create our action plan where each decision is designed to achieve the best possible delivery time and maximize your investment return.',
+    'process.step3.title': 'Agile Development',
+    'process.step3.description': 'Using the most modern approaches, we build your solution in record time. Incremental deliveries allow you to track in real time, ensuring you see progress and can adjust course when needed.',
+    'process.step4.title': 'Launch & Growth',
+    'process.step4.description': 'Time to take off! Our go-live strategy includes continuous support, performance monitoring and improvements based on real usage data, all designed so your new solution starts its cycle on the right foot.',
+    'process.step5.description': 'The perfect formula that delivers technology solutions that really impact your results, the way your company needs, in record time.',
+    
+    // CTA Features
+    'cta.feature1.title': 'Free Diagnosis',
+    'cta.feature1.desc': 'Complete analysis of your business',
+    'cta.feature2.title': 'Fast Delivery',
+    'cta.feature2.desc': 'Projects in record time',
+    'cta.feature3.title': 'Dedicated Support',
+    'cta.feature3.desc': 'Total project follow-up',
     
     // Common Labels
     'common.launch': 'Project Launch',

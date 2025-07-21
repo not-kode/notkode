@@ -97,28 +97,28 @@ const Empresas: React.FC = () => {
 
   const processSteps = [
     {
-      title: "Diagnóstico do Negócio",
-      description: "Mergulhamos no seu negócio para entender desafios, oportunidades e objetivos. Mapeamos processos atuais e identificamos como a solução desejada vai impactar diretamente nos resultados.",
+      title: "process.step1.title",
+      description: "process.step1.description",
       icon: "🔍"
     },
     {
-      title: "Estratégia Inteligente",
-      description: "Definimos a arquitetura ideal, escolhemos as tecnologias mais adequadas e criamos nosso plano de ação onde cada decisão é pensada para obter o melhor tempo de entrega possível e maximizar o retorno do seu investimento.",
+      title: "process.step2.title",
+      description: "process.step2.description",
       icon: "🎯"
     },
     {
-      title: "Desenvolvimento Ágil",
-      description: "Ao utilizar as abordagens mais modernas, construímos sua solução em tempo recorde. Entregas incrementais permitem o seu acompanhamento em tempo real, garantindo que você veja o progresso e possa ajustar o rumo quando necessário.",
+      title: "process.step3.title",
+      description: "process.step3.description",
       icon: "⚡"
     },
     {
-      title: "Lançamento & Crescimento",
-      description: "Hora de decolar! Nossa estratégia de lançamento (go-live), conta com suporte contínuo, monitoramento de performance e melhorias baseadas em dados reais de uso, tudo pensado para que sua nova solução inicie seu ciclo com o pé direito.",
+      title: "process.step4.title",
+      description: "process.step4.description",
       icon: "🚀"
     },
     {
       title: "=",
-      description: "A fórmula perfeita que entrega soluções tecnológicas que realmente impactam seus resultados, da forma que sua empresa precisa, em tempo recorde.",
+      description: "process.step5.description",
       icon: "="
     }
   ];
@@ -357,7 +357,7 @@ const Empresas: React.FC = () => {
                             <span className="text-gradient">Conhecimento em Negócios + Desenvolvimento + IA</span>
                           </h3>
                           <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
-                            {step.description}
+                            {t(step.description)}
                           </p>
                           <div className="flex flex-wrap justify-center gap-4 text-sm">
                             <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
@@ -391,7 +391,7 @@ const Empresas: React.FC = () => {
                           {String(index + 1).padStart(2, '0')}
                         </div>
                         <div className="ml-6">
-                          <h3 className="font-sora font-bold text-xl mb-2">{step.title}</h3>
+                          <h3 className="font-sora font-bold text-xl mb-2">{t(step.title)}</h3>
                           <div className={`w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500 ${isActive ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-50'}`}></div>
                         </div>
                       </div>
@@ -404,7 +404,7 @@ const Empresas: React.FC = () => {
                             </div>
                             <div className="flex-1">
                               <p className="text-muted-foreground text-sm leading-relaxed">
-                                {step.description}
+                                {t(step.description)}
                               </p>
                             </div>
                           </div>
@@ -448,22 +448,22 @@ const Empresas: React.FC = () => {
               <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
                 <Sparkles className="w-5 h-5 mr-3" />
                 <div>
-                  <div className="text-lg font-bold text-white">Diagnóstico Gratuito</div>
-                  <span className="text-white/80">Análise completa do seu negócio</span>
+                  <div className="text-lg font-bold text-white">{t('cta.feature1.title')}</div>
+                  <span className="text-white/80">{t('cta.feature1.desc')}</span>
                 </div>
               </div>
               <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
                 <Timer className="w-5 h-5 mr-3" />
                 <div>
-                  <div className="text-lg font-bold text-white">Entrega Rápida</div>
-                  <span className="text-white/80">Projetos em tempo recorde</span>
+                  <div className="text-lg font-bold text-white">{t('cta.feature2.title')}</div>
+                  <span className="text-white/80">{t('cta.feature2.desc')}</span>
                 </div>
               </div>
               <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
                 <Heart className="w-5 h-5 mr-3" />
                 <div>
-                  <div className="text-lg font-bold text-white">Suporte Dedicado</div>
-                  <span className="text-white/80">Acompanhamento total do projeto</span>
+                  <div className="text-lg font-bold text-white">{t('cta.feature3.title')}</div>
+                  <span className="text-white/80">{t('cta.feature3.desc')}</span>
                 </div>
               </div>
             </div>
