@@ -35,6 +35,7 @@ const translations = {
       title: "Notkode - Transforme sua visão em realidade com IA e No-Code",
       description: "Desenvolvimento de produtos digitais com Inteligência Artificial e No-Code. Crie soluções inovadoras e eficientes para o seu negócio.",
       whatsapp: "Fale com Nossa Equipe",
+      lovable_tag: "Este site foi 100% criado usando Lovable, bem-vindo à era da IA!",
       hero: {
         title: "O futuro do desenvolvimento de produtos digitais chegou",
         subtitle: "Inteligência Artificial + No-Code",
@@ -445,6 +446,7 @@ const translations = {
       title: "Notkode - Turn your vision into reality with AI and No-Code",
       description: "Digital product development with Artificial Intelligence and No-Code. Create innovative and efficient solutions for your business.",
       whatsapp: "Talk to Our Team",
+      lovable_tag: "This site was 100% created using Lovable, welcome to the AI era!",
       hero: {
         title: "The future of digital product development has arrived",
         subtitle: "Artificial Intelligence + No-Code",
