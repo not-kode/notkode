@@ -106,7 +106,7 @@ const Home: React.FC = () => {
         <div className="relative inline-block mb-8 md:mb-0">
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[700px] h-full bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
           <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-4 md:px-6 py-2 backdrop-blur-sm w-[700px] mx-auto">
-            <p className="relative text-xs md:text-sm font-medium tracking-wide font-mono" style={{ color: '#272B37' }}>
+            <p className="relative text-xs md:text-sm font-medium tracking-wide font-mono text-foreground">
               <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
               {t('home.lovable_tag')}
             </p>
