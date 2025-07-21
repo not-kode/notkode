@@ -338,7 +338,7 @@ const Empresas: React.FC = () => {
           </div>
           
           {/* Interactive Process Timeline */}
-          <div className="relative max-w-6xl mx-auto my-[50px]">
+          <div className="relative max-w-6xl mx-auto my-[80px] px-4">
             {/* Central connecting line */}
             <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{
               height: 'calc(100% - 4rem)'
@@ -352,7 +352,7 @@ const Empresas: React.FC = () => {
               // Special handling for the equals step
               if (isEqualsStep) {
                 return (
-                  <div key={index} className="flex justify-center mb-24 relative">
+                  <div key={index} className="flex justify-center mb-32 relative px-8">
                     <div className={`transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'}`}>
                       <div className="glass-card max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
                         {/* Background decoration */}
@@ -394,12 +394,12 @@ const Empresas: React.FC = () => {
               }
 
               return (
-                <div key={index} className="flex items-center mb-24 relative group">
+                <div key={index} className="flex items-center mb-32 relative group px-6">
                   {/* Step Dot */}
                   <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`}></div>
                   
                   {/* Content Container */}
-                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-12' : 'lg:pl-12 lg:ml-auto'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
+                  <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-16' : 'lg:pl-16 lg:ml-auto'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
                     <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${isActive ? 'translate-x-0 opacity-100 scale-100' : 'opacity-70 scale-95'}`}>
                       <div className="flex items-center mb-6">
                         <div className={`w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg ${isActive ? 'animate-pulse shadow-primary/50' : ''}`}>
@@ -430,7 +430,7 @@ const Empresas: React.FC = () => {
                   </div>
                   
                   {/* Description Container - Desktop only */}
-                  <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-12' : 'pr-12'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+                  <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-16' : 'pr-16'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
                     <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 shadow-lg shadow-primary/10">
                       <div className="flex items-center mb-4">
                         <div className="text-6xl opacity-80 mr-4">
