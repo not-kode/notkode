@@ -212,16 +212,16 @@ const translations = {
       },
       cta: {
         feature1: {
-          title: "Inovação Contínua",
-          desc: "Sempre na vanguarda das tecnologias"
+          title: "Orçamento Gratuito",
+          desc: "Análise completa sem compromisso"
         },
         feature2: {
-          title: "Relacionamento Duradouro",
-          desc: "Parceria de longo prazo para crescimento mútuo"
+          title: "Consultoria Inclusa",
+          desc: "Orientação estratégica para seu projeto"
         },
         feature3: {
-          title: "Resultados Comprovados",
-          desc: "Track record de projetos bem-sucedidos"
+          title: "Entrega Rápida",
+          desc: "Projetos entregues em tempo recorde"
         }
       }
     },
@@ -406,8 +406,8 @@ const translations = {
         subtitle: "Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso."
       },
       parcerias: {
-        title: "Pronto para uma Parceria de Sucesso?",
-        subtitle: "Junte-se a nós e transforme sua agência em líder de inovação no mercado"
+        title: "Pronto para escalar sua agência?",
+        subtitle: "Entre em contato conosco e descubra como podemos ajudar você a oferecer mais serviços aos seus clientes sem aumentar seus custos."
       },
       feature1: {
         title: "Diagnóstico Gratuito",
@@ -816,20 +816,20 @@ const translations = {
         subtitle: "Contact us and discover how we can transform your idea into a successful technological solution."
       },
       parcerias: {
-        title: "Ready for a Successful Partnership?",
-        subtitle: "Join us and transform your agency into a market innovation leader"
+        title: "Ready to scale your agency?",
+        subtitle: "Contact us and discover how we can help you offer more services to your clients without increasing your costs."
       },
       feature1: {
-        title: "Free Diagnosis",
-        desc: "Complete analysis of your business"
+        title: "Free Budget",
+        desc: "Complete analysis without commitment"
       },
       feature2: {
-        title: "Fast Delivery", 
-        desc: "Projects in record time"
+        title: "Consulting Included", 
+        desc: "Strategic guidance for your project"
       },
       feature3: {
-        title: "Dedicated Support",
-        desc: "Complete project monitoring"
+        title: "Fast Delivery",
+        desc: "Projects delivered in record time"
       }
     }
   }
