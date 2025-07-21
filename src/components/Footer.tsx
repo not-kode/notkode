@@ -21,14 +21,14 @@ const Footer: React.FC = () => {
           </div>
 
           {/* CNPJ and Location */}
-          <div className="flex flex-col items-center space-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center space-x-2 whitespace-nowrap">
-              <Building2 className="w-4 h-4" />
-              <span>CNPJ: 12.345.678/0001-90</span>
-            </div>
+          <div className="flex flex-col items-end space-y-2 text-sm text-muted-foreground">
             <div className="flex items-center space-x-2 whitespace-nowrap">
               <MapPin className="w-4 h-4" />
               <span>São Paulo, SP - Brasil</span>
+            </div>
+            <div className="flex items-center space-x-2 whitespace-nowrap">
+              <Building2 className="w-4 h-4" />
+              <span>CNPJ: 12.345.678/0001-90</span>
             </div>
           </div>
         </div>
