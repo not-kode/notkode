@@ -19,7 +19,9 @@ import {
   Star,
   Calendar,
   Brain,
-  Zap
+  Zap,
+  Timer,
+  Heart
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
@@ -31,33 +33,23 @@ const Parcerias: React.FC = () => {
   const benefits = [
     {
       icon: Users,
-      title: t('parcerias.benefits.hiring'),
-      description: 'Amplie seu portfólio sem os custos e complexidade de contratação'
+      title: 'Ofereça mais serviços aos seus clientes',
+      description: 'Agregue os nossos serviços ao seu portfolio, oferecendo soluções completas sem precisar contratar desenvolvedores ou designers internos'
     },
     {
       icon: TrendingUp,
-      title: t('parcerias.benefits.services'),
-      description: 'Torne-se uma agência full-service oferecendo soluções completas'
-    },
-    {
-      icon: Shield,
-      title: t('parcerias.benefits.margin'),
+      title: 'Margem de lucro sem overhead',
       description: 'Margens atrativas sem investimento em infraestrutura ou equipe'
-    },
-    {
-      icon: Award,
-      title: t('parcerias.benefits.delivery'),
-      description: 'Qualidade premium garantida com nosso track record comprovado'
-    },
-    {
-      icon: Lightbulb,
-      title: t('parcerias.benefits.expertise'),
-      description: 'Acesso a expertise em IA, no-code e tecnologias de ponta'
     },
     {
       icon: Bot,
       title: 'Especialistas em Inteligência Artificial',
       description: 'Equipe especializada nas mais avançadas tecnologias de IA e automação'
+    },
+    {
+      icon: Award,
+      title: 'Entrega garantida com qualidade Notkode',
+      description: 'Não corra riscos técnicos, garantimos qualidade premium da entrega e a satisfação do seu cliente com nosso track record comprovado'
     }
   ];
 
@@ -96,7 +88,7 @@ const Parcerias: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section - Padronizado com página de Empresas */}
+      {/* Hero Section */}
       <section className="relative py-20 px-8 overflow-hidden bg-background">
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
@@ -107,7 +99,7 @@ const Parcerias: React.FC = () => {
         
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center py-[40px]">
-            {/* Badge - Padronizado com estilo Lovable */}
+            {/* Badge */}
             <div className="relative inline-block mb-8 animate-fade-in-up">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
               <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
@@ -136,13 +128,13 @@ const Parcerias: React.FC = () => {
               Torne-se uma agência completa com nossa expertise como seu braço técnico
             </p>
             
-            {/* Social Proof Tags - Adicionado para consistência */}
+            {/* Social Proof Tags - Same as Empresas page */}
             <div className="flex flex-wrap justify-center gap-6 text-sm animate-fade-in-up mb-8">
               <div className="flex items-center text-muted-foreground group">
-                <Handshake className="w-4 h-4 text-primary mr-2" />
-                <div className="text-lg font-bold text-primary mr-2">+20</div>
+                <CheckCircle className="w-4 h-4 text-primary mr-2" />
+                <div className="text-lg font-bold text-primary mr-2">100+</div>
                 <span className="relative">
-                  Parcerias Ativas
+                  Projetos Entregues
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
@@ -150,15 +142,15 @@ const Parcerias: React.FC = () => {
                 <Star className="w-4 h-4 text-secondary mr-2" />
                 <div className="text-lg font-bold text-secondary mr-2">95%</div>
                 <span className="relative">
-                  Taxa de Sucesso
+                  Satisfação Cliente
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-secondary to-primary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
               <div className="flex items-center text-muted-foreground group">
-                <Calendar className="w-4 h-4 text-primary mr-2" />
+                <Timer className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">24h</div>
                 <span className="relative">
-                  Tempo de Resposta
+                  Tempo Resposta
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
@@ -175,7 +167,7 @@ const Parcerias: React.FC = () => {
         </div>
       </section>
 
-      {/* Benefits Section - Padronizado */}
+      {/* Benefits Section */}
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
@@ -185,7 +177,7 @@ const Parcerias: React.FC = () => {
             Vantagens exclusivas que transformam sua agência em uma operação completa
           </p>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {benefits.map((benefit, index) => (
               <div key={index} className="glass-card group hover:scale-105">
                 <div className="flex items-center mb-4">
@@ -201,11 +193,11 @@ const Parcerias: React.FC = () => {
         </div>
       </section>
 
-      {/* Services Section - Padronizado */}
+      {/* Services Section - Reordered before Portfolio */}
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
-            <span className="text-gradient">{t('parcerias.services.title')}</span>
+            <span className="text-gradient">Serviços Disponíveis para Terceirização</span>
           </h2>
           <p className="text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto">
             Serviços completos que você pode oferecer aos seus clientes
@@ -229,14 +221,14 @@ const Parcerias: React.FC = () => {
         </div>
       </section>
 
-      {/* Portfolio Section */}
+      {/* Portfolio Section - Reordered after Services */}
       <section id="portfolio" className="py-20 bg-background">
         <div className="px-8">
           <Portfolio />
         </div>
       </section>
 
-      {/* Process Section - Redesenhado com estilo da página de Empresas */}
+      {/* Process Section - Updated with vertical alignment */}
       <section className="relative py-20 px-8 overflow-hidden bg-background">
         {/* Background Elements */}
         <div className="absolute inset-0">
@@ -255,21 +247,18 @@ const Parcerias: React.FC = () => {
             </p>
           </div>
           
-          {/* Process Steps - Redesenhado */}
-          <div className="relative max-w-6xl mx-auto my-[80px]">
-            <div className="grid lg:grid-cols-3 gap-12">
+          {/* Process Steps - Vertical alignment */}
+          <div className="relative max-w-4xl mx-auto">
+            <div className="flex flex-col items-center space-y-16">
               {/* Step 1 */}
-              <div className="relative">
+              <div className="w-full max-w-2xl">
                 <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl text-center">
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
                     <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
-                      01
+                      📋
                     </div>
                   </div>
                   <div className="pt-12">
-                    <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-4xl">
-                      📋
-                    </div>
                     <h3 className="font-sora font-bold text-2xl mb-4">Apresente o Projeto</h3>
                     <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4"></div>
                     <p className="text-muted-foreground text-base leading-relaxed">
@@ -277,60 +266,82 @@ const Parcerias: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                {/* Arrow */}
-                <div className="hidden lg:block absolute top-1/2 -right-6 transform -translate-y-1/2 text-primary text-3xl">
-                  →
+                {/* Vertical Arrow */}
+                <div className="flex justify-center my-8">
+                  <div className="text-primary text-3xl transform rotate-90">
+                    →
+                  </div>
                 </div>
               </div>
 
               {/* Step 2 */}
-              <div className="relative">
+              <div className="w-full max-w-2xl">
                 <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl text-center">
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
                     <div className="w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
-                      02
+                      💡
                     </div>
                   </div>
                   <div className="pt-12">
-                    <div className="w-20 h-20 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-4xl">
-                      💡
-                    </div>
                     <h3 className="font-sora font-bold text-2xl mb-4">Receba Proposta</h3>
                     <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto mb-4"></div>
                     <p className="text-muted-foreground text-base leading-relaxed">
-                      Elaboramos cronograma detalhado, valores transparentes e especificações técnicas completas. Tudo personalizado para o projeto específico.
+                      Elaboramos cronograma detalhado, valores transparentes e especificações técnicas completas. Tudo pensado para que você fique no controle de todo o processo e sempre saiba o que está acontecendo.
                     </p>
                   </div>
                 </div>
-                {/* Arrow */}
-                <div className="hidden lg:block absolute top-1/2 -right-6 transform -translate-y-1/2 text-secondary text-3xl">
-                  →
+                {/* Vertical Arrow */}
+                <div className="flex justify-center my-8">
+                  <div className="text-secondary text-3xl transform rotate-90">
+                    →
+                  </div>
                 </div>
               </div>
 
               {/* Step 3 */}
-              <div className="relative">
+              <div className="w-full max-w-2xl">
                 <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl text-center">
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
                     <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
-                      03
+                      ⚙️
                     </div>
                   </div>
                   <div className="pt-12">
-                    <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-4xl">
-                      🚀
-                    </div>
-                    <h3 className="font-sora font-bold text-2xl mb-4">Entregamos Pronto</h3>
+                    <h3 className="font-sora font-bold text-2xl mb-4">Alinhamento da entrega</h3>
                     <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4"></div>
                     <p className="text-muted-foreground text-base leading-relaxed">
-                      Você recebe o projeto finalizado com qualidade Notkode. Suporte completo durante a entrega e implementação para garantir o sucesso.
+                      Combinamos quem irá gerenciar o projeto, aqui você escolhe se o seu cliente saberá que existimos ou você prefere realizar toda interface com o cliente e contar com nosso trabalho via bastidores.
+                    </p>
+                  </div>
+                </div>
+                {/* Vertical Arrow */}
+                <div className="flex justify-center my-8">
+                  <div className="text-primary text-3xl transform rotate-90">
+                    →
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="w-full max-w-2xl">
+                <div className="glass-card group hover:scale-105 transition-all duration-500 hover:shadow-2xl text-center">
+                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+                    <div className="w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
+                      🚀
+                    </div>
+                  </div>
+                  <div className="pt-12">
+                    <h3 className="font-sora font-bold text-2xl mb-4">Desenvolvimento FastForge™</h3>
+                    <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto mb-4"></div>
+                    <p className="text-muted-foreground text-base leading-relaxed">
+                      Nossa metodologia de entrega validada, garante que semana a semana o projeto progrida, com você acompanhando o desenvolvimento em tempo real e podendo ajustar a direção do projeto enquanto ele ainda está nascendo.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Resultado Final - Seção especial */}
+            {/* Resultado Final - Now at the bottom */}
             <div className="flex justify-center mt-20">
               <div className="glass-card max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
                 {/* Background decoration */}
@@ -371,16 +382,42 @@ const Parcerias: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section - Padronizado */}
-      <section className="py-12 px-8 bg-gradient-to-br from-primary to-secondary">
+      {/* CTA Section - Updated with three topics */}
+      <section className="py-20 px-8 bg-gradient-to-br from-primary to-secondary">
         <div className="container mx-auto text-center">
-          <div className="max-w-3xl mx-auto p-8 rounded-3xl">
+          <div className="max-w-4xl mx-auto p-8 rounded-3xl">
             <h2 className="font-sora font-bold text-4xl mb-6 text-white">
               Pronto para <span className="text-white/90">escalar</span> sua agência?
             </h2>
-            <p className="text-xl text-white/90 mb-8">
+            <p className="text-xl text-white/90 mb-12">
               Entre em contato conosco e descubra como podemos ajudar você a oferecer mais serviços aos seus clientes sem aumentar seus custos.
             </p>
+            
+            {/* Three Topics */}
+            <div className="flex flex-wrap justify-center gap-8 text-sm mb-12">
+              <div className="flex items-center text-white/90 group">
+                <Sparkles className="w-5 h-5 mr-3" />
+                <div>
+                  <div className="text-lg font-bold text-white">Orçamento Gratuito</div>
+                  <span className="text-white/80">Análise completa sem compromisso</span>
+                </div>
+              </div>
+              <div className="flex items-center text-white/90 group">
+                <Heart className="w-5 h-5 mr-3" />
+                <div>
+                  <div className="text-lg font-bold text-white">Consultoria Inclusa</div>
+                  <span className="text-white/80">Orientação estratégica para seu projeto</span>
+                </div>
+              </div>
+              <div className="flex items-center text-white/90 group">
+                <Zap className="w-5 h-5 mr-3" />
+                <div>
+                  <div className="text-lg font-bold text-white">Entrega Rápida</div>
+                  <span className="text-white/80">Projetos entregues em tempo recorde</span>
+                </div>
+              </div>
+            </div>
+            
             <WhatsAppButton 
               text="Entrar em Contato" 
               className="bg-white text-primary px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-white/25 hover:scale-105 transition-all duration-300 border-0 hover:bg-white/90" 
