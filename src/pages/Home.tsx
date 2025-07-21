@@ -39,10 +39,9 @@ const Home: React.FC = () => {
 
       <div className="container mx-auto max-w-4xl text-center relative z-10 flex-grow flex flex-col justify-center">
         {/* Main Title */}
-        <h1 className="font-sora font-bold text-4xl md:text-6xl lg:text-7xl mb-8 leading-tight">
+        <h1 className="font-sora font-bold text-3xl md:text-5xl lg:text-6xl mb-8 leading-tight">
           <div>
-            <span className="text-primary">Acelere</span> seu negócio com{' '}
-            <span className="text-gradient">tecnologia</span>
+            <span className="text-primary">Acelere</span> seu negócio com <span className="text-gradient">tecnologia</span>
           </div>
           <div>
             <span className="text-primary">sob medida</span>
@@ -51,8 +50,8 @@ const Home: React.FC = () => {
         
         {/* Subtitle - Console Style */}
         <div className="mb-16 max-w-3xl mx-auto">
-          <div className="bg-notkode-deep-navy/90 border border-primary/30 rounded-lg p-4 backdrop-blur-sm">
-            <div className="flex items-center mb-2">
+          <div className="bg-notkode-deep-navy/90 border border-primary/30 rounded-lg p-6 backdrop-blur-sm">
+            <div className="flex items-center mb-4">
               <div className="flex space-x-1 mr-3">
                 <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                 <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
@@ -60,49 +59,49 @@ const Home: React.FC = () => {
               </div>
               <span className="text-xs text-muted-foreground font-mono">terminal</span>
             </div>
-            <p className="font-mono text-lg md:text-xl text-primary/90 leading-relaxed">
+            <p className="font-mono text-lg md:text-xl text-primary/90 leading-relaxed mb-6">
               <span className="text-secondary">$</span> echo "Escolha como podemos ajudar você a crescer"
             </p>
+            
+            {/* Options inside terminal */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Empresas Option */}
+              <Link 
+                to="/empresas" 
+                className="glass-card group hover:scale-105 transition-all duration-300 p-6 text-left bg-background/10 hover:bg-background/20"
+              >
+                <div className="flex items-center mb-3">
+                  <Building className="w-6 h-6 text-primary mr-3 group-hover:scale-110 transition-transform" />
+                  <h2 className="font-sora font-bold text-lg">Para Empresas</h2>
+                </div>
+                <p className="text-muted-foreground mb-4 text-sm">
+                  Soluções tecnológicas personalizadas para acelerar seu negócio
+                </p>
+                <div className="flex items-center text-primary font-semibold text-sm">
+                  Explorar Soluções
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </Link>
+              
+              {/* Parcerias Option */}
+              <Link 
+                to="/parcerias" 
+                className="glass-card group hover:scale-105 transition-all duration-300 p-6 text-left bg-background/10 hover:bg-background/20"
+              >
+                <div className="flex items-center mb-3">
+                  <Handshake className="w-6 h-6 text-primary mr-3 group-hover:scale-110 transition-transform" />
+                  <h2 className="font-sora font-bold text-lg">Para Agências</h2>
+                </div>
+                <p className="text-muted-foreground mb-4 text-sm">
+                  Seja nosso parceiro e ofereça desenvolvimento sem contratar equipe
+                </p>
+                <div className="flex items-center text-primary font-semibold text-sm">
+                  Explorar Parceria
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </Link>
+            </div>
           </div>
-        </div>
-        
-        {/* Options */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto mb-12">
-          {/* Empresas Option */}
-          <Link 
-            to="/empresas" 
-            className="glass-card group hover:scale-105 transition-all duration-300 p-8 text-left"
-          >
-            <div className="flex items-center mb-4">
-              <Building className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
-              <h2 className="font-sora font-bold text-2xl">Para Empresas</h2>
-            </div>
-            <p className="text-muted-foreground mb-6">
-              Soluções tecnológicas personalizadas para acelerar seu negócio
-            </p>
-            <div className="flex items-center text-primary font-semibold">
-              Explorar Soluções
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
-            </div>
-          </Link>
-          
-          {/* Parcerias Option */}
-          <Link 
-            to="/parcerias" 
-            className="glass-card group hover:scale-105 transition-all duration-300 p-8 text-left"
-          >
-            <div className="flex items-center mb-4">
-              <Handshake className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
-              <h2 className="font-sora font-bold text-2xl">Para Agências</h2>
-            </div>
-            <p className="text-muted-foreground mb-6">
-              Seja nosso parceiro e ofereça desenvolvimento sem contratar equipe
-            </p>
-            <div className="flex items-center text-primary font-semibold">
-              Explorar Parceria
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
-            </div>
-          </Link>
         </div>
 
         {/* Futuristic Neon Lovable Tag */}
