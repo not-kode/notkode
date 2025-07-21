@@ -20,7 +20,8 @@ import {
   Brain,
   Zap,
   Timer,
-  Heart
+  Heart,
+  Building
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
@@ -115,11 +116,11 @@ const Parcerias: React.FC = () => {
               Torne-se uma agência completa com nossa expertise como seu braço técnico
             </p>
             
-            {/* Social Proof Tags - Same as Empresas page */}
+            {/* Social Proof Tags - Updated to match Empresas page */}
             <div className="flex flex-wrap justify-center gap-6 text-sm animate-fade-in-up mb-8">
               <div className="flex items-center text-muted-foreground group">
-                <CheckCircle className="w-4 h-4 text-primary mr-2" />
-                <div className="text-lg font-bold text-primary mr-2">100+</div>
+                <Building className="w-4 h-4 text-primary mr-2" />
+                <div className="text-lg font-bold text-primary mr-2">+50</div>
                 <span className="relative">
                   Projetos Entregues
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
@@ -127,17 +128,17 @@ const Parcerias: React.FC = () => {
               </div>
               <div className="flex items-center text-muted-foreground group">
                 <Star className="w-4 h-4 text-secondary mr-2" />
-                <div className="text-lg font-bold text-secondary mr-2">95%</div>
+                <div className="text-lg font-bold text-secondary mr-2">9.8</div>
                 <span className="relative">
-                  Satisfação Cliente
+                  Nota de Avaliação
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-secondary to-primary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
               <div className="flex items-center text-muted-foreground group">
-                <Timer className="w-4 h-4 text-primary mr-2" />
-                <div className="text-lg font-bold text-primary mr-2">24h</div>
+                <Calendar className="w-4 h-4 text-primary mr-2" />
+                <div className="text-lg font-bold text-primary mr-2">+4</div>
                 <span className="relative">
-                  Tempo Resposta
+                  Anos de Experiência
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
