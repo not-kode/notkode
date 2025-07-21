@@ -75,23 +75,23 @@ const Empresas: React.FC = () => {
   const whyChooseUs = [
     {
       icon: DollarSign,
-      title: "Custo-Benefício",
-      description: "Projetos entregues em até 50% menos tempo, com economia de até 60% comparado ao desenvolvimento tradicional."
+      title: t('empresas.why.cost_benefit.title'),
+      description: t('empresas.why.cost_benefit.desc')
     },
     {
       icon: Bot,
-      title: "Especialistas em Inteligência Artificial",
-      description: "Trabalhamos com IA muito antes dela estar no hype (na moda), dominamos as mais avançadas tecnologias de IA para criar soluções realmente inteligentes."
+      title: t('empresas.why.ai_experts.title'),
+      description: t('empresas.why.ai_experts.desc')
     },
     {
       icon: Shield,
-      title: "Escalabilidade",
-      description: "Soluções que crescem junto com seu negócio, contando com protocolos de segurança avançados e atualizações automáticas."
+      title: t('empresas.why.scalability.title'),
+      description: t('empresas.why.scalability.desc')
     },
     {
       icon: Headphones,
-      title: "Suporte Dedicado",
-      description: "Acompanhamento completo durante e após o desenvolvimento. Estamos a uma mensagem de distância, com canal de contato 100% disponível. Precisou? É só nos chamar no Whatsapp!"
+      title: t('empresas.why.support.title'),
+      description: t('empresas.why.support.desc')
     }
   ];
 
@@ -161,15 +161,13 @@ const Empresas: React.FC = () => {
                 <div className="flex items-center">
                   <span className="inline-block w-2 h-2 bg-primary rounded-full mr-3 animate-pulse"></span>
                   <Sparkles className="w-4 h-4 text-primary mr-2" />
-                  <span className="text-sm font-medium text-primary/90 tracking-wide font-mono">Soluções Tecnológicas Sob Medida</span>
+                  <span className="text-sm font-medium text-primary/90 tracking-wide font-mono">{t('empresas.hero.new_title')}</span>
                 </div>
               </div>
             </div>
             
             <h1 className="font-sora font-bold text-4xl mb-8 animate-fade-in-up leading-tight">
-              Desenvolvemos tecnologia{' '}
-              <span className="text-gradient">sobre medida</span> que acelera sua empresa em{' '}
-              <span className="text-gradient">tempo recorde</span>
+              {t('empresas.hero.new_subtitle')}
             </h1>
             
             <div className="flex flex-wrap justify-center gap-6 text-sm animate-fade-in-up mb-8">
@@ -177,7 +175,7 @@ const Empresas: React.FC = () => {
                 <Building className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">+50</div>
                 <span className="relative">
-                  Projetos Entregues
+                  {t('empresas.stats.projects')}
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
@@ -185,7 +183,7 @@ const Empresas: React.FC = () => {
                 <Star className="w-4 h-4 text-secondary mr-2" />
                 <div className="text-lg font-bold text-secondary mr-2">9.8</div>
                 <span className="relative">
-                  Nota de Avaliação
+                  {t('empresas.stats.rating')}
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-secondary to-primary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
@@ -193,14 +191,14 @@ const Empresas: React.FC = () => {
                 <Calendar className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">+4</div>
                 <span className="relative">
-                  Anos de Experiência
+                  {t('empresas.stats.experience')}
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
             </div>
             
             <div className="animate-fade-in-up">
-              <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
+              <WhatsAppButton text={t('empresas.cta.accelerate')} className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
             </div>
           </div>
         </div>
@@ -239,10 +237,10 @@ const Empresas: React.FC = () => {
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
-            Por que escolher a <span className="text-gradient">NotKode?</span>
+            {t('empresas.why.title')}
           </h2>
           <p className="text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto">
-            Desenvolvemos soluções modernas que oferecem vantagens reais para seu negócio
+            {t('empresas.why.subtitle')}
           </p>
           
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -264,7 +262,7 @@ const Empresas: React.FC = () => {
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
-            O que nossos <span className="text-gradient">clientes dizem</span>
+            {t('empresas.testimonials.title')}
           </h2>
           
           <div className="max-w-6xl mx-auto">
@@ -323,7 +321,7 @@ const Empresas: React.FC = () => {
         <div className="container mx-auto relative z-10">
           <div className="text-center mb-20">
             <h2 className="font-sora font-bold text-4xl mb-6">
-              Nosso <span className="text-gradient">Passo a Passo</span> para o Sucesso
+              {t('empresas.process.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Uma metodologia validada que transforma suas ideias em soluções de sucesso
