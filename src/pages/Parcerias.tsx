@@ -113,14 +113,7 @@ const Parcerias: React.FC = () => {
             
             {/* Main Title */}
             <h1 className="font-sora font-bold text-4xl mb-8 animate-fade-in-up leading-tight">
-              <span className="text-gradient relative">
-                Multiplique
-                <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary rounded-full opacity-50"></div>
-              </span>{' '}
-              sua receita oferecendo{' '}
-              <span className="text-gradient">desenvolvimento</span> e{' '}
-              <span className="text-gradient">design</span> sem contratar{' '}
-              <span className="text-gradient">ninguém</span>
+              Multiplique sua receita oferecendo desenvolvimento sem contratar ninguém
             </h1>
             
             {/* Subtitle */}
