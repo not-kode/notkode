@@ -61,7 +61,7 @@ const SobreNos: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="hero-gradient py-20 px-4">
+      <section className="hero-gradient pt-32 pb-12 px-4">
         <div className="container mx-auto text-center">
           <div className="relative inline-block mb-8">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
