@@ -106,7 +106,7 @@ const Home: React.FC = () => {
           <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
             <p className="relative text-sm font-medium text-primary/90 tracking-wide font-mono">
               <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
-              This website was 100% created using Lovable, welcome to the AI era!
+              {t('home.lovable_tag')}
             </p>
           </div>
         </div>

@@ -25,6 +25,7 @@ const translations = {
     'home.agency.title': 'Sou uma agência',
     'home.agency.desc': 'Quero terceirizar desenvolvimento e design',
     'home.whatsapp': 'Falar com especialista',
+    'home.lovable_tag': 'Este site foi 100% criado usando Lovable, bem-vindo à era da IA!',
     
     // Empresas Page
     'empresas.hero.title': 'Independente de qual o seu desafio, desenvolvemos tecnologia sobre medida que acelera sua empresa em tempo recorde.',
@@ -304,6 +305,7 @@ const translations = {
     'home.agency.title': 'I am an agency',
     'home.agency.desc': 'I want to outsource development and design',
     'home.whatsapp': 'Talk to a specialist',
+    'home.lovable_tag': 'This website was 100% created using Lovable, welcome to the AI era!',
     
     // Empresas Page
     'empresas.hero.title': 'Regardless of your challenge, we develop custom technology that accelerates your company in record time.',
