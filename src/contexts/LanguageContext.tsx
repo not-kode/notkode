@@ -187,20 +187,20 @@ const translations = {
         title: "Como Funciona a Parceria",
         subtitle: "Um processo simples e eficiente para começarmos a trabalhar juntos",
         step1: {
-          title: "Cadastro e Qualificação",
-          desc: "Análise do perfil da sua agência e definição da estrutura de parceria ideal"
+          title: "Apresente o Projeto",
+          desc: "Compartilhe os detalhes do projeto do seu cliente conosco. Analisamos requisitos, objetivos e expectativas para criar a proposta ideal."
         },
         step2: {
-          title: "Capacitação e Treinamento",
-          desc: "Workshop completo sobre nossas soluções e metodologias de vendas"
+          title: "Receba Proposta",
+          desc: "Elaboramos cronograma detalhado, valores transparentes e especificações técnicas completas. Tudo pensado para que você fique no controle de todo o processo e sempre saiba o que está acontecendo."
         },
         step3: {
-          title: "Suporte na Prospecção",
-          desc: "Materiais exclusivos e suporte ativo para apresentações e propostas"
+          title: "Alinhamento da entrega",
+          desc: "Combinamos quem irá gerenciar o projeto, aqui você escolhe se o seu cliente saberá que existimos ou você prefere realizar toda interface com o cliente e contar com nosso trabalho via bastidores."
         },
         step4: {
-          title: "Execução Conjunta",
-          desc: "Desenvolvimento colaborativo com nossa equipe técnica especializada"
+          title: "Desenvolvimento FastForge™",
+          desc: "Nossa metodologia de entrega validada, garante que semana a semana o projeto progrida, com você acompanhando o desenvolvimento em tempo real e podendo ajustar a direção do projeto enquanto ele ainda está nascendo."
         },
         result: {
           title: "Agência + Notkode = Resultados Excepcionais",
@@ -597,20 +597,20 @@ const translations = {
         title: "How the Partnership Works",
         subtitle: "A simple and efficient process to start working together",
         step1: {
-          title: "Registration and Qualification",
-          desc: "Analysis of your agency profile and definition of the ideal partnership structure"
+          title: "Present the Project",
+          desc: "Share your client's project details with us. We analyze requirements, objectives and expectations to create the ideal proposal."
         },
         step2: {
-          title: "Capacity Building and Training",
-          desc: "Complete workshop on our solutions and sales methodologies"
+          title: "Receive Proposal",
+          desc: "We elaborate detailed timeline, transparent values and complete technical specifications. Everything designed so you stay in control of the entire process and always know what's happening."
         },
         step3: {
-          title: "Prospecting Support",
-          desc: "Exclusive materials and active support for presentations and proposals"
+          title: "Delivery Alignment",
+          desc: "We agree on who will manage the project, here you choose if your client will know we exist or you prefer to handle all interface with the client and count on our behind-the-scenes work."
         },
         step4: {
-          title: "Joint Execution",
-          desc: "Collaborative development with our specialized technical team"
+          title: "FastForge™ Development",
+          desc: "Our validated delivery methodology ensures that week by week the project progresses, with you following development in real time and being able to adjust the project direction while it's still being born."
         },
         result: {
           title: "Agency + Notkode = Exceptional Results",
