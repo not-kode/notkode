@@ -45,8 +45,8 @@ const Home: React.FC = () => {
         </div>
         
         {/* Subtitle - Console Style */}
-        <div className="mb-8 md:mb-16 max-w-[1000px] mx-auto">
-          <div className="bg-notkode-deep-navy/90 border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm">
+        <div className="mb-8 md:mb-16 max-w-[1200px] mx-auto">
+          <div className="bg-notkode-deep-navy/90 border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm w-[1200px]">
             <div className="flex items-center mb-3 md:mb-4">
               <div className="flex space-x-1 mr-3">
                 <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full"></div>
