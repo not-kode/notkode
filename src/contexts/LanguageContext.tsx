@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from 'react';
 
 interface LanguageContextProps {
@@ -53,15 +52,10 @@ const translations = {
       contact: {
         title: "Vamos Inovar Juntos?",
         description: "Entre em contato conosco e descubra como a Notkode pode ajudar a sua empresa a alcançar novos patamares de sucesso com soluções digitais inovadoras e personalizadas."
+      },
+      footer: {
+        copyright: "© 2024 Notkode. Todos os direitos reservados."
       }
-    },
-    footer: {
-      copyright: "© 2024 Notkode. Todos os direitos reservados.",
-      rights: "Todos os direitos reservados.",
-      made_with: "Feito com",
-      by_notkode: "pela Notkode",
-      location: "São Paulo - SP, Brasil",
-      cnpj: "CNPJ: 00.000.000/0001-00"
     },
     about: {
       hero: {
@@ -112,13 +106,13 @@ const translations = {
         title: "Quem está por trás da Notkode",
         camila: {
           name: "Camila Tonelotto",
-          role: "Maga da UX",
+          role: "CEO",
           description: "Desde criança, Camila sempre teve uma paixão pela arte - passava horas pintando quadros. Essa veia artística a levou naturalmente ao design, depois ao UX, e finalmente ao desenvolvimento de software. Hoje, ela lidera a Notkode com foco em criar experiências que realmente facilitam a vida dos usuários, transformando sua visão artística em valor real para os negócios.",
           linkedin: "Se conectar no LinkedIn"
         },
         matheus: {
           name: "Matheus Tonelotto",
-          role: "Nosso Estrategista",
+          role: "CTO",
           description: "Com experiência sólida em multinacionais de software e nas startups brasileiras mais bem-sucedidas, Matheus traz uma visão técnica excepcional para a empresa. Especialista em Inteligência Artificial, já liderou projetos para empresas no Canadá, Estados Unidos e Inglaterra. Ele é o estrategista por trás de cada solução, sempre focado em entregar o máximo valor no menor tempo possível.",
           linkedin: "Se conectar no LinkedIn"
         }
@@ -190,15 +184,10 @@ const translations = {
       contact: {
         title: "Let's Innovate Together?",
         description: "Get in touch with us and discover how Notkode can help your company reach new levels of success with innovative and personalized digital solutions."
+      },
+      footer: {
+        copyright: "© 2024 Notkode. All rights reserved."
       }
-    },
-    footer: {
-      copyright: "© 2024 Notkode. All rights reserved.",
-      rights: "All rights reserved.",
-      made_with: "Made with",
-      by_notkode: "by Notkode",
-      location: "São Paulo - SP, Brazil",
-      cnpj: "CNPJ: 00.000.000/0001-00"
     },
     about: {
       hero: {
@@ -249,13 +238,13 @@ const translations = {
         title: "Who's behind Notkode",
         camila: {
           name: "Camila Tonelotto",
-          role: "UX Wizard",
+          role: "CEO",
           description: "Since childhood, Camila has always had a passion for art - she spent hours painting. This artistic vein naturally led her to design, then UX, and finally software development. Today, she leads Notkode with a focus on creating experiences that truly make users' lives easier, transforming her artistic vision into real business value.",
           linkedin: "Connect on LinkedIn"
         },
         matheus: {
           name: "Matheus Tonelotto",
-          role: "Our Strategist",
+          role: "CTO",
           description: "With solid experience in software multinationals and Brazil's most successful startups, Matheus brings exceptional technical vision to the company. An Artificial Intelligence specialist, he has led projects for companies in Canada, the United States, and England. He's the strategist behind every solution, always focused on delivering maximum value in the shortest time possible.",
           linkedin: "Connect on LinkedIn"
         }
