@@ -2,7 +2,7 @@
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
-import { CheckCircle, Globe, TrendingUp } from 'lucide-react';
+import { CheckCircle, Globe, TrendingUp, Linkedin } from 'lucide-react';
 
 const SobreNos: React.FC = () => {
   const { t } = useLanguage();
@@ -93,8 +93,9 @@ const SobreNos: React.FC = () => {
                   href="https://www.linkedin.com/in/gregoriocamila/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-primary hover:text-primary/80 font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg font-medium transition-all duration-300 hover:scale-105"
                 >
+                  <Linkedin className="w-4 h-4" />
                   {t('about.founders.camila.linkedin')}
                 </a>
               </div>
@@ -119,8 +120,9 @@ const SobreNos: React.FC = () => {
                   href="https://www.linkedin.com/in/matheustonelotto/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-primary hover:text-primary/80 font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg font-medium transition-all duration-300 hover:scale-105"
                 >
+                  <Linkedin className="w-4 h-4" />
                   {t('about.founders.matheus.linkedin')}
                 </a>
               </div>
