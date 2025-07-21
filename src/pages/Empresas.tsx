@@ -1,15 +1,42 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight } from 'lucide-react';
+import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight, Star, Quote } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const Empresas: React.FC = () => {
-  const {
-    t
-  } = useLanguage();
+  const { t } = useLanguage();
   const processRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState(0);
+
+  const testimonials = [
+    {
+      text: "A Notkode foi primordial para o rápido lançamento do meu projeto. Desde o primeiro contato com a Camila, tive uma atenção fora da curva, desde a negociação, durante o projeto e a entrega do site em si. Altíssima qualidade, técnica, agilidade e seriedade. Recomendo fortemente!",
+      author: "Bruno Coimbra",
+      company: "Azure Assessoria de Investimentos"
+    },
+    {
+      text: "Atendimento mega atencioso, atentos a cada detalhe e ideia, sempre com contrapontos lógicos e eficientes. O projeto foi entregue dentro do prazo e a qualidade foi perfeita. Indico com toda certeza.",
+      author: "Rodrigo Nascimento",
+      company: "LTS Corretagem de Seguros"
+    },
+    {
+      text: "Gostei muito de todo o processo, foi tudo muito profissional e podemos transformar rapidamente as ideias que tinha em realidade. Estou muito feliz com o resultado.",
+      author: "Fernando Freitas",
+      company: "Mark Tech"
+    },
+    {
+      text: "A NotKode foi fundamental para o lançamento da ZapInside. Em pouco tempo já haviamos começado a desenvolver a ideia e em três semanas já estavamos recebendo o primeiro cliente. Super recomendo para todos os empreendedores que precisarem colocar usa ideia no ar!",
+      author: "Giovanna Pretti",
+      company: "ZapInside"
+    },
+    {
+      text: "Depois que você atinge os primeiros 10 mil de faturamento com o seu SaaS, você precisa ir melhorando todo o seu funil, desde o site até o produto, para poder continuar crescendo e obtendo um bom LTV. A Notkode foi fundamental para otimizar toda a jornada do cliente e desenvolver o software ideal para conseguirmos superar o nosso desafio.",
+      author: "Walter Neto",
+      company: "AutoAgentes"
+    }
+  ];
 
   const services = [{
     icon: Building,
@@ -103,7 +130,8 @@ const Empresas: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  return <div className="min-h-screen">
+  return (
+    <div className="min-h-screen">
       {/* Hero Section - Mais criativo */}
       <section className="relative hero-gradient py-20 px-8 overflow-hidden">
         {/* Background decorative elements */}
@@ -335,10 +363,10 @@ const Empresas: React.FC = () => {
             Resultados <span className="text-gradient">Comprovados</span>
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="glass-card text-center group hover:scale-105">
               <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">
-                50+
+                +50
               </div>
               <div className="text-sm text-muted-foreground">
                 Projetos Entregues
@@ -347,30 +375,75 @@ const Empresas: React.FC = () => {
             
             <div className="glass-card text-center group hover:scale-105">
               <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">
-                R$ 300k+
+                9.8
               </div>
               <div className="text-sm text-muted-foreground">
-                Faturamento dos Clientes
+                Nota de Avaliação Final
               </div>
             </div>
             
             <div className="glass-card text-center group hover:scale-105">
               <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">
-                100%
+                +4
               </div>
               <div className="text-sm text-muted-foreground">
-                Satisfação dos Clientes
+                Anos de Clientes NotKode
               </div>
             </div>
-            
-            <div className="glass-card text-center group hover:scale-105">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">
-                3
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Anos de Experiência
-              </div>
-            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 px-8">
+        <div className="container mx-auto">
+          <h2 className="font-sora font-bold text-4xl text-center mb-16">
+            O que nossos <span className="text-gradient">clientes dizem</span>
+          </h2>
+          
+          <div className="max-w-6xl mx-auto">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-4">
+                {testimonials.map((testimonial, index) => (
+                  <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <div className="glass-card h-full group hover:scale-105">
+                      <div className="flex items-center justify-center mb-4">
+                        <Quote className="w-8 h-8 text-primary opacity-60" />
+                      </div>
+                      
+                      <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+                        "{testimonial.text}"
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-sora font-semibold text-sm mb-1">
+                            {testimonial.author}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {testimonial.company}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 text-primary fill-current" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-0 md:-left-12" />
+              <CarouselNext className="right-0 md:-right-12" />
+            </Carousel>
           </div>
         </div>
       </section>
@@ -389,7 +462,8 @@ const Empresas: React.FC = () => {
           </div>
         </div>
       </section>
-    </div>;
+    </div>
+  );
 };
 
 export default Empresas;
