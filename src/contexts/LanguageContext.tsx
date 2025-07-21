@@ -316,19 +316,19 @@ const translations = {
     // Testimonials
     testimonial: {
       bruno: {
-        text: "A Notkode transformou completamente nossa abordagem de negócios. A solução de IA que desenvolveram aumentou nossa eficiência em 300% e nos permitiu focar no que realmente importa: nossos clientes."
+        text: "A Notkode foi primordial para o rápido lançamento do meu projeto. Desde o primeiro contato com a Camila, tive uma atenção fora da curva, desde a negociação, durante o projeto e a entrega do site em si. Altíssima qualidade, técnica, agilidade e seriedade. Recomendo fortemente!"
       },
       rodrigo: {
-        text: "Parceria excepcional! A equipe da Notkode entendeu perfeitamente nossas necessidades e entregou uma solução que superou todas as expectativas. Recomendo sem hesitação."
+        text: "Atendimento mega atencioso, atentos a cada detalhe e ideia, sempre com contrapontos lógicos e eficientes. O projeto foi entregue dentro do prazo e a qualidade foi perfeita. Indico com toda certeza."
       },
       fernando: {
-        text: "A implementação do sistema foi surpreendentemente rápida e os resultados apareceram imediatamente. Nossa produtividade aumentou significativamente desde a primeira semana."
+        text: "Gostei muito de todo o processo, foi tudo muito profissional e podemos transformar rapidamente as ideias que tinha em realidade. Estou muito feliz com o resultado."
       },
       giovanna: {
-        text: "O que mais me impressiona é o suporte contínuo. Não é apenas desenvolvimento, é uma verdadeira parceria estratégica para o crescimento do nosso negócio."
+        text: "A NotKode foi fundamental para o lançamento da ZapInside. Em pouco tempo já havíamos começado a desenvolver a ideia e em três semanas já estávamos recebendo o primeiro cliente. Super recomendo para todos os empreendedores que precisarem colocar usa ideia no ar!"
       },
       walter: {
-        text: "A solução de automação que a Notkode criou revolucionou nossos processos. Conseguimos reduzir o tempo de resposta aos clientes em 80% e aumentar nossa capacidade de atendimento."
+        text: "Depois que você atinge os primeiros 10 mil de faturamento com o seu SaaS, você precisa ir melhorando todo o seu funil, desde o site até o produto, para poder continuar crescendo e obtendo um bom LTV. A Notkode foi fundamental para otimizar toda a jornada do cliente e desenvolver o software ideal para conseguirmos superar o nosso desafio."
       }
     },
     // Process steps
@@ -726,19 +726,19 @@ const translations = {
     // Testimonials
     testimonial: {
       bruno: {
-        text: "Notkode completely transformed our business approach. The AI solution they developed increased our efficiency by 300% and allowed us to focus on what really matters: our customers."
+        text: "Notkode was essential for the rapid launch of my project. From the first contact with Camila, I received exceptional attention throughout the negotiation, during the project and the website delivery itself. Highest quality, technique, agility and seriousness. I strongly recommend!"
       },
       rodrigo: {
-        text: "Exceptional partnership! The Notkode team perfectly understood our needs and delivered a solution that exceeded all expectations. I recommend without hesitation."
+        text: "Super attentive service, attentive to every detail and idea, always with logical and efficient counterpoints. The project was delivered on time and the quality was perfect. I definitely recommend."
       },
       fernando: {
-        text: "The system implementation was surprisingly fast and results appeared immediately. Our productivity increased significantly from the first week."
+        text: "I really liked the whole process, everything was very professional and we were able to quickly transform the ideas I had into reality. I'm very happy with the result."
       },
       giovanna: {
-        text: "What impresses me most is the continuous support. It's not just development, it's a true strategic partnership for our business growth."
+        text: "NotKode was fundamental for ZapInside's launch. In a short time we had already started developing the idea and in three weeks we were already receiving our first client. I highly recommend it to all entrepreneurs who need to get their idea online!"
       },
       walter: {
-        text: "The automation solution that Notkode created revolutionized our processes. We managed to reduce client response time by 80% and increase our service capacity."
+        text: "After you reach your first 10k in revenue with your SaaS, you need to keep improving your entire funnel, from the website to the product, to continue growing and achieving good LTV. Notkode was fundamental to optimize the entire customer journey and develop the ideal software to overcome our challenge."
       }
     },
     // Process steps
