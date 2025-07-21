@@ -12,16 +12,16 @@ const SobreNos: React.FC = () => {
       <section className="py-12 md:py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <h1 className="font-sora font-bold text-3xl md:text-5xl lg:text-6xl mb-6 md:mb-8">
-            <span className="text-gradient">{t('about.title')}</span>
+            <span className="text-gradient">{t('sobre.hero.title')}</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 md:mb-12 max-w-3xl mx-auto leading-relaxed">
-            {t('about.subtitle')}
+            {t('sobre.hero.subtitle')}
           </p>
         </div>
       </section>
 
       {/* Portfolio Section */}
-      <section id="portfolio">
+      <section id="portfolio" className="py-12 md:py-20">
         <Portfolio />
       </section>
 
@@ -29,10 +29,10 @@ const SobreNos: React.FC = () => {
       <section className="py-12 md:py-20 px-4 bg-muted/30">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-8">
-            <span className="text-primary">{t('about.mission.title')}</span>
+            <span className="text-primary">{t('sobre.founders.main_title')}</span>
           </h2>
           <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            {t('about.mission.description')}
+            {t('sobre.timeline.title')}
           </p>
         </div>
       </section>
