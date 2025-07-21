@@ -62,11 +62,14 @@ const SobreNos: React.FC = () => {
       {/* Hero Section */}
       <section className="hero-gradient py-20 px-4">
         <div className="container mx-auto text-center">
-          <h1 className="font-sora font-bold text-4xl md:text-6xl mb-8 animate-fade-in-up">
-            Somos a Notkode:
-          </h1>
-          <div className="inline-block bg-gradient-to-r from-primary to-secondary px-6 py-3 rounded-full text-white font-semibold text-lg mb-8">
-            Onde ideias se transformam em soluções reais
+          <div className="relative inline-block mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
+            <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-8 py-4 backdrop-blur-sm">
+              <h1 className="relative text-xl md:text-2xl font-semibold text-primary/90 tracking-wide font-sora">
+                <span className="inline-block w-2 h-2 bg-primary rounded-full mr-3 animate-pulse"></span>
+                Onde ideias se transformam em soluções reais
+              </h1>
+            </div>
           </div>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto">
             Nascemos em 2021 com a missão de democratizar a tecnologia, ajudando empresas e agências a crescerem sem as barreiras tradicionais do desenvolvimento.
@@ -113,7 +116,7 @@ const SobreNos: React.FC = () => {
           
           <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {/* Camila */}
-            <div className="glass-card group hover:scale-105">
+            <div className="glass-card group hover:scale-105 relative">
               <div className="flex items-start mb-6">
                 <div className="w-20 h-20 rounded-full overflow-hidden mr-4 flex-shrink-0">
                   <img 
@@ -125,24 +128,26 @@ const SobreNos: React.FC = () => {
                 <div>
                   <h3 className="font-sora font-bold text-xl">Camila Tonelotto</h3>
                   <p className="text-primary font-semibold">Maga do UX</p>
-                  <a 
-                    href="https://www.linkedin.com/in/gregoriocamila/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 mt-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm"
-                  >
-                    <span>Se conectar no LinkedIn</span>
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
                 </div>
               </div>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-6">
                 Desde criança, Camila sempre teve uma paixão pela arte - passava horas pintando quadros. Essa veia artística a levou naturalmente ao design, depois ao UX, e finalmente ao desenvolvimento de software. Hoje, ela lidera a Notkode com foco em criar experiências que realmente facilitam a vida dos usuários, transformando sua visão artística em valor real para os negócios.
               </p>
+              <div className="flex justify-end">
+                <a 
+                  href="https://www.linkedin.com/in/gregoriocamila/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm"
+                >
+                  <span>Se conectar no LinkedIn</span>
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
             </div>
 
             {/* Matheus */}
-            <div className="glass-card group hover:scale-105">
+            <div className="glass-card group hover:scale-105 relative">
               <div className="flex items-start mb-6">
                 <div className="w-20 h-20 rounded-full overflow-hidden mr-4 flex-shrink-0">
                   <img 
@@ -154,20 +159,22 @@ const SobreNos: React.FC = () => {
                 <div>
                   <h3 className="font-sora font-bold text-xl">Matheus Tonelotto</h3>
                   <p className="text-primary font-semibold">Nosso Estrategista</p>
-                  <a 
-                    href="https://www.linkedin.com/in/matheustonelotto/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 mt-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm"
-                  >
-                    <span>Se conectar no LinkedIn</span>
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
                 </div>
               </div>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-6">
                 Com experiência sólida em multinacionais de software e nas startups brasileiras mais bem-sucedidas, Matheus traz uma visão técnica excepcional para a empresa. Especialista em Inteligência Artificial, já liderou projetos para empresas no Canadá, Estados Unidos e Inglaterra. Ele é o estrategista por trás de cada solução, sempre focado em entregar o máximo valor no menor tempo possível.
               </p>
+              <div className="flex justify-end">
+                <a 
+                  href="https://www.linkedin.com/in/matheustonelotto/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-sm"
+                >
+                  <span>Se conectar no LinkedIn</span>
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -239,10 +246,15 @@ const SobreNos: React.FC = () => {
             Seja você uma empresa buscando crescer ou uma agência querendo expandir seus serviços, estamos aqui para ajudar você a escrever o próximo capítulo da sua história de sucesso.
           </p>
           
-          <WhatsAppButton 
-            className="text-lg px-8 py-4" 
-            text="Falar com Nossa Equipe"
-          />
+          <div className="relative inline-block">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-primary/40 to-primary/30 blur-lg rounded-full animate-pulse"></div>
+            <div className="relative">
+              <WhatsAppButton 
+                className="text-lg px-8 py-4 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-2xl hover:shadow-primary/25 transition-all duration-300 transform hover:scale-105" 
+                text="Falar com Nossa Equipe"
+              />
+            </div>
+          </div>
         </div>
       </section>
     </div>
