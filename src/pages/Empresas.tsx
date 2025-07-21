@@ -132,9 +132,9 @@ const Empresas: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section - Mais criativo */}
-      <section className="relative hero-gradient py-20 px-8 overflow-hidden">
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="relative py-20 px-8 overflow-hidden bg-background">
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
@@ -194,14 +194,15 @@ const Empresas: React.FC = () => {
       </section>
 
       {/* Services Section */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
             <span className="text-gradient">{t('empresas.services.title')}</span>
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map((service, index) => <div key={index} className="glass-card group hover:scale-105">
+            {services.map((service, index) => (
+              <div key={index} className="glass-card group hover:scale-105">
                 <div className="flex items-center justify-center mb-4">
                   <service.icon className="w-10 h-10 text-primary group-hover:scale-110 transition-transform" />
                 </div>
@@ -211,20 +212,21 @@ const Empresas: React.FC = () => {
                 <p className="text-muted-foreground text-center text-base">
                   {service.description}
                 </p>
-              </div>)}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Portfolio Section - Expanded background to 100% width */}
-      <section id="portfolio" className="py-20 bg-gradient-to-br from-primary/5 to-secondary/5">
+      {/* Portfolio Section */}
+      <section id="portfolio" className="py-20 bg-background">
         <div className="px-8">
           <Portfolio />
         </div>
       </section>
 
       {/* Differentials Section */}
-      <section className="py-20 px-8 bg-gradient-to-br from-primary/5 to-secondary/5">
+      <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
             Nossa <span className="text-gradient">Receita</span> para o Sucesso
@@ -237,7 +239,8 @@ const Empresas: React.FC = () => {
           <div className="max-w-6xl mx-auto">
             {/* Individual Ingredients */}
             <div className="grid md:grid-cols-2 gap-6 mb-12">
-              {differentials.map((differential, index) => <div key={index} className="glass-card group relative">
+              {differentials.map((differential, index) => (
+                <div key={index} className="glass-card group relative">
                   <div className="flex items-center mb-4">
                     <differential.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
                     <h3 className="font-sora font-semibold text-xl">{differential.title}</h3>
@@ -246,10 +249,13 @@ const Empresas: React.FC = () => {
                     {differential.description}
                   </p>
                   {/* Plus symbol on the right of all items except the last one */}
-                  {index < differentials.length - 1 && <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-lg hidden md:flex">
+                  {index < differentials.length - 1 && (
+                    <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center text-primary font-bold text-lg hidden md:flex">
                       +
-                    </div>}
-                </div>)}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
 
             {/* Vertical Equals Symbol */}
@@ -302,8 +308,8 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Testimonials Section - Moved before Process */}
-      <section className="py-20 px-8">
+      {/* Testimonials Section */}
+      <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
             O que nossos <span className="text-gradient">clientes dizem</span>
@@ -356,8 +362,8 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Process Section - Interactive Timeline - Moved after Testimonials */}
-      <section ref={processRef} className="relative py-20 px-8 overflow-hidden min-h-screen">
+      {/* Process Section */}
+      <section ref={processRef} className="relative py-20 px-8 overflow-hidden min-h-screen bg-background">
         {/* Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-10 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
@@ -378,14 +384,15 @@ const Empresas: React.FC = () => {
           <div className="relative max-w-6xl mx-auto my-[50px]">
             {/* Central connecting line */}
             <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{
-            height: 'calc(100% - 4rem)'
-          }}></div>
+              height: 'calc(100% - 4rem)'
+            }}></div>
             
             {processSteps.map((step, index) => {
-            const isActive = activeStep >= index;
-            const isLeft = index % 2 === 0;
+              const isActive = activeStep >= index;
+              const isLeft = index % 2 === 0;
 
-            return <div key={index} className="flex items-center mb-24 relative group">
+              return (
+                <div key={index} className="flex items-center mb-24 relative group">
                   {/* Step Dot */}
                   <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`}></div>
                   
@@ -435,8 +442,9 @@ const Empresas: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </div>;
-          })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
