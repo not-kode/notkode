@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Users, 
@@ -216,7 +217,7 @@ const Parcerias: React.FC = () => {
         </div>
       </section>
 
-      {/* Process Section - Updated with vertical alignment */}
+      {/* Process Section - Updated with vertical alignment and translated text */}
       <section className="relative py-20 px-8 overflow-hidden bg-background">
         {/* Background Elements */}
         <div className="absolute inset-0">
@@ -247,10 +248,10 @@ const Parcerias: React.FC = () => {
                     </div>
                   </div>
                   <div className="pt-12">
-                    <h3 className="font-sora font-bold text-2xl mb-4">Apresente o Projeto</h3>
+                    <h3 className="font-sora font-bold text-2xl mb-4">{t('parcerias.process.step1.title')}</h3>
                     <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4"></div>
                     <p className="text-muted-foreground text-base leading-relaxed">
-                      Compartilhe os detalhes do projeto do seu cliente conosco. Analisamos requisitos, objetivos e expectativas para criar a proposta ideal.
+                      {t('parcerias.process.step1.desc')}
                     </p>
                   </div>
                 </div>
@@ -271,10 +272,10 @@ const Parcerias: React.FC = () => {
                     </div>
                   </div>
                   <div className="pt-12">
-                    <h3 className="font-sora font-bold text-2xl mb-4">Receba Proposta</h3>
+                    <h3 className="font-sora font-bold text-2xl mb-4">{t('parcerias.process.step2.title')}</h3>
                     <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto mb-4"></div>
                     <p className="text-muted-foreground text-base leading-relaxed">
-                      Elaboramos cronograma detalhado, valores transparentes e especificações técnicas completas. Tudo pensado para que você fique no controle de todo o processo e sempre saiba o que está acontecendo.
+                      {t('parcerias.process.step2.desc')}
                     </p>
                   </div>
                 </div>
@@ -295,10 +296,10 @@ const Parcerias: React.FC = () => {
                     </div>
                   </div>
                   <div className="pt-12">
-                    <h3 className="font-sora font-bold text-2xl mb-4">Alinhamento da entrega</h3>
+                    <h3 className="font-sora font-bold text-2xl mb-4">{t('parcerias.process.step3.title')}</h3>
                     <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto mb-4"></div>
                     <p className="text-muted-foreground text-base leading-relaxed">
-                      Combinamos quem irá gerenciar o projeto, aqui você escolhe se o seu cliente saberá que existimos ou você prefere realizar toda interface com o cliente e contar com nosso trabalho via bastidores.
+                      {t('parcerias.process.step3.desc')}
                     </p>
                   </div>
                 </div>
@@ -319,10 +320,10 @@ const Parcerias: React.FC = () => {
                     </div>
                   </div>
                   <div className="pt-12">
-                    <h3 className="font-sora font-bold text-2xl mb-4">Desenvolvimento FastForge™</h3>
+                    <h3 className="font-sora font-bold text-2xl mb-4">{t('parcerias.process.step4.title')}</h3>
                     <div className="w-20 h-1 bg-gradient-to-r from-secondary to-primary rounded-full mx-auto mb-4"></div>
                     <p className="text-muted-foreground text-base leading-relaxed">
-                      Nossa metodologia de entrega validada, garante que semana a semana o projeto progrida, com você acompanhando o desenvolvimento em tempo real e podendo ajustar a direção do projeto enquanto ele ainda está nascendo.
+                      {t('parcerias.process.step4.desc')}
                     </p>
                   </div>
                 </div>
@@ -344,23 +345,23 @@ const Parcerias: React.FC = () => {
                     <Bot className="w-12 h-12 text-primary ml-4" />
                   </div>
                   <h3 className="font-sora font-bold text-2xl md:text-3xl mb-4">
-                    <span className="text-gradient">Expertise + Parceria + Resultados</span>
+                    <span className="text-gradient">{t('parcerias.process.result.title')}</span>
                   </h3>
                   <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
-                    A fórmula perfeita que transforma sua agência em uma operação completa, oferecendo soluções de alta qualidade sem os custos de contratação.
+                    {t('parcerias.process.result.desc')}
                   </p>
                   <div className="flex flex-wrap justify-center gap-4 text-sm">
                     <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
                       <CheckCircle className="w-4 h-4 text-primary mr-2" />
-                      <span>Margem Garantida</span>
+                      <span>{t('parcerias.process.result.tag1')}</span>
                     </div>
                     <div className="flex items-center bg-secondary/10 px-4 py-2 rounded-full">
                       <Zap className="w-4 h-4 text-secondary mr-2" />
-                      <span>Entrega Rápida</span>
+                      <span>{t('parcerias.process.result.tag2')}</span>
                     </div>
                     <div className="flex items-center bg-primary/10 px-4 py-2 rounded-full">
                       <TrendingUp className="w-4 h-4 text-primary mr-2" />
-                      <span>Crescimento Sustentável</span>
+                      <span>{t('parcerias.process.result.tag3')}</span>
                     </div>
                   </div>
                 </div>
