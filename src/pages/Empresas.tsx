@@ -1,6 +1,5 @@
-
 import React, { useEffect, useRef, useState } from 'react';
-import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight, Star, Quote, Users, ThumbsUp, Calendar, DollarSign, Shield, Headphones } from 'lucide-react';
+import { Building, Rocket, Bot, Workflow, Figma, Smartphone, ShoppingCart, Globe, CheckCircle, Target, Zap, Brain, TrendingUp, Award, Sparkles, ArrowRight, Star, Quote, Users, ThumbsUp, Calendar, DollarSign, Shield, Headphones, Heart, Timer } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
@@ -133,7 +132,6 @@ const Empresas: React.FC = () => {
       const elementTop = rect.top;
       const elementHeight = rect.height;
 
-      // Calculate which step should be active based on scroll position
       const scrollProgress = Math.max(0, Math.min(1, (windowHeight * 0.7 - elementTop) / (elementHeight * 0.8)));
       const stepIndex = Math.min(Math.floor(scrollProgress * processSteps.length), processSteps.length - 1);
       
@@ -148,9 +146,7 @@ const Empresas: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
       <section className="relative py-20 px-8 overflow-hidden bg-background">
-        {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-20 right-10 w-40 h-40 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -159,7 +155,6 @@ const Empresas: React.FC = () => {
         
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center py-[40px]">
-            {/* Badge - Updated with Lovable style */}
             <div className="relative inline-block mb-8 animate-fade-in-up">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
               <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
@@ -171,14 +166,12 @@ const Empresas: React.FC = () => {
               </div>
             </div>
             
-            {/* Main Title */}
             <h1 className="font-sora font-bold text-4xl mb-8 animate-fade-in-up leading-tight">
               Desenvolvemos tecnologia{' '}
               <span className="text-gradient">sobre medida</span> que acelera sua empresa em{' '}
               <span className="text-gradient">tempo recorde</span>
             </h1>
             
-            {/* Social Proof Tags - Moved before CTA */}
             <div className="flex flex-wrap justify-center gap-6 text-sm animate-fade-in-up mb-8">
               <div className="flex items-center text-muted-foreground group">
                 <Building className="w-4 h-4 text-primary mr-2" />
@@ -206,7 +199,6 @@ const Empresas: React.FC = () => {
               </div>
             </div>
             
-            {/* CTA Button - Moved after social proof */}
             <div className="animate-fade-in-up">
               <WhatsAppButton text="Acelerar Minha Empresa" className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
             </div>
@@ -214,7 +206,6 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Services Section */}
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
@@ -239,14 +230,12 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Portfolio Section */}
       <section id="portfolio" className="py-20 bg-background">
         <div className="px-8">
           <Portfolio />
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
@@ -272,7 +261,6 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
@@ -326,9 +314,7 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* Process Section */}
       <section ref={processRef} className="relative py-20 px-8 overflow-hidden min-h-screen bg-background">
-        {/* Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-10 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -344,9 +330,7 @@ const Empresas: React.FC = () => {
             </p>
           </div>
           
-          {/* Interactive Process Timeline */}
           <div className="relative max-w-6xl mx-auto my-[80px] px-4">
-            {/* Central connecting line */}
             <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{
               height: 'calc(100% - 4rem)'
             }}></div>
@@ -356,13 +340,11 @@ const Empresas: React.FC = () => {
               const isLeft = index % 2 === 0;
               const isEqualsStep = step.title === "=";
 
-              // Special handling for the equals step
               if (isEqualsStep) {
                 return (
                   <div key={index} className="flex justify-center mb-32 relative px-8">
                     <div className={`transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'}`}>
                       <div className="glass-card max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
-                        {/* Background decoration */}
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-3xl"></div>
                         <div className="absolute top-4 right-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl"></div>
                         <div className="absolute bottom-4 left-4 w-16 h-16 bg-secondary/10 rounded-full blur-xl"></div>
@@ -402,10 +384,8 @@ const Empresas: React.FC = () => {
 
               return (
                 <div key={index} className="flex items-center mb-32 relative group px-8">
-                  {/* Step Dot */}
                   <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`}></div>
                   
-                  {/* Content Container */}
                   <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-32' : 'lg:pl-32 lg:ml-auto'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
                     <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${isActive ? 'translate-x-0 opacity-100 scale-100' : 'opacity-70 scale-95'} ${isLeft ? 'translate-x-16' : '-translate-x-16'}`}>
                       <div className="flex items-center mb-6">
@@ -418,7 +398,6 @@ const Empresas: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* Description for Mobile/Tablet - shown when active */}
                       <div className={`lg:hidden transition-all duration-500 mt-4 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                         <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-2xl p-6">
                           <div className="flex items-center mb-3">
@@ -436,7 +415,6 @@ const Empresas: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Description Container - Desktop only */}
                   <div className={`hidden lg:block w-1/2 ${isLeft ? 'pl-20' : 'pr-20'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
                     <div className="glass rounded-3xl p-8 bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 shadow-lg shadow-primary/10 transform translate-x-8">
                       <div className="flex items-center mb-4">
@@ -458,16 +436,40 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-12 px-8 bg-gradient-to-br from-primary to-secondary">
+      <section className="py-20 px-8 bg-gradient-to-br from-primary to-secondary">
         <div className="container mx-auto text-center">
-          <div className="max-w-3xl mx-auto p-8 rounded-3xl">
+          <div className="max-w-4xl mx-auto p-8 rounded-3xl">
             <h2 className="font-sora font-bold text-4xl mb-6 text-white">
               Pronto para <span className="text-white/90">acelerar</span> sua empresa?
             </h2>
-            <p className="text-xl text-white/90 mb-8">
+            <p className="text-xl text-white/90 mb-12">
               Entre em contato conosco e descubra como podemos transformar sua ideia em uma solução tecnológica de sucesso.
             </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-12">
+              <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
+                <Sparkles className="w-5 h-5 mr-3" />
+                <div>
+                  <div className="text-lg font-bold text-white">Diagnóstico Gratuito</div>
+                  <span className="text-white/80">Análise completa do seu negócio</span>
+                </div>
+              </div>
+              <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
+                <Timer className="w-5 h-5 mr-3" />
+                <div>
+                  <div className="text-lg font-bold text-white">Entrega Rápida</div>
+                  <span className="text-white/80">Projetos em tempo recorde</span>
+                </div>
+              </div>
+              <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
+                <Heart className="w-5 h-5 mr-3" />
+                <div>
+                  <div className="text-lg font-bold text-white">Suporte Dedicado</div>
+                  <span className="text-white/80">Acompanhamento total do projeto</span>
+                </div>
+              </div>
+            </div>
+            
             <WhatsAppButton text="Entrar em Contato" className="bg-white text-primary px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-white/25 hover:scale-105 transition-all duration-300 border-0 hover:bg-white/90" />
           </div>
         </div>
