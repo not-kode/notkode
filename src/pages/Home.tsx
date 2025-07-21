@@ -3,7 +3,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building, Handshake, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import AnimatedBackgroundImages from '@/components/AnimatedBackgroundImages';
 
 const Home: React.FC = () => {
   const { t } = useLanguage();
@@ -11,7 +10,7 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden pt-20 pb-8 md:pt-16 md:pb-16">
       {/* Animated Magical Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0">
         {/* Noise Texture for Liquid Glass Effect */}
         <div className="absolute inset-0 opacity-20" 
              style={{
@@ -37,9 +36,6 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-secondary/5 animate-[magical-pulse_6s_ease-in-out_infinite]"></div>
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-muted/3 to-transparent animate-[magical-pulse_8s_ease-in-out_infinite_reverse] animation-delay-3000"></div>
       </div>
-
-      {/* Animated Background Images */}
-      <AnimatedBackgroundImages />
 
       <div className="container mx-auto max-w-[1440px] px-8 text-center relative z-10 flex-grow flex flex-col justify-center space-y-8">
         {/* Main Title */}
