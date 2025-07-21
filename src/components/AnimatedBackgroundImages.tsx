@@ -8,7 +8,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-20 h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 animate-gentle-float-fade"
         style={{
-          backgroundImage: 'url(/lovable-uploads/3b0bb47c-2b80-4678-bfb2-c9493caf546c.png)',
+          backgroundImage: 'url(/lovable-uploads/circular-n-logo.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -16,7 +16,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           left: '5%',
           animationDelay: '0s',
           animationDuration: '12s',
-          filter: 'hue-rotate(0deg) brightness(1)',
+          filter: 'hue-rotate(0deg) brightness(0.8)',
           mixBlendMode: 'soft-light'
         }}
       />
@@ -24,7 +24,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 animate-gentle-float-fade"
         style={{
-          backgroundImage: 'url(/lovable-uploads/3b0bb47c-2b80-4678-bfb2-c9493caf546c.png)',
+          backgroundImage: 'url(/lovable-uploads/circular-n-logo.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -32,7 +32,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           right: '10%',
           animationDelay: '3s',
           animationDuration: '16s',
-          filter: 'hue-rotate(180deg) brightness(0.2)',
+          filter: 'hue-rotate(180deg) brightness(0.3)',
           mixBlendMode: 'multiply'
         }}
       />
@@ -40,7 +40,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 animate-gentle-float-fade hidden md:block"
         style={{
-          backgroundImage: 'url(/lovable-uploads/3b0bb47c-2b80-4678-bfb2-c9493caf546c.png)',
+          backgroundImage: 'url(/lovable-uploads/circular-n-logo.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -48,15 +48,15 @@ const AnimatedBackgroundImages: React.FC = () => {
           left: '70%',
           animationDelay: '6s',
           animationDuration: '14s',
-          filter: 'hue-rotate(270deg) brightness(0.1)',
+          filter: 'hue-rotate(270deg) brightness(0.2)',
           mixBlendMode: 'darken'
         }}
       />
 
       <div 
-        className="absolute w-14 h-14 md:w-20 md:h-20 lg:w-28 lg:h-28 animate-gentle-float-fade"
+        className="absolute w-20 h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 animate-gentle-float-fade"
         style={{
-          backgroundImage: 'url(/lovable-uploads/3b0bb47c-2b80-4678-bfb2-c9493caf546c.png)',
+          backgroundImage: 'url(/lovable-uploads/circular-n-logo.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -64,7 +64,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           left: '15%',
           animationDelay: '9s',
           animationDuration: '18s',
-          filter: 'hue-rotate(120deg) brightness(0.3)',
+          filter: 'hue-rotate(120deg) brightness(0.4)',
           mixBlendMode: 'multiply'
         }}
       />
@@ -73,7 +73,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-16 h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 animate-gentle-float-fade"
         style={{
-          backgroundImage: 'url(/lovable-uploads/62941b87-8228-4970-9150-e1b6d5a9f516.png)',
+          backgroundImage: 'url(/lovable-uploads/smiley-face.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -81,7 +81,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           right: '20%',
           animationDelay: '2s',
           animationDuration: '15s',
-          filter: 'hue-rotate(60deg) brightness(0.8)',
+          filter: 'hue-rotate(60deg) brightness(0.7)',
           mixBlendMode: 'soft-light'
         }}
       />
@@ -89,7 +89,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-20 h-20 md:w-28 md:h-28 lg:w-36 lg:h-36 animate-gentle-float-fade"
         style={{
-          backgroundImage: 'url(/lovable-uploads/62941b87-8228-4970-9150-e1b6d5a9f516.png)',
+          backgroundImage: 'url(/lovable-uploads/smiley-face.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -97,7 +97,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           left: '25%',
           animationDelay: '5s',
           animationDuration: '13s',
-          filter: 'hue-rotate(200deg) brightness(0.15)',
+          filter: 'hue-rotate(200deg) brightness(0.25)',
           mixBlendMode: 'darken'
         }}
       />
@@ -105,7 +105,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-28 h-28 md:w-36 md:h-36 lg:w-44 lg:h-44 animate-gentle-float-fade hidden lg:block"
         style={{
-          backgroundImage: 'url(/lovable-uploads/62941b87-8228-4970-9150-e1b6d5a9f516.png)',
+          backgroundImage: 'url(/lovable-uploads/smiley-face.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -113,7 +113,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           right: '5%',
           animationDelay: '8s',
           animationDuration: '11s',
-          filter: 'hue-rotate(320deg) brightness(0.1)',
+          filter: 'hue-rotate(320deg) brightness(0.15)',
           mixBlendMode: 'multiply'
         }}
       />
@@ -121,7 +121,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-12 h-12 md:w-16 md:h-16 lg:w-24 lg:h-24 animate-gentle-float-fade hidden md:block"
         style={{
-          backgroundImage: 'url(/lovable-uploads/62941b87-8228-4970-9150-e1b6d5a9f516.png)',
+          backgroundImage: 'url(/lovable-uploads/smiley-face.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -129,7 +129,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           left: '50%',
           animationDelay: '11s',
           animationDuration: '17s',
-          filter: 'hue-rotate(140deg) brightness(0.4)',
+          filter: 'hue-rotate(140deg) brightness(0.5)',
           mixBlendMode: 'overlay'
         }}
       />
@@ -138,7 +138,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 animate-gentle-float-fade hidden xl:block"
         style={{
-          backgroundImage: 'url(/lovable-uploads/3b0bb47c-2b80-4678-bfb2-c9493caf546c.png)',
+          backgroundImage: 'url(/lovable-uploads/circular-n-logo.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -146,7 +146,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           left: '80%',
           animationDelay: '4s',
           animationDuration: '20s',
-          filter: 'hue-rotate(240deg) brightness(0.05) contrast(2)',
+          filter: 'hue-rotate(240deg) brightness(0.1) contrast(2)',
           mixBlendMode: 'darken'
         }}
       />
@@ -154,7 +154,7 @@ const AnimatedBackgroundImages: React.FC = () => {
       <div 
         className="absolute w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 animate-gentle-float-fade hidden xl:block"
         style={{
-          backgroundImage: 'url(/lovable-uploads/62941b87-8228-4970-9150-e1b6d5a9f516.png)',
+          backgroundImage: 'url(/lovable-uploads/smiley-face.png)',
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
@@ -162,7 +162,7 @@ const AnimatedBackgroundImages: React.FC = () => {
           right: '40%',
           animationDelay: '7s',
           animationDuration: '19s',
-          filter: 'hue-rotate(300deg) brightness(0.1) contrast(3)',
+          filter: 'hue-rotate(300deg) brightness(0.2) contrast(3)',
           mixBlendMode: 'darken'
         }}
       />
