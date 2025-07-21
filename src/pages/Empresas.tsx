@@ -146,7 +146,7 @@ const Empresas: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="relative py-20 px-8 overflow-hidden bg-background">
+      <section className="relative py-[100px] px-8 overflow-hidden bg-background">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-20 right-10 w-40 h-40 bg-secondary/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
