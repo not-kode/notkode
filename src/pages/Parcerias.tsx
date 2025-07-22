@@ -98,7 +98,7 @@ const Parcerias: React.FC = () => {
           <div className="absolute bottom-0 left-0 right-0 h-32 dark:bg-gradient-to-t dark:from-[#101420] dark:to-transparent dark:opacity-90"></div>
         </div>
         
-        <div className="w-full max-w-7xl mx-auto relative z-10">
+        <div className="w-full max-w-[1440px] mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center py-[40px]">
             {/* Badge */}
             <div className="relative inline-block mb-8 animate-fade-in-up">
