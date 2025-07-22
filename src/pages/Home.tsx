@@ -46,7 +46,7 @@ const Home: React.FC = () => {
         
         {/* Subtitle - Console Style */}
         <div className="mb-8 md:mb-16 max-w-[1200px] mx-auto">
-          <div className="border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm w-[1200px]" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
+          <div className="border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm w-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
             <div className="flex items-center mb-3 md:mb-4">
               <div className="flex space-x-1 mr-3">
                 <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full"></div>
