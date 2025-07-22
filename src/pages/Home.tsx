@@ -74,19 +74,14 @@ const Home: React.FC = () => {
 
   {/* Futuristic Neon Lovable Tag */}
 <div className="relative w-full max-w-[700px] mx-auto">
-  {/* Glow por trás, ocupando exatamente toda a área do wrapper */}
   <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
-
-  {/* Container do texto, alinhado perfeitamente ao glow */}
   <div className="relative w-full md:w-[700px] bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-4 md:px-6 py-2 backdrop-blur-sm overflow-hidden">
     <p className="flex items-center text-xs md:text-sm font-medium tracking-wide font-mono text-foreground">
-      <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
+      <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-primary rounded-full mr-2 animate-pulse" />
       {t('home.lovable_tag')}
     </p>
   </div>
 </div>
-
-
     </div>
   );
 };
