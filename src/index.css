@@ -119,7 +119,9 @@
   }
   
   .glass-card {
-    @apply glass rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+    @apply glass rounded-2xl p-6 transition-all duration-300 hover:scale-105 dark:hover:shadow-2xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(20px);
   }
   
   .glass-header {
