@@ -144,7 +144,7 @@ const Empresas: React.FC = () => {
               </div>
             </div>
             
-            <h1 className="font-sora font-bold text-4xl mb-8 animate-fade-in-up leading-tight">
+            <h1 className="font-sora font-bold text-[26px] md:text-4xl mb-8 animate-fade-in-up leading-tight">
               {t('empresas.hero.new_subtitle')}
             </h1>
             
@@ -182,7 +182,7 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-[60px] px-8 bg-background md:py-20">
+      <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
             <span className="text-gradient text-slate-900">{t('empresas.services.title')}</span>
