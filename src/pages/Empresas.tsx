@@ -202,10 +202,10 @@ const Empresas: React.FC = () => {
       </section>
 
       <section id="portfolio" className="py-[60px] md:py-20 bg-background">
-        <div className="px-8">
-          <Portfolio />
-        </div>
-      </section>
+  <div className="px-[20px] md:px-8">
+    <Portfolio />
+  </div>
+</section>
 
       <section className="py-[60px] px-[20px] md:py-20 md:px-8 bg-background relative overflow-hidden">
         {/* Organic fluid shapes - flowing animation */}
