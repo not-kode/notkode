@@ -211,12 +211,13 @@ const Empresas: React.FC = () => {
       </section>
 
       <section className="py-20 px-8 bg-background relative overflow-hidden">
-        {/* Organic fluid shapes - centralized behind cards */}
+        {/* Organic fluid shapes - flowing animation */}
         <div className="absolute inset-0 pointer-events-none z-0">
-          <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#86F0FF] opacity-20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-[#0C1224] opacity-15 rounded-full blur-2xl animate-pulse delay-1000"></div>
-          <div className="absolute bottom-1/3 left-1/3 w-64 h-64 bg-[#86F0FF] opacity-25 rounded-full blur-xl animate-pulse delay-500"></div>
-          <div className="absolute bottom-1/4 right-1/3 w-68 h-68 bg-[#0C1224] opacity-20 rounded-full blur-2xl animate-pulse delay-1500"></div>
+          <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#0C1224] opacity-25 rounded-full blur-3xl animate-glass-float"></div>
+          <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-[#0C1224] opacity-20 rounded-full blur-2xl animate-glass-float delay-1000"></div>
+          <div className="absolute bottom-1/3 left-1/3 w-64 h-64 bg-[#0C1224] opacity-30 rounded-full blur-xl animate-glass-float delay-500"></div>
+          <div className="absolute bottom-1/4 right-1/3 w-68 h-68 bg-[#0C1224] opacity-25 rounded-full blur-2xl animate-glass-float delay-1500"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-[#0C1224] opacity-15 rounded-full blur-2xl animate-glass-float delay-2000"></div>
         </div>
         <div className="container mx-auto relative z-10">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
