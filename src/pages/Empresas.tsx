@@ -119,7 +119,7 @@ const Empresas: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   return <div className="min-h-screen bg-background">
-      <section className="relative pt-[100px] pb-8 px-8 overflow-hidden bg-background mid:py-[120px]">
+      <section className="relative py-[120px] px-8 overflow-hidden bg-background">
         <div className="absolute inset-0 overflow-hidden">
           {/* Organic fluid shapes similar to the reference image */}
           <div className="absolute top-10 left-1/4 w-96 h-96 bg-gradient-to-br from-[#4BD2E5] via-[#8EE2E5] to-[#4BD2E5] rounded-[50%] blur-3xl opacity-30 animate-pulse transform rotate-45"></div>
@@ -144,7 +144,7 @@ const Empresas: React.FC = () => {
               </div>
             </div>
             
-            <h1 className="font-sora font-bold text-[26px] md:text-4xl mb-8 animate-fade-in-up leading-tight">
+            <h1 className="font-sora font-bold text-4xl mb-8 animate-fade-in-up leading-tight">
               {t('empresas.hero.new_subtitle')}
             </h1>
             
@@ -182,7 +182,7 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-20 px-8 bg-background">
+      <section className="py-[60px] px-8 bg-background md:py-20">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
             <span className="text-gradient text-slate-900">{t('empresas.services.title')}</span>
