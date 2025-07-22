@@ -32,7 +32,7 @@ const SobreNos: React.FC = () => {
             {t('about.hero.description')}
           </p>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-[1200px] mx-auto">
            <div className="glass-card flex items-center gap-4 p-[18px] py-[8px]">
   <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
     <MessageCircle className="w-5 h-5 text-primary" />
