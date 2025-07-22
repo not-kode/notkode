@@ -79,7 +79,7 @@ const SobreNos: React.FC = () => {
           
           <div className="grid md:grid-cols-2 gap-8 md:gap-12">
             {/* Camila */}
-            <div className="glass-card text-center">
+            <div className="glass-card text-center bg-white">
               <div className="flex flex-col items-center">
                 <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20">
                   <img 
@@ -108,7 +108,7 @@ const SobreNos: React.FC = () => {
             </div>
 
             {/* Matheus */}
-            <div className="glass-card text-center">
+            <div className="glass-card text-center bg-white">
               <div className="flex flex-col items-center">
                 <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20">
                   <img 
