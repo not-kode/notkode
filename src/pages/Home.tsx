@@ -41,15 +41,24 @@ const Home: React.FC = () => {
 <div className="container mx-auto max-w-[1440px] px-[20px] md:px-8 text-center relative z-10 flex-grow flex flex-col justify-center space-y-[22px] md:space-y-[32px]">
   {/* Main Title */}
   <div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl leading-tight">
-    {/* Primeira linha - permite quebra no mobile se necessário */}
-    <div className="whitespace-nowrap md:whitespace-nowrap">
-      <span className="text-primary">{t('home.main_title_1').split(' ')[0]}</span> {t('home.main_title_1').split(' ').slice(1).join(' ')}
+    {/* Mobile: quebra estruturada / Desktop: linha única */}
+    <div className="block md:hidden">
+      {/* Mobile - 3 linhas estruturadas */}
+      <div><span className="text-primary">{t('home.main_title_1').split(' ')[0]}</span> {t('home.main_title_1').split(' ').slice(1).join(' ')}</div>
+      <div>{t('home.main_title_2').split(' ').slice(0, -2).join(' ')} <span className="text-gradient">{t('home.main_title_2').split(' ').slice(-2, -1)[0]}</span></div>
+      <div><span className="text-primary">{t('home.main_title_2').split(' ').slice(-1)[0]}</span></div>
     </div>
-    {/* Segunda linha - sem whitespace-nowrap para permitir quebra no mobile */}
-    <div className="break-words md:whitespace-nowrap">
-      {t('home.main_title_2').split(' ').slice(0, -2).join(' ')} 
-      <span className="text-gradient">{t('home.main_title_2').split(' ').slice(-2, -1)[0]}</span> 
-      <span className="text-primary">{t('home.main_title_2').split(' ').slice(-1)[0]}</span>
+    
+    {/* Desktop - layout original */}
+    <div className="hidden md:block">
+      <div className="whitespace-nowrap">
+        <span className="text-primary">{t('home.main_title_1').split(' ')[0]}</span> {t('home.main_title_1').split(' ').slice(1).join(' ')}
+      </div>
+      <div className="whitespace-nowrap">
+        {t('home.main_title_2').split(' ').slice(0, -2).join(' ')} 
+        <span className="text-gradient">{t('home.main_title_2').split(' ').slice(-2, -1)[0]}</span> 
+        <span className="text-primary">{t('home.main_title_2').split(' ').slice(-1)[0]}</span>
+      </div>
     </div>
   </div>
   
@@ -62,10 +71,12 @@ const Home: React.FC = () => {
         <div className="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full"></div>
         <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full"></div>
       </div>
+      
       <span className="text-xs text-muted-foreground font-mono">terminal</span>
     </div>
     <p className="font-mono text-base md:text-lg md:text-xl text-primary/90 leading-relaxed mb-4 md:mb-6"><span className="text-secondary">$</span> echo "{t('home.terminal_echo')}"</p>
     <div className="grid md:grid-cols-2 gap-8">
+      
       {/* Empresas */}
       <Link to="/companies" className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20" style={{ backgroundColor: '#FFFFFF' }}>
         <div className="flex items-center mb-2 md:mb-3"><Building className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" /><h2 className="font-sora font-bold text-[20px]" style={{ color: '#272B37' }}>{t('home.companies_title')}</h2></div>
