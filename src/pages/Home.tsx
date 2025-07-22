@@ -37,46 +37,24 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-muted/3 to-transparent animate-[magical-pulse_8s_ease-in-out_infinite_reverse] animation-delay-3000"></div>
       </div>
 
-      <div
-  className="
-    container
-    mx-auto
-    max-w-[1440px]
-    px-8
-    text-center
-    relative
-    z-10
-    flex-grow
-    flex
-    flex-col
-    justify-start
-    md:justify-center
-    pt-6
-    md:pt-0
-    space-y-4
-    md:space-y-8
-  "
->
-  {/* Main Title */}
-  <div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl leading-tight">
-    <div className="break-words md:whitespace-nowrap">
-      <span className="text-primary">
-        {t('home.main_title_1').split(' ')[0]}
-      </span>{' '}
-      {t('home.main_title_1').split(' ').slice(1).join(' ')}
-    </div>
-    <div className="break-words md:whitespace-nowrap">
-      {t('home.main_title_2').split(' ').slice(0, -2).join(' ')}{' '}
-      <span className="text-gradient">
-        {t('home.main_title_2').split(' ').slice(-2, -1)[0]}
-      </span>{' '}
-      <span className="text-primary">
-        {t('home.main_title_2').split(' ').slice(-1)[0]}
-      </span>
-    </div>
+      <div className="container mx-auto max-w-[1440px] px-8 text-center relative z-10 flex-grow flex flex-col justify-center space-y-8">
+       {/* Main Title */}
+<div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl mt-6 md:mt-0 mb-4 md:mb-8 leading-tight">
+  <div className="whitespace-nowrap">
+    <span className="text-primary">
+      {t('home.main_title_1').split(' ')[0]}
+    </span>{' '}
+    {t('home.main_title_1').split(' ').slice(1).join(' ')}
   </div>
-
-  {/* o resto dos elementos (console, neon tag, etc.) */}
+  <div className="whitespace-nowrap">
+    {t('home.main_title_2').split(' ').slice(0, -2).join(' ')}{' '}
+    <span className="text-gradient">
+      {t('home.main_title_2').split(' ').slice(-2, -1)[0]}
+    </span>{' '}
+    <span className="text-primary">
+      {t('home.main_title_2').split(' ').slice(-1)[0]}
+    </span>
+  </div>
 </div>
 
         
