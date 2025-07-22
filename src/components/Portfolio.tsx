@@ -86,7 +86,7 @@ const Portfolio: React.FC = () => {
 
   return (
     <section className="py-[60px] px-[20px] md:py-20 md:px-8 bg-background">
-  <div className="w-full md:container md:mx-auto">
+  <div className="w-full md:max-w-[1440px] md:mx-auto">
         <h2 className="font-sora font-bold text-4xl text-center mb-4">
           <span className="text-gradient">{t('portfolio.title')}</span>
         </h2>
@@ -127,7 +127,7 @@ const Portfolio: React.FC = () => {
         </div>
 
         {/* Portfolio Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 w-full">
           {filteredPortfolio.length > 0 ? (
             filteredPortfolio.map((project, index) => (
               <div key={index} className="portfolio-card group hover:scale-105 transition-all duration-300">
