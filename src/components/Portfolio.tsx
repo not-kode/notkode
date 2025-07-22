@@ -130,7 +130,7 @@ const Portfolio: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 w-full">
           {filteredPortfolio.length > 0 ? (
             filteredPortfolio.map((project, index) => (
-              <div key={index} className="portfolio-card group hover:scale-105 transition-all duration-300">
+              <div key={index} className="portfolio-card group hover:scale-[1.02] hover:z-10 transition-all duration-300 w-full max-w-full">
                 {/* Project Header */}
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6 border-b border-border/20 pb-4">
   <div className="flex-1 min-w-0">
@@ -139,17 +139,17 @@ const Portfolio: React.FC = () => {
       {t(`category.${project.category.toLowerCase().includes('saas') ? 'saas' : project.category.toLowerCase() === 'e-commerce' ? 'ecommerce' : 'website'}`)}
     </span>
   </div>
-  <div className="flex flex-col md:items-end gap-2">
+  <div className="flex flex-col md:items-end gap-2 w-full">
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20 whitespace-nowrap">
                       <span>🚀</span>
                       <span>{t('common.launch')}:</span>
                       <span className="font-semibold">{project.year}</span>
                     </div>
-                   <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20 whitespace-nowrap md:whitespace-nowrap">
-                      <span>💸</span>
-                      <span>{t('common.revenue')}:</span>
-                      <span className="font-semibold">{project.revenue}</span>
-                    </div>
+                   <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20">
+  <span>💸</span>
+  <span>{t('common.revenue')}:</span>
+  <span className="font-semibold break-words max-w-full">{project.revenue}</span>
+</div>
                   </div>
                 </div>
 
