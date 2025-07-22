@@ -148,7 +148,7 @@ const Empresas: React.FC = () => {
               {t('empresas.hero.new_subtitle')}
             </h1>
             
-            <div className="flex flex-wrap justify-center gap-6 text-base animate-fade-in-up mb-8">  // 16px
+            <div className="flex flex-wrap justify-center gap-6 text-base animate-fade-in-up mb-8">
               <div className="flex items-center text-muted-foreground group">
                 <Building className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">+50</div>
@@ -167,7 +167,7 @@ const Empresas: React.FC = () => {
               </div>
               <div className="flex items-center text-muted-foreground group">
                 <Calendar className="w-4 h-4 text-primary mr-2" />
-                <div className="text-xl font-bold text-primary mr-2">+4</div>  // 20px
+                <div className="text-xl font-bold text-primary mr-2">+4</div>
                 <span className="relative">
                   {t('empresas.stats.experience')}
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
