@@ -300,7 +300,7 @@ const Empresas: React.FC = () => {
             </p>
           </div>
           
-          <div className="relative w-full md:max-w-6xl md:mx-auto my-[40px] md:my-[80px] px-4">
+          <div className="relative w-full md:max-w-6xl md:mx-auto my-[40px] md:my-[80px] px-0 md:px-4">
             <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{
             height: 'calc(100% - 4rem)'
           }}></div>
@@ -310,7 +310,7 @@ const Empresas: React.FC = () => {
             const isLeft = index % 2 === 0;
             const isEqualsStep = step.title === "=";
             if (isEqualsStep) {
-              return <div key={index} className="flex justify-center mb-32 relative px-8">
+              return <div key={index} className="flex justify-center mb-32 relative px-0 md:px-8">
                     <div className={`transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'}`}>
                       <div className="glass-card max-w-[1000px] mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-3xl"></div>
@@ -348,7 +348,7 @@ const Empresas: React.FC = () => {
                     </div>
                   </div>;
             }
-            return <div key={index} className="flex items-start mb-32 relative group px-8">
+            return <div key={index} className="flex items-start mb-32 relative group px-0 md:px-8">
                   <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`}></div>
                   
                   <div className={`w-full lg:w-1/2 lg:pr-8 transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
