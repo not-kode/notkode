@@ -247,14 +247,14 @@ const Empresas: React.FC = () => {
             {t('empresas.testimonials.title')}
           </h2>
           
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-[1400px] mx-auto">
             <Carousel opts={{
             align: "start",
             loop: true
           }} className="w-full">
-              <CarouselContent className="-ml-4">
-                {testimonials.map((testimonial, index) => <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                    <div className="glass-card h-full group hover:scale-105">
+              <CarouselContent className="-ml-8">
+                {testimonials.map((testimonial, index) => <CarouselItem key={index} className="pl-8 md:basis-1/2 lg:basis-1/3">
+                    <div className="glass-card h-full group hover:scale-105 border border-[#C4F7FF] dark:border-transparent shadow-[0_8px_20px_rgba(0,0,0,0.05)] dark:shadow-none">
                       <div className="flex items-center justify-center mb-4">
                         <Quote className="w-8 h-8 text-primary opacity-60" />
                       </div>
