@@ -119,7 +119,7 @@ const Empresas: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   return <div className="min-h-screen bg-background">
-      <section className="relative py-[120px] px-8 overflow-hidden bg-background">
+      <section className="relative pt-[100px] pb-[80px] px-[20px] md:py-[120px] md:px-8 overflow-hidden bg-background">
         <div className="absolute inset-0 overflow-hidden">
           {/* Organic fluid shapes similar to the reference image */}
           <div className="absolute top-10 left-1/4 w-96 h-96 bg-gradient-to-br from-[#4BD2E5] via-[#8EE2E5] to-[#4BD2E5] rounded-[50%] blur-3xl opacity-30 animate-pulse transform rotate-45"></div>
@@ -132,7 +132,7 @@ const Empresas: React.FC = () => {
         </div>
         
         <div className="container mx-auto relative z-10">
-          <div className="max-w-4xl mx-auto text-center py-[40px]">
+          <div className="max-w-4xl mx-auto text-center py-[20px] md:py-[40px]">
             <div className="relative inline-block mb-8 animate-fade-in-up">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
               <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
