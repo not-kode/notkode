@@ -160,7 +160,7 @@ const Portfolio: React.FC = () => {
 
                 {/* Technologies */}
                 <div className="mb-6">
-                  <h4 className="font-semibold text-base mb-2 text-primary">
+                  <h4 className="font-semibold text-base mb-2 text-[#101420] dark:text-[#FFFFFF]">
                     {t('common.technologies')}:
                   </h4>
                   <div className="flex flex-wrap gap-2">
