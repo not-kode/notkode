@@ -180,7 +180,7 @@ const Empresas: React.FC = () => {
       </section>
 
       <section className="py-20 px-8 bg-background">
-        <div className="container mx-auto">
+        <div className="w-full md:container md:mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
             <span className="text-gradient text-slate-900">{t('empresas.services.title')}</span>
           </h2>
@@ -207,7 +207,7 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-20 px-8 bg-background relative overflow-hidden">
+      <section className="py-20 px-[20px] md:px-8 bg-background relative overflow-hidden">
         {/* Organic fluid shapes - flowing animation */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#C4F7FF] dark:bg-[#033239] opacity-25 rounded-full blur-3xl animate-glass-float"></div>
@@ -216,7 +216,7 @@ const Empresas: React.FC = () => {
           <div className="absolute bottom-1/4 right-1/3 w-68 h-68 bg-[#C4F7FF] dark:bg-[#033239] opacity-25 rounded-full blur-2xl animate-glass-float delay-1500"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-56 h-56 bg-[#C4F7FF] dark:bg-[#033239] opacity-15 rounded-full blur-2xl animate-glass-float delay-2000"></div>
         </div>
-        <div className="container mx-auto relative z-10">
+        <div className="w-full md:container md:mx-auto relative z-10">
           <h2 className="font-sora font-bold text-4xl text-center mb-8">
             {t('empresas.why.title')}
           </h2>
@@ -238,8 +238,8 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-20 px-8 bg-background">
-        <div className="container mx-auto">
+      <section className="py-20 px-[20px] md:px-8 bg-background">
+        <div className="w-full md:container md:mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
             {t('empresas.testimonials.title')}
           </h2>
@@ -284,13 +284,13 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      <section ref={processRef} className="relative py-20 px-8 overflow-hidden min-h-screen bg-background">
+      <section ref={processRef} className="relative py-20 px-[20px] md:px-8 overflow-hidden min-h-screen bg-background">
         <div className="absolute inset-0">
           <div className="absolute top-10 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
         
-        <div className="container mx-auto relative z-10">
+        <div className="w-full md:container md:mx-auto relative z-10">
           <div className="text-center mb-20">
             <h2 className="font-sora font-bold text-4xl mb-6">
               {t('empresas.process.title')}
@@ -400,8 +400,8 @@ const Empresas: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-20 px-8 bg-gradient-to-br from-primary to-secondary">
-        <div className="container mx-auto text-center">
+      <section className="py-20 px-[20px] md:px-8 bg-gradient-to-br from-primary to-secondary">
+        <div className="w-full md:container md:mx-auto text-center">
           <div className="max-w-[1440px] mx-auto p-8 rounded-3xl">
             <h2 className="font-sora font-bold text-4xl mb-6 text-white">
               {t('cta.empresas.title')}
