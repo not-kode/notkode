@@ -37,97 +37,50 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-muted/3 to-transparent animate-[magical-pulse_8s_ease-in-out_infinite_reverse] animation-delay-3000"></div>
       </div>
 
-      <div className="container mx-auto max-w-[1440px] px-8 text-center relative z-10 flex-grow flex flex-col justify-center space-y-[22px] md:space-y-[32px]">
-       {/* Main Title */}
-<div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl leading-tight">
-  <div className="whitespace-nowrap">
-    <span className="text-primary">
-      {t('home.main_title_1').split(' ')[0]}
-    </span>{' '}
-    {t('home.main_title_1').split(' ').slice(1).join(' ')}
+      {/* Container Principal */}
+<div className="container mx-auto max-w-[1440px] px-8 text-center relative z-10 flex-grow flex flex-col justify-center space-y-[22px] md:space-y-[32px]">
+  {/* Main Title */}
+  <div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl leading-tight">
+    <div className="whitespace-nowrap"><span className="text-primary">{t('home.main_title_1').split(' ')[0]}</span> {t('home.main_title_1').split(' ').slice(1).join(' ')}</div>
+    <div className="whitespace-nowrap">{t('home.main_title_2').split(' ').slice(0, -2).join(' ')} <span className="text-gradient">{t('home.main_title_2').split(' ').slice(-2, -1)[0]}</span> <span className="text-primary">{t('home.main_title_2').split(' ').slice(-1)[0]}</span></div>
   </div>
-  <div className="whitespace-nowrap">
-    {t('home.main_title_2').split(' ').slice(0, -2).join(' ')}{' '}
-    <span className="text-gradient">
-      {t('home.main_title_2').split(' ').slice(-2, -1)[0]}
-    </span>{' '}
-    <span className="text-primary">
-      {t('home.main_title_2').split(' ').slice(-1)[0]}
-    </span>
-  </div>
-</div>
 
-        
-        {/* Subtitle - Console Style */}
-        <div className="max-w-[1200px] mx-auto">
-          <div className="border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm w-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
-            <div className="flex items-center mb-3 md:mb-4">
-              <div className="flex space-x-1 mr-3">
-                <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full"></div>
-                <div className="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full"></div>
-                <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full"></div>
-              </div>
-              <span className="text-xs text-muted-foreground font-mono">terminal</span>
-            </div>
-            <p className="font-mono text-base md:text-lg md:text-xl text-primary/90 leading-relaxed mb-4 md:mb-6">
-              <span className="text-secondary">$</span> echo "{t('home.terminal_echo')}"
-            </p>
-            
-            {/* Options inside terminal */}
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Empresas Option */}
-              <Link 
-                to="/companies" 
-                className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20" 
-                style={{ backgroundColor: '#FFFFFF' }}
-              >
-                <div className="flex items-center mb-2 md:mb-3">
-                  <Building className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
-                  <h2 className="font-sora font-bold text-[20px]" style={{ color: '#272B37' }}>{t('home.companies_title')}</h2>
-                </div>
-                <p className="mb-3 md:mb-4 text-[16px]" style={{ color: '#4D4D4D' }}>
-                  {t('home.companies_desc')}
-                </p>
-                <div className="flex items-center font-semibold text-xs md:text-sm" style={{ color: '#4D4D4D' }}>
-                  <span style={{ color: '#4D4D4D' }}>{t('home.companies_cta')}</span>
-                  <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" style={{ color: '#4D4D4D' }} />
-                </div>
-              </Link>
-              
-              {/* Parcerias Option */}
-              <Link 
-                to="/agencies" 
-                className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20"
-                style={{ backgroundColor: '#FFFFFF' }}
-              >
-                <div className="flex items-center mb-2 md:mb-3">
-                  <Handshake className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" />
-                  <h2 className="font-sora font-bold text-[20px]" style={{ color: '#272B37' }}>{t('home.agencies_title')}</h2>
-                </div>
-                <p className="mb-3 md:mb-4 text-[16px]" style={{ color: '#4D4D4D' }}>
-                  {t('home.agencies_desc')}
-                </p>
-                <div className="flex items-center font-semibold text-xs md:text-sm" style={{ color: '#4D4D4D' }}>
-                  <span style={{ color: '#4D4D4D' }}>{t('home.agencies_cta')}</span>
-                  <ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" style={{ color: '#4D4D4D' }} />
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Futuristic Neon Lovable Tag */}
-<div className="relative inline-block w-full max-w-[700px] mx-auto">
-  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full md:w-[700px] h-full bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
-  <div className="relative w-full md:w-[700px] bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-4 md:px-6 py-2 backdrop-blur-sm overflow-hidden">
-    <p className="flex items-center text-xs md:text-sm font-medium tracking-wide font-mono text-foreground">
-      <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
-      {t('home.lovable_tag')}
-    </p>
-  </div>
-</div>
-
+  {/* Subtitle — Console Style */}
+  <div className="max-w-[1200px] mx-auto border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm w-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
+    <div className="flex items-center mb-3 md:mb-4">
+      <div className="flex space-x-1 mr-3">
+        <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full"></div>
+        <div className="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full"></div>
+        <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full"></div>
       </div>
+      <span className="text-xs text-muted-foreground font-mono">terminal</span>
+    </div>
+    <p className="font-mono text-base md:text-lg md:text-xl text-primary/90 leading-relaxed mb-4 md:mb-6"><span className="text-secondary">$</span> echo "{t('home.terminal_echo')}"</p>
+    <div className="grid md:grid-cols-2 gap-8">
+      {/* Empresas */}
+      <Link to="/companies" className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20" style={{ backgroundColor: '#FFFFFF' }}>
+        <div className="flex items-center mb-2 md:mb-3"><Building className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" /><h2 className="font-sora font-bold text-[20px]" style={{ color: '#272B37' }}>{t('home.companies_title')}</h2></div>
+        <p className="mb-3 md:mb-4 text-[16px]" style={{ color: '#4D4D4D' }}>{t('home.companies_desc')}</p>
+        <div className="flex items-center font-semibold text-xs md:text-sm" style={{ color: '#4D4D4D' }}><span>{t('home.companies_cta')}</span><ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" /></div>
+      </Link>
+      {/* Agências */}
+      <Link to="/agencies" className="group hover:scale-105 transition-all duration-300 p-4 md:p-6 text-left rounded-lg backdrop-blur-sm border border-primary/20" style={{ backgroundColor: '#FFFFFF' }}>
+        <div className="flex items-center mb-2 md:mb-3"><Handshake className="w-5 h-5 md:w-6 md:h-6 text-primary mr-2 md:mr-3 group-hover:scale-110 transition-transform" /><h2 className="font-sora font-bold text-[20px]" style={{ color: '#272B37' }}>{t('home.agencies_title')}</h2></div>
+        <p className="mb-3 md:mb-4 text-[16px]" style={{ color: '#4D4D4D' }}>{t('home.agencies_desc')}</p>
+        <div className="flex items-center font-semibold text-xs md:text-sm" style={{ color: '#4D4D4D' }}><span>{t('home.agencies_cta')}</span><ArrowRight className="ml-1 md:ml-2 w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-2 transition-transform" /></div>
+      </Link>
+    </div>
+  </div>
+
+  {/* Futuristic Neon Lovable Tag */}
+  <div className="relative inline-block w-full max-w-[700px] mx-auto">
+    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full md:w-[700px] h-full bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
+    <div className="relative w-full md:w-[700px] bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-4 md:px-6 py-2 backdrop-blur-sm overflow-hidden">
+      <p className="flex items-center text-xs md:text-sm font-medium tracking-wide font-mono text-foreground"><span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-primary rounded-full mr-2 animate-pulse"></span>{t('home.lovable_tag')}</p>
+    </div>
+  </div>
+</div>
+
     </div>
   );
 };
