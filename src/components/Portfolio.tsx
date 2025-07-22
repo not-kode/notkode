@@ -132,14 +132,14 @@ const Portfolio: React.FC = () => {
             filteredPortfolio.map((project, index) => (
               <div key={index} className="portfolio-card group hover:scale-105 transition-all duration-300">
                 {/* Project Header */}
-                <div className="flex items-start justify-between mb-6 border-b border-border/20 pb-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-sora font-bold text-xl leading-tight mb-2">{project.name}</h3>
-                    <span className="px-3 py-1.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 inline-block">
-                      {t(`category.${project.category.toLowerCase().includes('saas') ? 'saas' : project.category.toLowerCase() === 'e-commerce' ? 'ecommerce' : 'website'}`)}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 ml-4">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6 border-b border-border/20 pb-4">
+  <div className="flex-1 min-w-0">
+    <h3 className="font-sora font-bold text-xl leading-tight mb-2">{project.name}</h3>
+    <span className="px-3 py-1.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 inline-block">
+      {t(`category.${project.category.toLowerCase().includes('saas') ? 'saas' : project.category.toLowerCase() === 'e-commerce' ? 'ecommerce' : 'website'}`)}
+    </span>
+  </div>
+  <div className="flex flex-col md:items-end gap-2">
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20 whitespace-nowrap">
                       <span>🚀</span>
                       <span>{t('common.launch')}:</span>
