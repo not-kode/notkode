@@ -109,7 +109,7 @@ const SobreNos: React.FC = () => {
                 <h3 className="font-sora font-bold text-xl mb-1" style={{
                 color: '#101420'
               }}>{t('about.founders.camila.name')}</h3>
-                <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md">{t('about.founders.camila.role')}</div>
+<div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.camila.role')}</div>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
                   {t('about.founders.camila.description')}
                 </p>
