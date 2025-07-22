@@ -4,40 +4,33 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-
 const Empresas: React.FC = () => {
-  const { t } = useLanguage();
+  const {
+    t
+  } = useLanguage();
   const processRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState(0);
-
-  const testimonials = [
-    {
-      text: "testimonial.bruno.text",
-      author: "Bruno Coimbra",
-      company: "Azure Assessoria de Investimentos"
-    },
-    {
-      text: "testimonial.rodrigo.text",
-      author: "Rodrigo Nascimento", 
-      company: "LTS Corretagem de Seguros"
-    },
-    {
-      text: "testimonial.fernando.text",
-      author: "Fernando Freitas",
-      company: "Mark Tech"
-    },
-    {
-      text: "testimonial.giovanna.text",
-      author: "Giovanna Pretti",
-      company: "ZapInside"
-    },
-    {
-      text: "testimonial.walter.text",
-      author: "Walter Neto",
-      company: "AutoAgentes"
-    }
-  ];
-
+  const testimonials = [{
+    text: "testimonial.bruno.text",
+    author: "Bruno Coimbra",
+    company: "Azure Assessoria de Investimentos"
+  }, {
+    text: "testimonial.rodrigo.text",
+    author: "Rodrigo Nascimento",
+    company: "LTS Corretagem de Seguros"
+  }, {
+    text: "testimonial.fernando.text",
+    author: "Fernando Freitas",
+    company: "Mark Tech"
+  }, {
+    text: "testimonial.giovanna.text",
+    author: "Giovanna Pretti",
+    company: "ZapInside"
+  }, {
+    text: "testimonial.walter.text",
+    author: "Walter Neto",
+    company: "AutoAgentes"
+  }];
   const services = [{
     icon: Building,
     title: t('empresas.services.internal'),
@@ -71,81 +64,61 @@ const Empresas: React.FC = () => {
     title: t('empresas.services.ecommerce'),
     description: 'Lojas virtuais otimizadas para conversão'
   }];
-
-  const whyChooseUs = [
-    {
-      icon: DollarSign,
-      title: t('empresas.why.cost_benefit.title'),
-      description: t('empresas.why.cost_benefit.desc')
-    },
-    {
-      icon: Bot,
-      title: t('empresas.why.ai_experts.title'),
-      description: t('empresas.why.ai_experts.desc')
-    },
-    {
-      icon: Shield,
-      title: t('empresas.why.scalability.title'),
-      description: t('empresas.why.scalability.desc')
-    },
-    {
-      icon: Headphones,
-      title: t('empresas.why.support.title'),
-      description: t('empresas.why.support.desc')
-    }
-  ];
-
-  const processSteps = [
-    {
-      title: "process.step1.title",
-      description: "process.step1.description",
-      icon: "🔍"
-    },
-    {
-      title: "process.step2.title",
-      description: "process.step2.description",
-      icon: "🎯"
-    },
-    {
-      title: "process.step3.title",
-      description: "process.step3.description",
-      icon: "⚡"
-    },
-    {
-      title: "process.step4.title",
-      description: "process.step4.description",
-      icon: "🚀"
-    },
-    {
-      title: "=",
-      description: "process.step5.description",
-      icon: "="
-    }
-  ];
-
+  const whyChooseUs = [{
+    icon: DollarSign,
+    title: t('empresas.why.cost_benefit.title'),
+    description: t('empresas.why.cost_benefit.desc')
+  }, {
+    icon: Bot,
+    title: t('empresas.why.ai_experts.title'),
+    description: t('empresas.why.ai_experts.desc')
+  }, {
+    icon: Shield,
+    title: t('empresas.why.scalability.title'),
+    description: t('empresas.why.scalability.desc')
+  }, {
+    icon: Headphones,
+    title: t('empresas.why.support.title'),
+    description: t('empresas.why.support.desc')
+  }];
+  const processSteps = [{
+    title: "process.step1.title",
+    description: "process.step1.description",
+    icon: "🔍"
+  }, {
+    title: "process.step2.title",
+    description: "process.step2.description",
+    icon: "🎯"
+  }, {
+    title: "process.step3.title",
+    description: "process.step3.description",
+    icon: "⚡"
+  }, {
+    title: "process.step4.title",
+    description: "process.step4.description",
+    icon: "🚀"
+  }, {
+    title: "=",
+    description: "process.step5.description",
+    icon: "="
+  }];
   useEffect(() => {
     const handleScroll = () => {
       if (!processRef.current) return;
-      
       const rect = processRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       const elementTop = rect.top;
       const elementHeight = rect.height;
-
       const scrollProgress = Math.max(0, Math.min(1, (windowHeight * 0.7 - elementTop) / (elementHeight * 0.8)));
       const stepIndex = Math.min(Math.floor(scrollProgress * processSteps.length), processSteps.length - 1);
-      
       setActiveStep(stepIndex);
     };
-
     window.addEventListener('scroll', handleScroll);
     handleScroll(); // Initial call
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <section className="relative py-[120px] px-8 overflow-hidden bg-background">
         <div className="absolute inset-0 overflow-hidden">
           {/* Organic fluid shapes similar to the reference image */}
@@ -216,19 +189,17 @@ const Empresas: React.FC = () => {
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {services.map((service, index) => (
-              <div key={index} className="glass-card group hover:scale-105">
+            {services.map((service, index) => <div key={index} className="glass-card group hover:scale-105">
                 <div className="flex items-center justify-center mb-4">
                   <service.icon className="w-10 h-10 text-primary group-hover:scale-110 transition-transform" />
                 </div>
-                <h3 className="font-sora font-semibold text-xl mb-3 text-center min-h-[56px] flex items-center justify-center">
+                <h3 className="font-sora text-xl mb-3 text-center min-h-[56px] flex items-center justify-center font-medium">
                   {service.title}
                 </h3>
                 <p className="text-muted-foreground text-center text-base">
                   {service.description}
                 </p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -249,8 +220,7 @@ const Empresas: React.FC = () => {
           </p>
           
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {whyChooseUs.map((item, index) => (
-              <div key={index} className="glass-card group hover:scale-105">
+            {whyChooseUs.map((item, index) => <div key={index} className="glass-card group hover:scale-105">
                 <div className="flex items-center mb-4">
                   <item.icon className="w-8 h-8 text-primary mr-3 group-hover:scale-110 transition-transform" />
                   <h3 className="font-sora font-semibold text-xl">{item.title}</h3>
@@ -258,8 +228,7 @@ const Empresas: React.FC = () => {
                 <p className="text-muted-foreground text-base">
                   {item.description}
                 </p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -271,16 +240,12 @@ const Empresas: React.FC = () => {
           </h2>
           
           <div className="max-w-6xl mx-auto">
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
+            <Carousel opts={{
+            align: "start",
+            loop: true
+          }} className="w-full">
               <CarouselContent className="-ml-4">
-                {testimonials.map((testimonial, index) => (
-                  <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                {testimonials.map((testimonial, index) => <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
                     <div className="glass-card h-full group hover:scale-105">
                       <div className="flex items-center justify-center mb-4">
                         <Quote className="w-8 h-8 text-primary opacity-60" />
@@ -301,14 +266,11 @@ const Empresas: React.FC = () => {
                         </div>
                         
                         <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 text-primary fill-current" />
-                          ))}
+                          {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-primary fill-current" />)}
                         </div>
                       </div>
                     </div>
-                  </CarouselItem>
-                ))}
+                  </CarouselItem>)}
               </CarouselContent>
               <CarouselPrevious className="left-0 md:-left-12" />
               <CarouselNext className="right-0 md:-right-12" />
@@ -335,17 +297,15 @@ const Empresas: React.FC = () => {
           
           <div className="relative max-w-6xl mx-auto my-[80px] px-4">
             <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{
-              height: 'calc(100% - 4rem)'
-            }}></div>
+            height: 'calc(100% - 4rem)'
+          }}></div>
             
             {processSteps.map((step, index) => {
-              const isActive = activeStep >= index;
-              const isLeft = index % 2 === 0;
-              const isEqualsStep = step.title === "=";
-
-              if (isEqualsStep) {
-                return (
-                  <div key={index} className="flex justify-center mb-32 relative px-8">
+            const isActive = activeStep >= index;
+            const isLeft = index % 2 === 0;
+            const isEqualsStep = step.title === "=";
+            if (isEqualsStep) {
+              return <div key={index} className="flex justify-center mb-32 relative px-8">
                     <div className={`transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'}`}>
                       <div className="glass-card max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-3xl"></div>
@@ -381,12 +341,9 @@ const Empresas: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div key={index} className="flex items-center mb-32 relative group px-8">
+                  </div>;
+            }
+            return <div key={index} className="flex items-center mb-32 relative group px-8">
                   <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`}></div>
                   
                   <div className={`w-full lg:w-1/2 ${isLeft ? 'lg:pr-32' : 'lg:pl-32 lg:ml-auto'} transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
@@ -432,9 +389,8 @@ const Empresas: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                </div>;
+          })}
           </div>
         </div>
       </section>
@@ -477,8 +433,6 @@ const Empresas: React.FC = () => {
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default Empresas;
