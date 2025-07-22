@@ -405,7 +405,7 @@ const Empresas: React.FC = () => {
 
       <section className="py-20 px-8 bg-gradient-to-br from-primary to-secondary">
         <div className="container mx-auto text-center">
-          <div className="max-w-4xl mx-auto p-8 rounded-3xl">
+          <div className="max-w-[1440px] mx-auto p-8 rounded-3xl">
             <h2 className="font-sora font-bold text-4xl mb-6 text-white">
               {t('cta.empresas.title')}
             </h2>
