@@ -139,7 +139,7 @@ const Empresas: React.FC = () => {
                 <div className="flex items-center">
                   <span className="inline-block w-2 h-2 bg-primary rounded-full mr-3 animate-pulse"></span>
                   <Sparkles className="w-4 h-4 text-primary mr-2" />
-                  <span className="text-sm md:text-sm font-medium text-[#272B37] dark:text-primary/90 tracking-wide font-mono">{t('empresas.hero.new_title')}</span>
+                  <span className="text-xs md:text-sm font-medium text-[#272B37] dark:text-primary/90 tracking-wide font-mono">{t('empresas.hero.new_title')}</span>
                 </div>
               </div>
             </div>
