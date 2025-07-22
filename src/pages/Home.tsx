@@ -8,7 +8,7 @@ const Home: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden pt-20 pb-8 md:pt-16 md:pb-16">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden pt-24 pb-8 md:pt-32 md:pb-16">
       {/* Animated Magical Background */}
       <div className="absolute inset-0">
         {/* Noise Texture for Liquid Glass Effect */}
