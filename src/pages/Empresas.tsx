@@ -131,8 +131,8 @@ const Empresas: React.FC = () => {
           <div className="absolute bottom-0 left-0 right-0 h-32 dark:bg-gradient-to-t dark:from-[#101420] dark:to-transparent dark:opacity-90"></div>
         </div>
         
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-4xl mx-auto text-center py-[20px] md:py-[40px]">
+        <div className="w-full md:container md:mx-auto relative z-10">
+  <div className="w-full md:max-w-4xl md:mx-auto text-center py-[20px] md:py-[40px]">
             <div className="relative inline-block mb-8 animate-fade-in-up">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
               <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
