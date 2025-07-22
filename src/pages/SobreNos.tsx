@@ -18,7 +18,7 @@ const SobreNos: React.FC = () => {
   return <div className="min-h-screen pt-20 md:pt-16 bg-background">
       {/* Hero Section */}
       <section className="py-12 md:py-20 px-4">
-        <div className="container mx-auto max-w-[1400px] text-center">
+        <div className="container mx-auto max-w-[1000px] text-center">
           <div className="relative inline-block mb-8 animate-fade-in-up">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
             <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-6 py-2 backdrop-blur-sm">
