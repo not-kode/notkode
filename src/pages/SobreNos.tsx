@@ -42,13 +42,15 @@ const SobreNos: React.FC = () => {
     <p className="text-muted-foreground">+55 11 95138-1254</p>
   </div>
 </div>
-            <div className="glass-card text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-sora font-bold text-lg mb-1 text-primary">{t('about.contact.email')}</h3>
-              <p className="text-muted-foreground">camila@notkode.com.br</p>
-            </div>
+            <div className="glass-card flex items-center gap-4 px-[18px] py-[8px]">
+  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+    <Mail className="w-6 h-6 text-primary" />
+  </div>
+  <div className="text-left">
+    <h3 className="font-sora font-bold text-lg mb-1 text-primary">{t('about.contact.email')}</h3>
+    <p className="text-muted-foreground">camila@notkode.com.br</p>
+  </div>
+</div>
             <div className="glass-card text-center">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-6 h-6 text-primary" />
