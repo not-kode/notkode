@@ -167,7 +167,7 @@ const Portfolio: React.FC = () => {
                     {project.technologies.split(', ').map((tech, techIndex) => (
                       <span 
                         key={techIndex}
-                        className="px-3 py-1 bg-primary/10 text-primary text-base font-medium rounded-full border border-primary/20"
+                        className="px-3 py-1 bg-[#B8F6FF]/24 text-[#A5A5A5] text-[13px] font-medium rounded-[100px] border border-[#86F0FF]"
                       >
                         {tech}
                       </span>
