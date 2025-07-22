@@ -74,7 +74,7 @@ const SobreNos: React.FC = () => {
       <section className="py-12 md:py-20 px-4" style={{ backgroundColor: '#86F0FF' }}>
         <div className="container mx-auto max-w-6xl">
           <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
-            <span className="light:text-[#101420] dark:text-[#FFFFFF]">{t('about.founders.title')}</span>
+            <span style={{ color: '#101420' }}>{t('about.founders.title')}</span>
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8 md:gap-12">
@@ -88,7 +88,7 @@ const SobreNos: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <h3 className="font-sora font-bold text-xl mb-1">{t('about.founders.camila.name')}</h3>
+                <h3 className="font-sora font-bold text-xl mb-1" style={{ color: '#101420' }}>{t('about.founders.camila.name')}</h3>
                 <div className="text-primary text-sm font-medium mb-4">{t('about.founders.camila.role')}</div>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
                   {t('about.founders.camila.description')}
@@ -117,7 +117,7 @@ const SobreNos: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <h3 className="font-sora font-bold text-xl mb-1">{t('about.founders.matheus.name')}</h3>
+                <h3 className="font-sora font-bold text-xl mb-1" style={{ color: '#101420' }}>{t('about.founders.matheus.name')}</h3>
                 <div className="text-primary text-sm font-medium mb-4">{t('about.founders.matheus.role')}</div>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
                   {t('about.founders.matheus.description')}
