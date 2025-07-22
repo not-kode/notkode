@@ -119,7 +119,7 @@ const Empresas: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   return <div className="min-h-screen bg-background">
-      <section className="relative pt-[100px] pb-8 px-8 overflow-hidden bg-background md:py-[120px]">
+      <section className="relative py-[120px] px-8 overflow-hidden bg-background">
         <div className="absolute inset-0 overflow-hidden">
           {/* Organic fluid shapes similar to the reference image */}
           <div className="absolute top-10 left-1/4 w-96 h-96 bg-gradient-to-br from-[#4BD2E5] via-[#8EE2E5] to-[#4BD2E5] rounded-[50%] blur-3xl opacity-30 animate-pulse transform rotate-45"></div>
@@ -144,10 +144,8 @@ const Empresas: React.FC = () => {
               </div>
             </div>
             
-            <h1 className="font-sora font-bold text-4xl mb-8 animate-fade-in-up leading-tight">
-              {t('empresas.hero.new_subtitle')}
+            <h1 className="font-sora font-bold text-4xl mb-8 animate-fade-in-up leading-tight">{t('empresas.hero.new_subtitle')}
             </h1>
-            
             <div className="flex flex-wrap justify-center gap-6 text-sm animate-fade-in-up mb-8">
               <div className="flex items-center text-muted-foreground group">
                 <Building className="w-4 h-4 text-primary mr-2" />
@@ -160,11 +158,11 @@ const Empresas: React.FC = () => {
               <div className="flex items-center text-muted-foreground group">
                 <Star className="w-4 h-4 text-secondary mr-2" />
                 <div className="text-lg font-bold text-secondary mr-2">9.8</div>
-                <span className="relative">
-                  {t('empresas.stats.rating')}
+                <span className="relative">{t('empresas.stats.rating')}
                   <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-secondary to-primary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
+              
               <div className="flex items-center text-muted-foreground group">
                 <Calendar className="w-4 h-4 text-primary mr-2" />
                 <div className="text-lg font-bold text-primary mr-2">+4</div>
@@ -174,7 +172,6 @@ const Empresas: React.FC = () => {
                 </span>
               </div>
             </div>
-            
             <div className="animate-fade-in-up">
               <WhatsAppButton text={t('empresas.cta.accelerate')} className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border-0" />
             </div>
