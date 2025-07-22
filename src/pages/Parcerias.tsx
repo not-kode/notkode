@@ -167,7 +167,7 @@ const Parcerias: React.FC = () => {
           <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-8">
             {t('parcerias.benefits.main_title')}
           </h2>
-          <p className="text-lg md:text-xl text-muted-foreground text-center mb-16 max-w-3xl mx-auto px-4">
+          <p className="text-lg md:text-xl text-muted-foreground text-center mb-16 max-w-[1200px] mx-auto px-4">
             {t('parcerias.benefits.main_subtitle')}
           </p>
           
