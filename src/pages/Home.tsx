@@ -102,18 +102,26 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-       {/* Futuristic Neon Lovable Tag */}
-<div className="relative inline-block mb-8 md:mb-0 w-auto max-w-full">
-  {/* Neon background, preenche todo o wrapper */}
-  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
-
-  {/* Conteúdo: auto‑width, quebra texto no mobile e nowrap a partir de md */}
-  <div className="relative inline-block bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 
+        {/* Futuristic Neon Lovable Tag */}
+<div className="relative mb-8 md:mb-0 flex justify-center px-4">
+  <div className="relative inline-flex items-center 
+                  whitespace-normal md:whitespace-nowrap 
+                  bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 
                   border border-primary/40 rounded-full 
-                  px-4 md:px-6 py-2 backdrop-blur-sm 
-                  w-auto whitespace-normal md:whitespace-nowrap">
-    <p className="flex items-center relative text-xs md:text-sm font-medium tracking-wide font-mono text-foreground">
-      <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
+                  px-4 md:px-6 py-2 backdrop-blur-sm">
+    
+    {/* fundo neon animado */}
+    <div className="absolute inset-0 
+                    bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 
+                    blur-md rounded-full animate-pulse"></div>
+    
+    {/* bolinha pulsante */}
+    <span className="relative inline-block 
+                     w-1.5 h-1.5 md:w-2 md:h-2 
+                     bg-primary rounded-full mr-2 animate-pulse" />
+    
+    {/* texto */}
+    <p className="relative text-xs md:text-sm font-medium tracking-wide font-mono text-foreground">
       {t('home.lovable_tag')}
     </p>
   </div>
