@@ -188,11 +188,9 @@ const Parcerias: React.FC = () => {
       </section>
 
       {/* Portfolio Section */}
-      <section id="portfolio" className="py-[40px] md:py-20 bg-background">
-        <div className="px-4 md:px-8">
-          <Portfolio />
-        </div>
-      </section>
+      <section id="portfolio" className="py-[60px] md:py-20 bg-background">
+  <Portfolio />
+</section>
 
       {/* Services Section */}
       <section className="py-[40px] px-4 md:py-20 md:px-8 bg-background">
