@@ -379,7 +379,7 @@ const Parcerias: React.FC = () => {
       {/* CTA Section */}
       <section className="py-20 px-4 md:px-8 bg-gradient-to-br from-primary to-secondary">
         <div className="w-full max-w-7xl mx-auto text-center">
-          <div className="max-w-4xl mx-auto p-6 md:p-8 rounded-3xl">
+          <div className="max-w-[1440px] mx-auto p-6 md:p-8 rounded-3xl">
             <h2 className="font-sora font-bold text-3xl md:text-4xl mb-6 text-white px-4">
               {t('cta.parcerias.title')}
             </h2>
