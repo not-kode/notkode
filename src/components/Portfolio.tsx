@@ -145,7 +145,7 @@ const Portfolio: React.FC = () => {
                       <span>{t('common.launch')}:</span>
                       <span className="font-semibold">{project.year}</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20 whitespace-nowrap">
+                   <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20 whitespace-nowrap md:whitespace-nowrap">
                       <span>💸</span>
                       <span>{t('common.revenue')}:</span>
                       <span className="font-semibold">{project.revenue}</span>
