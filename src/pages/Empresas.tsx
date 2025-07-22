@@ -202,6 +202,7 @@ const Empresas: React.FC = () => {
       </section>
 
       <section id="portfolio" className="py-[60px] md:py-20 bg-background">
+  <div className="px-[20px] md:px-8">
     <Portfolio />
   </div>
 </section>
