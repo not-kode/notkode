@@ -251,10 +251,10 @@ const Empresas: React.FC = () => {
             <Carousel opts={{
             align: "start",
             loop: true
-          }} className="w-full">
-              <CarouselContent className="-ml-8">
+          }} className="w-full overflow-visible">
+              <CarouselContent className="-ml-8 overflow-visible">
                 {testimonials.map((testimonial, index) => <CarouselItem key={index} className="pl-8 md:basis-1/2 lg:basis-1/3">
-                    <div className="glass-card h-full group hover:scale-105 border border-[#C4F7FF] dark:border-transparent shadow-[0_8px_20px_rgba(0,0,0,0.05)] dark:shadow-none">
+                    <div className="glass-card h-full group hover:scale-105 border border-[#C4F7FF] shadow-[0_8px_20px_rgba(0,0,0,0.05)] dark:shadow-none">
                       <div className="flex items-center justify-center mb-4">
                         <Quote className="w-8 h-8 text-primary opacity-60" />
                       </div>
