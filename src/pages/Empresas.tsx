@@ -185,7 +185,7 @@ const Empresas: React.FC = () => {
       <section className="py-20 px-8 bg-background">
         <div className="container mx-auto">
           <h2 className="font-sora font-bold text-4xl text-center mb-16">
-            <span className="text-gradient">{t('empresas.services.title')}</span>
+            <span className="text-gradient text-slate-900">{t('empresas.services.title')}</span>
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
