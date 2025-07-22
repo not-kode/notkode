@@ -128,7 +128,7 @@ const Empresas: React.FC = () => {
           <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-bl from-[#4BD2E5] to-[#8EE2E5] rounded-[80%] blur-2xl opacity-15 animate-pulse delay-1500 transform -rotate-45"></div>
           
           {/* Gradient overlay for section transition */}
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#101420] to-transparent opacity-90"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-32 dark:bg-gradient-to-t dark:from-[#101420] dark:to-transparent dark:opacity-90"></div>
         </div>
         
         <div className="container mx-auto relative z-10">
