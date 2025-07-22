@@ -315,7 +315,7 @@ const Empresas: React.FC = () => {
             if (isEqualsStep) {
               return <div key={index} className="flex justify-center mb-32 relative px-8">
                     <div className={`transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'}`}>
-                      <div className="glass-card max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
+                      <div className="glass-card max-w-[1000px] mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-3xl"></div>
                         <div className="absolute top-4 right-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl"></div>
                         <div className="absolute bottom-4 left-4 w-16 h-16 bg-secondary/10 rounded-full blur-xl"></div>
@@ -326,7 +326,7 @@ const Empresas: React.FC = () => {
                             <Award className="w-12 h-12 text-secondary mx-2" />
                             <Bot className="w-12 h-12 text-primary ml-4" />
                           </div>
-                          <h3 className="font-sora font-bold text-2xl md:text-3xl mb-4">
+                          <h3 className="font-sora font-bold text-2xl md:text-3xl mb-4 text-[#101420] dark:text-[#ffffff]">
                             <span className="text-gradient">{t('process.business_knowledge_title')}</span>
                           </h3>
                           <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
