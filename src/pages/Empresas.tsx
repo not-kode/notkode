@@ -291,7 +291,7 @@ const Empresas: React.FC = () => {
         </div>
         
         <div className="w-full md:container md:mx-auto relative z-10">
-          <div className="text-center mb-20">
+          <div className="text-center mb-8 md:mb-12">
             <h2 className="font-sora font-bold text-4xl mb-6">
               {t('empresas.process.title')}
             </h2>
@@ -300,7 +300,7 @@ const Empresas: React.FC = () => {
             </p>
           </div>
           
-          <div className="relative max-w-6xl mx-auto my-[80px] px-4">
+          <div className="relative w-full md:max-w-6xl md:mx-auto my-[40px] md:my-[80px] px-4">
             <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 bg-gradient-to-b from-primary/30 via-secondary/30 to-primary/30 hidden lg:block" style={{
             height: 'calc(100% - 4rem)'
           }}></div>
