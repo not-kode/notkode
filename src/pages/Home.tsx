@@ -37,9 +37,9 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-muted/3 to-transparent animate-[magical-pulse_8s_ease-in-out_infinite_reverse] animation-delay-3000"></div>
       </div>
 
-      <div className="container mx-auto max-w-[1440px] px-8 text-center relative z-10 flex-grow flex flex-col justify-center space-y-6">
+      <div className="container mx-auto max-w-[1440px] px-8 text-center relative z-10 flex-grow flex flex-col justify-center space-y-[22px] md:space-y-[32px]">
        {/* Main Title */}
-<div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl mt-6 md:mt-0 mb-8 md:mb-8 leading-tight">
+<div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl leading-tight">
   <div className="whitespace-nowrap">
     <span className="text-primary">
       {t('home.main_title_1').split(' ')[0]}
@@ -59,7 +59,7 @@ const Home: React.FC = () => {
 
         
         {/* Subtitle - Console Style */}
-        <div className="mt-8 md:mt-8 mb-8 md:mb-8 max-w-[1200px] mx-auto">
+        <div className="max-w-[1200px] mx-auto">
           <div className="border border-primary/30 rounded-lg p-4 md:p-6 backdrop-blur-sm w-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
             <div className="flex items-center mb-3 md:mb-4">
               <div className="flex space-x-1 mr-3">
@@ -117,7 +117,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Futuristic Neon Lovable Tag */}
-<div className="relative inline-block mb-8 md:mb-0 w-full max-w-[700px] mx-auto">
+<div className="relative inline-block w-full max-w-[700px] mx-auto">
   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full md:w-[700px] h-full bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
   <div className="relative w-full md:w-[700px] bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-4 md:px-6 py-2 backdrop-blur-sm overflow-hidden">
     <p className="flex items-center text-xs md:text-sm font-medium tracking-wide font-mono text-foreground">
