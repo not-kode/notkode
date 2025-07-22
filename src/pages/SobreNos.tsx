@@ -71,10 +71,10 @@ const SobreNos: React.FC = () => {
       </section>
 
       {/* Founders Section */}
-      <section className="py-12 md:py-20 px-4 bg-muted/30">
+      <section className="py-12 md:py-20 px-4" style={{ backgroundColor: '#86F0FF' }}>
         <div className="container mx-auto max-w-6xl">
           <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
-            <span className="text-gradient">{t('about.founders.title')}</span>
+            <span className="light:text-[#101420] dark:text-[#FFFFFF]">{t('about.founders.title')}</span>
           </h2>
           
           <div className="grid md:grid-cols-2 gap-8 md:gap-12">
@@ -143,7 +143,7 @@ const SobreNos: React.FC = () => {
       <section className="py-12 md:py-20 px-4">
         <div className="container mx-auto max-w-4xl">
           <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
-            <span className="text-gradient">{t('about.contact.title')}</span>
+            <span className="light:text-[#101420] dark:text-[#FFFFFF]">{t('about.contact.title')}</span>
           </h2>
           
           <div className="grid md:grid-cols-3 gap-8 mb-16">
