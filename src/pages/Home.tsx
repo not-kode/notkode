@@ -38,11 +38,25 @@ const Home: React.FC = () => {
       </div>
 
       <div className="container mx-auto max-w-[1440px] px-8 text-center relative z-10 flex-grow flex flex-col justify-center space-y-8">
-        {/* Main Title */}
-        <div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl mb-6 md:mb-8 leading-tight">
-          <div className="whitespace-nowrap"><span className="text-primary">{t('home.main_title_1').split(' ')[0]}</span> {t('home.main_title_1').split(' ').slice(1).join(' ')}</div>
-          <div className="whitespace-nowrap">{t('home.main_title_2').split(' ').slice(0, -2).join(' ')} <span className="text-gradient">{t('home.main_title_2').split(' ').slice(-2, -1)[0]}</span> <span className="text-primary">{t('home.main_title_2').split(' ').slice(-1)[0]}</span></div>
-        </div>
+       {/* Main Title */}
+<div className="font-sora font-bold text-2xl md:text-5xl lg:text-6xl mt-6 md:mt-0 mb-4 md:mb-8 leading-tight">
+  <div className="whitespace-nowrap">
+    <span className="text-primary">
+      {t('home.main_title_1').split(' ')[0]}
+    </span>{' '}
+    {t('home.main_title_1').split(' ').slice(1).join(' ')}
+  </div>
+  <div className="whitespace-nowrap">
+    {t('home.main_title_2').split(' ').slice(0, -2).join(' ')}{' '}
+    <span className="text-gradient">
+      {t('home.main_title_2').split(' ').slice(-2, -1)[0]}
+    </span>{' '}
+    <span className="text-primary">
+      {t('home.main_title_2').split(' ').slice(-1)[0]}
+    </span>
+  </div>
+</div>
+
         
         {/* Subtitle - Console Style */}
         <div className="mb-8 md:mb-16 max-w-[1200px] mx-auto">
@@ -103,30 +117,15 @@ const Home: React.FC = () => {
         </div>
 
         {/* Futuristic Neon Lovable Tag */}
-<div className="relative mb-8 md:mb-0 flex justify-center px-4">
-  <div className="relative inline-flex items-center 
-                  whitespace-normal md:whitespace-nowrap 
-                  bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 
-                  border border-primary/40 rounded-full 
-                  px-4 md:px-6 py-2 backdrop-blur-sm">
-    
-    {/* fundo neon animado */}
-    <div className="absolute inset-0 
-                    bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 
-                    blur-md rounded-full animate-pulse"></div>
-    
-    {/* bolinha pulsante */}
-    <span className="relative inline-block 
-                     w-1.5 h-1.5 md:w-2 md:h-2 
-                     bg-primary rounded-full mr-2 animate-pulse" />
-    
-    {/* texto */}
-    <p className="relative text-xs md:text-sm font-medium tracking-wide font-mono text-foreground">
-      {t('home.lovable_tag')}
-    </p>
-  </div>
-</div>
-
+        <div className="relative inline-block mb-8 md:mb-0">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[700px] h-full bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 blur-md rounded-full animate-pulse"></div>
+          <div className="relative bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 rounded-full px-4 md:px-6 py-2 backdrop-blur-sm w-[700px] mx-auto">
+            <p className="relative text-xs md:text-sm font-medium tracking-wide font-mono text-foreground">
+              <span className="inline-block w-1.5 h-1.5 md:w-2 md:h-2 bg-primary rounded-full mr-2 animate-pulse"></span>
+              {t('home.lovable_tag')}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
