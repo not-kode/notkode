@@ -85,7 +85,7 @@ const Parcerias: React.FC = () => {
   return (
     <div className="min-h-screen bg-background w-full">
       {/* Hero Section */}
-      <section className="relative pt-[120px] pb-[80px] px-4 md:px-8 overflow-hidden bg-background">
+      <section className="relative pt-[120px] pb-[60px] md:pb-[80px] px-4 md:px-8 overflow-hidden bg-background">
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Organic fluid shapes similar to the reference image */}
@@ -162,7 +162,7 @@ const Parcerias: React.FC = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 px-4 md:px-8 bg-background">
+      <section className="py-[60px] px-4 md:py-20 md:px-8 bg-background">
         <div className="w-full max-w-7xl mx-auto">
           <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-8">
             {t('parcerias.benefits.main_title')}
@@ -188,14 +188,14 @@ const Parcerias: React.FC = () => {
       </section>
 
       {/* Portfolio Section */}
-      <section id="portfolio" className="py-20 bg-background">
+      <section id="portfolio" className="py-[60px] md:py-20 bg-background">
         <div className="px-4 md:px-8">
           <Portfolio />
         </div>
       </section>
 
       {/* Services Section */}
-      <section className="py-20 px-4 md:px-8 bg-background">
+      <section className="py-[60px] px-4 md:py-20 md:px-8 bg-background">
         <div className="w-full max-w-7xl mx-auto">
           <h2 className="font-sora font-bold text-3xl md:text-4xl text-center mb-8">
             <span className="text-gradient">{t('parcerias.services.main_title')}</span>
@@ -223,7 +223,7 @@ const Parcerias: React.FC = () => {
       </section>
 
       {/* Process Section */}
-      <section className="relative py-20 px-4 md:px-8 overflow-hidden bg-background">
+      <section className="relative py-[60px] px-4 md:py-20 md:px-8 overflow-hidden bg-background">
         {/* Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-10 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
@@ -377,7 +377,7 @@ const Parcerias: React.FC = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 md:px-8 bg-gradient-to-br from-primary to-secondary">
+      <section className="py-[60px] px-4 md:py-20 md:px-8 bg-gradient-to-br from-primary to-secondary">
         <div className="w-full max-w-7xl mx-auto text-center">
           <div className="max-w-[1440px] mx-auto p-6 md:p-8 rounded-3xl">
             <h2 className="font-sora font-bold text-3xl md:text-4xl mb-6 text-white px-4">
