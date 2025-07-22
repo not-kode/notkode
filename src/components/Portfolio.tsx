@@ -127,7 +127,7 @@ const Portfolio: React.FC = () => {
         </div>
 
         {/* Portfolio Grid */}
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
           {filteredPortfolio.length > 0 ? (
             filteredPortfolio.map((project, index) => (
               <div key={index} className="portfolio-card group hover:scale-105 transition-all duration-300">
