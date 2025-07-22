@@ -33,13 +33,15 @@ const SobreNos: React.FC = () => {
           </p>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="glass-card text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-sora font-bold text-lg mb-2 text-primary">{t('about.contact.whatsapp')}</h3>
-              <p className="text-muted-foreground">+55 11 95138-1254</p>
-            </div>
+           <div className="glass-card flex items-center gap-4 p-[18px]">
+  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+    <MessageCircle className="w-6 h-6 text-primary" />
+  </div>
+  <div className="text-left">
+    <h3 className="font-sora font-bold text-lg mb-2 text-primary">{t('about.contact.whatsapp')}</h3>
+    <p className="text-muted-foreground">+55 11 95138-1254</p>
+  </div>
+</div>
             <div className="glass-card text-center">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="w-6 h-6 text-primary" />
