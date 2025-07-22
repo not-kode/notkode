@@ -310,7 +310,7 @@ const Empresas: React.FC = () => {
             const isLeft = index % 2 === 0;
             const isEqualsStep = step.title === "=";
             if (isEqualsStep) {
-              return <div key={index} className="flex justify-center mb-32 relative px-0 md:px-8">
+              return <div key={index} className="flex justify-center mb-8 md:mb-32 relative px-0 md:px-8">
                     <div className={`transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'}`}>
                       <div className="glass-card max-w-[1000px] mx-auto text-center bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-primary/20 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-3xl"></div>
@@ -348,17 +348,17 @@ const Empresas: React.FC = () => {
                     </div>
                   </div>;
             }
-            return <div key={index} className="flex items-start mb-32 relative group px-0 md:px-8">
+            return <div key={index} className="flex items-start mb-8 md:mb-32 relative group px-0 md:px-8">
                   <div className={`absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full shadow-lg border-4 border-background z-10 hidden lg:block transition-all duration-500 ${isActive ? 'bg-primary scale-125 shadow-primary/50' : 'bg-muted scale-100'}`}></div>
                   
                   <div className={`w-full lg:w-1/2 lg:pr-8 transition-all duration-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-30 translate-y-4'} relative`}>
                     <div className={`glass-card group hover:scale-105 transition-all duration-300 hover:shadow-2xl transform ${isActive ? 'translate-x-0 opacity-100 scale-100' : 'opacity-70 scale-95'}`}>
                       <div className="flex items-center mb-6">
-                        <div className={`w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-2xl group-hover:scale-110 transition-transform shadow-lg ${isActive ? 'animate-pulse shadow-primary/50' : ''}`}>
+                        <div className={`w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white font-bold text-lg md:text-2xl group-hover:scale-110 transition-transform shadow-lg ${isActive ? 'animate-pulse shadow-primary/50' : ''}`}>
                           {String(index + 1).padStart(2, '0')}
                         </div>
                         <div className="ml-6">
-                          <h3 className="font-sora font-bold text-xl mb-2">{t(step.title)}</h3>
+                          <h3 className="font-sora font-bold text-lg md:text-xl mb-2">{t(step.title)}</h3>
                           <div className={`w-20 h-1 bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500 ${isActive ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-50'}`}></div>
                         </div>
                       </div>
