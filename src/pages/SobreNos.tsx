@@ -123,7 +123,7 @@ const SobreNos: React.FC = () => {
             </div>
 
             {/* Matheus */}
-            <div className="glass-card text-center bg-white">
+            <div className="glass-card text-center bg-white/50">
               <div className="flex flex-col items-center">
                 <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20">
                   <img src="https://media.licdn.com/dms/image/v2/C4D03AQGd8lA9yG-Mqw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1534949512919?e=1755734400&v=beta&t=2w9hliqnKjhoZPhLo6MDYCD1-StXXGu9Z7dBRh2gjP8" alt="Matheus Tonelotto" className="w-full h-full object-cover" />
@@ -131,7 +131,7 @@ const SobreNos: React.FC = () => {
                 <h3 className="font-sora font-bold text-xl mb-1" style={{
                 color: '#101420'
               }}>{t('about.founders.matheus.name')}</h3>
-                <div className="text-primary text-sm font-medium mb-4">{t('about.founders.matheus.role')}</div>
+                <div className="text-primary text-sm font-medium mb-4 bg-white rounded-md">{t('about.founders.matheus.role')}</div>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
                   {t('about.founders.matheus.description')}
                 </p>
