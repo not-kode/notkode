@@ -383,7 +383,7 @@ const Parcerias: React.FC = () => {
             <h2 className="font-sora font-bold text-3xl md:text-4xl mb-6 text-white px-4">
               {t('cta.parcerias.title')}
             </h2>
-            <p className="text-lg md:text-xl text-white/90 mb-12 px-4">
+            <p className="text-lg md:text-xl text-white/90 mb-12 px-4 max-w-[800px] mx-auto">
               {t('cta.parcerias.subtitle')}
             </p>
             
