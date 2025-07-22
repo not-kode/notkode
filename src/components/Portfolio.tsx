@@ -86,7 +86,7 @@ const Portfolio: React.FC = () => {
 
   return (
     <section className="py-[60px] px-[20px] md:py-20 md:px-8 bg-background">
-  <div className="w-full md:max-w-[1440px] md:mx-auto">
+  <div className="w-full md:container md:mx-auto">
         <h2 className="font-sora font-bold text-4xl text-center mb-4">
           <span className="text-gradient">{t('portfolio.title')}</span>
         </h2>
