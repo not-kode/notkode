@@ -2,7 +2,7 @@
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
-import { CheckCircle, Globe, TrendingUp } from 'lucide-react';
+import { CheckCircle, Globe, TrendingUp, MessageCircle, Mail, MapPin } from 'lucide-react';
 
 const SobreNos: React.FC = () => {
   const { t } = useLanguage();
@@ -35,6 +35,30 @@ const SobreNos: React.FC = () => {
           <p className="text-lg md:text-xl text-muted-foreground mb-8 md:mb-12 max-w-3xl mx-auto leading-relaxed">
             {t('about.hero.description')}
           </p>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="glass-card text-center">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-sora font-bold text-lg mb-2 text-primary">{t('about.contact.whatsapp')}</h3>
+              <p className="text-muted-foreground">+55 11 95138-1254</p>
+            </div>
+            <div className="glass-card text-center">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-sora font-bold text-lg mb-2 text-primary">{t('about.contact.email')}</h3>
+              <p className="text-muted-foreground">camila@notkode.com.br</p>
+            </div>
+            <div className="glass-card text-center">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-sora font-bold text-lg mb-2 text-primary">{t('about.contact.location')}</h3>
+              <p className="text-muted-foreground">{t('about.contact.locationValue')}</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -139,29 +163,6 @@ const SobreNos: React.FC = () => {
         </div>
       </section>
 
-      {/* Contact Information */}
-      <section className="py-12 md:py-20 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
-            <span className="light:text-[#101420] dark:text-[#FFFFFF]">{t('about.contact.title')}</span>
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="glass-card text-center">
-              <h3 className="font-sora font-bold text-lg mb-2 text-primary">{t('about.contact.whatsapp')}</h3>
-              <p className="text-muted-foreground">+55 11 95138-1254</p>
-            </div>
-            <div className="glass-card text-center">
-              <h3 className="font-sora font-bold text-lg mb-2 text-primary">{t('about.contact.email')}</h3>
-              <p className="text-muted-foreground">camila@notkode.com.br</p>
-            </div>
-            <div className="glass-card text-center">
-              <h3 className="font-sora font-bold text-lg mb-2 text-primary">{t('about.contact.location')}</h3>
-              <p className="text-muted-foreground">{t('about.contact.locationValue')}</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-12 md:py-20 px-4 bg-gradient-to-br from-primary/10 via-secondary/5 to-background">
