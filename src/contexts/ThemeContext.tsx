@@ -13,16 +13,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check localStorage first, then system preference, then default to dark
+    // Check localStorage first, then default to dark
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('notkode-theme');
       if (stored && (stored === 'dark' || stored === 'light')) {
         return stored as Theme;
       }
-      
-      // Check system preference
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      return systemTheme;
     }
     return 'dark';
   });
