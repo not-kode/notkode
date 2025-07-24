@@ -34,35 +34,35 @@ const Empresas: React.FC = () => {
   const services = [{
     icon: Building,
     title: t('empresas.services.internal'),
-    description: 'Sistemas de gestão, CRM, ERP e ferramentas específicas para seu negócio'
+    description: 'Management systems, CRM, ERP and specific tools for your business'
   }, {
     icon: Rocket,
     title: t('empresas.services.saas'),
-    description: 'Plataformas escaláveis para comercializar como produto'
+    description: 'Scalable platforms to commercialize as a product'
   }, {
     icon: Bot,
     title: t('empresas.services.ai'),
-    description: 'Chatbots inteligentes e assistentes virtuais personalizados'
+    description: 'Intelligent chatbots and personalized virtual assistants'
   }, {
     icon: Workflow,
     title: t('empresas.services.automation'),
-    description: 'Automação de processos e integrações entre sistemas'
+    description: 'Process automation and system integrations'
   }, {
     icon: Figma,
     title: t('empresas.services.figma'),
-    description: 'Prototipagem e design de interfaces antes do desenvolvimento'
+    description: 'Prototyping and interface design before development'
   }, {
     icon: Globe,
     title: t('empresas.services.websites'),
-    description: 'Sites institucionais e aplicações web responsivas'
+    description: 'Institutional websites and responsive web applications'
   }, {
     icon: Smartphone,
     title: t('empresas.services.mobile'),
-    description: 'Apps nativos e híbridos para iOS e Android'
+    description: 'Native and hybrid apps for iOS and Android'
   }, {
     icon: ShoppingCart,
     title: t('empresas.services.ecommerce'),
-    description: 'Lojas virtuais otimizadas para conversão'
+    description: 'Virtual stores optimized for conversion'
   }];
   const whyChooseUs = [{
     icon: DollarSign,
