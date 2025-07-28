@@ -95,7 +95,7 @@ const SobreNos: React.FC = () => {
       </section>
 
       {/* Founders Section */}
-      <section className="py-12 md:py-20 px-4 bg-gradient-radial-light dark:bg-[#131520]">
+      <section className="py-12 md:py-20 px-4 dark:bg-[#131520]">
         <div className="container mx-auto max-w-6xl">
           <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
             <span style={{
