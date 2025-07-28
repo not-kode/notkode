@@ -109,7 +109,7 @@ const SobreNos: React.FC = () => {
     <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
       <span style={{
             color: '#101420'
-          }}>{t('about.founders.title')}</span>
+          }} className="text-slate-50">{t('about.founders.title')}</span>
     </h2>
     
     <div className="grid md:grid-cols-2 gap-8 md:gap-12">
