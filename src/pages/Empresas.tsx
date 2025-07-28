@@ -399,43 +399,43 @@ const Empresas: React.FC = () => {
       </section>
 
       <section className="py-[60px] px-[20px] md:py-20 md:px-8 bg-gradient-to-br from-primary to-secondary">
-        <div className="w-full md:container md:mx-auto text-center">
-          <div className="max-w-[1440px] mx-auto p-8 rounded-3xl">
-            <h2 className="font-sora font-bold text-4xl mb-6 text-white">
-              {t('cta.empresas.title')}
-            </h2>
-            <p className="text-xl text-white/90 mb-12">
-              {t('cta.empresas.subtitle')}
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-12">
-              <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
-                <Sparkles className="w-6 h-6 mr-3" />
-                <div>
-                  <div className="text-lg font-bold text-white">{t('cta.feature1.title')}</div>
-                  <span className="text-white/80">{t('cta.feature1.desc')}</span>
-                </div>
-              </div>
-              <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
-                <Timer className="w-6 h-6 mr-3" />
-                <div>
-                  <div className="text-lg font-bold text-white">{t('cta.feature2.title')}</div>
-                  <span className="text-white/80">{t('cta.feature2.desc')}</span>
-                </div>
-              </div>
-              <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
-                <Heart className="w-6 h-6 mr-3" />
-                <div>
-                  <div className="text-lg font-bold text-white">{t('cta.feature3.title')}</div>
-                  <span className="text-white/80">{t('cta.feature3.desc')}</span>
-                </div>
-              </div>
-            </div>
-            
-            <WhatsAppButton text={t('common.contact')} className="bg-white text-primary px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-white/25 hover:scale-105 transition-all duration-300 border-0 hover:bg-white/90" />
+  <div className="w-full md:container md:mx-auto text-center">
+    <div className="max-w-[1440px] mx-auto p-8 rounded-3xl">
+      <h2 className="font-sora font-bold text-4xl mb-6 text-white">
+        {t('cta.empresas.title')}
+      </h2>
+      <p className="text-xl text-white/90 mb-12">
+        {t('cta.empresas.subtitle')}
+      </p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-12">
+        <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
+          <Sparkles className="w-6 h-6 mr-3 text-[#111320]" />
+          <div className="text-left">
+            <div className="text-lg font-bold text-[#111320]">{t('cta.feature1.title')}</div>
+            <span className="text-gray-700">{t('cta.feature1.desc')}</span>
           </div>
         </div>
-      </section>
+        <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
+          <Timer className="w-6 h-6 mr-3 text-[#111320]" />
+          <div className="text-left">
+            <div className="text-lg font-bold text-[#111320]">{t('cta.feature2.title')}</div>
+            <span className="text-gray-700">{t('cta.feature2.desc')}</span>
+          </div>
+        </div>
+        <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4 text-white/90 group hover:bg-white/20 transition-all duration-300">
+          <Heart className="w-6 h-6 mr-3 text-[#111320]" />
+          <div className="text-left">
+            <div className="text-lg font-bold text-[#111320]">{t('cta.feature3.title')}</div>
+            <span className="text-gray-700">{t('cta.feature3.desc')}</span>
+          </div>
+        </div>
+      </div>
+      
+      <WhatsAppButton text={t('common.contact')} className="bg-white text-primary px-8 py-4 text-base font-semibold rounded-full shadow-2xl hover:shadow-white/25 hover:scale-105 transition-all duration-300 border-0 hover:bg-white/90" />
+    </div>
+  </div>
+</section>
     </div>;
 };
 export default Empresas;
