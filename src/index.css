@@ -213,3 +213,8 @@
     background-clip: text;
   }
 }
+
+/* Gradient backgrounds */
+.bg-gradient-radial-light {
+  background: radial-gradient(circle at center, #B8F6FF 5%, #FFFFFF 20%);
+}
