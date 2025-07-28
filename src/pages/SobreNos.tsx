@@ -94,15 +94,8 @@ const SobreNos: React.FC = () => {
         </div>
       </section>
 
-  {/* Founders Section */}
-<section className="py-12 md:py-20 px-4 relative" data-bg="#111320">
-  <style dangerouslySetInnerHTML={{
-    __html: `
-      .dark section[data-bg="#111320"] {
-        background-color: #111320 !important;
-      }
-    `
-  }}></style>
+   {/* Founders Section */}
+<section className="py-12 md:py-20 px-4 relative">
   {/* Simple animated circles for dark mode only */}
   <div className="absolute inset-0 pointer-events-none z-0 dark:block hidden">
     <div className="absolute top-1/4 left-1/4 w-36 h-36 bg-[#8EE2E5] opacity-30 rounded-full blur-xl animate-pulse"></div>
@@ -161,6 +154,7 @@ const SobreNos: React.FC = () => {
     </div>
   </div>
 </section>
+
 
       {/* CTA Section */}
       <section className="py-12 md:py-20 px-4 bg-gradient-to-br from-primary/10 via-secondary/5 to-background">
