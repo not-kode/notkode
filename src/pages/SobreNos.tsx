@@ -95,7 +95,7 @@ const SobreNos: React.FC = () => {
       </section>
 
       {/* Founders Section */}
-      <section className="py-12 md:py-20 px-4" style={{
+      <section className="py-12 md:py-20 px-4 dark:bg-[#131520]" style={{
   background: 'radial-gradient(circle at center, #B8F6FF 5%, #FFFFFF 20%)'
 }}>
         <div className="container mx-auto max-w-6xl">
