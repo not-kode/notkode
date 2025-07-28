@@ -95,7 +95,7 @@ const SobreNos: React.FC = () => {
       </section>
 
      {/* Founders Section */}
-<section className="py-12 md:py-20 px-4 dark:bg-[#131520] relative">
+    <section className="py-12 md:py-20 px-4 dark:bg-[#131520] relative">
   {/* Organic fluid shapes - flowing animation */}
   <div className="absolute inset-0 pointer-events-none z-0">
     <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#4BD2E5] dark:bg-[#4BD2E5] opacity-40 rounded-full blur-3xl animate-glass-float"></div>
@@ -108,8 +108,8 @@ const SobreNos: React.FC = () => {
   <div className="container mx-auto max-w-6xl relative z-10">
     <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
       <span style={{
-        color: '#101420'
-      }}>{t('about.founders.title')}</span>
+            color: '#101420'
+          }}>{t('about.founders.title')}</span>
     </h2>
     
     <div className="grid md:grid-cols-2 gap-8 md:gap-12">
@@ -120,10 +120,10 @@ const SobreNos: React.FC = () => {
             <img src="https://media.licdn.com/dms/image/v2/D4D03AQHN8KBb8CeCTw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1719845395227?e=1755734400&v=beta&t=P1DLP0YNtGKxQehMREushPTcxLNYH31ym6pb4KbZ2kM" alt="Camila Tonelotto" className="w-full h-full object-cover" />
           </div>
           <h3 className="font-sora font-bold text-xl mb-1" style={{
-            color: '#101420'
-          }}>{t('about.founders.camila.name')}</h3>
+                color: '#101420'
+              }}>{t('about.founders.camila.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.camila.role')}</div>
-          <p className="text-muted-foreground mb-6 leading-relaxed">
+          <p className="mb-6 leading-relaxed text-slate-950">
             {t('about.founders.camila.description')}
           </p>
           <a href="https://www.linkedin.com/in/gregoriocamila/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-[#101420] px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-primary/20">
@@ -142,10 +142,10 @@ const SobreNos: React.FC = () => {
             <img src="https://media.licdn.com/dms/image/v2/C4D03AQGd8lA9yG-Mqw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1534949512919?e=1755734400&v=beta&t=2w9hliqnKjhoZPhLo6MDYCD1-StXXGu9Z7dBRh2gjP8" alt="Matheus Tonelotto" className="w-full h-full object-cover" />
           </div>
           <h3 className="font-sora font-bold text-xl mb-1" style={{
-            color: '#101420'
-          }}>{t('about.founders.matheus.name')}</h3>
+                color: '#101420'
+              }}>{t('about.founders.matheus.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.matheus.role')}</div>
-          <p className="text-muted-foreground mb-6 leading-relaxed">
+          <p className="mb-6 leading-relaxed text-gray-950">
             {t('about.founders.matheus.description')}
           </p>
           <a href="https://www.linkedin.com/in/matheustonelotto/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-[#101420] px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-primary/20">
@@ -158,7 +158,7 @@ const SobreNos: React.FC = () => {
       </div>
     </div>
   </div>
-</section>
+    </section>
 
 
       {/* CTA Section */}
