@@ -95,7 +95,8 @@ const SobreNos: React.FC = () => {
       </section>
 
     {/* Founders Section */}
-<section className="py-12 md:py-20 px-4 dark:bg-[#111320] relative">
+<section className="py-12 md:py-20 px-4 relative" style={{ backgroundColor: 'var(--background)' }}>
+  <div className="absolute inset-0 dark:bg-[#111320] dark:block hidden"></div>
   {/* Simple animated circles for dark mode only */}
   <div className="absolute inset-0 pointer-events-none z-0 dark:block hidden">
     <div className="absolute top-1/4 left-1/4 w-36 h-36 bg-[#8EE2E5] opacity-30 rounded-full blur-xl animate-pulse"></div>
