@@ -41,7 +41,7 @@ const SobreNos: React.FC = () => {
     <h3 className="font-sora font-bold text-lg mb-1 text-primary">{t('about.contact.whatsapp')}</h3>
     <p className="text-muted-foreground">+55 11 95138-1254</p>
   </div>
-</div>
+          </div>
             <div className="glass-card flex items-center gap-4 px-[18px] py-[8px]">
   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
     <Mail className="w-6 h-6 text-primary" />
@@ -50,7 +50,7 @@ const SobreNos: React.FC = () => {
     <h3 className="font-sora font-bold text-lg mb-1 text-primary">{t('about.contact.email')}</h3>
     <p className="text-muted-foreground">camila@notkode.com.br</p>
   </div>
-</div>
+          </div>
             <div className="glass-card flex items-center gap-4 px-[18px] py-[8px]">
   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
     <MapPin className="w-6 h-6 text-primary" />
@@ -59,7 +59,7 @@ const SobreNos: React.FC = () => {
     <h3 className="font-sora font-bold text-lg mb-1 text-primary">{t('about.contact.location')}</h3>
     <p className="text-muted-foreground">{t('about.contact.locationValue')}</p>
   </div>
-</div>
+          </div>
           </div>
         </div>
       </section>
@@ -95,7 +95,7 @@ const SobreNos: React.FC = () => {
       </section>
 
       {/* Founders Section */}
-<section className="py-12 md:py-20 px-4 dark:bg-[#131520] relative">
+    <section className="py-12 md:py-20 px-4 dark:bg-[#131520] relative">
   {/* Organic fluid shapes - flowing animation */}
   <div className="absolute inset-0 pointer-events-none z-0">
     <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-[#C4F7FF] dark:bg-[#033239] opacity-25 rounded-full blur-3xl animate-glass-float"></div>
@@ -108,8 +108,8 @@ const SobreNos: React.FC = () => {
   <div className="container mx-auto max-w-6xl relative z-10">
     <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
       <span style={{
-        color: '#101420'
-      }}>{t('about.founders.title')}</span>
+            color: '#101420'
+          }} className="text-slate-50">{t('about.founders.title')}</span>
     </h2>
     
     <div className="grid md:grid-cols-2 gap-8 md:gap-12">
@@ -120,8 +120,8 @@ const SobreNos: React.FC = () => {
             <img src="https://media.licdn.com/dms/image/v2/D4D03AQHN8KBb8CeCTw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1719845395227?e=1755734400&v=beta&t=P1DLP0YNtGKxQehMREushPTcxLNYH31ym6pb4KbZ2kM" alt="Camila Tonelotto" className="w-full h-full object-cover" />
           </div>
           <h3 className="font-sora font-bold text-xl mb-1" style={{
-            color: '#101420'
-          }}>{t('about.founders.camila.name')}</h3>
+                color: '#101420'
+              }}>{t('about.founders.camila.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.camila.role')}</div>
           <p className="text-muted-foreground mb-6 leading-relaxed">
             {t('about.founders.camila.description')}
@@ -142,8 +142,8 @@ const SobreNos: React.FC = () => {
             <img src="https://media.licdn.com/dms/image/v2/C4D03AQGd8lA9yG-Mqw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1534949512919?e=1755734400&v=beta&t=2w9hliqnKjhoZPhLo6MDYCD1-StXXGu9Z7dBRh2gjP8" alt="Matheus Tonelotto" className="w-full h-full object-cover" />
           </div>
           <h3 className="font-sora font-bold text-xl mb-1" style={{
-            color: '#101420'
-          }}>{t('about.founders.matheus.name')}</h3>
+                color: '#101420'
+              }}>{t('about.founders.matheus.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.matheus.role')}</div>
           <p className="text-muted-foreground mb-6 leading-relaxed">
             {t('about.founders.matheus.description')}
@@ -158,7 +158,7 @@ const SobreNos: React.FC = () => {
       </div>
     </div>
   </div>
-</section>
+    </section>
 
 
       {/* CTA Section */}
