@@ -94,39 +94,17 @@ const SobreNos: React.FC = () => {
         </div>
       </section>
 
-     {/* Founders Section */}
-<section className="py-12 md:py-20 px-4 relative" style={{ backgroundColor: '#111320' }}>
-  {/* Animated Magical Background */}
-  <div className="absolute inset-0 pointer-events-none z-0">
-    {/* Noise Texture for Liquid Glass Effect */}
-    <div className="absolute inset-0 opacity-20" 
-         style={{
-           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`,
-           backgroundSize: '200px 200px',
-           mixBlendMode: 'soft-light'
-         }}>
-    </div>
-    
-    {/* Giant Radiating Circles - Using Notkode Palette */}
-    <div className="absolute -top-1/2 left-1/2 -translate-x-1/2 w-[80vw] h-[80vw] max-w-[900px] max-h-[900px] bg-gradient-to-br from-primary/25 via-primary/10 to-transparent rounded-full blur-3xl animate-[magical-pulse_8s_ease-in-out_infinite]"></div>
-    
-    <div className="absolute -bottom-1/2 right-1/2 translate-x-1/2 w-[75vw] h-[75vw] max-w-[850px] max-h-[850px] bg-gradient-to-tl from-secondary/20 via-secondary/10 to-transparent rounded-full blur-3xl animate-[magical-pulse_12s_ease-in-out_infinite_reverse] animation-delay-2000"></div>
-    
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] max-w-[800px] max-h-[800px] bg-gradient-to-r from-primary/15 via-muted/10 to-secondary/15 rounded-full blur-2xl animate-[magical-pulse_10s_ease-in-out_infinite] animation-delay-4000"></div>
-    
-    {/* Secondary Radiating Layer */}
-    <div className="absolute top-1/4 right-1/4 w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] bg-gradient-to-bl from-primary/20 via-muted/8 to-transparent rounded-full blur-2xl animate-[magical-pulse_14s_ease-in-out_infinite_reverse] animation-delay-6000"></div>
-    
-    <div className="absolute bottom-1/4 left-1/4 w-[65vw] h-[65vw] max-w-[750px] max-h-[750px] bg-gradient-to-tr from-secondary/18 via-primary/8 to-transparent rounded-full blur-2xl animate-[magical-pulse_16s_ease-in-out_infinite] animation-delay-8000"></div>
-    
-    {/* Irradiation Effect Layers */}
-    <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-secondary/5 animate-[magical-pulse_6s_ease-in-out_infinite]"></div>
-    <div className="absolute inset-0 bg-gradient-radial from-transparent via-muted/3 to-transparent animate-[magical-pulse_8s_ease-in-out_infinite_reverse] animation-delay-3000"></div>
+    {/* Founders Section */}
+<section className="py-12 md:py-20 px-4 dark:bg-[#131520] relative">
+  {/* Simple animated circles for dark mode only */}
+  <div className="absolute inset-0 pointer-events-none z-0 dark:block hidden">
+    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#8EE2E5] opacity-30 rounded-full blur-xl animate-pulse"></div>
+    <div className="absolute bottom-1/3 right-1/4 w-24 h-24 bg-[#8EE2E5] opacity-25 rounded-full blur-lg animate-pulse delay-1000"></div>
   </div>
 
   <div className="container mx-auto max-w-6xl relative z-10">
     <h2 className="font-sora font-bold text-2xl md:text-4xl mb-6 md:mb-16 text-center">
-      <span style={{
+      <span className="dark:text-white" style={{
         color: '#101420'
       }}>{t('about.founders.title')}</span>
     </h2>
