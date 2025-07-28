@@ -95,7 +95,7 @@ const SobreNos: React.FC = () => {
       </section>
 
      {/* Founders Section */}
-<section className="py-12 md:py-20 px-4 dark:bg-[#131520] relative">
+<section className="py-12 md:py-20 px-4 dark:bg-[#111320] relative">
   {/* Animated Magical Background */}
   <div className="absolute inset-0 pointer-events-none z-0">
     {/* Noise Texture for Liquid Glass Effect */}
