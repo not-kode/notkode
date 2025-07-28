@@ -95,11 +95,11 @@ const SobreNos: React.FC = () => {
       </section>
 
     {/* Founders Section */}
-<section className="py-12 md:py-20 px-4 dark:bg-[#131520] relative">
+<section className="py-12 md:py-20 px-4 dark:bg-[#111320] relative">
   {/* Simple animated circles for dark mode only */}
   <div className="absolute inset-0 pointer-events-none z-0 dark:block hidden">
-    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#8EE2E5] opacity-30 rounded-full blur-xl animate-pulse"></div>
-    <div className="absolute bottom-1/3 right-1/4 w-24 h-24 bg-[#8EE2E5] opacity-25 rounded-full blur-lg animate-pulse delay-1000"></div>
+    <div className="absolute top-1/4 left-1/4 w-36 h-36 bg-[#8EE2E5] opacity-30 rounded-full blur-xl animate-pulse"></div>
+    <div className="absolute bottom-1/3 right-1/4 w-28 h-28 bg-[#8EE2E5] opacity-25 rounded-full blur-lg animate-pulse delay-1000"></div>
   </div>
 
   <div className="container mx-auto max-w-6xl relative z-10">
