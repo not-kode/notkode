@@ -94,7 +94,7 @@ const SobreNos: React.FC = () => {
         </div>
       </section>
 
-    {/* Founders Section */}
+   {/* Founders Section */}
 <section className="py-12 md:py-20 px-4 relative" style={{ backgroundColor: 'var(--background)' }}>
   <div className="absolute inset-0 dark:bg-[#111320] dark:block hidden"></div>
   {/* Simple animated circles for dark mode only */}
@@ -119,7 +119,7 @@ const SobreNos: React.FC = () => {
             color: '#101420'
           }}>{t('about.founders.camila.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.camila.role')}</div>
-          <p className="text-muted-foreground mb-6 leading-relaxed">
+          <p className="text-muted-foreground dark:text-[#111320] mb-6 leading-relaxed">
             {t('about.founders.camila.description')}
           </p>
           <a href="https://www.linkedin.com/in/gregoriocamila/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-[#101420] px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-primary/20">
@@ -141,7 +141,7 @@ const SobreNos: React.FC = () => {
             color: '#101420'
           }}>{t('about.founders.matheus.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.matheus.role')}</div>
-          <p className="text-muted-foreground mb-6 leading-relaxed">
+          <p className="text-muted-foreground dark:text-[#111320] mb-6 leading-relaxed">
             {t('about.founders.matheus.description')}
           </p>
           <a href="https://www.linkedin.com/in/matheustonelotto/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-[#101420] px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-primary/20">
