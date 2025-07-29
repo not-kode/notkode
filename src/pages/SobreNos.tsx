@@ -94,7 +94,7 @@ const SobreNos: React.FC = () => {
         </div>
       </section>
 
-  {/* Founders Section */}
+   {/* Founders Section */}
 <section className="py-12 md:py-20 px-4 relative">
   {/* Intensified animated circles for dark mode only */}
   <div className="absolute inset-0 pointer-events-none z-0 dark:block hidden">
@@ -110,21 +110,21 @@ const SobreNos: React.FC = () => {
     
     <div className="grid md:grid-cols-2 gap-8 md:gap-12">
       {/* Camila */}
-      <div className="glass-card text-center backdrop-blur-sm bg-white/80 dark:bg-white/10 border border-gray-200/50 dark:border-white/20 shadow-lg dark:shadow-xl">
+      <div className="glass-card text-center backdrop-blur-sm bg-primary/20 dark:bg-white/10 border border-gray-200/50 dark:border-white/20 shadow-lg dark:shadow-xl">
         <div className="flex flex-col items-center">
           <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20 dark:border-primary/30">
             <img src="https://media.licdn.com/dms/image/v2/D4D03AQHN8KBb8CeCTw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1719845395227?e=1755734400&v=beta&t=P1DLP0YNtGKxQehMREushPTcxLNYH31ym6pb4KbZ2kM" alt="Camila Tonelotto" className="w-full h-full object-cover" />
           </div>
-          <h3 className="font-sora font-bold text-xl mb-1 text-gray-900 dark:text-white">
-            {t('about.founders.camila.name')}
-          </h3>
+          <h3 className="font-sora font-bold text-xl mb-1" style={{
+                color: '#101420'
+              }}>{t('about.founders.camila.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/95 dark:bg-white/95 rounded-md px-3 py-1.5">
             {t('about.founders.camila.role')}
           </div>
-          <p className="text-gray-700 dark:text-white/90 mb-6 leading-relaxed">
+          <p className="text-muted-foreground dark:text-[#111320] mb-6 leading-relaxed">
             {t('about.founders.camila.description')}
           </p>
-          <a href="https://www.linkedin.com/in/gregoriocamila/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gray-100/80 hover:bg-gray-200/80 dark:bg-white/20 dark:hover:bg-white/30 text-gray-800 dark:text-white px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-gray-200/50 dark:border-white/30">
+          <a href="https://www.linkedin.com/in/gregoriocamila/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-primary/20">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
             </svg>
@@ -134,21 +134,21 @@ const SobreNos: React.FC = () => {
       </div>
 
       {/* Matheus */}
-      <div className="glass-card text-center backdrop-blur-sm bg-white/80 dark:bg-white/10 border border-gray-200/50 dark:border-white/20 shadow-lg dark:shadow-xl">
+      <div className="glass-card text-center backdrop-blur-sm bg-primary/20 dark:bg-white/10 border border-gray-200/50 dark:border-white/20 shadow-lg dark:shadow-xl">
         <div className="flex flex-col items-center">
           <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20 dark:border-primary/30">
             <img src="https://media.licdn.com/dms/image/v2/C4D03AQGd8lA9yG-Mqw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1534949512919?e=1755734400&v=beta&t=2w9hliqnKjhoZPhLo6MDYCD1-StXXGu9Z7dBRh2gjP8" alt="Matheus Tonelotto" className="w-full h-full object-cover" />
           </div>
-          <h3 className="font-sora font-bold text-xl mb-1 text-gray-900 dark:text-white">
-            {t('about.founders.matheus.name')}
-          </h3>
+          <h3 className="font-sora font-bold text-xl mb-1" style={{
+                color: '#101420'
+              }}>{t('about.founders.matheus.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/95 dark:bg-white/95 rounded-md px-3 py-1.5">
             {t('about.founders.matheus.role')}
           </div>
-          <p className="text-gray-700 dark:text-white/90 mb-6 leading-relaxed">
+          <p className="text-muted-foreground dark:text-[#111320] mb-6 leading-relaxed">
             {t('about.founders.matheus.description')}
           </p>
-          <a href="https://www.linkedin.com/in/matheustonelotto/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-gray-100/80 hover:bg-gray-200/80 dark:bg-white/20 dark:hover:bg-white/30 text-gray-800 dark:text-white px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-gray-200/50 dark:border-white/30">
+          <a href="https://www.linkedin.com/in/matheustonelotto/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-primary/20">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
             </svg>
