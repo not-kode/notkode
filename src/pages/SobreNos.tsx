@@ -115,9 +115,7 @@ const SobreNos: React.FC = () => {
           <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20 dark:border-primary/30">
             <img src="https://media.licdn.com/dms/image/v2/D4D03AQHN8KBb8CeCTw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1719845395227?e=1755734400&v=beta&t=P1DLP0YNtGKxQehMREushPTcxLNYH31ym6pb4KbZ2kM" alt="Camila Tonelotto" className="w-full h-full object-cover" />
           </div>
-          <h3 className="font-sora font-bold text-xl mb-1" style={{
-                color: '#101420'
-              }}>{t('about.founders.camila.name')}</h3>
+          <h3 className="font-sora font-bold text-xl mb-1 text-[#101420] dark:text-[#FFFFFF]">{t('about.founders.camila.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/95 dark:bg-white/95 rounded-md px-3 py-1.5">
             {t('about.founders.camila.role')}
           </div>
@@ -139,9 +137,7 @@ const SobreNos: React.FC = () => {
           <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20 dark:border-primary/30">
             <img src="https://media.licdn.com/dms/image/v2/C4D03AQGd8lA9yG-Mqw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1534949512919?e=1755734400&v=beta&t=2w9hliqnKjhoZPhLo6MDYCD1-StXXGu9Z7dBRh2gjP8" alt="Matheus Tonelotto" className="w-full h-full object-cover" />
           </div>
-          <h3 className="font-sora font-bold text-xl mb-1" style={{
-                color: '#101420'
-              }}>{t('about.founders.matheus.name')}</h3>
+          <h3 className="font-sora font-bold text-xl mb-1 text-[#101420] dark:text-[#FFFFFF]">{t('about.founders.matheus.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/95 dark:bg-white/95 rounded-md px-3 py-1.5">
             {t('about.founders.matheus.role')}
           </div>
