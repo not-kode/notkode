@@ -155,11 +155,11 @@ const Empresas: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center text-muted-foreground group">
-                <Star className="w-4 h-4 text-secondary mr-2" />
-                <div className="text-lg font-bold text-secondary mr-2">9.8</div>
+                <Star className="w-4 h-4 text-primary mr-2" />
+                <div className="text-lg font-bold text-primary mr-2">9.8</div>
                 <span className="relative text-white md:text-muted-foreground">
                   {t('empresas.stats.rating')}
-                  <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-secondary to-primary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                  <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-primary rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                 </span>
               </div>
               <div className="flex items-center text-muted-foreground group">
