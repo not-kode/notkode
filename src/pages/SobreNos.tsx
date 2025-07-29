@@ -119,7 +119,7 @@ const SobreNos: React.FC = () => {
           <div className="text-primary text-sm font-medium mb-4 bg-white/95 dark:bg-white/95 rounded-md px-3 py-1.5">
             {t('about.founders.camila.role')}
           </div>
-          <p className="text-muted-foreground dark:text-[#111320] mb-6 leading-relaxed">
+          <p className="text-muted-foreground dark:text-[#E9E9E9] mb-6 leading-relaxed">
             {t('about.founders.camila.description')}
           </p>
           <a href="https://www.linkedin.com/in/gregoriocamila/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-[#8EE2E5]/20 hover:bg-[#8EE2E5]/30 text-[#101420] px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-[#8EE2E5]/40">
@@ -141,7 +141,7 @@ const SobreNos: React.FC = () => {
           <div className="text-primary text-sm font-medium mb-4 bg-white/95 dark:bg-white/95 rounded-md px-3 py-1.5">
             {t('about.founders.matheus.role')}
           </div>
-          <p className="text-muted-foreground dark:text-[#111320] mb-6 leading-relaxed">
+          <p className="text-muted-foreground dark:text-[#E9E9E9] mb-6 leading-relaxed">
             {t('about.founders.matheus.description')}
           </p>
           <a href="https://www.linkedin.com/in/matheustonelotto/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-[#8EE2E5]/20 hover:bg-[#8EE2E5]/30 text-[#101420] px-4 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 border border-[#8EE2E5]/40">
