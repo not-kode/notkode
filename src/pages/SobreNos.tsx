@@ -95,7 +95,7 @@ const SobreNos: React.FC = () => {
       </section>
 
    {/* Founders Section */}
-<section className="py-12 md:py-20 px-4 relative">
+    <section className="py-12 md:py-20 px-4 relative">
   {/* Simple animated circles for dark mode only */}
   <div className="absolute inset-0 pointer-events-none z-0 dark:block hidden">
     <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-[#8EE2E5] opacity-35 rounded-full blur-xl animate-[pulse_3s_ease-in-out_infinite]"></div>
@@ -109,14 +109,14 @@ const SobreNos: React.FC = () => {
     
     <div className="grid md:grid-cols-2 gap-8 md:gap-12">
       {/* Camila */}
-      <div className="glass-card text-center bg-white/[0.42]">
+      <div className="glass-card text-center bg-gray-300">
         <div className="flex flex-col items-center">
           <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20">
             <img src="https://media.licdn.com/dms/image/v2/D4D03AQHN8KBb8CeCTw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1719845395227?e=1755734400&v=beta&t=P1DLP0YNtGKxQehMREushPTcxLNYH31ym6pb4KbZ2kM" alt="Camila Tonelotto" className="w-full h-full object-cover" />
           </div>
           <h3 className="font-sora font-bold text-xl mb-1" style={{
-            color: '#101420'
-          }}>{t('about.founders.camila.name')}</h3>
+                color: '#101420'
+              }}>{t('about.founders.camila.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.camila.role')}</div>
           <p className="text-muted-foreground dark:text-[#111320] mb-6 leading-relaxed">
             {t('about.founders.camila.description')}
@@ -131,14 +131,14 @@ const SobreNos: React.FC = () => {
       </div>
 
       {/* Matheus */}
-      <div className="glass-card text-center bg-white/50">
+      <div className="glass-card text-center bg-gray-300">
         <div className="flex flex-col items-center">
           <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20">
             <img src="https://media.licdn.com/dms/image/v2/C4D03AQGd8lA9yG-Mqw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1534949512919?e=1755734400&v=beta&t=2w9hliqnKjhoZPhLo6MDYCD1-StXXGu9Z7dBRh2gjP8" alt="Matheus Tonelotto" className="w-full h-full object-cover" />
           </div>
           <h3 className="font-sora font-bold text-xl mb-1" style={{
-            color: '#101420'
-          }}>{t('about.founders.matheus.name')}</h3>
+                color: '#101420'
+              }}>{t('about.founders.matheus.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/[0.99] rounded-md px-3 py-1.5">{t('about.founders.matheus.role')}</div>
           <p className="text-muted-foreground dark:text-[#111320] mb-6 leading-relaxed">
             {t('about.founders.matheus.description')}
@@ -153,7 +153,7 @@ const SobreNos: React.FC = () => {
       </div>
     </div>
   </div>
-</section>
+    </section>
 
 
       {/* CTA Section */}
