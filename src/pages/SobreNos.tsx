@@ -112,7 +112,7 @@ const SobreNos: React.FC = () => {
       <div className="glass-card text-center backdrop-blur-sm bg-[#32E5FF]/10 dark:bg-white/10 border border-gray-200/50 dark:border-white/20 shadow-lg dark:shadow-xl">
         <div className="flex flex-col items-center">
           <div className="w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/20 dark:border-primary/30">
-            <img src="https://media.licdn.com/dms/image/v2/D4D03AQHN8KBb8CeCTw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1719845395227?e=1755734400&v=beta&t=P1DLP0YNtGKxQehMREushPTcxLNYH31ym6pb4KbZ2kM" alt="Camila Tonelotto" className="w-full h-full object-cover" />
+            <img src="https://media.licdn.com/dms/image/v2/D4D03AQElOGkKca3CIg/profile-displayphoto-scale_200_200/B4DZhbYR3_HsAc-/0/1753879750995?e=1756944000&v=beta&t=U5vcEaF4gxPsa1EZX_Og0yXgnnukxB-QoIv6fDraXTQ" alt="Camila Tonelotto" className="w-full h-full object-cover" />
           </div>
           <h3 className="font-sora font-bold text-xl mb-1 text-[#101420] dark:text-[#FFFFFF]">{t('about.founders.camila.name')}</h3>
           <div className="text-primary text-sm font-medium mb-4 bg-white/95 dark:bg-white/95 rounded-md px-3 py-1.5">
