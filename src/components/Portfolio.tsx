@@ -18,47 +18,8 @@ const Portfolio: React.FC = () => {
       year: "2025",
       technologies: "WeWeb, Xano, ASAAS, Posthog, OpenAI, Anthropic (Claude), n8n, Sendgrid, MegaAPI",
       link: "https://www.autoagentes.com.br/",
+      image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.03.14.png?_wwcv=1753963420039",
       gradient: "from-blue-500 to-purple-600"
-    },
-    {
-      name: "Ativa Clientes",
-      category: "SaaS (Desenvolvimento de software)",
-      description: "portfolio.ativa.description",
-      revenue: "+40 mil reais",
-      year: "2024",
-      technologies: "WeWeb, Xano, Stripe, Posthog, OpenAI, Gemini, Postmark, APIBrasil",
-      link: "https://www.youtube.com/watch?v=D4rfmBY5_UQ&t=312s",
-      gradient: "from-green-500 to-teal-600"
-    },
-    {
-      name: "ZapInside",
-      category: "SaaS (Desenvolvimento de software)",
-      description: "portfolio.zapinside.description",
-      revenue: "+2 mil reais",
-      year: "2025",
-      technologies: "WeWeb, Xano, ASAAS, Posthog, OpenAI, Anthropic (Claude), MegaApi",
-      link: "https://www.zapinside.com.br/",
-      gradient: "from-orange-500 to-red-600"
-    },
-    {
-      name: "Noodrops",
-      category: "E-commerce",
-      description: "portfolio.noodrops.description",
-      revenue: "+80 mil reais / mês",
-      year: "2023",
-      technologies: "WooCommerce, Wordpress, GA4, Pagar.me, Yampi, Voxuy, Microsoft Clarity",
-      link: "https://noodrops.com.br/",
-      gradient: "from-purple-500 to-pink-600"
-    },
-    {
-      name: "Loss Prevention",
-      category: "Website",
-      description: "portfolio.loss.description",
-      revenue: "+100 mil reais / mês",
-      year: "2023",
-      technologies: "Framer, GA4, Typeform, AirTable, SendGrid, n8n",
-      link: "https://www.lossprevention.com.br/",
-      gradient: "from-indigo-500 to-blue-600"
     },
     {
       name: "Solojet",
@@ -68,7 +29,52 @@ const Portfolio: React.FC = () => {
       year: "2024",
       technologies: "WeWeb, Google Maps API (GCP), Google Sheets, PostHog, RD Station, n8n",
       link: "https://www.solojetaviacao.com.br/pt/",
+      image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.01.39.jpg?_wwcv=1753963527702",
       gradient: "from-cyan-500 to-blue-600"
+    },
+    {
+      name: "Noodrops",
+      category: "E-commerce",
+      description: "portfolio.noodrops.description",
+      revenue: "+80 mil reais / mês",
+      year: "2023",
+      technologies: "WooCommerce, Wordpress, GA4, Pagar.me, Yampi, Voxuy, Microsoft Clarity",
+      link: "https://noodrops.com.br/",
+      image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.00.40.png?_wwcv=1753963420076",
+      gradient: "from-purple-500 to-pink-600"
+    },
+    {
+      name: "Agência Cotton",
+      category: "Website",
+      description: "Site institucional para agência criativa especializada em branding e marketing digital. O projeto teve como objetivo criar uma experiência digital que reflete a identidade criativa da marca, com animações fluidas e design contemporâneo. A plataforma conta com portfólio interativo, sistema de captação de leads otimizado e integração com ferramentas de análise para maximizar as conversões de orçamentos qualificados.",
+      revenue: "💸 Cliente: Agência de branding e design",
+      year: "2025",
+      technologies: "Framer, Google Analytics 4, WhatsApp Business API, Hotjar, Zapier",
+      link: "https://agenciacotton.com.br/",
+      image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.00.20_1.jpg?_wwcv=1753963620297",
+      gradient: "from-indigo-500 to-blue-600"
+    },
+    {
+      name: "ZapInside",
+      category: "SaaS (Desenvolvimento de software)",
+      description: "portfolio.zapinside.description",
+      revenue: "+2 mil reais",
+      year: "2025",
+      technologies: "WeWeb, Xano, ASAAS, Posthog, OpenAI, Anthropic (Claude), MegaApi",
+      link: "https://www.zapinside.com.br/",
+      image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.02.12.png?_wwcv=1753963420041",
+      gradient: "from-orange-500 to-red-600"
+    },
+    {
+      name: "Ativa Clientes",
+      category: "SaaS (Desenvolvimento de software)",
+      description: "portfolio.ativa.description",
+      revenue: "+40 mil reais",
+      year: "2024",
+      technologies: "WeWeb, Xano, Stripe, Posthog, OpenAI, Gemini, Postmark, APIBrasil",
+      link: "https://www.youtube.com/watch?v=D4rfmBY5_UQ&t=312s",
+      image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.10.28.png?_wwcv=1753963863256",
+      gradient: "from-green-500 to-teal-600"
     }
   ];
 
@@ -153,9 +159,18 @@ const Portfolio: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Project Image */}
+                <div className="mb-6 rounded-lg overflow-hidden">
+                  <img 
+                    src={project.image} 
+                    alt={project.name}
+                    className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+
                 {/* Description */}
                 <p className="text-muted-foreground text-base mb-4 leading-relaxed">
-                  {t(project.description)}
+                  {project.name === "Agência Cotton" ? project.description : t(project.description)}
                 </p>
 
                 {/* Technologies */}
