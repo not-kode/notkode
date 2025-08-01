@@ -8,6 +8,8 @@ const Portfolio: React.FC = () => {
   
   // Filter state - only category
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  // State for managing expanded descriptions
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<number, boolean>>({});
 
   const portfolio = [
     {
@@ -90,6 +92,20 @@ const Portfolio: React.FC = () => {
     });
   }, [selectedCategory]);
 
+  // Toggle description expansion
+  const toggleDescription = (index: number) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  // Function to truncate text to approximately 3 lines (around 200 characters)
+  const getTruncatedText = (text: string, isExpanded: boolean) => {
+    if (isExpanded || text.length <= 200) return text;
+    return text.substring(0, 200) + '...';
+  };
+
   return (
     <section className="py-[60px] px-[20px] md:py-20 md:px-8 bg-background">
   <div className="w-full md:max-w-[1440px] md:mx-auto">
@@ -164,14 +180,29 @@ const Portfolio: React.FC = () => {
                   <img 
                     src={project.image} 
                     alt={project.name}
-                    className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+                    className="w-full h-[300px] object-cover hover:scale-105 transition-transform duration-300"
                   />
                 </div>
 
                 {/* Description */}
-                <p className="text-muted-foreground text-base mb-4 leading-relaxed">
-                  {project.name === "Agência Cotton" ? project.description : t(project.description)}
-                </p>
+                <div className="mb-4">
+                  <div className="min-h-[72px]">
+                    <p className="text-muted-foreground text-base leading-relaxed">
+                      {project.name === "Agência Cotton" 
+                        ? getTruncatedText(project.description, expandedDescriptions[index] || false)
+                        : getTruncatedText(t(project.description), expandedDescriptions[index] || false)
+                      }
+                    </p>
+                  </div>
+                  {((project.name === "Agência Cotton" ? project.description : t(project.description)).length > 200) && (
+                    <button
+                      onClick={() => toggleDescription(index)}
+                      className="text-primary hover:text-primary/80 text-sm font-medium mt-2 transition-colors"
+                    >
+                      {expandedDescriptions[index] ? 'Ler menos' : 'Ler mais'}
+                    </button>
+                  )}
+                </div>
 
                 {/* Technologies */}
                 <div className="mb-6">
