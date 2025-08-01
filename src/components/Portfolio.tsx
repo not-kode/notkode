@@ -159,7 +159,7 @@ const Portfolio: React.FC = () => {
                     </p>
                   </div>
                   {(project.name === "Agência Cotton" ? project.description : t(project.description)).length > 200 && <button onClick={() => toggleDescription(index)} className="mt-2 transition-colors text-sm font-normal text-sky-200">
-                      {expandedDescriptions[index] ? 'Ler menos' : 'Ler mais'}
+                      {expandedDescriptions[index] ? t('common.read_less') : t('common.read_more')}
                     </button>}
                 </div>
 
