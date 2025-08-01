@@ -407,7 +407,9 @@ const translations = {
       launch: "Lançamento",
       revenue: "Receita",
       technologies: "Tecnologias",
-      contact: "Entrar em Contato"
+      contact: "Entrar em Contato",
+      read_more: "Ler mais",
+      read_less: "Ler menos"
     },
     // CTA sections
     cta: {
@@ -827,7 +829,9 @@ const translations = {
       launch: "Launch",
       revenue: "Revenue",
       technologies: "Technologies",
-      contact: "Get In Touch"
+      contact: "Get In Touch",
+      read_more: "Learn more",
+      read_less: "Learn less"
     },
     // CTA sections
     cta: {
