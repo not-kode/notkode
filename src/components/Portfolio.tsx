@@ -148,7 +148,7 @@ const Portfolio: React.FC = () => {
 
                 {/* Project Image */}
                 <div className="mb-6 rounded-lg overflow-hidden">
-                  <img src={project.image} alt={project.name} className="w-full h-[300px] object-cover hover:scale-105 transition-transform duration-300" />
+                  <img src={project.image} alt={project.name} className="w-full h-[200px] md:h-[300px] object-cover hover:scale-105 transition-transform duration-300" />
                 </div>
 
                 {/* Description */}
