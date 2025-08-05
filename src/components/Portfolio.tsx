@@ -43,7 +43,7 @@ const Portfolio: React.FC = () => {
   }, {
     name: "Agência Cotton",
     category: "Website",
-    description: "Site institucional para agência criativa especializada em branding e marketing digital. O projeto teve como objetivo criar uma experiência digital que reflete a identidade criativa da marca, com animações fluidas e design contemporâneo. A plataforma conta com portfólio interativo, sistema de captação de leads otimizado e integração com ferramentas de análise para maximizar as conversões de orçamentos qualificados.",
+    description: "portfolio.cotton.description",
     revenue: "💸 Cliente: Agência de branding e design",
     year: "2025",
     technologies: "Framer, Google Analytics 4, WhatsApp Business API, Hotjar, Zapier",
@@ -61,6 +61,26 @@ const Portfolio: React.FC = () => {
     image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.02.12.png?_wwcv=1753963420041",
     gradient: "from-orange-500 to-red-600"
   }, {
+    name: "Ponto Patta",
+    category: "E-commerce",
+    description: "portfolio.pontopatta.description",
+    revenue: "+R$ 150 mil/mês",
+    year: "2023",
+    technologies: "WooCommerce, WordPress, Google Analytics 4, Facebook Pixel, PagSeguro, Correios API, Mailchimp, Yoast SEO",
+    link: "#",
+    image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-08-05_at_17.33.32.png?_wwcv=1754426054294",
+    gradient: "from-pink-500 to-rose-600"
+  }, {
+    name: "Azure Investimentos",
+    category: "Website",
+    description: "portfolio.azure.description",
+    revenue: "💸 Cliente: Assessoria de investimentos",
+    year: "2024",
+    technologies: "Framer, Google Analytics 4, WhatsApp Business API, Make",
+    link: "#",
+    image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-08-05_at_17.32.25_1.png?_wwcv=1754426246762",
+    gradient: "from-blue-500 to-cyan-600"
+  }, {
     name: "Ativa Clientes",
     category: "SaaS (Desenvolvimento de software)",
     description: "portfolio.ativa.description",
@@ -70,6 +90,16 @@ const Portfolio: React.FC = () => {
     link: "https://www.youtube.com/watch?v=D4rfmBY5_UQ&t=312s",
     image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.10.28.png?_wwcv=1753963863256",
     gradient: "from-green-500 to-teal-600"
+  }, {
+    name: "Peki Marketing",
+    category: "Website",
+    description: "portfolio.peki.description",
+    revenue: "💸 Cliente: Agência especializada em gastronomia",
+    year: "2024",
+    technologies: "Framer, Google Analytics 4, Facebook Pixel, Hotjar, WhatsApp Business API, ActiveCampaign, Cloudflare",
+    link: "#",
+    image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-08-05_at_17.33.02.png?_wwcv=1754426054292",
+    gradient: "from-emerald-500 to-green-600"
   }];
 
   // Extract unique categories
@@ -155,10 +185,10 @@ const Portfolio: React.FC = () => {
                 <div className="mb-4">
                   <div className="min-h-[72px]">
                     <p className="text-muted-foreground text-base leading-relaxed">
-                      {project.name === "Agência Cotton" ? getTruncatedText(project.description, expandedDescriptions[index] || false) : getTruncatedText(t(project.description), expandedDescriptions[index] || false)}
+                      {getTruncatedText(t(project.description), expandedDescriptions[index] || false)}
                     </p>
                   </div>
-                  {(project.name === "Agência Cotton" ? project.description : t(project.description)).length > 200 && <button onClick={() => toggleDescription(index)} className="mt-2 transition-colors text-sm font-normal text-sky-200">
+                  {t(project.description).length > 200 && <button onClick={() => toggleDescription(index)} className="mt-2 transition-colors text-sm font-normal text-sky-200">
                       {expandedDescriptions[index] ? t('common.read_less') : t('common.read_more')}
                     </button>}
                 </div>

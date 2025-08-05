@@ -386,6 +386,18 @@ const translations = {
       zapinside: {
         description: "E se você pudesse ver tudo o que acontece nas conversas de WhatsApp do seu time que realiza atendimentos? É este desafio que este SaaS resolve, as conversas do WhatsApp revelam tudo o que você precisa saber sobre seus leads e sua equipe de vendas ou de atendimento. A gente analisa tudo pra você — e entrega insights acionáveis de forma clara, rápida e prática. Tudo com IA e zero esforço manual."
       },
+      cotton: {
+        description: "Site institucional para agência criativa especializada em branding e marketing digital. O projeto teve como objetivo criar uma experiência digital que reflete a identidade criativa da marca, com animações fluidas e design contemporâneo. A plataforma conta com portfólio interativo, sistema de captação de leads otimizado e integração com ferramentas de análise para maximizar as conversões de orçamentos qualificados."
+      },
+      pontopatta: {
+        description: "E-commerce para marca de bolsas artesanais que combina couro e crochê em peças exclusivas. O projeto focou em criar uma experiência de compra que valoriza o trabalho artesanal e a exclusividade dos produtos. Implementamos sistema de cupons integrado com pesquisa de mercado, checkout otimizado e integração completa com sistemas de pagamento e logística, resultando em uma taxa de conversão acima da média do mercado de moda."
+      },
+      azure: {
+        description: "Website institucional desenvolvido para assessoria de investimentos parceira do BTG Pactual. O projeto focou em criar uma plataforma que transmite confiança e facilita a conversão de visitantes em clientes qualificados. O site apresenta de forma clara todos os produtos de investimento oferecidos - renda fixa, variável, agronegócio, câmbio e investimentos internacionais - com formulários estratégicos integrados via Make para automação do processo comercial."
+      },
+      peki: {
+        description: "Landing page desenvolvida para agência focada em marketing para restaurantes e deliverys. O site foi estruturado para comunicar claramente as soluções oferecidas, destacando o método exclusivo BAR (Branding, Aquisição, Recorrência) e casos de sucesso. A plataforma conta com formulário de captação otimizado que qualifica leads automaticamente, permitindo que a equipe comercial foque apenas em prospects com real potencial de conversão."
+      },
       noodrops: {
         description: "E-commerce destinado a comercialização das Smart Pills da Noodrops, a opção perfeita pra você cuidar do seu cérebro, seja com performance, seja com saúde cerebral. Somos a Smart Pill Nº1 no Brasil, a mais querida e mais recomendada."
       },
@@ -807,6 +819,18 @@ const translations = {
       },
       zapinside: {
         description: "What if you could see everything that happens in your customer service team's WhatsApp conversations? This is the challenge this SaaS solves. WhatsApp conversations reveal everything you need to know about your leads and your sales or customer service team. We analyze everything for you — and deliver actionable insights clearly, quickly and practically. All with AI and zero manual effort."
+      },
+      cotton: {
+        description: "Institutional website for a creative agency specialized in branding and digital marketing. The project aimed to create a digital experience that reflects the brand's creative identity, with fluid animations and contemporary design. The platform features an interactive portfolio, optimized lead capture system and integration with analytics tools to maximize qualified budget conversions."
+      },
+      pontopatta: {
+        description: "E-commerce for a handcrafted handbag brand that combines leather and crochet in exclusive pieces. The project focused on creating a shopping experience that values craftsmanship and product exclusivity. We implemented a coupon system integrated with market research, optimized checkout, and complete integration with payment and logistics systems, resulting in a conversion rate above the fashion market average."
+      },
+      azure: {
+        description: "Institutional website developed for an investment advisory firm partnered with BTG Pactual. The project focused on creating a platform that conveys trust and facilitates the conversion of visitors into qualified clients. The website clearly presents all investment products offered - fixed income, equities, agribusiness, foreign exchange, and international investments - with strategic forms integrated via Make for commercial process automation."
+      },
+      peki: {
+        description: "Landing page developed for an agency focused on marketing for restaurants and delivery services. The website was structured to clearly communicate the solutions offered, highlighting the exclusive BAR method (Branding, Acquisition, Recurrence) and success stories. The platform features an optimized capture form that automatically qualifies leads, allowing the sales team to focus only on prospects with real conversion potential."
       },
       noodrops: {
         description: "E-commerce dedicated to selling Noodrops Smart Pills, the perfect option for you to take care of your brain, whether for performance or brain health. We are the #1 Smart Pill in Brazil, the most loved and most recommended."
