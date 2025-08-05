@@ -67,7 +67,7 @@ const Portfolio: React.FC = () => {
     revenue: "+R$ 150 mil/mês",
     year: "2023",
     technologies: "WooCommerce, WordPress, Google Analytics 4, Facebook Pixel, PagSeguro, Correios API, Mailchimp, Yoast SEO",
-    link: "#",
+    link: "https://pontopatta.com.br/",
     image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-08-05_at_17.33.32.png?_wwcv=1754426054294",
     gradient: "from-pink-500 to-rose-600"
   }, {
@@ -77,7 +77,7 @@ const Portfolio: React.FC = () => {
     revenue: "💸 Cliente: Assessoria de investimentos",
     year: "2024",
     technologies: "Framer, Google Analytics 4, WhatsApp Business API, Make",
-    link: "#",
+    link: "https://azureinvestimentos.com/",
     image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-08-05_at_17.32.25_1.png?_wwcv=1754426246762",
     gradient: "from-blue-500 to-cyan-600"
   }, {
@@ -97,7 +97,7 @@ const Portfolio: React.FC = () => {
     revenue: "💸 Cliente: Agência especializada em gastronomia",
     year: "2024",
     technologies: "Framer, Google Analytics 4, Facebook Pixel, Hotjar, WhatsApp Business API, ActiveCampaign, Cloudflare",
-    link: "#",
+    link: "https://www.pekimarketing.com.br/",
     image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-08-05_at_17.33.02.png?_wwcv=1754426054292",
     gradient: "from-emerald-500 to-green-600"
   }];
