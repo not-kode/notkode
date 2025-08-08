@@ -22,11 +22,13 @@ import {
   Zap,
   Timer,
   Heart,
-  Building
+  Building,
+  Quote
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import Portfolio from '@/components/Portfolio';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const Parcerias: React.FC = () => {
   const { t } = useLanguage();
@@ -81,6 +83,28 @@ const Parcerias: React.FC = () => {
       description: t('parcerias.service6.desc')
     }
   ];
+
+  const testimonials = [{
+    text: "testimonial.bruno.text",
+    author: "Bruno Coimbra",
+    company: "Azure Assessoria de Investimentos"
+  }, {
+    text: "testimonial.rodrigo.text",
+    author: "Rodrigo Nascimento",
+    company: "LTS Corretagem de Seguros"
+  }, {
+    text: "testimonial.fernando.text",
+    author: "Fernando Freitas",
+    company: "Mark Tech"
+  }, {
+    text: "testimonial.giovanna.text",
+    author: "Giovanna Pretti",
+    company: "ZapInside"
+  }, {
+    text: "testimonial.walter.text",
+    author: "Walter Neto",
+    company: "AutoAgentes"
+  }];
 
   return (
     <div className="min-h-screen bg-background w-full">
@@ -191,6 +215,67 @@ const Parcerias: React.FC = () => {
       <section id="portfolio" className="py-[60px] md:py-20 bg-background">
   <Portfolio />
 </section>
+
+      {/* Testimonials Section */}
+      <section className="py-[60px] px-[20px] md:py-20 md:px-8 bg-background">
+        <div className="w-full md:container md:mx-auto">
+          <h2 className="font-sora font-bold text-4xl text-center mb-16">
+            {t('empresas.testimonials.title')}
+          </h2>
+          
+          {/* YouTube Video */}
+          <div className="max-w-[700px] mx-auto mb-16">
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-2xl shadow-2xl"
+                src="https://www.youtube.com/embed/YoIYH7y2p54"
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+          
+          <div className="max-w-[1400px] mx-auto">
+            <Carousel opts={{
+            align: "start",
+            loop: true
+          }} className="w-full overflow-visible">
+              <CarouselContent className="-ml-8 overflow-visible">
+                {testimonials.map((testimonial, index) => <CarouselItem key={index} className="pl-8 md:basis-1/2 lg:basis-1/3">
+                    <div className="glass-card h-full group hover:scale-105 border border-[#C4F7FF] shadow-[0_8px_20px_rgba(0,0,0,0.05)] dark:shadow-none">
+                      <div className="flex items-center justify-center mb-4">
+                        <Quote className="w-8 h-8 text-primary opacity-60" />
+                      </div>
+                      
+                       <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+                         "{t(testimonial.text)}"
+                       </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-sora font-semibold text-sm mb-1">
+                            {testimonial.author}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {testimonial.company}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-primary fill-current" />)}
+                        </div>
+                      </div>
+                    </div>
+                  </CarouselItem>)}
+              </CarouselContent>
+              <CarouselPrevious className="left-0 md:-left-12" />
+              <CarouselNext className="right-0 md:-right-12" />
+            </Carousel>
+          </div>
+        </div>
+      </section>
 
       {/* Services Section */}
       <section className="py-[40px] px-4 md:py-20 md:px-8 bg-background">

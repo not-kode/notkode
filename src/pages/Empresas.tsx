@@ -242,6 +242,20 @@ const Empresas: React.FC = () => {
             {t('empresas.testimonials.title')}
           </h2>
           
+          {/* YouTube Video */}
+          <div className="max-w-[700px] mx-auto mb-16">
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-2xl shadow-2xl"
+                src="https://www.youtube.com/embed/YoIYH7y2p54"
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+          
           <div className="max-w-[1400px] mx-auto">
             <Carousel opts={{
             align: "start",
