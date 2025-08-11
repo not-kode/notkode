@@ -24,7 +24,7 @@ const Portfolio: React.FC = () => {
     name: "Solojet Aviação",
     category: "Website",
     description: "portfolio.solojet.description",
-    revenue: "Empresa multinacional de médio porte",
+    revenue: "💸 Cliente: Empresa multinacional de médio porte",
     year: "2024",
     technologies: "WeWeb, Google Maps API (GCP), Google Sheets, PostHog, RD Station, n8n",
     link: "https://www.solojetaviacao.com.br/pt/",
@@ -170,7 +170,7 @@ const Portfolio: React.FC = () => {
                     </div>
                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20">
   <span>💸</span>
-  <span>{t('common.revenue')}:</span>
+  <span>{project.revenue.startsWith('💸 Cliente:') ? '' : `${t('common.revenue')}:`}</span>
   <span className="font-semibold break-words max-w-full">{project.revenue}</span>
               </div>
                   </div>
