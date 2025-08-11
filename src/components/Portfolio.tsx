@@ -21,7 +21,7 @@ const Portfolio: React.FC = () => {
     image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.03.14.png?_wwcv=1753963420039",
     gradient: "from-blue-500 to-purple-600"
   }, {
-    name: "Solojet",
+    name: "Solojet Aviação",
     category: "Website",
     description: "portfolio.solojet.description",
     revenue: "Empresa multinacional de médio porte",
