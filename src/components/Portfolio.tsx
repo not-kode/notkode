@@ -18,7 +18,7 @@ const Portfolio: React.FC = () => {
     year: "2025",
     technologies: "WeWeb, Xano, ASAAS, Posthog, OpenAI, Anthropic (Claude), n8n, Sendgrid, MegaAPI",
     link: "https://www.autoagentes.com.br/",
-    image: "https://cdn.weweb.io/designs/50e5be05-9b56-4b9f-a534-8ee1bc77dcdc/sections/Screenshot_2025-07-31_at_09.03.14.png?_wwcv=1753963420039",
+    image: "https://cdn.weweb.io/designs/4de8406f-3cb0-4cd7-ba3b-e924323d9c29/sections/Aug_11_Screenshot_from_Squoosh.webp?_wwcv=1754931180342",
     gradient: "from-blue-500 to-purple-600"
   }, {
     name: "Solojet Aviação",
@@ -169,7 +169,7 @@ const Portfolio: React.FC = () => {
                       <span className="font-semibold">{project.year}</span>
                     </div>
                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 text-xs font-medium rounded-full border border-green-500/20">
-  <span>💸</span>
+  {!project.revenue.startsWith('💸 Cliente:') && <span>💸</span>}
   <span>{project.revenue.startsWith('💸 Cliente:') ? '' : `${t('common.revenue')}:`}</span>
   <span className="font-semibold break-words max-w-full">{project.revenue}</span>
               </div>
