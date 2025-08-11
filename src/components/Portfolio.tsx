@@ -208,7 +208,7 @@ const Portfolio: React.FC = () => {
                         <img
   src={project.image}
   alt={project.name}
-  className="w-full h-[420px] object-contain object-center bg-black/5 hover:scale-105 transition-transform duration-300"
+  className="w-full h-[360px] object-contain object-center bg-black/5 hover:scale-105 transition-transform duration-300"
 />
 
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
