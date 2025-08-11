@@ -205,12 +205,11 @@ const Portfolio: React.FC = () => {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="cursor-pointer relative group">
-                        <img
+                        <<img
   src={project.image}
   alt={project.name}
-  className="w-full h-[360px] object-contain object-center bg-black/5 hover:scale-105 transition-transform duration-300"
+  className="w-full h-auto md:h-[300px] object-fill hover:scale-105 transition-transform duration-300"
 />
-
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm rounded-full p-3">
                             <span className="text-sm font-medium text-gray-800">Clique para ampliar</span>
