@@ -157,7 +157,7 @@ const Portfolio: React.FC = () => {
                 {/* Project Header */}
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6 border-b border-border/20 pb-4 min-w-0">
   <div className="flex-1 min-w-0">
-    <h3 className="font-sora font-bold text-xl leading-tight mb-2">{project.name}</h3>
+    <h3 className="font-sora font-bold text-xl leading-tight mb-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{project.name}</h3>
     <span className="px-3 py-1.5 bg-secondary/10 text-secondary text-xs font-medium rounded-full border border-secondary/20 inline-block whitespace-nowrap">
       {t(`category.${project.category.toLowerCase().includes('saas') ? 'saas' : project.category.toLowerCase() === 'e-commerce' ? 'ecommerce' : 'website'}`)}
     </span>
