@@ -68,7 +68,7 @@ export async function Process({ locale, reverse = false }: { locale: string; rev
                 {/* Photo */}
                 <CircuitBg variant="card" />
                 <Image
-                  src="/images/generated/bg-hero.png"
+                  src="/images/generated/bg-hero.jpg"
                   alt=""
                   fill
                   className="object-cover"

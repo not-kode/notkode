@@ -18,7 +18,7 @@ export async function AgencyBanner({ locale }: { locale: string }) {
             <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[5/6] sm:aspect-[4/3]">
 
               {/* Mountain photo */}
-              <Image src="/images/generated/bg-hero.png" alt="" fill className="object-cover" />
+              <Image src="/images/generated/bg-hero.jpg" alt="" fill className="object-cover" />
 
               {/* Warm tint */}
               <div className="absolute inset-0" style={{ background: 'rgba(220,185,140,0.35)', mixBlendMode: 'multiply' }} />

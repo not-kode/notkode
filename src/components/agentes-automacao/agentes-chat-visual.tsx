@@ -7,7 +7,7 @@ export function AgentesChatVisual() {
 
       {/* Landscape — rock strata, technical feel */}
       <Image
-        src="/images/generated/bg-process.png"
+        src="/images/generated/bg-process.jpg"
         alt=""
         fill
         sizes="(max-width: 1024px) 100vw, 520px"

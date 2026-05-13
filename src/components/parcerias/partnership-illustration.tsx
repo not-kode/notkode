@@ -8,7 +8,7 @@ export function PartnershipIllustration() {
 
       {/* Landscape photo — generated specifically for /parcerias (two paths converging) */}
       <Image
-        src="/images/generated/bg-parcerias.png"
+        src="/images/generated/bg-parcerias.jpg"
         alt=""
         fill
         sizes="(max-width: 1024px) 100vw, 520px"
