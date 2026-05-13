@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notkode — Manual de Identidade v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Parabole (local) ─────────────────────────── */
+  @font-face {
+    font-family: 'Parabole';
+    src: url('../public/fonts/Parabole.woff2') format('woff2'),
+         url('../public/fonts/Parabole.woff') format('woff');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* ── Reset & Base ─────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #fffef2;
+    color: #191918;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+  }
+
+  /* ── Design tokens ────────────────────────────── */
+  :root {
+    --cream:      #fffef2;
+    --cream-2:    #f3f2e7;
+    --cream-3:    #ede8dc;
+    --ink:        #191918;
+    --ink-60:     rgba(25,25,24,0.6);
+    --ink-40:     rgba(25,25,24,0.4);
+    --ink-20:     rgba(25,25,24,0.2);
+    --ink-10:     rgba(25,25,24,0.1);
+    --blue:       #3B82F6;
+    --blue-soft:  #93C5FD;
+    --blue-glow:  rgba(59,130,246,0.15);
+    --border:     1px solid rgba(25,25,24,0.1);
+    --radius-sm:  8px;
+    --radius-md:  12px;
+    --radius-lg:  20px;
+  }
+
+  /* ── Layout ───────────────────────────────────── */
+  .page { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
+  .section { padding: 80px 0; border-bottom: 1px solid var(--ink-10); }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-40);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+  h2.section-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-40);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 40px;
+  }
+
+  /* ── Cover ───────────────────────────────────── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .cover-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-40);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .cover-title {
+    font-family: 'Parabole', 'Inter', sans-serif;
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 24px;
+  }
+  .cover-meta {
+    font-size: 14px;
+    color: var(--ink-40);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Colors ──────────────────────────────────── */
+  .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .swatch { border-radius: var(--radius-md); overflow: hidden; border: var(--border); }
+  .swatch-color { height: 80px; }
+  .swatch-info { padding: 12px; background: white; }
+  .swatch-name { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .swatch-hex { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-40); }
+
+  /* ── Typography ──────────────────────────────── */
+  .type-row { margin-bottom: 40px; padding-bottom: 40px; border-bottom: 1px solid var(--ink-10); }
+  .type-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .type-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-40); margin-bottom: 12px; letter-spacing: 0.1em; }
+
+  .parabole-display {
+    font-family: 'Parabole', 'Inter', sans-serif;
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .parabole-display .accent {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-soft) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ── FONT MIXING EXAMPLES ───────────────────── */
+  .mix-examples { display: flex; flex-direction: column; gap: 40px; }
+  .mix-card {
+    background: var(--cream-2);
+    border-radius: var(--radius-lg);
+    padding: 40px 48px;
+    border: var(--border);
+    position: relative;
+  }
+  .mix-tag {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-40);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    background: var(--cream);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: var(--border);
+  }
+  .mix-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-40); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 16px; }
+
+  /* Option A: All Parabole */
+  .option-a h2 {
+    font-family: 'Parabole', 'Inter', sans-serif;
+    font-size: 2.75rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+
+  /* Option B: DM Sans heading + Parabole accent word */
+  .option-b h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 2.75rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .option-b h2 .parabole-word {
+    font-family: 'Parabole', 'Inter', sans-serif;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-soft) 60%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Option C: Parabole hero + DM Sans for h2/h3 */
+  .option-c h1 {
+    font-family: 'Parabole', 'Inter', sans-serif;
+    font-size: 3.75rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .option-c h1 .accent {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-soft) 60%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .option-c h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .option-c p.sub {
+    font-size: 18px;
+    color: var(--ink-60);
+    line-height: 1.6;
+    margin-top: 16px;
+    max-width: 480px;
+  }
+
+  /* Option D: DM Sans bold + Parabole italic/light for accent */
+  .option-d h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 2.75rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .option-d h2 .para-light {
+    font-family: 'Parabole', 'Inter', sans-serif;
+    font-weight: 300;
+    color: var(--ink-60);
+    letter-spacing: -0.01em;
+  }
+
+  /* ── Type scale ──────────────────────────────── */
+  .scale-row { display: flex; align-items: baseline; gap: 24px; margin-bottom: 24px; }
+  .scale-size { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-40); min-width: 60px; }
+
+  /* ── Buttons ─────────────────────────────────── */
+  .btn-grid { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
+
+  /* Base — compartilhado */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    cursor: pointer; text-decoration: none; border: none;
+    transition: all 0.2s;
+  }
+
+  /* CTA (hero + seção) — Parabole, uppercase */
+  .btn-cta {
+    font-family: 'Parabole', 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 14px 24px; border-radius: 12px; /* rounded-xl */
+  }
+
+  /* CTA pill — rounded-full, usado em banners de seção */
+  .btn-cta-pill {
+    font-family: 'Parabole', 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 12px 24px; border-radius: 9999px; /* rounded-full */
+  }
+
+  /* Link interno — DM Sans, sem uppercase */
+  .btn-link {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 0; background: none; border: none;
+  }
+
+  .btn-primary   { background: var(--blue); color: white; }
+  .btn-primary:hover  { background: rgba(59,130,246,0.9); transform: translateY(-1px); }
+  .btn-secondary { background: transparent; color: var(--ink); border: var(--border); }
+  .btn-secondary:hover { background: rgba(25,25,24,0.04); }
+  .btn-ghost     { background: transparent; color: var(--blue); }
+
+  /* ── Photo + Grain card ──────────────────────── */
+  .photo-card {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    aspect-ratio: 16/7;
+    border: var(--border);
+  }
+  .photo-card img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .photo-card .warm-tint {
+    position: absolute; inset: 0;
+    background: rgba(220,185,140,0.35);
+    mix-blend-mode: multiply;
+  }
+  .photo-card .grain {
+    position: absolute; inset: 0;
+    background-image: url('../public/images/relace-ref/grain.png');
+    background-repeat: repeat;
+    background-size: 648px auto;
+    mix-blend-mode: multiply;
+    opacity: 0.7;
+  }
+  .photo-card .fig-label {
+    position: absolute; bottom: 16px; right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: rgba(255,255,255,0.5);
+    text-transform: uppercase; letter-spacing: 0.2em;
+  }
+  .code-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 32px;
+  }
+  .code-window {
+    background: rgba(6,6,8,0.90);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    width: 100%; max-width: 380px;
+  }
+  .code-chrome {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 16px; height: 36px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #FF5F57; } .dot-y { background: #FEBC2E; } .dot-g { background: #28C840; }
+  .code-filename { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.2); margin-left: 8px; }
+  .code-body { padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.7; }
+  .kw  { color: #FCA44A; }
+  .str { color: #6EE7B7; }
+  .cm  { color: rgba(255,255,255,0.25); }
+  .id  { color: rgba(255,255,255,0.7); }
+  .pn  { color: rgba(255,255,255,0.35); }
+
+  /* ── Section marker ──────────────────────────── */
+  .section-marker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--ink-40); margin-bottom: 20px;
+  }
+  .section-marker-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+
+  /* ── Trust band example ──────────────────────── */
+  .trust-band { display: flex; align-items: center; gap: 40px; padding: 24px 0; border-top: var(--border); border-bottom: var(--border); }
+  .trust-label { font-size: 12px; color: var(--ink-60); line-height: 1.4; min-width: 150px; flex-shrink: 0; }
+  .trust-names { display: flex; flex: 1; }
+  .trust-name { width: 180px; text-align: center; font-size: 13px; color: rgba(25,25,24,0.45); font-family: 'DM Sans', sans-serif; flex-shrink: 0; }
+
+  /* ── Grid ────────────────────────────────────── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+  /* ── Usage note ──────────────────────────────── */
+  .usage-note {
+    background: var(--cream-2); border-radius: var(--radius-md);
+    padding: 20px 24px; border: var(--border);
+    font-size: 13px; color: var(--ink-60);
+    margin-top: 24px; line-height: 1.6;
+  }
+  .usage-note strong { color: var(--ink); }
+
+  /* ── Print-style header ──────────────────────── */
+  .page-header {
+    padding: 40px 0 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 0;
+  }
+  .brand-name { font-family: 'Parabole', 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+  .doc-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-40); text-align: right; line-height: 1.6; }
+
+  @media (max-width: 768px) {
+    .page { padding: 0 24px; }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .trust-band { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="brand-name">Notkode</div>
+    <div class="doc-meta">Manual de Identidade v2.1<br>Maio 2026 · DM Sans + Parabole + Circuit Grid</div>
+  </div>
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-eyebrow">❯ notkode / identity-v2 / overview</div>
+    <div class="cover-title">Manual de<br>Identidade</div>
+    <div style="font-size: 18px; color: var(--ink-60); max-width: 560px; line-height: 1.6; margin: 24px 0 40px;">
+      Sistema visual baseado na referência relace.ai — paleta cream quente, tipografia Parabole + DM Sans, acento azul elétrico, fotografia editorial com grain.
+    </div>
+    <div class="cover-meta">v2.0 · Design System · Notkode 2026</div>
+  </div>
+
+
+  <!-- 01 · CORES -->
+  <div class="section">
+    <div class="section-label">01 · Paleta de Cores</div>
+
+    <div style="margin-bottom: 32px;">
+      <h2 class="section-title">Backgrounds</h2>
+      <div class="color-grid">
+        <div class="swatch">
+          <div class="swatch-color" style="background:#fffef2"></div>
+          <div class="swatch-info"><div class="swatch-name">Surface Base</div><div class="swatch-hex">#fffef2</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#f3f2e7"></div>
+          <div class="swatch-info"><div class="swatch-name">Surface Elevated</div><div class="swatch-hex">#f3f2e7</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#ede8dc"></div>
+          <div class="swatch-info"><div class="swatch-name">Surface Sunken</div><div class="swatch-hex">#ede8dc</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 32px;">
+      <h2 class="section-title">Texto</h2>
+      <div class="color-grid">
+        <div class="swatch">
+          <div class="swatch-color" style="background:#191918"></div>
+          <div class="swatch-info"><div class="swatch-name">Text Primary</div><div class="swatch-hex">#191918</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:rgba(25,25,24,0.6); border-radius: 0;"></div>
+          <div class="swatch-info"><div class="swatch-name">Text Secondary</div><div class="swatch-hex">rgba(25,25,24,0.6)</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:rgba(25,25,24,0.4)"></div>
+          <div class="swatch-info"><div class="swatch-name">Text Muted</div><div class="swatch-hex">rgba(25,25,24,0.4)</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:rgba(25,25,24,0.25)"></div>
+          <div class="swatch-info"><div class="swatch-name">Text Dim</div><div class="swatch-hex">rgba(25,25,24,0.25)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="section-title">Acento — Azul Elétrico</h2>
+      <div class="color-grid">
+        <div class="swatch">
+          <div class="swatch-color" style="background:#3B82F6"></div>
+          <div class="swatch-info"><div class="swatch-name">Primary</div><div class="swatch-hex">#3B82F6</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:#93C5FD"></div>
+          <div class="swatch-info"><div class="swatch-name">Primary Soft</div><div class="swatch-hex">#93C5FD</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:rgba(59,130,246,0.15)"></div>
+          <div class="swatch-info"><div class="swatch-name">Primary Glow</div><div class="swatch-hex">rgba(59,130,246,0.15)</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background:linear-gradient(135deg,#3B82F6,#93C5FD)"></div>
+          <div class="swatch-info"><div class="swatch-name">Gradient Brand</div><div class="swatch-hex">#3B82F6 → #93C5FD</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 02 · TIPOGRAFIA — MIXING OPTIONS -->
+  <div class="section">
+    <div class="section-label">02 · Tipografia — Opções de Mistura</div>
+
+    <div class="usage-note" style="margin-bottom: 48px;">
+      <strong>Sistema de fontes:</strong> A Parabole é usada para <strong>destaque de palavras-chave nos títulos</strong>, não para todo o texto. O corpo e títulos secundários usam DM Sans. Abaixo estão 4 opções de mistura para aprovação.
+    </div>
+
+    <div class="mix-examples">
+
+      <!-- Option A -->
+      <div class="mix-card option-a">
+        <div class="mix-tag">Opção A</div>
+        <div class="mix-label">Toda tipografia em Parabole</div>
+        <h2>Sistemas que trabalham por você</h2>
+        <p style="font-size:18px;color:var(--ink-60);margin-top:12px;font-family:'DM Sans',sans-serif;line-height:1.6;">
+          Sistemas sob medida que substituem várias ferramentas SaaS.
+        </p>
+        <div class="usage-note">Parabole em todos os h1–h2. Forte presença visual mas pode saturar em textos menores.</div>
+      </div>
+
+      <!-- Option B -->
+      <div class="mix-card option-b">
+        <div class="mix-tag">Opção B ★ Escolhida</div>
+        <div class="mix-label">DM Sans no título + Parabole na palavra de destaque</div>
+        <h2>Sistemas que <span class="parabole-word">trabalham</span> por você</h2>
+        <p style="font-size:18px;color:var(--ink-60);margin-top:12px;font-family:'DM Sans',sans-serif;line-height:1.6;">
+          Sistemas sob medida que substituem várias ferramentas SaaS.
+        </p>
+        <div class="usage-note">A palavra-chave do conceito aparece em Parabole + gradiente azul. O resto fica em DM Sans. <strong>Este é o estilo do relace.ai — máximo impacto com legibilidade total.</strong></div>
+      </div>
+
+      <!-- Option C -->
+      <div class="mix-card option-c">
+        <div class="mix-tag">Opção C</div>
+        <div class="mix-label">Parabole só no H1 hero — DM Sans em tudo mais</div>
+        <h1>Pare de alugar <span class="accent">software.</span></h1>
+        <h2 style="margin-top:8px;">Construa um, com IA dentro.</h2>
+        <p class="sub">Sistemas sob medida que substituem várias ferramentas SaaS. Mais produtividade, menos custo.</p>
+        <div class="usage-note">Parabole só no H1 principal. Todos os h2/h3 usam DM Sans bold. Hierarquia clara e muito legível.</div>
+      </div>
+
+      <!-- Option D -->
+      <div class="mix-card option-d">
+        <div class="mix-tag">Opção D</div>
+        <div class="mix-label">DM Sans bold + Parabole light para contraste de peso</div>
+        <h2>Sistemas que <span class="para-light">trabalham</span> por você</h2>
+        <p style="font-size:18px;color:var(--ink-60);margin-top:12px;font-family:'DM Sans',sans-serif;line-height:1.6;">
+          Sistemas sob medida que substituem várias ferramentas SaaS.
+        </p>
+        <div class="usage-note">Parabole weight 300 contrasta com DM Sans weight 700 no mesmo título. Efeito editorial sutil.</div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- 03 · HIERARQUIA TIPOGRÁFICA -->
+  <div class="section">
+    <div class="section-label">03 · Hierarquia de Tamanhos (DM Sans)</div>
+
+    <div class="type-row">
+      <div class="type-meta">Display Hero · Parabole · 3.75rem / 60px · weight 700 · tracking -0.03em</div>
+      <div style="font-family:'Parabole','Inter',sans-serif;font-size:3.75rem;font-weight:700;line-height:1.05;letter-spacing:-0.03em;color:var(--ink)">
+        IA dentro.
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">H1 Hero · DM Sans · 3.75rem / 60px · weight 700 · tracking -0.03em</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:3.75rem;font-weight:700;line-height:1.05;letter-spacing:-0.03em;color:var(--ink)">
+        Pare de alugar software.
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">H2 Section · DM Sans · 2.75rem / 44px · weight 700 · tracking -0.025em</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:2.75rem;font-weight:700;line-height:1.1;letter-spacing:-0.025em;color:var(--ink)">
+        Um sistema. Sua operação inteira.
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">H3 Subheading · DM Sans · 1.25rem / 20px · weight 600</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:1.25rem;font-weight:600;line-height:1.3;color:var(--ink)">
+        Construído sob medida
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">Body Large · DM Sans · 18px · weight 400 · line-height 1.6</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:18px;color:rgba(25,25,24,0.6);line-height:1.6;max-width:600px">
+        Sistemas sob medida que substituem várias ferramentas SaaS. Mais produtividade, menos custo, controle total do código.
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">Body · DM Sans · 15px · weight 400 · line-height 1.6</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:15px;color:rgba(25,25,24,0.6);line-height:1.6;max-width:600px">
+        Cada módulo nasce do seu processo real, não de templates genéricos. IA integrada ao core do sistema com contexto do seu negócio.
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">Mono · JetBrains Mono · 11px · uppercase · tracking 0.18em</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(25,25,24,0.4);text-transform:uppercase;letter-spacing:0.18em">
+        ● Como trabalhamos
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 04 · BOTÕES -->
+  <div class="section">
+    <div class="section-label">04 · Componentes — Botões</div>
+
+    <h2 class="section-title">Hero CTAs — Parabole · rounded-xl · uppercase</h2>
+    <div class="btn-grid" style="margin-bottom:8px">
+      <a class="btn btn-cta btn-primary">Agendar Diagnóstico ↗</a>
+      <a class="btn btn-cta btn-secondary">Ver como funciona ↗</a>
+    </div>
+    <div class="usage-note" style="margin-bottom:40px">
+      <code>font-family: Parabole</code> · <code>font-weight: 700</code> · <code>uppercase</code> · <code>letter-spacing: 0.08em</code> · <code>border-radius: 12px</code> (rounded-xl) · ícone ArrowUpRight
+    </div>
+
+    <h2 class="section-title">CTAs de seção — Parabole · rounded-full · uppercase</h2>
+    <div class="btn-grid" style="margin-bottom:8px">
+      <a class="btn btn-cta-pill btn-primary">Tornar-se parceiro →</a>
+      <a class="btn btn-cta-pill btn-secondary">Explorar casos →</a>
+    </div>
+    <div class="usage-note" style="margin-bottom:40px">
+      <code>font-family: Parabole</code> · <code>border-radius: 9999px</code> (rounded-full) · mesmo tracking/uppercase do hero CTA · usado em banners AgencyBanner, FinalCTA
+    </div>
+
+    <h2 class="section-title">Links internos — DM Sans · sem uppercase</h2>
+    <div class="btn-grid" style="margin-bottom:8px">
+      <a class="btn btn-link btn-ghost">Explorar Sistemas com IA →</a>
+      <a class="btn btn-link btn-ghost">Ver todos os cases →</a>
+    </div>
+    <div class="usage-note">
+      <code>font-family: DM Sans</code> · <code>font-weight: 600</code> · <strong>sem</strong> uppercase · sem border/background · ícone ArrowRight · usado dentro de seções (showcase CTA, services list)
+    </div>
+  </div>
+
+
+  <!-- 05 · VISUAL — FOTO + GRAIN -->
+  <div class="section">
+    <div class="section-label">05 · Visual Editorial — Foto + Grain + UI</div>
+
+    <div class="usage-note" style="margin-bottom: 32px;">
+      <strong>Técnica relace.ai:</strong> Foto de paisagem (nossa gerada via Freepik Mystic) + warm tint overlay <code>rgba(220,185,140,0.35) multiply</code> + grain.png tile 648px <code>multiply 0.7</code> + janela de código dark por cima. Resultado: estilo editorial impresso.
+    </div>
+
+    <div class="photo-card" style="margin-bottom: 16px;">
+      <img src="../public/images/generated/bg-hero.png" alt="hero background" onerror="this.style.background='linear-gradient(135deg,#c8a87a,#a07050)';this.style.height='100%'">
+      <div class="warm-tint"></div>
+      <div class="grain"></div>
+      <div class="code-overlay">
+        <div class="code-window">
+          <div class="code-chrome">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+            <span class="code-filename">analyze.js</span>
+          </div>
+          <div class="code-body">
+<span class="kw">async</span> <span class="kw">function</span> <span class="id">analyze</span><span class="pn">(</span><span class="id">client</span><span class="pn">) {</span><br>
+<span class="cm">  // Fase 01 — Análise Estratégica</span><br>
+<span class="pn">  </span><span class="kw">const</span> <span class="pn">[</span><span class="id">ctx</span><span class="pn">] =</span> <span class="kw">await</span> <span class="id">ai.map</span><span class="pn">(</span><br>
+<span class="str">    "processos e oportunidades"</span><span class="pn">,</span><br>
+<span class="pn">    {</span> <span class="id">company</span><span class="pn">:</span> <span class="id">client.id</span> <span class="pn">}</span><br>
+<span class="pn">  )</span><br>
+<br>
+<span class="pn">  </span><span class="kw">return</span> <span class="pn">{</span> <span class="id">strategy</span> <span class="pn">};</span><br>
+<span class="pn">}</span>
+          </div>
+        </div>
+      </div>
+      <div class="fig-label">FIG. 001</div>
+    </div>
+
+    <div class="usage-note">
+      <strong>Onde usar:</strong> Process section (como trabalhamos), Agency section (para agências).
+      Foto + grain = elemento visual de seção. Texto/CTA fica no lado oposto, nunca em cima da foto.
+    </div>
+  </div>
+
+
+  <!-- 05b · CIRCUIT GRID BACKGROUND -->
+  <div class="section">
+    <div class="section-label">05b · Circuit Grid — Fundo Animado</div>
+
+    <div class="usage-note" style="margin-bottom: 32px;">
+      <strong>Dois componentes:</strong> <code>HeroBackground</code> (hero, seção cheia) e <code>CircuitBg</code> (dentro de cards de foto). Grid ortogonal de nós + arestas horizontais/verticais com sinais viajando. <strong>Nunca diagonais.</strong>
+    </div>
+
+    <div class="three-col" style="margin-bottom: 32px;">
+      <div style="padding: 24px; background: var(--cream-2); border-radius: var(--radius-md); border: var(--border);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:12px">HeroBackground</div>
+        <ul style="font-size:12px;color:var(--ink-60);line-height:2;list-style:none;padding:0">
+          <li>• Grid 10×4, step 110px</li>
+          <li>• viewBox 1100×440</li>
+          <li>• Ghost lines: rgba(59,130,246,0.13)</li>
+          <li>• Signals: 8 edges, dur 2.6–3.8s</li>
+          <li>• Glow blob azul, opacity 0.07</li>
+          <li>• Sem -z-10 (pai relative sem z-index)</li>
+        </ul>
+      </div>
+      <div style="padding: 24px; background: var(--cream-2); border-radius: var(--radius-md); border: var(--border);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:12px">CircuitBg variant="section"</div>
+        <ul style="font-size:12px;color:var(--ink-60);line-height:2;list-style:none;padding:0">
+          <li>• Mesma geometria do hero</li>
+          <li>• Usar em: FinalCTA section</li>
+          <li>• Linhas azuis sobre cream</li>
+          <li>• opacity global: 0.65</li>
+        </ul>
+      </div>
+      <div style="padding: 24px; background: #0a0a12; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.06);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#93C5FD;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:12px">CircuitBg variant="card"</div>
+        <ul style="font-size:12px;color:rgba(255,255,255,0.45);line-height:2;list-style:none;padding:0">
+          <li>• Grid 7×5, step 60px</li>
+          <li>• viewBox 480×360</li>
+          <li>• Ghost: rgba(255,255,255,0.10)</li>
+          <li>• Signal: rgba(147,197,253,0.90)</li>
+          <li>• Usar dentro de photo cards escuros</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="usage-note">
+      <strong>Animações CSS:</strong> <code>signal-travel</code> — strokeDashoffset 120→-12, opacity 0→1→0 (edge traversal).
+      <code>node-glow</code> — opacity 0.20→0.90 ciclo. <code>node-ring</code> — r expande com fade. <code>hero-glow-drift</code> — translate + scale em 20–26s.
+      <strong>Regra:</strong> todas as coordenadas pre-computadas como constantes fora do componente para evitar hydration mismatch.
+    </div>
+  </div>
+
+
+  <!-- 06 · COMPONENTES DE SEÇÃO -->
+  <div class="section">
+    <div class="section-label">06 · Componentes de Seção</div>
+
+    <!-- Section marker -->
+    <div style="margin-bottom: 40px;">
+      <h2 class="section-title">Section Marker</h2>
+      <div class="section-marker">
+        <div class="section-marker-dot"></div>
+        Como trabalhamos
+      </div>
+    </div>
+
+    <!-- Trust band -->
+    <div style="margin-bottom: 40px;">
+      <h2 class="section-title">Trust Band — Label esquerda + nomes mesma largura</h2>
+      <div class="trust-band">
+        <div class="trust-label">Empresas que<br>confiaram na Notkode</div>
+        <div style="display:flex;gap:32px;align-items:center;flex:1;overflow:hidden">
+          <span style="font-size:12px;color:rgba(25,25,24,0.35);font-family:'JetBrains Mono',monospace">[logos em /public/images/logos/logos1–10.png]</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue)">mix-blend-mode: multiply · opacity-50 hover:opacity-80 · h-8 lg:h-9</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SVG Flow diagram -->
+    <div style="margin-bottom: 40px;">
+      <h2 class="section-title">Diagrama de Fluxo (Agency) — SVG sobre card cream</h2>
+      <div style="background: var(--cream-2); border: var(--border); border-radius: var(--radius-lg); padding: 48px; display:flex; align-items:center; justify-content:center;">
+        <svg viewBox="0 0 400 130" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;">
+          <rect x="4" y="30" width="96" height="62" rx="10" fill="#ede8dc" stroke="rgba(25,25,24,0.12)" stroke-width="1"/>
+          <text x="52" y="55" text-anchor="middle" fill="rgba(25,25,24,0.38)" font-size="7.5" font-family="JetBrains Mono,monospace" letter-spacing="0.1em">SUA</text>
+          <text x="52" y="72" text-anchor="middle" fill="rgba(25,25,24,0.72)" font-size="13" font-family="Inter,sans-serif" font-weight="600">Agência</text>
+          <line x1="102" y1="61" x2="140" y2="61" stroke="rgba(25,25,24,0.18)" stroke-width="1" stroke-dasharray="3 3"/>
+          <polygon points="140,57 146,61 140,65" fill="rgba(25,25,24,0.22)"/>
+          <rect x="148" y="18" width="104" height="84" rx="12" fill="#3B82F6" stroke="rgba(59,130,246,0.3)" stroke-width="1.5"/>
+          <text x="200" y="54" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="7.5" font-family="JetBrains Mono,monospace" letter-spacing="0.1em">TECH PARTNER</text>
+          <text x="200" y="72" text-anchor="middle" fill="white" font-size="14" font-family="Inter,sans-serif" font-weight="700">Notkode</text>
+          <line x1="254" y1="61" x2="292" y2="61" stroke="rgba(25,25,24,0.18)" stroke-width="1" stroke-dasharray="3 3"/>
+          <polygon points="292,57 298,61 292,65" fill="rgba(25,25,24,0.22)"/>
+          <rect x="300" y="30" width="96" height="62" rx="10" fill="#ede8dc" stroke="rgba(25,25,24,0.12)" stroke-width="1"/>
+          <text x="348" y="55" text-anchor="middle" fill="rgba(25,25,24,0.38)" font-size="7.5" font-family="JetBrains Mono,monospace" letter-spacing="0.1em">SEU</text>
+          <text x="348" y="72" text-anchor="middle" fill="rgba(25,25,24,0.72)" font-size="13" font-family="Inter,sans-serif" font-weight="600">Cliente</text>
+          <circle cx="200" cy="115" r="3" fill="#22C55E"/>
+          <text x="208" y="119" fill="rgba(25,25,24,0.3)" font-size="7.5" font-family="JetBrains Mono,monospace">NDA incluso · 100% white-label</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Hub diagram -->
+    <div>
+      <h2 class="section-title">Diagrama Hub-and-Spoke (Produto) — SVG animado</h2>
+      <div class="usage-note">
+        <strong>SystemDiagram component:</strong> 6 módulos orbitando núcleo central. Anel externo gira 70s. Núcleo pulsa 3.5s. Fundo cream card com borda hairline. Paleta: nós warm gray, centro azul, conexões azul/18%.
+      </div>
+    </div>
+
+    <!-- Scroll-sticky product showcase -->
+    <div style="margin-top: 40px; margin-bottom: 40px;">
+      <h2 class="section-title">Product Scroll-Sticky Showcase</h2>
+      <div class="usage-note">
+        <strong>Layout:</strong> grid 1fr/1fr. Esquerda: lista de features com auto-avanço 8s (<code>setInterval</code>) — click trava (<code>setLocked(true)</code>). Direita: sticky card aspect-[4/3] com 4 visuais em cross-fade (opacity + translateY 400ms).<br><br>
+        <strong>Indicador ativo:</strong> bottom-border do item vira <code>1.5px solid rgba(59,130,246,0.55)</code>; inativo <code>opacity: 0.38</code>.<br><br>
+        <strong>Progress bar:</strong> barrinhas <code>w-5 h-1</code> nos dots — animação <code>progress-bar</code> 8s linear esvazia ao trocar.<br><br>
+        <strong>4 visuais:</strong> FIG.001 module configurator · FIG.002 IA agent flow com cenários reais · FIG.003 terminal ownership.sh · FIG.004 tabela Hoje×Em 1 ano.
+      </div>
+    </div>
+
+    <!-- Video + Carousel testimonials -->
+    <div style="margin-bottom: 40px;">
+      <h2 class="section-title">Testimonials — Vídeo + Carrossel</h2>
+      <div class="usage-note">
+        <strong>Layout:</strong> grid 1fr/1fr. Esquerda: iframe YouTube em terminal escuro (chrome bar + traffic lights + <code>depoimento.mp4</code> + footer bar). Direita: carrossel cliente com título DM Sans + <span style="font-family:'Parabole','DM Sans',sans-serif">Parabole</span> na última frase, setas ←/→ + contador 01/05 no topo, dots expansíveis na base.<br><br>
+        <strong>Vídeo:</strong> <code>https://www.youtube.com/embed/YoIYH7y2p54</code> · aspect-ratio 16:9 via padding-bottom 56.25%.<br><br>
+        <strong>Animação de troca:</strong> <code>testimonial-in</code> — opacity 0→1 + translateY 10px→0 em 0.35s.
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 07 · REGRAS DE USO -->
+  <div class="section">
+    <div class="section-label">07 · Regras de Uso</div>
+
+    <div class="three-col">
+      <div style="padding: 24px; background: var(--cream-2); border-radius: var(--radius-md); border: var(--border);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:12px">✓ Fazer</div>
+        <ul style="font-size:13px;color:var(--ink-60);line-height:2;list-style:none;padding:0">
+          <li>• Parabole em palavras-chave de títulos</li>
+          <li>• DM Sans para corpo e subtítulos</li>
+          <li>• Foto + grain = card contido, não fundo</li>
+          <li>• Botões uppercase + ArrowUpRight</li>
+          <li>• Alternância base ↔ elevated entre seções</li>
+          <li>• text-wrap: pretty em todos headings</li>
+          <li>• Nunca palavra solitária na última linha</li>
+          <li>• Circuit grid só horizontal/vertical — nunca diagonal</li>
+          <li>• Coordenadas SVG pre-computadas fora do componente</li>
+          <li>• Video testimonial em terminal escuro (iframe 16:9)</li>
+        </ul>
+      </div>
+      <div style="padding: 24px; background: var(--cream-2); border-radius: var(--radius-md); border: var(--border);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#EF4444;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:12px">✗ Não Fazer</div>
+        <ul style="font-size:13px;color:var(--ink-60);line-height:2;list-style:none;padding:0">
+          <li>• Parabole em texto corrido/body</li>
+          <li>• Foto como background de seção inteira</li>
+          <li>• Dark overlay pesado sobre fotos</li>
+          <li>• Texto em cima de foto (só UI/diagrama)</li>
+          <li>• Duas seções consecutivas com mesmo bg</li>
+          <li>• H1 acima de 4rem (64px)</li>
+          <li>• Amoeba blobs no tema light</li>
+          <li>• Diagonais no circuit grid</li>
+          <li>• Math.sin/cos dentro de render (hydration mismatch)</li>
+        </ul>
+      </div>
+      <div style="padding: 24px; background: var(--cream-2); border-radius: var(--radius-md); border: var(--border);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-40);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:12px">Referências</div>
+        <ul style="font-size:13px;color:var(--ink-60);line-height:2;list-style:none;padding:0">
+          <li>• relace.ai — visual e estrutura de seções</li>
+          <li>• Fotos: Freepik Mystic API (key no .env.local)</li>
+          <li>• Grain: /public/images/relace-ref/grain.png</li>
+          <li>• Fotos: /public/images/generated/bg-*.png</li>
+          <li>• Fonte: /public/fonts/Parabole.woff2</li>
+          <li>• Script: /scripts/gen-images.mjs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <div style="padding: 40px 0; display: flex; justify-content: space-between; align-items: center; border-top: var(--border); margin-top: 0;">
+    <div style="font-family:'Parabole','Inter',sans-serif;font-size:1.25rem;font-weight:700;letter-spacing:-0.02em">Notkode</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-40)">identity-v2.html · v2.1 · Maio 2026 · Para uso interno</div>
+  </div>
+
+</div>
+
+</body>
+</html>

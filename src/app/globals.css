@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================================================================
+   FONTS
+   =================================================================== */
+@font-face {
+  font-family: 'Parabole';
+  src: url('/fonts/Parabole.woff2') format('woff2'),
+       url('/fonts/Parabole.woff') format('woff');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ===================================================================
+   DESIGN TOKENS
+   =================================================================== */
+@layer base {
+  :root {
+    --font-dm: 'DM Sans';
+    --font-bricolage: 'Parabole';
+
+    /* Surfaces — relace.ai warm cream */
+    --surface-base: 55 100% 97%;      /* #fffef2 */
+    --surface-elevated: 55 33% 93%;   /* #f3f2e7 */
+    --surface-sunken: 38 25% 90%;     /* #ede8dc */
+
+    --border-subtle: 25, 25, 24;
+    --border-strong: 25, 25, 24;
+
+    /* Text — warm dark */
+    --text-primary: 60 2% 10%;        /* #191918 */
+    --text-secondary: 54 4% 34%;      /* warm medium gray */
+    --text-muted: 34 4% 50%;          /* muted warm */
+    --text-dim: 34 3% 63%;            /* dim warm */
+
+    --glass-blur: 24px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-dm), 'DM Sans', system-ui, sans-serif;
+    color: hsl(var(--text-primary));
+    background: hsl(var(--surface-base));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-dm), 'DM Sans', system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-wrap: pretty;
+  }
+  h1 { font-weight: 700; letter-spacing: -0.03em; line-height: 1.08; }
+  ::selection { background: rgba(59, 130, 246, 0.25); }
+}
+
+/* ===================================================================
+   UTILITY COMPONENTS — system-style primitives
+   =================================================================== */
+@layer components {
+  /* Brand gradient text — subtly animated for life */
+  .text-gradient {
+    background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 50%, #3B82F6 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-shift 8s ease-in-out infinite;
+  }
+
+  /* Glass (subtle, system-like) */
+  .glass {
+    background: rgba(255, 254, 242, 0.75);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid rgba(25, 25, 24, 0.08);
+  }
+  .glass-strong {
+    background: rgba(255, 254, 242, 0.92);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid rgba(25, 25, 24, 0.12);
+  }
+
+  /* Eyebrow label — discreet by default; pair with a cyan dot for accent */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 font-label uppercase tracking-[0.18em] text-[11px] text-text-muted;
+  }
+
+  /* System-style hairline border */
+  .border-hairline { border: 1px solid rgba(25, 25, 24, 0.09); }
+  .border-hairline-strong { border: 1px solid rgba(25, 25, 24, 0.14); }
+
+  /* Section dividers */
+  .divide-hairline > * + * { border-top: 1px solid rgba(25, 25, 24, 0.09); }
+
+  /* Backgrounds — system-style with subtle drift */
+  .bg-grid-dots {
+    background-image: radial-gradient(circle at 1px 1px, rgba(25, 25, 24, 0.07) 1px, transparent 0);
+    background-size: 32px 32px;
+    animation: grid-drift 80s linear infinite;
+  }
+  .bg-grid-lines {
+    background-image:
+      linear-gradient(to right, rgba(25, 25, 24, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(25, 25, 24, 0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+    animation: grid-drift 120s linear infinite;
+  }
+
+  /* Hero radial glow */
+  .bg-hero-glow {
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 130, 246, 0.09), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 30%, rgba(147, 197, 253, 0.05), transparent 50%);
+  }
+
+  /* Status pulse dot */
+  .status-dot {
+    @apply inline-block w-1.5 h-1.5 rounded-full bg-primary;
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
+    animation: status-pulse 2s ease-out infinite;
+  }
+}
+
+/* ===================================================================
+   KEYFRAMES — ambient + micro
+   =================================================================== */
+@keyframes status-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+@keyframes type-cursor {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes grid-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 32px 32px; }
+}
+
+.cursor-blink { animation: type-cursor 1s steps(1) infinite; }
+
+/* Hero background animations */
+@keyframes hero-glow-drift {
+  0%, 100% { transform: translate(0%,   0%)   scale(1);    }
+  25%       { transform: translate(8%,  -6%)   scale(1.06); }
+  50%       { transform: translate(3%,   10%)  scale(0.94); }
+  75%       { transform: translate(-6%,  4%)   scale(1.02); }
+}
+@keyframes testimonial-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes case-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes progress-bar {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+@keyframes rain-fall {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+@keyframes rise-up {
+  0%   { transform: translateY(100%); }
+  100% { transform: translateY(-100vh); }
+}
+@keyframes signal-ring {
+  0%   { transform: scale(0.15); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: scale(1);    opacity: 0; }
+}
+@keyframes flow-right {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100vw); }
+}
+@keyframes streak {
+  0%   { transform: rotate(28deg) translateX(-100%); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: rotate(28deg) translateX(120vw);  opacity: 0; }
+}
+@keyframes wave-dot {
+  0%, 100% { transform: translateY(0px);   opacity: 0.35; }
+  50%       { transform: translateY(-12px); opacity: 0.7; }
+}
+@keyframes signal-travel {
+  0%   { stroke-dashoffset:  120; opacity: 0;   }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { stroke-dashoffset: -12; opacity: 0;   }
+}
+@keyframes node-glow {
+  0%, 100% { opacity: 0.20; }
+  50%       { opacity: 0.90; }
+}
+@keyframes node-ring {
+  0%, 100% { r: 4;  opacity: 0;    }
+  50%       { r: 10; opacity: 0.18; }
+}
+
+/* Organic blob animations */
+@keyframes amoeba-drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  33%       { transform: translate(40px, -30px) rotate(120deg) scale(1.08); }
+  66%       { transform: translate(-30px, 40px) rotate(240deg) scale(0.94); }
+}
+@keyframes morph-shape {
+  0%, 100% { border-radius: 65% 35% 55% 45% / 55% 60% 40% 45%; }
+  50%       { border-radius: 45% 55% 35% 65% / 45% 40% 60% 55%; }
+}
+
+/* SVG diagram animations */
+@keyframes diagram-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes diagram-orbit-rev {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+@keyframes diagram-pulse {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.12); opacity: 0.75; }
+}
+@keyframes diagram-breathe {
+  0%, 100% { transform: scale(1);    }
+  50%       { transform: scale(1.03); }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
