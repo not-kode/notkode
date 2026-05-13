@@ -4,7 +4,6 @@ import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/ui/reveal';
 import { CasesGrid } from '@/components/cases/cases-grid';
 import { CasesHeroBackground } from '@/components/cases/cases-hero-background';
-import { CasesMarquee } from '@/components/cases/cases-marquee';
 import { TrustBand } from '@/components/home/trust-band';
 import { Testimonials } from '@/components/home/testimonials';
 import { FinalCTA } from '@/components/home/final-cta';
@@ -87,12 +86,6 @@ export default async function CasesPage({
           </div>
         </div>
 
-        {/* Marquee — projects preview */}
-        <Reveal delay={300}>
-          <div className="pb-14 lg:pb-20">
-            <CasesMarquee />
-          </div>
-        </Reveal>
       </section>
 
       {/* Trust band */}

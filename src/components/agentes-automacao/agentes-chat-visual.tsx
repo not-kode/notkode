@@ -3,7 +3,7 @@ import Image from 'next/image';
 // Photo card with WhatsApp-like chat terminal showing AI responding to customers
 export function AgentesChatVisual() {
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[4/3] w-full">
+    <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[5/6] sm:aspect-[4/3] w-full">
 
       {/* Landscape — rock strata, technical feel */}
       <Image

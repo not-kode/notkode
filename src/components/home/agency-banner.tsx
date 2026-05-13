@@ -15,7 +15,7 @@ export async function AgencyBanner({ locale }: { locale: string }) {
 
           {/* LEFT — photo + grain + code editor (same style as Process) */}
           <Reveal distance={28}>
-            <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[4/3]">
+            <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[5/6] sm:aspect-[4/3]">
 
               {/* Mountain photo */}
               <Image src="/images/generated/bg-hero.png" alt="" fill className="object-cover" />

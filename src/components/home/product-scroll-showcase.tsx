@@ -286,7 +286,49 @@ export function ProductScrollShowcase({
   const figLabel = FIG_LABELS[active] ?? 'FIG. 001';
 
   return (
-    <div className="lg:grid lg:grid-cols-[1fr_1fr] gap-16 items-start">
+    <>
+      {/* ── MOBILE: each feature stacked with its visual inline ── */}
+      <div className="lg:hidden space-y-10">
+        {features.map((f, i) => {
+          const VisualComp = VISUALS[i] ?? VISUALS[0];
+          const figLabel   = FIG_LABELS[i] ?? 'FIG. 001';
+          return (
+            <article
+              key={f.title}
+              className="rounded-2xl border border-black/[0.08] overflow-hidden"
+              style={{ background: 'hsl(55 100% 97%)' }}
+            >
+              <div className="p-5">
+                <h3 className="text-[16px] font-semibold tracking-tight text-text-primary mb-1.5">
+                  {f.title}
+                </h3>
+                <p className="text-[13px] text-text-secondary leading-relaxed">
+                  {f.desc}
+                </p>
+              </div>
+              <div className="relative aspect-[4/3] border-t border-black/[0.06]">
+                <VisualComp />
+                <span className="absolute bottom-3 right-4 font-mono text-[10px] tracking-[0.2em] text-text-dim uppercase pointer-events-none select-none">
+                  {figLabel}
+                </span>
+              </div>
+            </article>
+          );
+        })}
+
+        <div className="pt-2">
+          <Link
+            href={ctaHref}
+            className="group inline-flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all"
+          >
+            {cta}
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </div>
+
+      {/* ── DESKTOP: scroll-sticky with auto-advance ── */}
+      <div className="hidden lg:grid lg:grid-cols-[1fr_1fr] gap-16 items-start">
 
       {/* ── Left — scrollable feature list ── */}
       <div>
@@ -375,6 +417,7 @@ export function ProductScrollShowcase({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

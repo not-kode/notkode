@@ -48,11 +48,11 @@ export default async function SobrePage({
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-surface-base">
         <SobreHeroBackground />
-        <div className="relative z-10 container mx-auto px-5 lg:px-8 pt-32 lg:pt-44 pb-20 lg:pb-24">
-          <div className="grid lg:grid-cols-[60%_40%] gap-12 lg:gap-20 items-start">
-            <Reveal>
+        <div className="relative z-10 container mx-auto px-5 lg:px-8 pt-24 lg:pt-32 pb-20 lg:pb-24">
+          <div className="grid lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-12 lg:gap-16 items-start">
+            <Reveal className="min-w-0">
               <SectionMarker number="00" label="Sobre a Notkode" />
-              <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.08] tracking-[-0.03em] mt-4 mb-6">
+              <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.08] tracking-[-0.03em] mt-4 mb-6 break-words">
                 <span className="block mb-1">Tecnologia sob medida,</span>
                 <span className="block">
                   <span className="font-bricolage text-gradient">feita por gente que entende.</span>

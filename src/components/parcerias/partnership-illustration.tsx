@@ -4,7 +4,7 @@ import Image from 'next/image';
 // Same visual identity as Process and AgencyBanner — keeps the brand cohesive
 export function PartnershipIllustration() {
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[4/3] w-full">
+    <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[5/6] sm:aspect-[4/3] w-full">
 
       {/* Landscape photo — generated specifically for /parcerias (two paths converging) */}
       <Image

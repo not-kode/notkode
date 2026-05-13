@@ -4,6 +4,7 @@ import { Logo } from '@/components/brand/logo';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from './language-toggle';
 import { ServicesMenu } from './services-menu';
+import { MobileMenu } from './mobile-menu';
 
 export function Header() {
   const t = useTranslations('Nav');
@@ -15,6 +16,7 @@ export function Header() {
           <Logo variant="horizontal-dark" width={120} priority />
         </Link>
 
+        {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-7 text-sm">
           <Link href="/sistemas-ia" className="text-text-secondary hover:text-primary transition-colors font-medium">
             {t('sistemasIA')}
@@ -31,11 +33,13 @@ export function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3">
+        {/* Right side: language + CTA + mobile menu */}
+        <div className="flex items-center gap-2 lg:gap-3">
           <LanguageToggle />
-          <Link href="/contato">
+          <Link href="/contato" className="hidden sm:block">
             <Button size="sm">{t('contato')}</Button>
           </Link>
+          <MobileMenu />
         </div>
       </div>
     </header>

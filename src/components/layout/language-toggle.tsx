@@ -16,7 +16,8 @@ export function LanguageToggle() {
     <button
       onClick={() =>
         startTransition(() => {
-          router.replace(pathname, { locale: switchTo });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          router.replace(pathname as any, { locale: switchTo });
         })
       }
       disabled={isPending}

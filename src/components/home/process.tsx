@@ -20,9 +20,9 @@ export async function Process({ locale, reverse = false }: { locale: string; rev
       <div className="absolute inset-0 -z-10 bg-grid-dots opacity-15" />
 
       <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32 relative">
-        <div className={`grid lg:grid-cols-[1fr_1fr] gap-16 items-center ${reverse ? 'lg:[&>*:first-child]:order-2' : ''}`}>
-          {/* LEFT column: header + step list */}
-          <div>
+        <div className="grid lg:grid-cols-[1fr_1fr] gap-12 lg:gap-16 items-center">
+          {/* Text column — always 2nd on mobile, position based on reverse on desktop */}
+          <div className={`order-2 ${reverse ? 'lg:order-2' : 'lg:order-1'}`}>
             <Reveal>
               <SectionMarker number="04" label={t('processEyebrow')} />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-4 mt-4">
@@ -61,10 +61,10 @@ export async function Process({ locale, reverse = false }: { locale: string; rev
             </div>
           </div>
 
-          {/* RIGHT column: contained photo card */}
-          <Reveal delay={150}>
+          {/* Image column — always 1st on mobile, position based on reverse on desktop */}
+          <Reveal delay={150} className={`order-1 ${reverse ? 'lg:order-1' : 'lg:order-2'}`}>
             <div className="lg:sticky lg:top-28">
-              <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[4/3]">
+              <div className="relative rounded-2xl overflow-hidden border border-black/[0.08] aspect-[5/6] sm:aspect-[4/3]">
                 {/* Photo */}
                 <CircuitBg variant="card" />
                 <Image
