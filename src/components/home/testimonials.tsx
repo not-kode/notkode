@@ -56,7 +56,7 @@ export async function Testimonials({ locale }: { locale: string }) {
                 style={{ background: 'rgba(14,14,18,0.96)', borderTop: '1px solid rgba(255,255,255,0.06)' }}
               >
                 <span className="font-mono text-[10px] text-white/25">notkode.com.br</span>
-                <span className="font-mono text-[10px] text-white/20">// video testimonial</span>
+                <span className="font-mono text-[10px] text-white/20">{'// video testimonial'}</span>
               </div>
             </div>
           </Reveal>

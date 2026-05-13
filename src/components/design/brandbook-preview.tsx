@@ -211,7 +211,7 @@ export function BrandbookPreview() {
               <div className="rounded-xl p-6" style={{ background: 'rgba(25,25,24,0.03)' }}>
                 <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-3">Mono · JetBrains Mono</p>
                 <p className="font-mono text-[12px] text-text-secondary">
-                  // labels, eyebrows, metadados técnicos
+                  {'// labels, eyebrows, metadados técnicos'}
                 </p>
               </div>
             </section>

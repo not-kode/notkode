@@ -166,7 +166,7 @@ export default async function CaseDetailPage({
               {item.problem && (
                 <Reveal>
                   <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-3">
-                    // Desafio
+                    {'// Desafio'}
                   </p>
                   <p className="text-[17px] lg:text-[19px] text-text-primary leading-[1.55]">
                     {item.problem}
@@ -176,7 +176,7 @@ export default async function CaseDetailPage({
               {item.solution && (
                 <Reveal delay={150}>
                   <p className="font-mono text-[10px] text-primary uppercase tracking-widest mb-3">
-                    // Solução
+                    {'// Solução'}
                   </p>
                   <p className="text-[17px] lg:text-[19px] text-text-primary leading-[1.55]">
                     {item.solution}

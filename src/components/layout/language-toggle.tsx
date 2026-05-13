@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { usePathname, useRouter } from '@/i18n/routing';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 
 export function LanguageToggle() {
@@ -12,14 +12,12 @@ export function LanguageToggle() {
 
   const switchTo = locale === 'pt' ? 'en' : 'pt';
 
+  // Replace the leading /pt or /en in the current path
+  const newPath = pathname.replace(/^\/(pt|en)/, `/${switchTo}`);
+
   return (
     <button
-      onClick={() =>
-        startTransition(() => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          router.replace(pathname as any, { locale: switchTo });
-        })
-      }
+      onClick={() => startTransition(() => router.replace(newPath))}
       disabled={isPending}
       className="font-label text-xs uppercase tracking-[0.12em] text-text-secondary hover:text-primary transition-colors px-2 py-1"
     >
