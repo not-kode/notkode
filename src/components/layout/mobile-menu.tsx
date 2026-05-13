@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
-import { Menu, X, Bot, Boxes, Palette, ArrowUpRight, ChevronDown, Sparkles } from 'lucide-react';
+import { Menu, X, Bot, Boxes, Palette, ArrowUpRight, ChevronDown } from 'lucide-react';
 
 export function MobileMenu() {
   const t = useTranslations('Nav');
@@ -100,39 +100,8 @@ export function MobileMenu() {
           </ul>
         </nav>
 
-        {/* Featured promo */}
-        <div className="px-5 pb-6">
-          <Link
-            href="/sistemas-ia"
-            onClick={close}
-            className="block relative rounded-2xl p-5 overflow-hidden"
-            style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}
-          >
-            <div
-              className="absolute inset-0 opacity-40 pointer-events-none"
-              style={{
-                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(59,130,246,0.20) 1px, transparent 0)',
-                backgroundSize: '20px 20px',
-              }}
-            />
-            <div className="relative">
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full mb-3" style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)' }}>
-                <Sparkles className="w-3 h-3 text-primary" strokeWidth={2} />
-                <span className="font-mono text-[9px] text-primary uppercase tracking-widest font-semibold">produto âncora</span>
-              </div>
-              <p className="text-[14px] font-semibold text-text-primary mb-1 leading-tight">Sistemas com IA</p>
-              <p className="text-[12px] text-text-secondary leading-snug mb-3">
-                Tudo da sua operação num sistema só. Sob medida.
-              </p>
-              <span className="font-mono text-[11px] text-primary inline-flex items-center gap-1">
-                Conhecer <ArrowUpRight className="w-3 h-3" />
-              </span>
-            </div>
-          </Link>
-        </div>
-
         {/* CTA at bottom */}
-        <div className="px-5 pb-8 border-t border-black/[0.06] pt-6">
+        <div className="px-5 pb-8 pt-4">
           <Link
             href="/contato"
             onClick={close}
