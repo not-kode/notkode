@@ -8,7 +8,7 @@ export async function FeaturedCase({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: 'Home' });
 
   return (
-    <section className="relative overflow-hidden bg-surface-base">
+    <section id="cases" className="relative overflow-hidden bg-surface-base scroll-mt-24">
       <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
         <Reveal>
           <SectionMarker number="02" label={t('caseEyebrow')} />

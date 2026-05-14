@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { SectionMarker } from '@/components/ui/section-marker';
-import { ProductScrollShowcase } from '@/components/home/product-scroll-showcase';
+import { ProductScrollShowcaseLazy as ProductScrollShowcase } from '@/components/home/product-scroll-showcase-lazy';
 
 interface ProductShowcaseProps {
   locale: string;

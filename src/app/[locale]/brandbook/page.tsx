@@ -1,10 +1,10 @@
 import { setRequestLocale } from 'next-intl/server';
-import { ArrowDown, Palette, Type, BookOpen, Layout } from 'lucide-react';
+import { ArrowDown, Palette, Type, BookOpen, Layout, Search, PenTool, Rocket } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
-import { InlineForm } from '@/components/ui/inline-form';
 import { SobreHeroBackground } from '@/components/sobre/sobre-hero-background';
-import { BrandbookPreview } from '@/components/design/brandbook-preview';
+import { BrandbookPreviewLazy as BrandbookPreview } from '@/components/design/brandbook-preview-lazy';
+import { BrandbookPricingForm } from '@/components/brandbook/brandbook-pricing-form';
 
 const DELIVERABLES = [
   {
@@ -35,7 +35,25 @@ const STATS = [
   { value: '+30',     label: 'identidades visuais entregues' },
 ];
 
-export default async function DesignPage({
+const HOW = [
+  {
+    icon: Search,
+    title: 'Imersão na marca',
+    desc: 'Entendemos seu negócio, público e referências. Saída: moodboard, valores de marca e direções criativas.',
+  },
+  {
+    icon: PenTool,
+    title: 'Concepção e refino',
+    desc: 'Apresentamos 2–3 caminhos de logo, paleta e tipografia. Você escolhe um e a gente refina até bater.',
+  },
+  {
+    icon: Rocket,
+    title: 'Brandbook + aplicações',
+    desc: 'Entregamos manual de marca completo, vetores editáveis e templates prontos para a sua equipe usar.',
+  },
+];
+
+export default async function BrandbookPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -62,10 +80,10 @@ export default async function DesignPage({
               </p>
 
               <a
-                href="#comecar"
+                href="#orcamento"
                 className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
               >
-                Quero meu brandbook
+                Calcular meu brandbook
                 <ArrowDown className="w-4 h-4" />
               </a>
             </Reveal>
@@ -151,30 +169,62 @@ export default async function DesignPage({
         </div>
       </section>
 
-      {/* ── Form inline ── */}
-      <section id="comecar" className="bg-surface-base">
+      {/* ── Como entregamos ── */}
+      <section className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
-          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-16 items-center">
-            <Reveal>
-              <SectionMarker number="03" label="Vamos começar" />
-              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-6">
-                Conta sobre{' '}
-                <span className="font-bricolage">o seu negócio.</span>
-              </h2>
-              <p className="text-[16px] text-text-secondary leading-relaxed">
-                Não precisa ter referências prontas. Descreve seu segmento e personalidade da empresa em algumas linhas — a gente volta com uma proposta no WhatsApp em horas.
-              </p>
-            </Reveal>
+          <Reveal>
+            <SectionMarker number="03" label="Como entregamos" />
+            <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
+              Três etapas{' '}
+              <span className="font-bricolage">do briefing à marca pronta.</span>
+            </h2>
+          </Reveal>
 
-            <Reveal delay={120}>
-              <InlineForm
-                title="Receba um orçamento direto."
-                subtitle="Sem call obrigatória — só o essencial."
-                serviceTag="identidade-visual"
-                needsPlaceholder="Ex: tenho uma loja de cosméticos artesanais focada em mulheres 25–40. Quero uma marca elegante e contemporânea, com paleta neutra e tipografia limpa..."
-              />
-            </Reveal>
+          <div className="grid md:grid-cols-3 gap-5 lg:gap-6">
+            {HOW.map((step, i) => (
+              <Reveal key={step.title} delay={i * 100}>
+                <article
+                  className="rounded-2xl border border-black/[0.08] p-6 lg:p-7 h-full"
+                  style={{ background: 'hsl(55 100% 97%)' }}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="font-mono text-[11px] text-text-dim">0{i + 1}</span>
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <step.icon className="w-4 h-4 text-primary" strokeWidth={1.7} />
+                    </div>
+                  </div>
+                  <h3 className="text-[17px] lg:text-[18px] font-semibold tracking-tight text-text-primary mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-[14px] text-text-secondary leading-relaxed">
+                    {step.desc}
+                  </p>
+                </article>
+              </Reveal>
+            ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Pricing form ── */}
+      <section id="orcamento" className="bg-surface-elevated">
+        <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
+          <Reveal>
+            <div className="max-w-3xl mb-10 lg:mb-12">
+              <SectionMarker number="04" label="Seu orçamento" />
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
+                Monte sua identidade,{' '}
+                <span className="font-bricolage">veja o investimento na hora.</span>
+              </h2>
+              <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
+                Quatro perguntas curtas. No final você vê o investimento estimado e pode pedir a proposta detalhada.
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <BrandbookPricingForm />
+          </Reveal>
         </div>
       </section>
     </>

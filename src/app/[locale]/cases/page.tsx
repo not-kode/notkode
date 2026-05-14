@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/ui/reveal';
-import { CasesGrid } from '@/components/cases/cases-grid';
+import { CasesGridLazy as CasesGrid } from '@/components/cases/cases-grid-lazy';
 import { CasesHeroBackground } from '@/components/cases/cases-hero-background';
 import { TrustBand } from '@/components/home/trust-band';
 import { Testimonials } from '@/components/home/testimonials';
@@ -67,13 +67,13 @@ export default async function CasesPage({
 
             <Reveal delay={200}>
               <div className="flex flex-wrap justify-center gap-3">
-                <Link
-                  href="/contato"
+                <a
+                  href="/sistemas-ia#diagnostico"
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
                 >
                   Quero ser o próximo case
                   <ArrowUpRight className="w-4 h-4" />
-                </Link>
+                </a>
                 <a
                   href="#grid"
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border-hairline-strong text-text-primary font-bold text-[13px] uppercase tracking-wide hover:bg-black/[0.04] transition-all duration-200"

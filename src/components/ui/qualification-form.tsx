@@ -3,6 +3,26 @@
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-react';
 
+// ── Schema ────────────────────────────────────────────────────────────────
+
+export type QualificationOption = { id: string; label: string };
+
+export type QualificationSchema = {
+  /** identifier sent with the lead payload (e.g. 'sistemas-ia', 'parcerias') */
+  serviceTag: string;
+  /** Step 1 — multi-select needs/goals */
+  needs: { title: string; subtitle: string; options: QualificationOption[] };
+  /** Step 2 — identity (always: name + email + whatsapp; company optional) */
+  identity?: { title?: string; subtitle?: string; companySizes?: string[] };
+  /** Step 3 — context (timing + description) */
+  context: { title?: string; subtitle?: string; timings: QualificationOption[] };
+  /** WhatsApp message after submit */
+  whatsappMessage?: string;
+  /** copy on success screen */
+  successTitle?: string;
+  successBody?: string;
+};
+
 type Step = 0 | 1 | 2;
 
 interface FormData {
@@ -16,25 +36,9 @@ interface FormData {
   timing: string;
 }
 
-const NEEDS = [
-  { id: 'sistema',    label: 'Sistema interno com IA' },
-  { id: 'agentes',    label: 'Agentes & Automação' },
-  { id: 'produto',    label: 'Produto digital (SaaS, App)' },
-  { id: 'design',     label: 'Design / Prototipagem' },
-  { id: 'agencia',    label: 'Parceria white-label (agência)' },
-  { id: 'nao_sei',    label: 'Ainda não sei direito' },
-];
+const DEFAULT_SIZES = ['1–10 pessoas', '11–50 pessoas', '51–200 pessoas', '200+ pessoas'];
 
-const COMPANY_SIZES = ['1–10 pessoas', '11–50 pessoas', '51–200 pessoas', '200+ pessoas'];
-
-const TIMINGS = [
-  { id: 'imediato', label: 'Quero começar agora' },
-  { id: '30dias',   label: 'Em até 30 dias' },
-  { id: '60dias',   label: 'Em 60+ dias' },
-  { id: 'pesquisa', label: 'Apenas pesquisando' },
-];
-
-export function ContatoForm() {
+export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   const [step, setStep] = useState<Step>(0);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [data, setData] = useState<FormData>({
@@ -64,29 +68,45 @@ export function ContatoForm() {
 
   const submit = async () => {
     setStatus('submitting');
-    // Backend handling decided later (memory). For now we just simulate.
-    await new Promise((r) => setTimeout(r, 900));
-    // TODO: send to /api/contato or n8n webhook when defined
+    try {
+      await fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceTag: schema.serviceTag,
+          kind: 'qualification',
+          data,
+        }),
+      });
+    } catch {
+      // MVP: fire-and-forget
+    }
     // eslint-disable-next-line no-console
-    console.log('[contato form]', data);
+    console.log('[qualification-form]', schema.serviceTag, data);
     setStatus('success');
   };
 
   // Success screen
   if (status === 'success') {
+    const message =
+      schema.whatsappMessage ?? 'Acabei de preencher o formulário no site, vim para acelerar o contato.';
     return (
-      <div className="rounded-2xl border border-black/[0.08] p-8 lg:p-10 text-center" style={{ background: 'hsl(55 100% 97%)' }}>
+      <div
+        className="rounded-2xl border border-black/[0.08] p-8 lg:p-10 text-center"
+        style={{ background: 'hsl(55 100% 97%)' }}
+      >
         <div className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-6">
           <Check className="w-8 h-8 text-primary" strokeWidth={2.5} />
         </div>
         <h3 className="text-[1.5rem] lg:text-[1.75rem] font-semibold tracking-tight text-text-primary mb-3">
-          Recebemos sua mensagem.
+          {schema.successTitle ?? 'Recebemos sua mensagem.'}
         </h3>
         <p className="text-[15px] text-text-secondary leading-relaxed mb-6 max-w-md mx-auto">
-          Em até <strong>24 horas</strong> alguém da nossa equipe entra em contato pelo e-mail e WhatsApp para agendar um diagnóstico gratuito de 30 minutos.
+          {schema.successBody ??
+            <>Em até <strong>24 horas</strong> alguém do nosso time entra em contato pelo e-mail e WhatsApp para agendar um diagnóstico gratuito de 30 minutos.</>}
         </p>
         <a
-          href="https://wa.me/5511951381254?text=Acabei de preencher o formulário no site, vim para acelerar o contato."
+          href={`https://wa.me/5511951381254?text=${encodeURIComponent(message)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="font-bricolage inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#25D366] text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px transition-all duration-200"
@@ -98,8 +118,13 @@ export function ContatoForm() {
     );
   }
 
+  const sizes = schema.identity?.companySizes ?? DEFAULT_SIZES;
+
   return (
-    <div className="rounded-2xl border border-black/[0.08] overflow-hidden" style={{ background: 'hsl(55 100% 97%)' }}>
+    <div
+      className="rounded-2xl border border-black/[0.08] overflow-hidden"
+      style={{ background: 'hsl(55 100% 97%)' }}
+    >
       {/* Progress bar */}
       <div className="px-6 lg:px-8 pt-6 pb-2">
         <div className="flex items-center justify-between mb-2">
@@ -107,7 +132,7 @@ export function ContatoForm() {
             Etapa {step + 1} de 3
           </span>
           <span className="font-mono text-[10px] text-text-dim">
-            ❯ diagnostico.sh
+            ❯ {schema.serviceTag}.sh
           </span>
         </div>
         <div className="flex gap-1.5">
@@ -129,18 +154,17 @@ export function ContatoForm() {
         {step === 0 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
-              O que você precisa?
+              {schema.needs.title}
             </h3>
-            <p className="text-[14px] text-text-secondary mb-6">
-              Pode marcar mais de uma. Se não tiver certeza, marca a última.
-            </p>
+            <p className="text-[14px] text-text-secondary mb-6">{schema.needs.subtitle}</p>
 
             <div className="grid sm:grid-cols-2 gap-2.5">
-              {NEEDS.map((n) => {
+              {schema.needs.options.map((n) => {
                 const active = data.needs.includes(n.id);
                 return (
                   <button
                     key={n.id}
+                    type="button"
                     onClick={() => toggleNeed(n.id)}
                     className="text-left px-4 py-3 rounded-xl transition-all duration-200"
                     style={{
@@ -170,10 +194,10 @@ export function ContatoForm() {
         {step === 1 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
-              Quem é você?
+              {schema.identity?.title ?? 'Quem é você?'}
             </h3>
             <p className="text-[14px] text-text-secondary mb-6">
-              Só o essencial pra a gente entrar em contato.
+              {schema.identity?.subtitle ?? 'Só o essencial pra a gente entrar em contato.'}
             </p>
 
             <div className="space-y-4">
@@ -208,7 +232,7 @@ export function ContatoForm() {
                     style={{ border: '1px solid rgba(25,25,24,0.10)' }}
                   >
                     <option value="">Selecione</option>
-                    {COMPANY_SIZES.map((s) => (
+                    {sizes.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
@@ -245,20 +269,21 @@ export function ContatoForm() {
         {step === 2 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
-              Contexto do projeto.
+              {schema.context.title ?? 'Contexto do projeto.'}
             </h3>
             <p className="text-[14px] text-text-secondary mb-6">
-              Quanto mais detalhes, melhor preparamos a conversa.
+              {schema.context.subtitle ?? 'Quanto mais detalhes, melhor preparamos a conversa.'}
             </p>
 
             <div className="space-y-4">
               <Field label="Quando você quer começar?">
                 <div className="grid sm:grid-cols-2 gap-2">
-                  {TIMINGS.map((t) => {
+                  {schema.context.timings.map((t) => {
                     const active = data.timing === t.id;
                     return (
                       <button
                         key={t.id}
+                        type="button"
                         onClick={() => update('timing', t.id)}
                         className="text-left px-4 py-2.5 rounded-lg text-[13px] transition-all"
                         style={{
@@ -292,6 +317,7 @@ export function ContatoForm() {
       {/* Footer with navigation */}
       <div className="flex items-center justify-between gap-3 px-6 lg:px-8 py-5 border-t border-black/[0.06] bg-black/[0.02]">
         <button
+          type="button"
           onClick={() => setStep((s) => Math.max(0, s - 1) as Step)}
           disabled={step === 0}
           className="font-mono text-[12px] text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
@@ -302,6 +328,7 @@ export function ContatoForm() {
 
         {step < 2 ? (
           <button
+            type="button"
             onClick={() => setStep((s) => Math.min(2, s + 1) as Step)}
             disabled={!canContinue}
             className="font-bricolage inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"
@@ -311,6 +338,7 @@ export function ContatoForm() {
           </button>
         ) : (
           <button
+            type="button"
             onClick={submit}
             disabled={!canContinue || status === 'submitting'}
             className="font-bricolage inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"

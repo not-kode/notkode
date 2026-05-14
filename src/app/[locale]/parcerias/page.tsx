@@ -1,12 +1,12 @@
 import { setRequestLocale } from 'next-intl/server';
-import { ArrowUpRight, TrendingUp, Users, Zap, Shield, Code2, Sparkles, type LucideIcon } from 'lucide-react';
-import { Link } from '@/i18n/routing';
+import { ArrowUpRight, ArrowDown, TrendingUp, Users, Zap, Shield, Code2, Sparkles, type LucideIcon } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { ParceriasHeroBackground } from '@/components/parcerias/parcerias-hero-background';
 import { PartnershipIllustration } from '@/components/parcerias/partnership-illustration';
 import { AgencyBanner } from '@/components/home/agency-banner';
 import { FinalCTA } from '@/components/home/final-cta';
+import { ParceriasQualificationForm } from '@/components/parcerias/parcerias-qualification-form';
 
 function HighlightCard({
   icon: Icon,
@@ -133,13 +133,13 @@ export default async function ParceriasPage({
                 Você fecha o projeto. A gente constrói nos bastidores. Seu cliente recebe um produto sob medida com sua marca — e você multiplica o ticket sem mudar a estrutura.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Link
-                  href="/contato"
+                <a
+                  href="#parceria"
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
                 >
                   Tornar-se parceiro
-                  <ArrowUpRight className="w-4 h-4" />
-                </Link>
+                  <ArrowDown className="w-4 h-4" />
+                </a>
                 <a
                   href="#como-funciona"
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border-hairline-strong text-text-primary font-bold text-[13px] uppercase tracking-wide hover:bg-black/[0.04] transition-all duration-200"
@@ -257,7 +257,29 @@ export default async function ParceriasPage({
       </section>
 
       {/* ── CTA final ── */}
-      <FinalCTA locale={locale} />
+      {/* ── Parceria form ── */}
+      <section id="parceria" className="bg-surface-elevated">
+        <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
+          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-16 items-start">
+            <Reveal>
+              <SectionMarker number="05" label="Vamos conversar" />
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-6">
+                Conta como{' '}
+                <span className="font-bricolage">a gente pode te ajudar.</span>
+              </h2>
+              <p className="text-[16px] text-text-secondary leading-relaxed">
+                Três perguntas curtas pra entender sua agência e como podemos ser braço técnico — sem reunião desnecessária. Resposta em até 24h.
+              </p>
+            </Reveal>
+
+            <Reveal delay={120}>
+              <ParceriasQualificationForm />
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      <FinalCTA locale={locale} ctaHref="#parceria" />
     </>
   );
 }

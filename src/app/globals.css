@@ -169,6 +169,19 @@
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes priceReveal {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.97); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes flow-dash {
+  from { stroke-dashoffset: 0;   }
+  to   { stroke-dashoffset: -28; }
+}
+@keyframes flow-pulse {
+  0%   { transform: scale(1);   opacity: 0.9; }
+  100% { transform: scale(1.5); opacity: 0;   }
+}
 @keyframes progress-bar {
   from { width: 0%; }
   to   { width: 100%; }

@@ -15,11 +15,12 @@ export const routing = defineRouting({
       pt: '/agentes-automacao',
       en: '/ai-agents-automation',
     },
-    '/produtos-digitais': {
-      pt: '/produtos-digitais',
-      en: '/digital-products',
+    '/sites': {
+      pt: '/sites',
+      en: '/websites',
     },
-    '/design': '/design',
+    '/ecommerce': '/ecommerce',
+    '/brandbook': '/brandbook',
     '/parcerias': {
       pt: '/parcerias',
       en: '/partners',
@@ -31,10 +32,6 @@ export const routing = defineRouting({
       en: '/about',
     },
     '/blog': '/blog',
-    '/contato': {
-      pt: '/contato',
-      en: '/contact',
-    },
   },
 });
 

@@ -1,11 +1,18 @@
 import { getTranslations } from 'next-intl/server';
 import { ArrowRight } from 'lucide-react';
-import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/ui/reveal';
 import { CircuitBg } from '@/components/ui/circuit-bg';
 
-export async function FinalCTA({ locale }: { locale: string }) {
+interface FinalCTAProps {
+  locale: string;
+  /** Where the CTA points. In-page anchor like "#diagnostico" or path with anchor like "/pt/sistemas-ia#diagnostico". */
+  ctaHref?: string;
+}
+
+export async function FinalCTA({ locale, ctaHref }: FinalCTAProps) {
   const t = await getTranslations({ locale, namespace: 'Home' });
+  // Default: take the user to the services grid on the home (locale-aware)
+  const href = ctaHref ?? `/${locale}#servicos`;
 
   return (
     <section className="relative overflow-hidden bg-surface-elevated border-t border-black/[0.07] py-28 lg:py-36">
@@ -27,8 +34,7 @@ export async function FinalCTA({ locale }: { locale: string }) {
 
           <Reveal delay={100}>
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-5 text-text-primary">
-              Vamos construir{' '}
-              <span className="font-bricolage">algo que é seu.</span>
+              {t('finalCtaTitle')}
             </h2>
           </Reveal>
 
@@ -39,21 +45,15 @@ export async function FinalCTA({ locale }: { locale: string }) {
           </Reveal>
 
           <Reveal delay={300}>
-            <Link
-              href="/contato"
+            <a
+              href={href}
               className="font-bricolage group inline-flex items-center gap-2 px-8 py-4 rounded-full bg-primary text-white font-bold text-base uppercase tracking-wide hover:-translate-y-0.5 hover:shadow-glow hover:bg-primary/90 transition-all duration-300"
             >
               {t('finalCtaButton')}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+            </a>
           </Reveal>
 
-          <Reveal delay={400}>
-            <div className="mt-8 font-mono text-xs text-text-muted">
-              <span className="text-text-dim">{'❯ '}</span>
-              {t('finalCtaMeta')}
-            </div>
-          </Reveal>
         </div>
       </div>
     </section>

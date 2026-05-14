@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 import { ArrowUpRight } from 'lucide-react';
-import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/ui/reveal';
 import { HeroBackground } from '@/components/home/hero-background';
 
@@ -16,10 +15,18 @@ export async function Hero({ locale }: { locale: string }) {
 
           {/* LEFT — headline */}
           <Reveal className="min-w-0">
-            <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.12] tracking-[-0.025em] break-words">
-              <span className="block mb-1">Tecnologia feita para</span>
+            <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.12] tracking-[-0.025em] break-words text-text-primary">
               <span className="block">
-                <span className="font-bricolage text-gradient">o seu negócio.</span>
+                <span className="font-bricolage font-normal">Tecnologia</span>{' '}
+                de ponta,
+              </span>
+              <span className="block">
+                entregue na{' '}
+                <span className="font-bricolage font-normal">velocidade</span>
+              </span>
+              <span className="block">
+                que <span className="font-bricolage font-normal">sua empresa</span>{' '}
+                precisa.
               </span>
             </h1>
           </Reveal>
@@ -34,20 +41,20 @@ export async function Hero({ locale }: { locale: string }) {
 
             <Reveal delay={240}>
               <div className="flex flex-wrap gap-3">
-                <Link
-                  href="/contato"
+                <a
+                  href="#servicos"
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
                 >
                   {t('heroPrimaryCta')}
                   <ArrowUpRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  href="/sistemas-ia"
+                </a>
+                <a
+                  href="#cases"
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border-hairline-strong text-text-primary font-bold text-[13px] uppercase tracking-wide hover:bg-black/[0.04] transition-all duration-200"
                 >
                   {t('heroSecondaryCta')}
                   <ArrowUpRight className="w-4 h-4" />
-                </Link>
+                </a>
               </div>
             </Reveal>
           </div>

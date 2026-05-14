@@ -8,10 +8,8 @@ export async function Testimonials({ locale }: { locale: string }) {
 
   const items = [
     { quote: t('testimonial1Quote'), author: t('testimonial1Author'), role: t('testimonial1Role') },
-    { quote: t('testimonial2Quote'), author: t('testimonial2Author'), role: t('testimonial2Role') },
     { quote: t('testimonial3Quote'), author: t('testimonial3Author'), role: t('testimonial3Role') },
     { quote: t('testimonial4Quote'), author: t('testimonial4Author'), role: t('testimonial4Role') },
-    { quote: t('testimonial5Quote'), author: t('testimonial5Author'), role: t('testimonial5Role') },
   ];
 
   return (

@@ -1,60 +1,194 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
-import { ChevronDown, Bot, Boxes, Palette, ArrowUpRight, Sparkles, ArrowRight } from 'lucide-react';
+import {
+  ChevronDown,
+  Bot,
+  Globe,
+  ShoppingCart,
+  Palette,
+  ArrowUpRight,
+  Sparkles,
+  X,
+} from 'lucide-react';
 
 export function ServicesMenu() {
   const t = useTranslations('Nav');
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
+  // Only render portal after mount (avoids SSR document is not defined)
+  useEffect(() => { setMounted(true); }, []);
+
+  // Lock body scroll when fullscreen is open
   useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onEsc(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
-    }
-    document.addEventListener('click', onDocClick);
+    if (open) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('keydown', onEsc);
-    return () => {
-      document.removeEventListener('click', onDocClick);
-      document.removeEventListener('keydown', onEsc);
-    };
+    return () => document.removeEventListener('keydown', onEsc);
   }, []);
 
   const services = [
-    {
-      href: '/agentes-automacao' as const,
-      icon: Bot,
-      title: t('agentesAutomacao'),
-      desc: t('agentesAutomacaoDesc'),
-      tag: 'self-service',
-    },
-    {
-      href: '/produtos-digitais' as const,
-      icon: Boxes,
-      title: t('produtosDigitais'),
-      desc: t('produtosDigitaisDesc'),
-      tag: 'consultivo',
-    },
-    {
-      href: '/design' as const,
-      icon: Palette,
-      title: t('design'),
-      desc: t('designDesc'),
-      tag: 'self-service',
-    },
+    { href: '/sites' as const,             icon: Globe,        title: t('sites'),            desc: t('sitesDesc')            },
+    { href: '/ecommerce' as const,         icon: ShoppingCart, title: t('ecommerce'),        desc: t('ecommerceDesc')        },
+    { href: '/agentes-automacao' as const, icon: Bot,          title: t('agentesAutomacao'), desc: t('agentesAutomacaoDesc') },
+    { href: '/brandbook' as const,         icon: Palette,      title: t('brandbook'),        desc: t('brandbookDesc')        },
   ];
 
+  const overlay = (
+    <div
+        className={`fixed inset-0 z-[100] transition-all duration-300 ${
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        style={{
+          background: 'hsl(55 100% 97%)',
+        }}
+        aria-hidden={!open}
+      >
+        {/* Decorative grid background */}
+        <div
+          className="absolute inset-0 opacity-[0.35] pointer-events-none"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(59,130,246,0.15) 1px, transparent 0)',
+            backgroundSize: '32px 32px',
+          }}
+        />
+
+        {/* Header bar */}
+        <div className="relative flex items-center justify-between px-5 lg:px-8 h-16 lg:h-20 border-b border-black/[0.06]">
+          <span className="font-mono text-[11px] text-text-dim uppercase tracking-widest">
+            ❯ serviços / soluções
+          </span>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Fechar menu"
+            className="w-11 h-11 -mr-2 flex items-center justify-center text-text-primary hover:bg-black/[0.04] rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" strokeWidth={1.8} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="relative h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] overflow-y-auto">
+          <div className="container mx-auto px-5 lg:px-8 py-10 lg:py-14 max-w-6xl">
+
+            {/* Featured banner — Sistemas com IA */}
+            <Link
+              href="/sistemas-ia"
+              onClick={() => setOpen(false)}
+              className="group relative block rounded-2xl overflow-hidden mb-10 lg:mb-12 transition-all duration-300 hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, rgba(59,130,246,0.10), rgba(59,130,246,0.03))',
+                border: '1px solid rgba(59,130,246,0.25)',
+                boxShadow: '0 20px 60px -20px rgba(59,130,246,0.20)',
+              }}
+            >
+              <div className="relative p-6 lg:p-8 flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
+                <div className="flex-1 min-w-0">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full mb-3"
+                       style={{ background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.25)' }}>
+                    <Sparkles className="w-3 h-3 text-primary" strokeWidth={2} />
+                    <span className="font-mono text-[9px] text-primary uppercase tracking-widest font-semibold">
+                      Produto âncora
+                    </span>
+                  </div>
+                  <h3 className="font-bricolage text-[1.5rem] lg:text-[2rem] font-bold text-text-primary leading-tight tracking-tight mb-2">
+                    {t('sistemasIA')}
+                  </h3>
+                  <p className="text-[14px] lg:text-[15px] text-text-secondary leading-relaxed max-w-xl">
+                    Substitua dezenas de ferramentas por um sistema interno sob medida — com IA que aprende com o seu negócio.
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <span className="font-bricolage inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide group-hover:bg-primary/90 transition-colors">
+                    Conhecer
+                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* Section label */}
+            <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-5">
+              ❯ outros serviços
+            </p>
+
+            {/* 2x2 grid */}
+            <div className="grid sm:grid-cols-2 gap-4 lg:gap-5">
+              {services.map((s) => (
+                <Link
+                  key={s.href}
+                  href={s.href}
+                  onClick={() => setOpen(false)}
+                  className="group relative rounded-2xl p-6 lg:p-7 transition-all duration-200 hover:-translate-y-1"
+                  style={{
+                    background: 'hsl(55 100% 97%)',
+                    border: '1px solid rgba(25,25,24,0.08)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div className="flex items-start gap-5">
+                    <div
+                      className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 group-hover:scale-105"
+                      style={{ background: 'rgba(59,130,246,0.10)' }}
+                    >
+                      <s.icon className="w-6 h-6 text-primary" strokeWidth={1.7} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <h4 className="text-[17px] lg:text-[18px] font-semibold tracking-tight text-text-primary group-hover:text-primary transition-colors">
+                          {s.title}
+                        </h4>
+                        <ArrowUpRight
+                          className="w-4 h-4 text-text-dim shrink-0 opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all"
+                          strokeWidth={1.8}
+                        />
+                      </div>
+                      <p className="text-[13px] lg:text-[14px] text-text-secondary leading-relaxed">
+                        {s.desc}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Footer micro-CTA */}
+            <div className="mt-10 lg:mt-12 pt-6 border-t border-black/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <p className="font-mono text-[11px] text-text-dim">
+                ❯ não sabe por onde começar?
+              </p>
+              <a
+                href="/sistemas-ia#diagnostico"
+                onClick={() => setOpen(false)}
+                className="group inline-flex items-center gap-2 text-[13px] text-text-secondary hover:text-primary transition-colors"
+              >
+                <span>Agendar diagnóstico de 30 min</span>
+                <ArrowUpRight className="w-3.5 h-3.5 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+  );
+
   return (
-    <div ref={ref} className="relative">
+    <>
+      {/* Trigger button — sits in the header */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        onMouseEnter={() => setOpen(true)}
         aria-expanded={open}
         className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors text-sm"
       >
@@ -64,123 +198,8 @@ export function ServicesMenu() {
         />
       </button>
 
-      {open && (
-        <div
-          onMouseLeave={() => setOpen(false)}
-          className="absolute top-full left-1/2 -translate-x-1/2 pt-3 w-[820px] z-50"
-          style={{ maxWidth: 'calc(100vw - 40px)' }}
-        >
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: 'hsl(55 100% 97%)',
-              border: '1px solid rgba(25,25,24,0.08)',
-              boxShadow: '0 30px 80px -20px rgba(59,130,246,0.15), 0 16px 40px -16px rgba(0,0,0,0.12)',
-            }}
-          >
-            <div className="grid lg:grid-cols-[1.8fr_1fr]">
-
-              {/* LEFT — services list */}
-              <div className="p-5 lg:p-6">
-                <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-4 px-2">
-                  ❯ outros serviços
-                </p>
-
-                <div className="space-y-1">
-                  {services.map((s) => (
-                    <Link
-                      key={s.href}
-                      href={s.href}
-                      onClick={() => setOpen(false)}
-                      className="group flex items-start gap-4 p-3.5 rounded-xl hover:bg-black/[0.03] transition-colors duration-200"
-                    >
-                      <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200"
-                        style={{ background: 'rgba(59,130,246,0.08)' }}
-                      >
-                        <s.icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-[14px] font-semibold text-text-primary group-hover:text-primary transition-colors">
-                            {s.title}
-                          </span>
-                          <span className="font-mono text-[9px] text-text-dim uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ background: 'rgba(25,25,24,0.05)' }}>
-                            {s.tag}
-                          </span>
-                        </div>
-                        <p className="text-[12px] text-text-secondary leading-snug">
-                          {s.desc}
-                        </p>
-                      </div>
-                      <ArrowUpRight className="w-4 h-4 text-text-dim shrink-0 mt-1 opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all duration-200" strokeWidth={1.8} />
-                    </Link>
-                  ))}
-                </div>
-
-                {/* Footer link to cases */}
-                <div className="mt-4 pt-4 border-t border-black/[0.06] px-2">
-                  <Link
-                    href="/cases"
-                    onClick={() => setOpen(false)}
-                    className="group inline-flex items-center gap-2 text-[12px] text-text-secondary hover:text-primary transition-colors"
-                  >
-                    <span>Ver todos os 12+ projetos entregues</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* RIGHT — featured / CTA */}
-              <div
-                className="relative p-5 lg:p-6"
-                style={{ background: 'rgba(59,130,246,0.04)', borderLeft: '1px solid rgba(25,25,24,0.06)' }}
-              >
-                {/* Subtle pattern */}
-                <div
-                  className="absolute inset-0 opacity-30 pointer-events-none"
-                  style={{
-                    backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(59,130,246,0.18) 1px, transparent 0)',
-                    backgroundSize: '24px 24px',
-                  }}
-                />
-
-                <div className="relative">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full mb-4" style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                    <Sparkles className="w-3 h-3 text-primary" strokeWidth={2} />
-                    <span className="font-mono text-[9px] text-primary uppercase tracking-widest font-semibold">Produto âncora</span>
-                  </div>
-
-                  <h3 className="text-[16px] font-semibold tracking-tight text-text-primary mb-2 leading-tight">
-                    Sistemas internos<br />com IA dentro.
-                  </h3>
-                  <p className="text-[12px] text-text-secondary leading-relaxed mb-5">
-                    Substitua dezenas de ferramentas por um sistema sob medida — feito pro jeito que sua empresa funciona.
-                  </p>
-
-                  <Link
-                    href="/sistemas-ia"
-                    onClick={() => setOpen(false)}
-                    className="font-bricolage w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-white font-bold text-[11px] uppercase tracking-wide hover:bg-primary/90 transition-colors mb-3"
-                  >
-                    Conhecer sistema
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </Link>
-
-                  <Link
-                    href="/contato"
-                    onClick={() => setOpen(false)}
-                    className="block text-center font-mono text-[10px] text-primary hover:underline"
-                  >
-                    ou agendar diagnóstico grátis →
-                  </Link>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Fullscreen overlay rendered via Portal — escapes the header's containing block (created by backdrop-filter) */}
+      {mounted && createPortal(overlay, document.body)}
+    </>
   );
 }

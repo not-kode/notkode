@@ -194,13 +194,13 @@ export function ROICalculator() {
                   <p className="text-[12px] text-text-dim mb-4 leading-relaxed">
                     Preços baseados nos planos intermediários reais de cada ferramenta (mai/2025). Ferramentas por usuário calculadas para 3 pessoas. Na conversa de diagnóstico você recebe uma proposta personalizada.
                   </p>
-                  <Link
-                    href="/contato"
+                  <a
+                    href="#diagnostico"
                     className="font-bricolage w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:bg-primary/90 hover:-translate-y-px transition-all duration-200"
                   >
                     Quero meu diagnóstico gratuito
                     <ArrowUpRight className="w-4 h-4" />
-                  </Link>
+                  </a>
                 </div>
               </div>
             </div>

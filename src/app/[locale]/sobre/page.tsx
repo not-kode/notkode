@@ -2,7 +2,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { ArrowUpRight, Linkedin } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
-import { TimelineHorizontal } from '@/components/sobre/timeline-horizontal';
+import { TimelineHorizontalLazy as TimelineHorizontal } from '@/components/sobre/timeline-horizontal-lazy';
 import { FounderPhoto } from '@/components/sobre/founder-photo';
 import { SobreHeroBackground } from '@/components/sobre/sobre-hero-background';
 import { FinalCTA } from '@/components/home/final-cta';

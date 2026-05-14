@@ -36,9 +36,9 @@ export function Header() {
         {/* Right side: language + CTA + mobile menu */}
         <div className="flex items-center gap-2 lg:gap-3">
           <LanguageToggle />
-          <Link href="/contato" className="hidden sm:block">
+          <a href="/sistemas-ia#diagnostico" className="hidden sm:block">
             <Button size="sm">{t('contato')}</Button>
-          </Link>
+          </a>
           <MobileMenu />
         </div>
       </div>

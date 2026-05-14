@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
-import { Menu, X, Bot, Boxes, Palette, ArrowUpRight, ChevronDown } from 'lucide-react';
+import { Menu, X, Bot, Globe, ShoppingCart, Palette, ArrowUpRight, ChevronDown } from 'lucide-react';
 
 export function MobileMenu() {
   const t = useTranslations('Nav');
@@ -87,9 +87,10 @@ export function MobileMenu() {
               </button>
               {servicesOpen && (
                 <ul className="mt-1 pb-2 pl-2 space-y-1">
-                  <MobileSubItem href="/agentes-automacao" icon={Bot}     title={t('agentesAutomacao')} desc={t('agentesAutomacaoDesc')} onClick={close} />
-                  <MobileSubItem href="/produtos-digitais" icon={Boxes}   title={t('produtosDigitais')} desc={t('produtosDigitaisDesc')} onClick={close} />
-                  <MobileSubItem href="/design"            icon={Palette} title={t('design')}           desc={t('designDesc')}           onClick={close} />
+                  <MobileSubItem href="/sites"             icon={Globe}        title={t('sites')}             desc={t('sitesDesc')}             onClick={close} />
+                  <MobileSubItem href="/ecommerce"         icon={ShoppingCart} title={t('ecommerce')}         desc={t('ecommerceDesc')}         onClick={close} />
+                  <MobileSubItem href="/agentes-automacao" icon={Bot}          title={t('agentesAutomacao')}  desc={t('agentesAutomacaoDesc')}  onClick={close} />
+                  <MobileSubItem href="/brandbook"         icon={Palette}      title={t('brandbook')}         desc={t('brandbookDesc')}         onClick={close} />
                 </ul>
               )}
             </li>
@@ -102,14 +103,14 @@ export function MobileMenu() {
 
         {/* CTA at bottom */}
         <div className="px-5 pb-8 pt-4">
-          <Link
-            href="/contato"
+          <a
+            href="/sistemas-ia#diagnostico"
             onClick={close}
             className="font-bricolage w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide hover:bg-primary/90 transition-colors"
           >
             {t('contato')}
             <ArrowUpRight className="w-4 h-4" />
-          </Link>
+          </a>
           <p className="font-mono text-[10px] text-text-dim text-center mt-3">
             resposta em até 24h · sem compromisso
           </p>
@@ -159,7 +160,7 @@ function MobileNavItem({ href, label, onClick, featured = false }: { href: '/sis
 function MobileSubItem({
   href, icon: Icon, title, desc, onClick,
 }: {
-  href: '/agentes-automacao' | '/produtos-digitais' | '/design';
+  href: '/sites' | '/ecommerce' | '/agentes-automacao' | '/brandbook';
   icon: typeof Bot;
   title: string;
   desc: string;
