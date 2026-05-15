@@ -15,16 +15,16 @@ export async function Hero({ locale }: { locale: string }) {
 
           {/* LEFT — headline */}
           <Reveal className="min-w-0">
-            <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.12] tracking-[-0.025em] break-words text-text-primary">
-              <span className="block">
+            <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.15] lg:leading-[1.12] tracking-[-0.025em] break-words text-text-primary">
+              <span className="lg:block">
                 <span className="font-bricolage font-normal">Tecnologia</span>{' '}
                 de ponta,
-              </span>
-              <span className="block">
+              </span>{' '}
+              <span className="lg:block">
                 entregue na{' '}
                 <span className="font-bricolage font-normal">velocidade</span>
-              </span>
-              <span className="block">
+              </span>{' '}
+              <span className="lg:block">
                 que <span className="font-bricolage font-normal">sua empresa</span>{' '}
                 precisa.
               </span>

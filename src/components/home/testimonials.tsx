@@ -15,11 +15,8 @@ export async function Testimonials({ locale }: { locale: string }) {
   return (
     <section className="relative bg-surface-elevated overflow-hidden">
       <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
-        <Reveal>
-          <SectionMarker number="05" label={t('testimonialsEyebrow')} />
-        </Reveal>
 
-        <div className="grid lg:grid-cols-[1fr_1fr] gap-12 lg:gap-16 items-start mt-10">
+        <div className="grid lg:grid-cols-[1fr_1fr] gap-12 lg:gap-16 items-start">
 
           {/* LEFT — video in terminal */}
           <Reveal>
@@ -59,14 +56,21 @@ export async function Testimonials({ locale }: { locale: string }) {
             </div>
           </Reveal>
 
-          {/* RIGHT — text carousel */}
-          <Reveal delay={150}>
-            <TestimonialsCarousel
-              items={items}
-              titleMain="Resultados que os"
-              titleAccent="clientes sentem."
-            />
-          </Reveal>
+          {/* RIGHT — eyebrow + title + carousel grouped */}
+          <div className="flex flex-col">
+            <Reveal>
+              <SectionMarker number="05" label={t('testimonialsEyebrow')} />
+            </Reveal>
+            <Reveal delay={150}>
+              <div className="mt-4">
+                <TestimonialsCarousel
+                  items={items}
+                  titleMain="Histórias de quem construiu com a"
+                  titleAccent="Notkode."
+                />
+              </div>
+            </Reveal>
+          </div>
 
         </div>
       </div>

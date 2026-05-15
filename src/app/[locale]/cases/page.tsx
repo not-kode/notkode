@@ -44,7 +44,7 @@ export default async function CasesPage({
               <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.5rem] font-bold leading-[1.06] tracking-[-0.03em] mb-6">
                 <span className="block mb-1">Projetos que viraram</span>
                 <span className="block">
-                  <span className="font-bricolage text-gradient">resultado real.</span>
+                  <span className="font-bricolage">resultado</span> real.
                 </span>
               </h1>
               <p className="text-[17px] lg:text-[19px] text-text-secondary leading-[1.6] mx-auto max-w-2xl mb-10">

@@ -5,6 +5,31 @@ import { SectionMarker } from '@/components/ui/section-marker';
 import { ParceriasHeroBackground } from '@/components/parcerias/parcerias-hero-background';
 import { AutomationFlowDiagram } from '@/components/agentes-automacao/flow-diagram';
 import { AgentesPricingForm } from '@/components/agentes-automacao/agentes-pricing-form';
+import { TimeDrainSection } from '@/components/agentes-automacao/time-drain-section';
+import { ProductFAQ } from '@/components/ui/product-faq';
+
+const AGENTES_FAQS = [
+  {
+    q: 'WhatsApp oficial é obrigatório?',
+    a: 'Não. A API oficial faz sentido quando o cliente já tem volume e verba pra arcar com os custos (a Meta cobra por mensagem e o ciclo de aprovação é mais longo). Pra automação interna ou volume menor, integramos com outros canais (e-mail, Telegram, formulário) sem esse overhead.',
+  },
+  {
+    q: 'Vai funcionar com o CRM/ERP que eu já uso?',
+    a: 'Sim, na grande maioria dos casos. Trabalhamos com qualquer ferramenta que tenha API ou webhook (RD, HubSpot, Pipedrive, Bling, Omie, Tiny, planilha Google, Notion, Airtable…). Se não tiver, escrevemos a ponte.',
+  },
+  {
+    q: 'Posso ajustar a automação depois, sem chamar vocês?',
+    a: 'Sim. Entregamos com documentação e treinamento do seu time. Quem usa n8n/Make consegue mexer em respostas, gatilhos e mensagens sem precisar de dev. Mudanças estruturais maiores valem uma conversa com a gente.',
+  },
+  {
+    q: 'Quanto tempo até a primeira automação estar rodando?',
+    a: 'Automações simples ficam prontas em 1 a 2 semanas. Integrações com IA, agentes complexos ou pilhas com muitas ferramentas chegam a 4–6 semanas. Na primeira conversa estimamos o seu caso.',
+  },
+  {
+    q: 'E se o cliente perguntar algo que o agente não sabe responder?',
+    a: 'O agente nunca finge. Quando não tem confiança na resposta, transfere pra um humano com o contexto da conversa já anexado. Seu time recebe o lead já meio resolvido, não do zero.',
+  },
+];
 
 const USE_CASES = [
   {
@@ -15,7 +40,7 @@ const USE_CASES = [
   {
     icon: Workflow,
     title: 'Integração entre sistemas',
-    desc: 'Fluxos n8n que conectam CRM, financeiro, e-mail e planilhas — sem precisar copiar dado de um lugar para outro.',
+    desc: 'Fluxos n8n que conectam CRM, financeiro, e-mail e planilhas, sem precisar copiar dado de um lugar para outro.',
   },
   {
     icon: Bot,
@@ -25,7 +50,7 @@ const USE_CASES = [
   {
     icon: Zap,
     title: 'Automação de tarefas',
-    desc: 'De preencher planilha a enviar e-mail de cobrança — o que sua equipe faz manual pode rodar sozinho.',
+    desc: 'De preencher planilha a enviar e-mail de cobrança. O que sua equipe faz manual pode rodar sozinho.',
   },
 ];
 
@@ -36,13 +61,13 @@ const RESULTS = [
 ];
 
 const STACK = [
-  { name: 'n8n',                  use: 'Orquestração de fluxos entre sistemas — nosso default para automação séria.' },
+  { name: 'n8n',                  use: 'Orquestração de fluxos entre sistemas. Nosso default para automação séria.' },
   { name: 'Make / Zapier',        use: 'Automação rápida quando o fluxo cabe em conectores prontos.' },
   { name: 'OpenAI · Claude',      use: 'Modelos de linguagem para classificar mensagens, redigir respostas e raciocinar.' },
   { name: 'WhatsApp Business API',use: 'Mensagens transacionais e conversacionais com o cliente, com selo oficial.' },
   { name: 'Google Sheets / Drive',use: 'Banco improvisado simples e acessível para o cliente conferir/editar.' },
   { name: 'Notion · Airtable',    use: 'Bases estruturadas quando o time já vive nessas ferramentas.' },
-  { name: 'APIs custom',          use: 'Quando o sistema do cliente não tem conector — escrevemos a ponte.' },
+  { name: 'APIs custom',          use: 'Quando o sistema do cliente não tem conector, escrevemos a ponte.' },
 ];
 
 const HOW = [
@@ -84,7 +109,7 @@ export default async function AgentesAutomacaoPage({
               <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.08] tracking-[-0.03em] mb-5 break-words">
                 <span className="block mb-1">Sua equipe parou de fazer</span>
                 <span className="block">
-                  <span className="font-bricolage text-gradient">o que a máquina faz melhor.</span>
+                  o que a <span className="font-bricolage">máquina</span> faz melhor.
                 </span>
               </h1>
               <p className="text-[16px] lg:text-[17px] text-text-secondary leading-[1.6] mb-7">
@@ -107,6 +132,9 @@ export default async function AgentesAutomacaoPage({
           </div>
         </div>
       </section>
+
+      {/* ── Beat 2: onde o tempo da equipe vaza (com flow animado) ── */}
+      <TimeDrainSection />
 
       {/* ── Resultados típicos ── */}
       <section className="bg-surface-elevated">
@@ -134,8 +162,7 @@ export default async function AgentesAutomacaoPage({
           <Reveal>
             <SectionMarker number="01" label="Casos de uso comuns" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
-              Onde a automação{' '}
-              <span className="font-bricolage">faz mais diferença.</span>
+              Onde a automação faz mais <span className="font-bricolage">diferença.</span>
             </h2>
           </Reveal>
 
@@ -168,11 +195,10 @@ export default async function AgentesAutomacaoPage({
           <Reveal>
             <SectionMarker number="02" label="Stack que usamos" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4 max-w-2xl">
-              As ferramentas certas{' '}
-              <span className="font-bricolage">para cada caso.</span>
+              As ferramentas certas para cada <span className="font-bricolage">caso.</span>
             </h2>
             <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mb-12">
-              Não casamos com um único stack. Escolhemos a ferramenta certa para o problema certo — e te entregamos uma documentação clara de como tudo funciona.
+              Não casamos com um único stack. Escolhemos a ferramenta certa para o problema certo, e te entregamos uma documentação clara de como tudo funciona.
             </p>
           </Reveal>
 
@@ -202,8 +228,7 @@ export default async function AgentesAutomacaoPage({
           <Reveal>
             <SectionMarker number="03" label="Como entregamos" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
-              Três passos{' '}
-              <span className="font-bricolage">do briefing à operação.</span>
+              Três passos do briefing à <span className="font-bricolage">operação.</span>
             </h2>
           </Reveal>
 
@@ -233,15 +258,23 @@ export default async function AgentesAutomacaoPage({
         </div>
       </section>
 
+      {/* ── Beat 6: objeções específicas de automação ── */}
+      <ProductFAQ
+        eyebrow="Dúvidas frequentes"
+        title={<>O que <span className="font-bricolage">todo dono</span> pergunta antes de começar.</>}
+        faqs={AGENTES_FAQS}
+        surface="elevated"
+      />
+
       {/* ── Pricing form ── */}
-      <section id="orcamento" className="bg-surface-elevated">
+      <section id="orcamento" className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mb-10 lg:mb-12">
               <SectionMarker number="04" label="Seu orçamento" />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
-                Monte o escopo,{' '}
-                <span className="font-bricolage">veja a faixa na hora.</span>
+                Monte o escopo, veja a faixa{' '}
+                <span className="font-bricolage">na hora.</span>
               </h2>
               <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
                 Quatro perguntas curtas para entender o que você precisa. No final você vê a faixa de investimento e pode pedir a proposta detalhada.

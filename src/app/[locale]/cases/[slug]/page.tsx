@@ -198,7 +198,7 @@ export default async function CaseDetailPage({
               </p>
               <h2 className="text-[1.5rem] lg:text-[1.9rem] font-semibold tracking-tight text-text-primary mb-8">
                 Construído com{' '}
-                <span className="font-bricolage">{item.stack.length} ferramentas integradas.</span>
+                <span className="font-bricolage">{item.stack.length}</span> ferramentas integradas.
               </h2>
               <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
                 {item.stack.map((tech) => (

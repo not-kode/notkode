@@ -4,11 +4,11 @@ import { LayoutDashboard, Package, Users, BarChart3, Settings, Search, Bell, Che
 export function ProdutoAppPreview() {
   return (
     <div className="relative max-w-5xl mx-auto">
-      {/* Soft glow behind the device */}
+      {/* Soft glow behind the device — brand cyan */}
       <div
         className="absolute -inset-12 rounded-3xl pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(59,130,246,0.10) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse at center, rgba(75,210,229,0.12) 0%, transparent 65%)',
           filter: 'blur(60px)',
         }}
       />
@@ -17,7 +17,7 @@ export function ProdutoAppPreview() {
       <div
         className="relative rounded-2xl overflow-hidden border border-black/[0.10] shadow-2xl"
         style={{
-          boxShadow: '0 30px 80px -30px rgba(59,130,246,0.20), 0 16px 40px -16px rgba(0,0,0,0.12)',
+          boxShadow: '0 30px 80px -30px rgba(75,210,229,0.22), 0 16px 40px -16px rgba(0,0,0,0.12)',
         }}
       >
         {/* Window chrome */}
@@ -125,34 +125,90 @@ export function ProdutoAppPreview() {
         </div>
       </div>
 
-      {/* Floating phone mockup — bottom right corner */}
-      <div className="hidden md:block absolute -bottom-8 -right-6 lg:-right-10 w-[140px] lg:w-[160px] rotate-6">
-        <div className="relative rounded-[28px] overflow-hidden border-[10px] shadow-2xl" style={{ background: '#0a0a0f', borderColor: '#0a0a0f', boxShadow: '0 20px 60px -20px rgba(0,0,0,0.4)' }}>
+      {/* Floating phone mockup — IA notifications view */}
+      <div className="hidden md:block absolute -bottom-10 -right-4 lg:-right-8 w-[152px] lg:w-[176px] rotate-[7deg]">
+        {/* Soft cyan glow behind phone */}
+        <div
+          className="absolute -inset-6 rounded-[40px] pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse at center, rgba(75,210,229,0.20) 0%, transparent 70%)',
+            filter: 'blur(24px)',
+          }}
+        />
+        <div
+          className="relative rounded-[32px] overflow-hidden border-[8px]"
+          style={{
+            background: '#0a0a0f',
+            borderColor: '#0a0a0f',
+            boxShadow: '0 26px 70px -24px rgba(0,0,0,0.5), 0 8px 24px -8px rgba(75,210,229,0.18)',
+          }}
+        >
           {/* Phone screen */}
-          <div className="aspect-[9/19] p-3" style={{ background: 'hsl(55 100% 97%)' }}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+          <div className="aspect-[9/19.5] px-2.5 pt-7 pb-3" style={{ background: 'hsl(55 100% 97%)' }}>
+            {/* Status bar */}
+            <div className="flex items-center justify-between px-1 mb-3">
+              <span className="font-mono text-[7px] text-text-primary font-semibold">9:41</span>
+              <div className="flex items-center gap-0.5">
+                <div className="w-1 h-1 rounded-full bg-text-primary" />
+                <div className="w-1 h-1 rounded-full bg-text-primary" />
+                <div className="w-1 h-1 rounded-full bg-text-primary" />
+              </div>
+            </div>
+
+            {/* App header */}
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <div className="w-5 h-5 rounded-md bg-primary flex items-center justify-center">
                 <span className="text-white text-[7px] font-bold">N</span>
               </div>
-              <div className="w-5 h-5 rounded-full" style={{ background: 'rgba(25,25,24,0.06)' }} />
+              <div className="flex-1">
+                <p className="text-[8px] font-semibold text-text-primary leading-none">Notifs IA</p>
+                <p className="text-[5px] text-text-dim leading-none mt-0.5">3 novas hoje</p>
+              </div>
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             </div>
-            <div className="space-y-2">
-              <div className="rounded-md p-2" style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                <p className="text-[7px] font-bold text-primary">R$ 24.8k</p>
-                <p className="text-[5px] text-text-dim">vendas hoje</p>
+
+            {/* Notification feed */}
+            <div className="space-y-1.5">
+              <div
+                className="rounded-md px-2 py-1.5"
+                style={{
+                  background: 'rgba(75,210,229,0.10)',
+                  border: '1px solid rgba(75,210,229,0.18)',
+                }}
+              >
+                <div className="flex items-center gap-1 mb-0.5">
+                  <span className="text-[6px] font-mono text-primary font-bold tracking-wider">IA</span>
+                  <span className="text-[5px] text-text-dim">há 2min</span>
+                </div>
+                <p className="text-[6.5px] text-text-primary leading-snug">
+                  Lead João S. respondeu. Quente.
+                </p>
               </div>
-              <div className="rounded-md p-2" style={{ background: 'rgba(25,25,24,0.03)' }}>
-                <p className="text-[7px] font-semibold text-text-primary">48 pedidos</p>
-                <p className="text-[5px] text-text-dim">+8 desde ontem</p>
+
+              <div className="rounded-md px-2 py-1.5" style={{ background: 'rgba(25,25,24,0.03)' }}>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <span className="text-[6px] font-mono text-text-secondary font-bold tracking-wider">IA</span>
+                  <span className="text-[5px] text-text-dim">há 12min</span>
+                </div>
+                <p className="text-[6.5px] text-text-primary leading-snug">
+                  E-mail enviado pra 8 clientes.
+                </p>
               </div>
-              <div className="rounded-md p-2" style={{ background: 'rgba(25,25,24,0.03)' }}>
-                <p className="text-[7px] font-semibold text-text-primary">3 ações IA</p>
-                <p className="text-[5px] text-text-dim">automáticas hoje</p>
+
+              <div className="rounded-md px-2 py-1.5" style={{ background: 'rgba(25,25,24,0.03)' }}>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <span className="text-[6px] font-mono text-text-secondary font-bold tracking-wider">IA</span>
+                  <span className="text-[5px] text-text-dim">há 1h</span>
+                </div>
+                <p className="text-[6.5px] text-text-primary leading-snug">
+                  Estoque baixo: produto X.
+                </p>
               </div>
             </div>
           </div>
-          {/* Notch */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-3 rounded-full" style={{ background: '#0a0a0f' }} />
+
+          {/* Notch / Dynamic Island */}
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-14 h-4 rounded-full" style={{ background: '#0a0a0f' }} />
         </div>
       </div>
     </div>

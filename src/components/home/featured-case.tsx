@@ -1,7 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { ArrowRight, Quote } from 'lucide-react';
 import { Link } from '@/i18n/routing';
-import { SectionMarker } from '@/components/ui/section-marker';
 import { Reveal } from '@/components/ui/reveal';
 
 export async function FeaturedCase({ locale }: { locale: string }) {
@@ -11,7 +10,12 @@ export async function FeaturedCase({ locale }: { locale: string }) {
     <section id="cases" className="relative overflow-hidden bg-surface-base scroll-mt-24">
       <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
         <Reveal>
-          <SectionMarker number="02" label={t('caseEyebrow')} />
+          <div className="inline-flex items-center gap-2.5 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-muted">
+              {t('caseEyebrow')}
+            </span>
+          </div>
         </Reveal>
 
         <div className="grid lg:grid-cols-[1.5fr_1fr] gap-10 lg:gap-16 mt-10">

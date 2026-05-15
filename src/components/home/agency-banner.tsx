@@ -2,7 +2,6 @@ import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { ArrowRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
-import { SectionMarker } from '@/components/ui/section-marker';
 import { Reveal } from '@/components/ui/reveal';
 
 export async function AgencyBanner({ locale }: { locale: string }) {
@@ -107,7 +106,12 @@ export async function AgencyBanner({ locale }: { locale: string }) {
           {/* RIGHT — text + CTA */}
           <Reveal delay={120}>
             <div>
-              <SectionMarker number="03" label={t('agencyEyebrow')} />
+              <div className="inline-flex items-center gap-2.5 mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-muted">
+                  {t('agencyEyebrow')}
+                </span>
+              </div>
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-4 mt-2">
                 Multiplique sua{' '}
                 <span className="font-bricolage">receita</span>{' '}

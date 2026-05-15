@@ -126,7 +126,7 @@ export default async function ParceriasPage({
               <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.08] tracking-[-0.03em] mb-5 break-words">
                 <span className="block mb-1">Sua agência entrega mais.</span>
                 <span className="block">
-                  <span className="font-bricolage text-gradient">Sem contratar ninguém.</span>
+                  Sem contratar <span className="font-bricolage">ninguém.</span>
                 </span>
               </h1>
               <p className="text-[16px] lg:text-[17px] text-text-secondary leading-[1.6] mb-7">
@@ -191,7 +191,7 @@ export default async function ParceriasPage({
             <SectionMarker number="01" label="Por que parceria" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
               Quatro motivos para{' '}
-              <span className="font-bricolage">parar de recusar projetos.</span>
+              parar de <span className="font-bricolage">recusar</span> projetos.
             </h2>
           </Reveal>
 
@@ -229,7 +229,7 @@ export default async function ParceriasPage({
             <SectionMarker number="03" label="Seu novo portfólio" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
               O que sua agência passa{' '}
-              <span className="font-bricolage">a oferecer.</span>
+              a <span className="font-bricolage">oferecer.</span>
             </h2>
           </Reveal>
 
@@ -265,7 +265,7 @@ export default async function ParceriasPage({
               <SectionMarker number="05" label="Vamos conversar" />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-6">
                 Conta como{' '}
-                <span className="font-bricolage">a gente pode te ajudar.</span>
+                a gente pode te <span className="font-bricolage">ajudar.</span>
               </h2>
               <p className="text-[16px] text-text-secondary leading-relaxed">
                 Três perguntas curtas pra entender sua agência e como podemos ser braço técnico — sem reunião desnecessária. Resposta em até 24h.

@@ -1,10 +1,56 @@
 import { setRequestLocale } from 'next-intl/server';
-import { ArrowDown, Palette, Type, BookOpen, Layout, Search, PenTool, Rocket } from 'lucide-react';
+import {
+  ArrowDown, Palette, Type, BookOpen, Layout, Search, PenTool, Rocket,
+  Sprout, Leaf, Flag, ArrowRight,
+} from 'lucide-react';
+import Link from 'next/link';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { SobreHeroBackground } from '@/components/sobre/sobre-hero-background';
 import { BrandbookPreviewLazy as BrandbookPreview } from '@/components/design/brandbook-preview-lazy';
 import { BrandbookPricingForm } from '@/components/brandbook/brandbook-pricing-form';
+import { ProductFAQ } from '@/components/ui/product-faq';
+
+const LIFECYCLE_STAGES = [
+  {
+    Icon: Sprout,
+    label: 'Marca nascendo',
+    desc: 'Empresa pré-lançamento ou primeiro mercado. Precisa de identidade pra existir oficialmente.',
+  },
+  {
+    Icon: Leaf,
+    label: 'Rebrand leve',
+    desc: 'O negócio amadureceu e o visual ficou pra trás. Hora de atualizar sem reinventar do zero.',
+  },
+  {
+    Icon: Flag,
+    label: 'Antes do site novo',
+    desc: 'A marca precisa estar pronta antes do site sair, pra ele já nascer consistente com a identidade.',
+  },
+];
+
+const BRANDBOOK_FAQS = [
+  {
+    q: 'Preciso de brandbook se já tenho logo?',
+    a: 'Depende. Se você tem só o logo solto, sem paleta definida, tipografia escolhida ou regras de uso, qualquer designer novo vai criar inconsistência. O brandbook é o que protege a marca de virar versões soltas em apresentação, social e site.',
+  },
+  {
+    q: 'Vocês refazem o logo do zero ou trabalham com o que já existe?',
+    a: 'Os dois caminhos. Refazer do zero quando a marca não traduz mais quem o negócio é hoje. Refinar quando o logo já tem identidade, mas falta sistema (paleta, tipografia, aplicações).',
+  },
+  {
+    q: 'Quanto tempo até a marca estar pronta?',
+    a: 'Entre 2 e 3 semanas pro brandbook essencial. Combo com site costuma rodar em paralelo: a marca fica pronta antes do site ir pro ar, garantindo consistência.',
+  },
+  {
+    q: 'O brandbook combina com o site que vocês fazem?',
+    a: 'É o jeito que recomendamos contratar. Quando os dois saem juntos, a identidade visual chega no site exata, sem reinterpretação. Combo Brandbook + Site sai com desconto.',
+  },
+  {
+    q: 'Quem fica com os arquivos editáveis?',
+    a: 'Você. Vetores em SVG, PDF e PNG, sem dependência de software pago. Pode levar pra qualquer designer continuar a partir daí.',
+  },
+];
 
 const DELIVERABLES = [
   {
@@ -72,11 +118,11 @@ export default async function BrandbookPage({
               <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.08] tracking-[-0.03em] mb-6">
                 <span className="block mb-1">A marca da sua empresa,</span>
                 <span className="block">
-                  <span className="font-bricolage text-gradient">feita pra durar.</span>
+                  feita pra <span className="font-bricolage">durar.</span>
                 </span>
               </h1>
               <p className="text-[17px] lg:text-[19px] text-text-secondary leading-[1.6] mx-auto mb-8">
-                Logo, paleta de cores, tipografia e brandbook completo. Construímos a identidade visual que sua empresa precisa para crescer com personalidade e consistência.
+                Pra marca nova nascendo, rebrand leve ou antes do site novo. Logo, paleta, tipografia e brandbook prontos pra sustentar tudo que a empresa vai construir depois.
               </p>
 
               <a
@@ -111,15 +157,65 @@ export default async function BrandbookPage({
         </div>
       </section>
 
-      {/* ── Brandbook preview ── */}
+      {/* ── Quando faz sentido: ciclo de vida da marca ── */}
       <section className="bg-surface-base">
+        <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
+          <Reveal>
+            <div className="max-w-3xl mx-auto text-center mb-14 lg:mb-16">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim mb-4">
+                Quando faz sentido
+              </p>
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                <span className="block">Três momentos em que sua marca</span>
+                <span className="font-bricolage block">pede um brandbook.</span>
+              </h2>
+              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
+                Brandbook não é coisa só de empresa madura. É a base que segura tudo que vem depois: o site, a apresentação, o post, a proposta.
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Visual estático: 3 etapas com ícones, linha central tracejada conectando */}
+          <Reveal delay={120}>
+            <div className="relative max-w-4xl mx-auto px-4 lg:px-8" aria-hidden="true">
+              {/* Linha central horizontal (desktop), alinhada com o centro vertical dos ícones */}
+              <div className="hidden md:block absolute left-[14%] right-[14%] top-[52px] h-px border-t border-dashed border-black/20" />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 relative">
+                {LIFECYCLE_STAGES.map(({ Icon, label, desc }, i) => (
+                  <div
+                    key={label}
+                    className="relative z-10 flex flex-col items-center text-center px-4 pt-6 pb-7"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-white border border-black/[0.08] flex items-center justify-center shadow-sm mb-5">
+                      <Icon className="w-6 h-6 text-primary" strokeWidth={1.6} />
+                    </div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim mb-2">
+                      Etapa {String(i + 1).padStart(2, '0')}
+                    </p>
+                    <p className="font-bricolage text-[18px] lg:text-[20px] font-semibold text-text-primary mb-2">
+                      {label}
+                    </p>
+                    <p className="text-[13px] lg:text-[14px] text-text-secondary leading-relaxed max-w-xs">
+                      {desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── Brandbook preview ── */}
+      <section className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-14">
               <SectionMarker number="01" label="Veja um exemplo real" />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
                 Folheie o brandbook que{' '}
-                <span className="font-bricolage">a gente entrega.</span>
+                a gente <span className="font-bricolage">entrega.</span>
               </h2>
               <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
                 Role para baixo dentro do documento e veja as páginas reais de uma identidade visual: capa, logo, cores, tipografia, componentes e aplicações.
@@ -134,14 +230,14 @@ export default async function BrandbookPage({
       </section>
 
       {/* ── Entregáveis ── */}
-      <section className="bg-surface-elevated">
+      <section className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-12">
               <SectionMarker number="02" label="O que você recebe" />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4">
                 Tudo que sua marca{' '}
-                <span className="font-bricolage">precisa para existir.</span>
+                precisa para <span className="font-bricolage">existir.</span>
               </h2>
             </div>
           </Reveal>
@@ -170,13 +266,12 @@ export default async function BrandbookPage({
       </section>
 
       {/* ── Como entregamos ── */}
-      <section className="bg-surface-base">
+      <section className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <SectionMarker number="03" label="Como entregamos" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
-              Três etapas{' '}
-              <span className="font-bricolage">do briefing à marca pronta.</span>
+              Três etapas do briefing à <span className="font-bricolage">marca pronta.</span>
             </h2>
           </Reveal>
 
@@ -206,15 +301,86 @@ export default async function BrandbookPage({
         </div>
       </section>
 
+      {/* ── Combo Brandbook + Site: cross-sell visual ── */}
+      <section className="bg-surface-base">
+        <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
+          <Reveal>
+            <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-14">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim mb-4">
+                Combo natural
+              </p>
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                Brandbook e Site,{' '}
+                <span className="font-bricolage">na mesma respiração.</span>
+              </h2>
+              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
+                Quando os dois saem juntos, a identidade chega no site exata, sem reinterpretação. Sem perder uma palette no caminho, sem refazer tipografia. E o combo sai com desconto.
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Visual: two pieces fitting */}
+          <Reveal delay={120}>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 max-w-3xl mx-auto mb-10">
+              <div className="flex-1 max-w-xs w-full rounded-2xl border border-black/[0.08] bg-white/60 p-6 text-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="w-5 h-5 text-primary" strokeWidth={1.7} />
+                </div>
+                <p className="font-bricolage text-[18px] font-semibold text-text-primary mb-1">
+                  Brandbook
+                </p>
+                <p className="text-[13px] text-text-secondary">
+                  Logo, paleta, tipografia, regras
+                </p>
+              </div>
+
+              <ArrowRight className="w-6 h-6 text-primary rotate-90 md:rotate-0 shrink-0" strokeWidth={1.8} />
+
+              <div className="flex-1 max-w-xs w-full rounded-2xl border border-black/[0.08] bg-white/60 p-6 text-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Layout className="w-5 h-5 text-primary" strokeWidth={1.7} />
+                </div>
+                <p className="font-bricolage text-[18px] font-semibold text-text-primary mb-1">
+                  Site
+                </p>
+                <p className="text-[13px] text-text-secondary">
+                  Identidade aplicada, sem ruído
+                </p>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={240}>
+            <div className="text-center">
+              <Link
+                href="/sites"
+                className="font-bricolage inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-black/[0.12] bg-white/60 hover:bg-white/90 text-text-primary font-bold text-[13px] uppercase tracking-wide transition-all duration-200"
+              >
+                Ver como funciona o combo
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── FAQ: objeções comuns de brandbook ── */}
+      <ProductFAQ
+        eyebrow="Dúvidas frequentes"
+        title={<>O que <span className="font-bricolage">todo fundador</span> pergunta antes de fechar.</>}
+        faqs={BRANDBOOK_FAQS}
+        surface="elevated"
+      />
+
       {/* ── Pricing form ── */}
-      <section id="orcamento" className="bg-surface-elevated">
+      <section id="orcamento" className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mb-10 lg:mb-12">
               <SectionMarker number="04" label="Seu orçamento" />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
-                Monte sua identidade,{' '}
-                <span className="font-bricolage">veja o investimento na hora.</span>
+                Monte sua identidade, veja o investimento{' '}
+                <span className="font-bricolage">na hora.</span>
               </h2>
               <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
                 Quatro perguntas curtas. No final você vê o investimento estimado e pode pedir a proposta detalhada.

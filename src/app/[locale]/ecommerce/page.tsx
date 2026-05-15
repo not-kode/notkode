@@ -3,13 +3,46 @@ import { ArrowDown, ShoppingCart, RefreshCw, TrendingUp, CreditCard, Search, Pen
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { ProdutosHeroBackground } from '@/components/produtos-digitais/produtos-hero-background';
-import { BrowserShowcase, type ShowcaseSlide } from '@/components/ui/browser-showcase';
+import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showcase';
 import { EcommercePricingForm } from '@/components/ecommerce/ecommerce-pricing-form';
+import { PainNamingBlock } from '@/components/ui/pain-naming-block';
+import { ProductFAQ } from '@/components/ui/product-faq';
 
-const STORE_SLIDES: ShowcaseSlide[] = [
-  { id: 'noodrops',       name: 'Noodrops',         url: 'noodrops.com.br',           live: true },
-  { id: 'brechodonhanha', name: 'Brechó do Nhanha', url: 'brechodonhanha.com.br',     from: '#9D174D', to: '#500724', tag: 'moda circular' },
-  { id: 'ipecas',         name: 'IPeças',           url: 'ipecasdaconstrucao.com.br', from: '#0369A1', to: '#0C4A6E', tag: 'peças & construção' },
+const FRANKENSTEIN_LINES = [
+  { text: 'Plataforma de loja (Shopify, Yampi, Loja Integrada…)', metric: 'R$ 600–1.200/mês' },
+  { text: 'App de cupom + recuperação de carrinho', metric: 'R$ 200–350/mês' },
+  { text: 'App de frete inteligente', metric: 'R$ 150–300/mês' },
+  { text: 'Gateway de pagamento', metric: '3,4% por transação' },
+  { text: 'ERP + integrador', metric: 'R$ 350–600/mês' },
+  { text: 'Plugins avulsos (review, pop-up, SEO, fiscal…)', metric: 'R$ 150–250/mês' },
+];
+
+const ECOMMERCE_FAQS = [
+  {
+    q: 'Já estou na Shopify (ou Yampi, Nuvemshop…). Preciso migrar tudo?',
+    a: 'Não obrigatoriamente. Em muitos casos a gente integra o que falta (ERP, automações, CRM próprio) e mantém a plataforma atual rodando. Migração só quando o custo mensal já dói e o catálogo justifica.',
+  },
+  {
+    q: 'Perco SEO e ranking na migração?',
+    a: 'Não. Mapeamos todas as URLs antigas, fazemos redirecionamento 301, mantemos estrutura de palavras-chave e monitoramos ranking nas primeiras 4 semanas. Na maioria das migrações o tráfego se mantém ou cresce.',
+  },
+  {
+    q: 'E meus dados de cliente, vão pra onde?',
+    a: 'Você é dono do banco. Migramos clientes, histórico de pedidos e cupons. O CRM fica seu, sem assinatura de plataforma cobrando pelo seu próprio dado.',
+  },
+  {
+    q: 'Quanto tempo até a loja estar no ar?',
+    a: 'Entre 4 e 8 semanas. Loja nova do zero leva mais tempo que migração ou otimização. Na primeira conversa estimamos o prazo do seu caso.',
+  },
+  {
+    q: 'E se eu quiser trocar de fornecedor depois?',
+    a: 'Troca. O código é seu, a hospedagem é sua, o banco é seu. Sem fidelidade, sem refém. Qualquer dev consegue continuar o trabalho.',
+  },
+];
+
+const STORE_SLIDES: StackSlide[] = [
+  { id: 'noodrops', name: 'Noodrops',   url: 'noodrops.com.br',       image: '/images/portfolio/noodrops.jpg', segment: 'nootrópicos' },
+  { id: 'donanha',  name: 'Dona Nhá',   url: 'donanhabrecho.com.br',  image: '/images/portfolio/donanha.jpg',  segment: 'brechó / moda' },
 ];
 
 const SCENARIOS = [
@@ -47,7 +80,7 @@ const PLATFORMS = [
   },
   {
     name: 'Custom (Next.js)',
-    use: 'Quando o negócio precisa de algo único — assinaturas, configurador de produto, integração pesada com ERP.',
+    use: 'Quando o negócio precisa de algo único: assinaturas, configurador de produto, integração pesada com ERP.',
   },
 ];
 
@@ -88,11 +121,11 @@ export default async function EcommercePage({
               <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.5rem] font-bold leading-[1.06] tracking-[-0.03em] mb-6">
                 <span className="block mb-1">Loja virtual que</span>
                 <span className="block">
-                  <span className="font-bricolage text-gradient">vende sozinha.</span>
+                  vende <span className="font-bricolage">sozinha.</span>
                 </span>
               </h1>
               <p className="text-[17px] lg:text-[19px] text-text-secondary leading-[1.6] max-w-2xl mx-auto mb-8">
-                Do catálogo ao checkout, com pagamento, frete e marketing integrados. Construímos lojas que faturam R$80k a R$150k por mês — calcule seu projeto abaixo.
+                Do catálogo ao checkout, com pagamento, frete e marketing integrados. Construímos lojas que faturam R$80k a R$150k por mês. Calcule seu projeto abaixo.
               </p>
             </Reveal>
 
@@ -108,10 +141,31 @@ export default async function EcommercePage({
           </div>
 
           <Reveal delay={280} distance={32}>
-            <BrowserShowcase slides={STORE_SLIDES} />
+            <StackedShowcase slides={STORE_SLIDES} />
           </Reveal>
         </div>
       </section>
+
+      {/* ── Beat 2: Frankenstein de assinaturas — nomeia a dor do ICP ── */}
+      <PainNamingBlock
+        eyebrow="A conta no fim do mês"
+        title={<>Sua loja virou um <span className="font-bricolage">Frankenstein</span> de assinaturas.</>}
+        intro="Plataforma, app de cupom, app de frete, gateway, ERP, plugin disso, plugin daquilo. Cada um cobra. Cada um cresce com o faturamento. Cada um tira um pedaço da margem antes de você ver o lucro."
+        variant="tally"
+        surface="base"
+        pains={FRANKENSTEIN_LINES}
+        footer={
+          <div className="max-w-2xl rounded-2xl border border-black/[0.08] bg-white/40 px-6 py-5 lg:px-8 lg:py-6">
+            <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-dim mb-2">
+              Conta típica de uma DTC de R$ 80k–R$ 200k/mês
+            </p>
+            <p className="text-[15px] lg:text-[16px] text-text-primary leading-snug">
+              <span className="font-semibold">R$ 1.500 a R$ 3.000/mês fixos</span>, mais{' '}
+              <span className="font-semibold">3,4% sobre tudo que vende</span>. Numa loja sob medida, isso vira investimento único, sem teto de crescimento e sem alugar pedaços da sua operação.
+            </p>
+          </div>
+        }
+      />
 
       {/* ── Resultados ── */}
       <section className="bg-surface-elevated">
@@ -139,8 +193,7 @@ export default async function EcommercePage({
           <Reveal>
             <SectionMarker number="01" label="Para qual cenário" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
-              Três cenários,{' '}
-              <span className="font-bricolage">o mesmo cuidado.</span>
+              Três cenários, o mesmo <span className="font-bricolage">cuidado.</span>
             </h2>
           </Reveal>
 
@@ -173,8 +226,8 @@ export default async function EcommercePage({
           <Reveal>
             <SectionMarker number="02" label="Plataformas que usamos" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4 max-w-2xl">
-              Cada loja tem a plataforma{' '}
-              <span className="font-bricolage">que faz sentido.</span>
+              Cada loja tem a plataforma que faz{' '}
+              <span className="font-bricolage">sentido.</span>
             </h2>
             <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mb-12">
               Não casamos com uma plataforma só. Recomendamos com base em catálogo, ticket médio e modelo de venda.
@@ -208,8 +261,7 @@ export default async function EcommercePage({
           <Reveal>
             <SectionMarker number="03" label="Como entregamos" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
-              Três etapas{' '}
-              <span className="font-bricolage">até a loja vender sozinha.</span>
+              Três etapas até a loja vender <span className="font-bricolage">sozinha.</span>
             </h2>
           </Reveal>
 
@@ -239,15 +291,23 @@ export default async function EcommercePage({
         </div>
       </section>
 
+      {/* ── Beat 6: objeções específicas de e-commerce ── */}
+      <ProductFAQ
+        eyebrow="Dúvidas frequentes"
+        title={<>Perguntas que <span className="font-bricolage">todo dono</span> de loja faz.</>}
+        faqs={ECOMMERCE_FAQS}
+        surface="elevated"
+      />
+
       {/* ── Pricing form ── */}
-      <section id="orcamento" className="bg-surface-elevated">
+      <section id="orcamento" className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mb-10 lg:mb-12">
               <SectionMarker number="04" label="Seu orçamento" />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
-                Monte sua loja,{' '}
-                <span className="font-bricolage">veja o investimento na hora.</span>
+                Monte sua loja, veja o investimento{' '}
+                <span className="font-bricolage">na hora.</span>
               </h2>
               <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
                 Quatro perguntas para entender seu cenário. No final você vê a faixa estimada e pode pedir a proposta detalhada.

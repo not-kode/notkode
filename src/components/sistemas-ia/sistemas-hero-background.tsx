@@ -3,13 +3,14 @@
 import { useEffect, useRef } from 'react';
 
 // Blob definitions — collision radius + visual size
+// Brand cyan/turquoise (primary + soft) com opacidades reduzidas — fundo menos saturado
 const DEFS = [
-  { r: 190, w: 380, h: 320, opacity: 0.30, blur: 52, color: '59,130,246',  morphDur: '11s', morphDelay: '0s'   },
-  { r: 110, w: 220, h: 200, opacity: 0.24, blur: 40, color: '147,197,253', morphDur: '9s',  morphDelay: '-3s'  },
-  { r: 130, w: 260, h: 230, opacity: 0.20, blur: 46, color: '59,130,246',  morphDur: '13s', morphDelay: '-6s'  },
-  { r:  70, w: 140, h: 128, opacity: 0.22, blur: 30, color: '147,197,253', morphDur: '8s',  morphDelay: '-2s'  },
-  { r:  85, w: 170, h: 150, opacity: 0.18, blur: 34, color: '59,130,246',  morphDur: '10s', morphDelay: '-4s'  },
-  { r:  48, w:  96, h:  86, opacity: 0.16, blur: 22, color: '147,197,253', morphDur: '7s',  morphDelay: '-1s'  },
+  { r: 190, w: 380, h: 320, opacity: 0.18, blur: 56, color: '75,210,229',  morphDur: '11s', morphDelay: '0s'   },
+  { r: 110, w: 220, h: 200, opacity: 0.14, blur: 42, color: '142,226,229', morphDur: '9s',  morphDelay: '-3s'  },
+  { r: 130, w: 260, h: 230, opacity: 0.12, blur: 48, color: '75,210,229',  morphDur: '13s', morphDelay: '-6s'  },
+  { r:  70, w: 140, h: 128, opacity: 0.13, blur: 32, color: '142,226,229', morphDur: '8s',  morphDelay: '-2s'  },
+  { r:  85, w: 170, h: 150, opacity: 0.10, blur: 36, color: '75,210,229',  morphDur: '10s', morphDelay: '-4s'  },
+  { r:  48, w:  96, h:  86, opacity: 0.09, blur: 24, color: '142,226,229', morphDur: '7s',  morphDelay: '-1s'  },
 ] as const;
 
 type BlobState = {

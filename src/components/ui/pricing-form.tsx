@@ -73,6 +73,48 @@ function isFieldComplete(field: PricingField, value: string | string[]): boolean
   return Array.isArray(value) && value.length >= min;
 }
 
+type SummaryRow = { label: string; valueLabels: string[] };
+
+function summarizeSelection(schema: PricingSchema, selection: PricingSelection): SummaryRow[] {
+  return schema.fields
+    .map((field): SummaryRow => {
+      const value = selection[field.id];
+      if (field.type === 'single') {
+        const opt = field.options.find((o) => o.value === value);
+        return { label: field.label, valueLabels: opt ? [opt.label] : [] };
+      }
+      const arr = (value as string[]) ?? [];
+      const labels = arr
+        .map((v) => field.options.find((o) => o.value === v)?.label)
+        .filter((l): l is string => Boolean(l));
+      return { label: field.label, valueLabels: labels };
+    })
+    .filter((s) => s.valueLabels.length > 0);
+}
+
+function buildWhatsAppMessage(
+  schema: PricingSchema,
+  summary: SummaryRow[],
+  min: number,
+  max: number,
+  name: string,
+): string {
+  const greeting = name
+    ? `Olá! Sou ${name}, acabei de preencher o formulário no site Notkode (${schema.serviceTag}).`
+    : `Olá! Acabei de preencher o formulário no site Notkode (${schema.serviceTag}).`;
+  const lines = [
+    greeting,
+    '',
+    'Meu escopo:',
+    ...summary.map((s) => `• ${s.label}: ${s.valueLabels.join(', ')}`),
+    '',
+    `Faixa estimada: ${fmt(min)} – ${fmt(max)}`,
+    '',
+    'Podemos seguir com a proposta detalhada?',
+  ];
+  return lines.join('\n');
+}
+
 // ── Main component ────────────────────────────────────────────────────────
 
 export function PricingForm({ schema }: { schema: PricingSchema }) {
@@ -129,36 +171,99 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   // ── Success screen ──
   if (status === 'success') {
     const copy = schema.copy ?? {};
+    const summary = summarizeSelection(schema, selection);
+    const waMessage = buildWhatsAppMessage(schema, summary, min, max, name);
+    const waUrl = `https://wa.me/5511951381254?text=${encodeURIComponent(waMessage)}`;
+
     return (
       <div
-        className="rounded-2xl border border-black/[0.08] p-8 lg:p-12 text-center max-w-2xl mx-auto"
+        className="rounded-2xl border border-black/[0.08] overflow-hidden max-w-2xl mx-auto"
         style={{ background: 'hsl(55 100% 97%)' }}
       >
-        <div className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-6">
-          <Check className="w-8 h-8 text-primary" strokeWidth={2.5} />
+        {/* Header centralizado */}
+        <div className="px-6 lg:px-10 pt-10 pb-6 text-center">
+          <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-5">
+            <Check className="w-7 h-7 text-primary" strokeWidth={2.5} />
+          </div>
+          <h3 className="text-[1.5rem] lg:text-[1.75rem] font-semibold tracking-tight text-text-primary mb-2">
+            {copy.successTitle ?? 'Sua proposta tá pronta.'}
+          </h3>
+          <p className="text-[14px] text-text-secondary leading-relaxed max-w-md mx-auto">
+            {name ? `${name}, ` : ''}sua faixa está estimada abaixo. Próximo passo é confirmar tudo no WhatsApp.
+          </p>
         </div>
-        <h3 className="text-[1.5rem] lg:text-[1.75rem] font-semibold tracking-tight text-text-primary mb-3">
-          {copy.successTitle ?? 'Recebemos seu pedido.'}
-        </h3>
-        <p className="text-[15px] text-text-secondary leading-relaxed mb-2 max-w-md mx-auto">
-          Faixa estimada para o seu escopo:{' '}
-          <span className="font-bricolage font-semibold text-text-primary whitespace-nowrap">
-            {fmt(min)} – {fmt(max)}
-          </span>
-        </p>
-        <p className="text-[15px] text-text-secondary leading-relaxed mb-7 max-w-md mx-auto">
-          {copy.successBody ??
-            'Em algumas horas você recebe a proposta detalhada no WhatsApp e e-mail confirmando escopo, prazo e investimento final.'}
-        </p>
-        <a
-          href="https://wa.me/5511951381254?text=Acabei de preencher o formul%C3%A1rio no site, quero acelerar."
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-bricolage inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#25D366] text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px transition-all duration-200"
-        >
-          <MessageCircle className="w-4 h-4" />
-          Falar agora pelo WhatsApp
-        </a>
+
+        {/* Faixa de preço destacada */}
+        <div className="px-6 lg:px-10 pb-6">
+          <div
+            className="rounded-2xl border border-primary/30 px-6 py-6 text-center"
+            style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))' }}
+          >
+            <p className="font-mono text-[10px] uppercase tracking-widest text-primary mb-2">
+              Investimento estimado
+            </p>
+            <p className="font-bricolage text-[1.75rem] md:text-[2.25rem] font-bold text-text-primary leading-tight tracking-tight">
+              {fmt(min)} <span className="text-text-muted font-normal">–</span> {fmt(max)}
+            </p>
+          </div>
+        </div>
+
+        {/* Resumo das escolhas */}
+        {summary.length > 0 && (
+          <div className="px-6 lg:px-10 pb-6">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-text-dim text-center mb-4">
+              Seu escopo
+            </p>
+            <ul className="space-y-2.5 max-w-md mx-auto">
+              {summary.map((s, i) => (
+                <li key={i} className="flex items-start gap-3 text-[14px]">
+                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-text-dim">{s.label}: </span>
+                    <span className="text-text-primary font-medium">{s.valueLabels.join(', ')}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Próximos passos */}
+        <div className="px-6 lg:px-10 pb-6">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-text-dim text-center mb-4">
+            O que vem agora
+          </p>
+          <ol className="space-y-2 max-w-md mx-auto">
+            {[
+              'Você abre o WhatsApp com o resumo já preenchido.',
+              'A gente confirma o escopo numa conversa de 15 minutos.',
+              'Em até 24h você recebe a proposta detalhada com prazo final.',
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-3 text-[14px] text-text-secondary leading-relaxed">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center font-mono text-[10px] text-primary mt-0.5">
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* CTA WhatsApp */}
+        <div className="px-6 lg:px-10 pb-10 pt-2 text-center">
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#25D366] text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px transition-all duration-200"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Continuar pelo WhatsApp
+          </a>
+          <p className="text-[12px] text-text-muted mt-3">
+            Mensagem com seu escopo já pré-preenchida.
+          </p>
+        </div>
       </div>
     );
   }

@@ -55,7 +55,7 @@ export default async function SobrePage({
               <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.08] tracking-[-0.03em] mt-4 mb-6 break-words">
                 <span className="block mb-1">Tecnologia sob medida,</span>
                 <span className="block">
-                  <span className="font-bricolage text-gradient">feita por gente que entende.</span>
+                  feita por gente que <span className="font-bricolage">entende.</span>
                 </span>
               </h1>
               <p className="text-[17px] lg:text-[19px] text-text-secondary leading-[1.6] max-w-2xl">
@@ -99,7 +99,7 @@ export default async function SobrePage({
             <Reveal delay={100}>
               <p className="text-[1.4rem] md:text-[1.75rem] lg:text-[1.9rem] font-semibold leading-[1.3] tracking-[-0.015em] text-text-primary">
                 Devolver às empresas o controle da sua tecnologia. Construir software que reflete o jeito único de cada operação, com IA que aprende, e código que fica nas mãos certas —{' '}
-                <span className="font-bricolage text-gradient">as do cliente.</span>
+                as do <span className="font-bricolage">cliente.</span>
               </p>
             </Reveal>
           </div>
@@ -116,7 +116,7 @@ export default async function SobrePage({
             <SectionMarker number="03" label="Quem está por trás" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
               Dois fundadores,{' '}
-              <span className="font-bricolage">um time direto.</span>
+              um time <span className="font-bricolage">direto.</span>
             </h2>
           </Reveal>
 

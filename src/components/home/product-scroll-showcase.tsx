@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 
 /* ─────────────────────────────────────────────
    Types
@@ -267,6 +267,7 @@ export function ProductScrollShowcase({
 }: Props) {
   const [active, setActive]   = useState(0);
   const [locked, setLocked]   = useState(false);
+  const [openMobile, setOpenMobile] = useState(0); // primeiro item aberto por padrão
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Auto-advance every 8s unless user locked a tab
@@ -287,36 +288,59 @@ export function ProductScrollShowcase({
 
   return (
     <>
-      {/* ── MOBILE: each feature stacked with its visual inline ── */}
-      <div className="lg:hidden space-y-10">
-        {features.map((f, i) => {
-          const VisualComp = VISUALS[i] ?? VISUALS[0];
-          const figLabel   = FIG_LABELS[i] ?? 'FIG. 001';
-          return (
-            <article
-              key={f.title}
-              className="rounded-2xl border border-black/[0.08] overflow-hidden"
-              style={{ background: 'hsl(55 100% 97%)' }}
-            >
-              <div className="p-5">
-                <h3 className="text-[16px] font-semibold tracking-tight text-text-primary mb-1.5">
-                  {f.title}
-                </h3>
-                <p className="text-[13px] text-text-secondary leading-relaxed">
-                  {f.desc}
-                </p>
-              </div>
-              <div className="relative aspect-[4/3] border-t border-black/[0.06]">
-                <VisualComp />
-                <span className="absolute bottom-3 right-4 font-mono text-[10px] tracking-[0.2em] text-text-dim uppercase pointer-events-none select-none">
-                  {figLabel}
-                </span>
-              </div>
-            </article>
-          );
-        })}
+      {/* ── MOBILE: accordion (uma feature aberta por vez) ── */}
+      <div className="lg:hidden">
+        <div className="rounded-2xl border border-black/[0.08] overflow-hidden divide-y divide-black/[0.06]" style={{ background: 'hsl(55 100% 97%)' }}>
+          {features.map((f, i) => {
+            const VisualComp = VISUALS[i] ?? VISUALS[0];
+            const figLabel   = FIG_LABELS[i] ?? 'FIG. 001';
+            const isOpen     = openMobile === i;
+            return (
+              <article key={f.title}>
+                <button
+                  type="button"
+                  onClick={() => setOpenMobile(isOpen ? -1 : i)}
+                  aria-expanded={isOpen}
+                  className="w-full flex items-center gap-3 px-5 py-4 text-left"
+                >
+                  <span
+                    className="font-mono text-[10px] tracking-widest text-text-dim shrink-0"
+                    style={{ minWidth: 28 }}
+                  >
+                    0{i + 1}
+                  </span>
+                  <h3 className="flex-1 text-[15px] font-semibold tracking-tight text-text-primary">
+                    {f.title}
+                  </h3>
+                  <ChevronDown
+                    className="w-4 h-4 text-text-secondary transition-transform shrink-0"
+                    style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0)' }}
+                    strokeWidth={2}
+                  />
+                </button>
 
-        <div className="pt-2">
+                {isOpen && (
+                  <div className="px-5 pb-5">
+                    <p className="text-[13px] text-text-secondary leading-relaxed mb-4">
+                      {f.desc}
+                    </p>
+                    <div
+                      className="relative rounded-xl border border-black/[0.08] overflow-hidden"
+                      style={{ minHeight: 380 }}
+                    >
+                      <VisualComp />
+                      <span className="absolute bottom-3 right-4 font-mono text-[9px] tracking-[0.2em] text-text-dim uppercase pointer-events-none select-none">
+                        {figLabel}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="pt-6">
           <Link
             href={ctaHref}
             className="group inline-flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all"

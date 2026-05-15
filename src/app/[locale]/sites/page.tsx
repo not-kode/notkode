@@ -1,42 +1,74 @@
 import { setRequestLocale } from 'next-intl/server';
-import { ArrowDown, Layout, FileText, BookOpen, Globe2, Gauge, Search, PenTool, Rocket } from 'lucide-react';
+import {
+  ArrowDown, Layout, FileText, BookOpen, Globe2, Search, PenTool, Rocket,
+  Sparkles, Code2, Wand2, Gauge as GaugeIcon,
+  RefreshCw, FlaskConical, ShieldCheck,
+} from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { ProdutosHeroBackground } from '@/components/produtos-digitais/produtos-hero-background';
-import { BrowserShowcase, type ShowcaseSlide } from '@/components/ui/browser-showcase';
+import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showcase';
 import { SitesPricingForm } from '@/components/sites/sites-pricing-form';
+import { ProductFAQ } from '@/components/ui/product-faq';
 
-const SITE_SLIDES: ShowcaseSlide[] = [
-  { id: 'propay',  name: 'ProPay',          url: 'propay.com.br',          embedUrl: 'https://propay.com.br',           live: true },
-  { id: 'solojet', name: 'Solojet Aviação', url: 'solojetaviacao.com.br',  embedUrl: 'https://www.solojetaviacao.com.br', live: true },
-  { id: 'simbos',  name: 'SimbOS',          url: 'simbos.com',             embedUrl: 'https://simbos.com',              live: true },
-  { id: 'blindy',  name: 'Blindy',          url: 'blindy.com.br',          embedUrl: 'https://www.blindy.com.br',       live: true },
+const SITES_FAQS = [
+  {
+    q: 'Quanto tempo até o site estar no ar?',
+    a: 'Entre 2 e 4 semanas para landing pages e sites institucionais médios. Sites com blog ou multilíngue podem levar 5 a 8 semanas. Na primeira conversa estimamos o seu caso.',
+  },
+  {
+    q: 'Preciso já ter logo e identidade visual?',
+    a: 'Não, mas ajuda. Se não tiver, fazemos o brandbook simples junto (logo, paleta, tipografia, aplicações básicas) como combo. Veja a página de Identidade & Brandbook.',
+  },
+  {
+    q: 'Framer, WordPress ou Next.js: como vocês decidem?',
+    a: 'Pelo objetivo, não pela ferramenta. Framer quando marketing quer publicar sozinho com animações ricas. WordPress quando há blog volumoso ou equipe acostumada. Next.js quando performance, SEO técnico ou integração custom importam. Mostramos os trade-offs antes de fechar.',
+  },
+  {
+    q: 'O domínio fica no meu nome? E a hospedagem?',
+    a: 'Tudo no seu nome. Domínio, conta de hospedagem, credenciais. A Notkode não trava nada. Se um dia você decidir trocar de fornecedor, sai com tudo na mão.',
+  },
+  {
+    q: 'E o conteúdo (textos, imagens)? Vocês fazem ou eu?',
+    a: 'Depende do escopo. No pacote padrão fazemos a estrutura e copy de cada página com base em briefing seu. Imagens próprias são bem-vindas; se não tiver, usamos banco de imagens curado ou contratamos foto/render à parte.',
+  },
+  {
+    q: 'Como funciona a manutenção depois do site no ar?',
+    a: 'Plano mensal opcional que cobre atualizações de conteúdo (trocar copy, imagens, criar nova seção), testes A/B de hero e copy, e manutenção técnica (segurança, performance, uptime). Sem fidelidade, e você pode pausar quando quiser.',
+  },
+];
+
+const SITE_SLIDES: StackSlide[] = [
+  { id: 'propay',  name: 'ProPay',              url: 'propay.com.br',           image: '/images/portfolio/propay.jpg',  segment: 'RH & folha' },
+  { id: 'solojet', name: 'Solojet Aviação',     url: 'solojetaviacao.com.br',   image: '/images/portfolio/solojet.jpg', segment: 'aviação executiva' },
+  { id: 'azure',   name: 'Azure Investimentos', url: 'azureinvestimentos.com',  image: '/images/portfolio/azure.jpg',   segment: 'assessoria BTG' },
+  { id: 'simbos',  name: 'SimbOS',              url: 'simbos.vercel.app',       image: '/images/portfolio/simbos.jpg',  segment: 'SaaS · AI workspace' },
 ];
 
 const TYPES = [
   {
-    icon: FileText,
-    title: 'Landing Page',
-    desc: 'Uma página focada em uma só ação: conversão. Ideal para campanhas pagas, lançamentos e captação de leads.',
-    examples: 'Hero · Prova social · CTA · Formulário',
+    icon: Layout,
+    scenario: 'Sua marca está nascendo ou ganhando cara nova.',
+    recommendation: 'Site institucional',
+    oneLiner: 'A vitrine que faz a marca parecer maior do que o time é hoje.',
   },
   {
-    icon: Layout,
-    title: 'Site Institucional',
-    desc: 'Apresentação completa da empresa — sobre, serviços, cases e contato. A vitrine digital do negócio.',
-    examples: 'Azure · Solojet · Peki · Cotton',
+    icon: FileText,
+    scenario: 'Você roda ads e o lead precisa cair direto no funil.',
+    recommendation: 'Landing Page',
+    oneLiner: 'Uma página, uma missão: converter. Pronta pra rodar campanha na segunda.',
   },
   {
     icon: BookOpen,
-    title: 'Site + Blog',
-    desc: 'Institucional com área editorial integrada. SEO de longo prazo + autoridade de conteúdo.',
-    examples: 'Sanity / WordPress · GA4 · RSS',
+    scenario: 'Você quer aparecer no Google sem brigar com ad budget.',
+    recommendation: 'Site + Blog',
+    oneLiner: 'Tráfego orgânico que não depende de verba de mídia.',
   },
   {
     icon: Globe2,
-    title: 'Site Multilíngue',
-    desc: 'Conteúdo em PT, EN e mais idiomas — pronto para audiência internacional desde o dia 1.',
-    examples: 'i18n · hreflang · CDN global',
+    scenario: 'Seu cliente fala outro idioma, ou vai falar logo.',
+    recommendation: 'Site multilíngue',
+    oneLiner: 'Tradução tratada como conteúdo, não como Google Translate.',
   },
 ];
 
@@ -46,19 +78,17 @@ const STATS = [
   { value: '95+',     label: 'pontuação média no PageSpeed' },
 ];
 
-const STACK = [
-  {
-    name: 'Framer',
-    use: 'Sites institucionais com animações ricas e CMS visual. Bom para marketing que quer publicar sozinho.',
-  },
-  {
-    name: 'Next.js',
-    use: 'Quando performance, SEO técnico ou integração custom importam. Nossa escolha default para projetos sérios.',
-  },
-  {
-    name: 'WordPress',
-    use: 'Sites com blog volumoso ou equipe já acostumada com WP. Plugins maduros para SEO e conteúdo.',
-  },
+const AI_PILLARS = [
+  { Icon: Wand2,     label: 'Design',  desc: 'Direção visual e UI prototipadas com IA antes da primeira linha de código.' },
+  { Icon: Code2,     label: 'Código',  desc: 'Stack custom em Next.js, gerado e revisado por humano com IA acelerando cada etapa.' },
+  { Icon: Sparkles,  label: 'Copy',    desc: 'Texto que vende, escrito junto, calibrado por dado e teste, não por achismo.' },
+  { Icon: GaugeIcon, label: 'Otimização', desc: 'SEO, performance e responsivo aplicados desde o primeiro commit.' },
+];
+
+const MAINTENANCE = [
+  { Icon: RefreshCw,    label: 'Atualizações de conteúdo', desc: 'Trocar copy, imagens, criar nova página ou seção sem refazer proposta a cada vez.' },
+  { Icon: FlaskConical, label: 'Testes de hero e copy',    desc: 'A/B tests pra saber o que converte. Decisão por dado, não por achismo.' },
+  { Icon: ShieldCheck,  label: 'Manutenção técnica',       desc: 'Segurança, uptime, performance e correções monitoradas, pra você não precisar pensar nisso.' },
 ];
 
 const HOW = [
@@ -98,11 +128,11 @@ export default async function SitesPage({
               <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.5rem] font-bold leading-[1.06] tracking-[-0.03em] mb-6">
                 <span className="block mb-1">Seu site no ar em</span>
                 <span className="block">
-                  <span className="font-bricolage text-gradient">poucas semanas.</span>
+                  poucas <span className="font-bricolage">semanas.</span>
                 </span>
               </h1>
               <p className="text-[17px] lg:text-[19px] text-text-secondary leading-[1.6] max-w-2xl mx-auto mb-8">
-                Landing pages, sites institucionais e blogs construídos sob medida — sem template, com performance, SEO e copy de verdade. Calcule o investimento abaixo.
+                LP pra campanha que começa segunda, ou institucional que vai com a marca nova. A gente desenha pelo objetivo do seu cliente, não pelo template que dá menos trabalho.
               </p>
             </Reveal>
 
@@ -118,7 +148,7 @@ export default async function SitesPage({
           </div>
 
           <Reveal delay={280} distance={32}>
-            <BrowserShowcase slides={SITE_SLIDES} />
+            <StackedShowcase slides={SITE_SLIDES} />
           </Reveal>
         </div>
       </section>
@@ -143,40 +173,58 @@ export default async function SitesPage({
         </div>
       </section>
 
-      {/* ── Tipos ── */}
+      {/* ── Tipos como decisão (cenário → recomendação) ── */}
       <section className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
-            <SectionMarker number="01" label="O que construímos" />
-            <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
-              Quatro formatos.{' '}
-              <span className="font-bricolage">Uma só metodologia.</span>
-            </h2>
+            <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim mb-4">
+                Que site faz sentido pra você
+              </p>
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                A escolha não é{' '}
+                <span className="font-bricolage">de template.</span>
+                <br />
+                É de momento.
+              </h2>
+              <p className="mt-5 text-[16px] lg:text-[17px] leading-relaxed text-text-secondary max-w-2xl mx-auto">
+                Antes de pensar em ferramenta, entenda em qual desses quatro momentos sua marca está. O formato certo cai sozinho.
+              </p>
+            </div>
           </Reveal>
 
-          <div className="grid md:grid-cols-2 gap-5 lg:gap-6">
+          <div className="grid md:grid-cols-2 gap-4 lg:gap-5 max-w-5xl mx-auto">
             {TYPES.map((t, i) => (
-              <Reveal key={t.title} delay={i * 90}>
+              <Reveal key={t.recommendation} delay={i * 90}>
                 <article
-                  className="rounded-2xl border border-black/[0.08] p-6 lg:p-7 h-full hover:border-primary/30 hover:-translate-y-1 transition-all duration-300"
+                  className="group h-full rounded-2xl border border-black/[0.08] p-6 lg:p-7 hover:border-primary/30 hover:-translate-y-1 transition-all duration-300"
                   style={{ background: 'hsl(55 100% 97%)' }}
                 >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <t.icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
                     </div>
-                    <h3 className="text-[18px] lg:text-[20px] font-semibold tracking-tight text-text-primary">
-                      {t.title}
-                    </h3>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim">
+                      Cenário {String(i + 1).padStart(2, '0')}
+                    </span>
                   </div>
-                  <p className="text-[14px] text-text-secondary leading-relaxed mb-4">
-                    {t.desc}
+
+                  <p className="text-[16px] lg:text-[17px] font-semibold text-text-primary leading-snug mb-5">
+                    {t.scenario}
                   </p>
-                  <div className="pt-3 border-t border-black/[0.06]">
-                    <p className="font-mono text-[10px] text-text-dim">
-                      {t.examples}
-                    </p>
+
+                  <div className="flex items-center gap-2 text-primary mb-2">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.16em]">
+                      A gente entrega
+                    </span>
+                    <span className="h-px flex-1 bg-primary/20" />
                   </div>
+                  <p className="font-bricolage text-[20px] lg:text-[22px] font-semibold text-text-primary mb-2">
+                    {t.recommendation}
+                  </p>
+                  <p className="text-[13px] lg:text-[14px] text-text-secondary leading-snug">
+                    {t.oneLiner}
+                  </p>
                 </article>
               </Reveal>
             ))}
@@ -184,38 +232,47 @@ export default async function SitesPage({
         </div>
       </section>
 
-      {/* ── Stack ── */}
-      <section className="bg-surface-elevated">
+      {/* ── Construção com IA: o foco real da Notkode em 2026 ── */}
+      <section className="relative bg-surface-elevated overflow-hidden">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
-            <SectionMarker number="02" label="Stack que usamos" />
-            <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4 max-w-2xl">
-              A tecnologia certa{' '}
-              <span className="font-bricolage">para cada caso.</span>
-            </h2>
-            <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mb-12">
-              Escolhemos a plataforma certa para seu objetivo — não te empurramos para o que dá mais comissão.
-            </p>
+            <div className="max-w-3xl mx-auto text-center mb-14 lg:mb-16">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim mb-4">
+                Como construímos
+              </p>
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                Cada site é construído{' '}
+                <span className="font-bricolage">com IA</span>, ponta a ponta.
+              </h2>
+              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
+                IA aplicada no processo, do design ao código, da copy à otimização. É por isso que entregamos em 2 a 4 semanas o que outras agências levam três meses. Sem comprometer qualidade.
+              </p>
+            </div>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-4 lg:gap-5">
-            {STACK.map((s, i) => (
-              <Reveal key={s.name} delay={i * 80}>
-                <div
-                  className="rounded-xl border border-black/[0.08] p-5 lg:p-6 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
-                >
-                  <p className="font-bricolage text-[16px] font-semibold text-text-primary mb-2 flex items-center gap-2">
-                    <Gauge className="w-4 h-4 text-primary" strokeWidth={1.7} />
-                    {s.name}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-5xl mx-auto">
+            {AI_PILLARS.map(({ Icon, label, desc }, i) => (
+              <Reveal key={label} delay={i * 80}>
+                <div className="h-full text-center px-5 py-7 lg:py-8 rounded-2xl border border-black/[0.08] bg-white/40">
+                  <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-primary" strokeWidth={1.6} />
+                  </div>
+                  <p className="font-bricolage text-[17px] font-semibold text-text-primary mb-2">
+                    {label}
                   </p>
                   <p className="text-[13px] text-text-secondary leading-relaxed">
-                    {s.use}
+                    {desc}
                   </p>
                 </div>
               </Reveal>
             ))}
           </div>
+
+          <Reveal delay={400}>
+            <p className="text-center text-[13px] text-text-muted max-w-xl mx-auto mt-10">
+              Cliente que prefere Framer ou WordPress, a gente atende. Mas o default é construção custom acelerada por IA.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -225,8 +282,7 @@ export default async function SitesPage({
           <Reveal>
             <SectionMarker number="03" label="Como entregamos" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
-              Três etapas{' '}
-              <span className="font-bricolage">do briefing ao ar.</span>
+              Três etapas do briefing <span className="font-bricolage">ao ar.</span>
             </h2>
           </Reveal>
 
@@ -256,6 +312,52 @@ export default async function SitesPage({
         </div>
       </section>
 
+      {/* ── Manutenção contínua: produto que a Notkode vende além do go-live ── */}
+      <section className="bg-surface-elevated">
+        <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
+          <Reveal>
+            <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-14">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim mb-4">
+                Depois do go-live
+              </p>
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                Site no ar é o começo,{' '}
+                <span className="font-bricolage">não o fim.</span>
+              </h2>
+              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
+                Plano de manutenção opcional pra deixar o site evoluindo com o negócio. Sem chamar uma nova proposta toda vez que precisar trocar uma seção ou testar um hero novo.
+              </p>
+            </div>
+          </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 max-w-5xl mx-auto">
+            {MAINTENANCE.map(({ Icon, label, desc }, i) => (
+              <Reveal key={label} delay={i * 90}>
+                <div className="h-full p-6 lg:p-7 rounded-2xl border border-black/[0.08] bg-white/40">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
+                  </div>
+                  <p className="font-bricolage text-[17px] font-semibold text-text-primary mb-2">
+                    {label}
+                  </p>
+                  <p className="text-[14px] text-text-secondary leading-relaxed">
+                    {desc}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Beat 6: objeções comuns de quem vai contratar site ── */}
+      <ProductFAQ
+        eyebrow="Dúvidas frequentes"
+        title={<>O que <span className="font-bricolage">todo cliente</span> pergunta antes de fechar.</>}
+        faqs={SITES_FAQS}
+        surface="base"
+      />
+
       {/* ── Pricing form ── */}
       <section id="orcamento" className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
@@ -263,8 +365,8 @@ export default async function SitesPage({
             <div className="max-w-3xl mb-10 lg:mb-12">
               <SectionMarker number="04" label="Seu orçamento" />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
-                Monte seu site,{' '}
-                <span className="font-bricolage">veja a faixa na hora.</span>
+                Monte seu site, veja a faixa{' '}
+                <span className="font-bricolage">na hora.</span>
               </h2>
               <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
                 Quatro perguntas curtas. No final você vê o investimento estimado e pode pedir a proposta detalhada.
