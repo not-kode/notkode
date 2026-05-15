@@ -36,9 +36,9 @@ export function Header() {
         {/* Right side: language + CTA + mobile menu */}
         <div className="flex items-center gap-2 lg:gap-3">
           <LanguageToggle />
-          <a href="/sistemas-ia#diagnostico" className="hidden sm:block">
+          <Link href={{ pathname: '/sistemas-ia', hash: 'diagnostico' }} className="hidden sm:block">
             <Button size="sm">{t('contato')}</Button>
-          </a>
+          </Link>
           <MobileMenu />
         </div>
       </div>

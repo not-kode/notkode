@@ -67,13 +67,13 @@ export default async function CasesPage({
 
             <Reveal delay={200}>
               <div className="flex flex-wrap justify-center gap-3">
-                <a
-                  href="/sistemas-ia#diagnostico"
+                <Link
+                  href={{ pathname: '/sistemas-ia', hash: 'diagnostico' }}
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
                 >
                   Quero ser o próximo case
                   <ArrowUpRight className="w-4 h-4" />
-                </a>
+                </Link>
                 <a
                   href="#grid"
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border-hairline-strong text-text-primary font-bold text-[13px] uppercase tracking-wide hover:bg-black/[0.04] transition-all duration-200"
