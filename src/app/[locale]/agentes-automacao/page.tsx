@@ -260,8 +260,7 @@ export default async function AgentesAutomacaoPage({
 
       {/* ── Beat 6: objeções específicas de automação ── */}
       <ProductFAQ
-        eyebrow="Dúvidas frequentes"
-        title={<>O que <span className="font-bricolage">todo dono</span> pergunta antes de começar.</>}
+        title={<><span className="block">O que todo dono</span><span className="block font-bricolage">pergunta antes de começar.</span></>}
         faqs={AGENTES_FAQS}
         surface="elevated"
       />
@@ -270,13 +269,12 @@ export default async function AgentesAutomacaoPage({
       <section id="orcamento" className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
-            <div className="max-w-3xl mb-10 lg:mb-12">
-              <SectionMarker number="04" label="Seu orçamento" />
-              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
-                Monte o escopo, veja a faixa{' '}
-                <span className="font-bricolage">na hora.</span>
+            <div className="max-w-3xl mx-auto text-center mb-10 lg:mb-12">
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                <span className="block">Monte o escopo,</span>
+                <span className="block font-bricolage">veja a faixa na hora.</span>
               </h2>
-              <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
+              <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
                 Quatro perguntas curtas para entender o que você precisa. No final você vê a faixa de investimento e pode pedir a proposta detalhada.
               </p>
             </div>

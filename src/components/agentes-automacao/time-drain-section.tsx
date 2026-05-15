@@ -29,12 +29,9 @@ export function TimeDrainSection() {
         {/* Header */}
         <Reveal>
           <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
-            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim mb-4">
-              O custo invisível
-            </p>
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
-              Onde sua equipe perde tempo{' '}
-              <span className="font-bricolage">todo dia.</span>
+              <span className="block">Onde sua equipe</span>
+              <span className="block font-bricolage">perde tempo todo dia.</span>
             </h2>
             <p className="mt-5 text-[16px] lg:text-[17px] leading-relaxed text-text-secondary max-w-2xl mx-auto">
               A pequena tarefa repetitiva que não dói por hora, mas sangra dezenas de horas por semana entre cinco pessoas. É aí que a Notkode atua: não pra trocar seu time por bot, mas pra devolver o tempo que a planilha, o e-mail e o WhatsApp comem sozinhos.

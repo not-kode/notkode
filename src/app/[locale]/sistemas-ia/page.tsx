@@ -100,25 +100,23 @@ export default async function SistemasIAPage({
       {/* ── Form de interesse (qualification form) ── */}
       <section id="diagnostico" className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
-          <div className="grid lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-16 items-start">
-            <Reveal>
-              <SectionMarker number="07" label="Tenho interesse" />
-              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-6">
-                Vamos entender{' '}
-                o seu <span className="font-bricolage">cenário.</span>
+          <Reveal>
+            <div className="max-w-2xl mx-auto text-center mb-10 lg:mb-12">
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                <span className="block">Vamos entender</span>
+                <span className="block font-bricolage">o seu cenário.</span>
               </h2>
-              <p className="text-[16px] text-text-secondary leading-relaxed mb-4">
-                Três perguntas curtas pra a gente preparar uma conversa de 30 minutos sob medida. Sem template, sem proposta fria.
+              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed">
+                Três perguntas curtas pra preparar uma conversa de 30 minutos sob medida. Sem template, sem proposta fria, sem compromisso.
               </p>
-              <p className="text-[14px] text-text-muted leading-relaxed">
-                Sistemas com IA são projetos consultivos. A faixa típica fica entre R$ 25k e R$ 80k, dependendo do escopo. A conversa inicial é gratuita e sem compromisso.
-              </p>
-            </Reveal>
+            </div>
+          </Reveal>
 
-            <Reveal delay={120}>
+          <Reveal delay={120}>
+            <div className="max-w-2xl mx-auto">
               <SistemasQualificationForm />
-            </Reveal>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </section>
     </>

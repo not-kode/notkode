@@ -162,9 +162,6 @@ export default async function BrandbookPage({
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-14 lg:mb-16">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim mb-4">
-                Quando faz sentido
-              </p>
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
                 <span className="block">Três momentos em que sua marca</span>
                 <span className="font-bricolage block">pede um brandbook.</span>
@@ -306,12 +303,9 @@ export default async function BrandbookPage({
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-14">
-              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-dim mb-4">
-                Combo natural
-              </p>
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
-                Brandbook e Site,{' '}
-                <span className="font-bricolage">na mesma respiração.</span>
+                <span className="block">Brandbook e Site,</span>
+                <span className="block font-bricolage">na mesma respiração.</span>
               </h2>
               <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
                 Quando os dois saem juntos, a identidade chega no site exata, sem reinterpretação. Sem perder uma palette no caminho, sem refazer tipografia. E o combo sai com desconto.
@@ -366,8 +360,7 @@ export default async function BrandbookPage({
 
       {/* ── FAQ: objeções comuns de brandbook ── */}
       <ProductFAQ
-        eyebrow="Dúvidas frequentes"
-        title={<>O que <span className="font-bricolage">todo fundador</span> pergunta antes de fechar.</>}
+        title={<><span className="block">O que todo fundador</span><span className="block font-bricolage">pergunta antes de fechar.</span></>}
         faqs={BRANDBOOK_FAQS}
         surface="elevated"
       />
@@ -376,13 +369,12 @@ export default async function BrandbookPage({
       <section id="orcamento" className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
-            <div className="max-w-3xl mb-10 lg:mb-12">
-              <SectionMarker number="04" label="Seu orçamento" />
-              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
-                Monte sua identidade, veja o investimento{' '}
-                <span className="font-bricolage">na hora.</span>
+            <div className="max-w-3xl mx-auto text-center mb-10 lg:mb-12">
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                <span className="block">Monte sua identidade,</span>
+                <span className="block font-bricolage">veja o investimento na hora.</span>
               </h2>
-              <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
+              <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
                 Quatro perguntas curtas. No final você vê o investimento estimado e pode pedir a proposta detalhada.
               </p>
             </div>

@@ -148,8 +148,7 @@ export default async function EcommercePage({
 
       {/* ── Beat 2: Frankenstein de assinaturas — nomeia a dor do ICP ── */}
       <PainNamingBlock
-        eyebrow="A conta no fim do mês"
-        title={<>Sua loja virou um <span className="font-bricolage">Frankenstein</span> de assinaturas.</>}
+        title={<><span className="block">Sua loja virou um</span><span className="block font-bricolage">Frankenstein de assinaturas.</span></>}
         intro="Plataforma, app de cupom, app de frete, gateway, ERP, plugin disso, plugin daquilo. Cada um cobra. Cada um cresce com o faturamento. Cada um tira um pedaço da margem antes de você ver o lucro."
         variant="tally"
         surface="base"
@@ -293,8 +292,7 @@ export default async function EcommercePage({
 
       {/* ── Beat 6: objeções específicas de e-commerce ── */}
       <ProductFAQ
-        eyebrow="Dúvidas frequentes"
-        title={<>Perguntas que <span className="font-bricolage">todo dono</span> de loja faz.</>}
+        title={<><span className="block">Perguntas que todo dono</span><span className="block font-bricolage">de loja faz.</span></>}
         faqs={ECOMMERCE_FAQS}
         surface="elevated"
       />
@@ -303,13 +301,12 @@ export default async function EcommercePage({
       <section id="orcamento" className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
-            <div className="max-w-3xl mb-10 lg:mb-12">
-              <SectionMarker number="04" label="Seu orçamento" />
-              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4">
-                Monte sua loja, veja o investimento{' '}
-                <span className="font-bricolage">na hora.</span>
+            <div className="max-w-3xl mx-auto text-center mb-10 lg:mb-12">
+              <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
+                <span className="block">Monte sua loja,</span>
+                <span className="block font-bricolage">veja o investimento na hora.</span>
               </h2>
-              <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed">
+              <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
                 Quatro perguntas para entender seu cenário. No final você vê a faixa estimada e pode pedir a proposta detalhada.
               </p>
             </div>
