@@ -42,9 +42,6 @@ export function ROICalculator() {
   const totalMonth = toolsCost + laborCost;
   const totalYear  = totalMonth * 12;
 
-  // Estimativa simplificada de investimento notkode (baseada em complexidade proxy)
-  const notkodeCost = Math.max(12000, Math.round(selected.size * 2800 / 500) * 500);
-  const paybackMonths = totalMonth > 0 ? Math.ceil(notkodeCost / totalMonth) : 0;
 
   return (
     <section className="bg-surface-base relative overflow-hidden">
@@ -167,32 +164,22 @@ export function ROICalculator() {
                 {/* Com Notkode */}
                 <div className="px-6 py-5 border-b border-black/[0.06] space-y-3" style={{ background: 'rgba(59,130,246,0.03)' }}>
                   <div className="flex items-baseline justify-between">
-                    <span className="text-[13px] text-text-secondary">Sistema Notkode (investimento)</span>
-                    <span className="font-mono text-[14px] text-primary font-semibold">
-                      a partir de R$ {notkodeCost.toLocaleString('pt-BR')}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
                     <span className="text-[13px] text-text-secondary">Mensalidade de plataforma</span>
                     <span className="font-mono text-[14px] text-primary font-semibold">R$ 0/mês</span>
                   </div>
-                  {totalMonth > 0 && (
-                    <div
-                      className="flex items-baseline justify-between pt-3 mt-1"
-                      style={{ borderTop: '1px solid rgba(59,130,246,0.12)' }}
-                    >
-                      <span className="text-[14px] font-semibold text-text-primary">Payback estimado</span>
-                      <span className="font-mono text-[18px] text-primary font-bold">
-                        {paybackMonths} {paybackMonths === 1 ? 'mês' : 'meses'}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[13px] text-text-secondary">Investimento</span>
+                    <span className="font-mono text-[13px] text-text-muted">único, sem teto de crescimento</span>
+                  </div>
+                  <p className="text-[12px] text-text-muted leading-relaxed pt-2">
+                    A faixa exata depende do escopo. É o que discutimos na conversa de diagnóstico.
+                  </p>
                 </div>
 
                 {/* CTA */}
                 <div className="px-6 py-5">
                   <p className="text-[12px] text-text-dim mb-4 leading-relaxed">
-                    Preços baseados nos planos intermediários reais de cada ferramenta (mai/2025). Ferramentas por usuário calculadas para 3 pessoas. Na conversa de diagnóstico você recebe uma proposta personalizada.
+                    Preços baseados nos planos intermediários reais de cada ferramenta (mai/2025). Ferramentas por usuário calculadas para 3 pessoas.
                   </p>
                   <a
                     href="#diagnostico"

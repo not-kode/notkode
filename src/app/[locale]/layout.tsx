@@ -45,7 +45,7 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <LangSync locale={locale} />
       <Header />
-      <main>{children}</main>
+      <main className="overflow-x-clip">{children}</main>
       <Footer />
     </NextIntlClientProvider>
   );

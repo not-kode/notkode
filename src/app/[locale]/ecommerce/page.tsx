@@ -1,5 +1,5 @@
 import { setRequestLocale } from 'next-intl/server';
-import { ArrowDown, ShoppingCart, RefreshCw, TrendingUp, CreditCard, Search, PenTool, Rocket } from 'lucide-react';
+import { ArrowDown, ShoppingCart, RefreshCw, Cpu, CreditCard, Search, PenTool, Rocket } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { ProdutosHeroBackground } from '@/components/produtos-digitais/produtos-hero-background';
@@ -7,6 +7,7 @@ import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showca
 import { EcommercePricingForm } from '@/components/ecommerce/ecommerce-pricing-form';
 import { PainNamingBlock } from '@/components/ui/pain-naming-block';
 import { ProductFAQ } from '@/components/ui/product-faq';
+import { BrandbookCombo } from '@/components/ui/brandbook-combo';
 
 const FRANKENSTEIN_LINES = [
   { text: 'Plataforma de loja (Shopify, Yampi, Loja Integrada…)', metric: 'R$ 600–1.200/mês' },
@@ -18,6 +19,10 @@ const FRANKENSTEIN_LINES = [
 ];
 
 const ECOMMERCE_FAQS = [
+  {
+    q: 'Qual a diferença entre loja com plataforma e loja com sistema próprio?',
+    a: 'Plataforma é aluguel: mensalidade fixa mais percentual sobre tudo que vende, e você fica preso ao ecossistema de quem aluga. Sistema próprio é investimento único: checkout, CRM e operação dentro de uma base que ninguém cobra royalty. Recomendamos começar pela plataforma quando o orçamento pede, e migrar pro sistema próprio quando a operação justifica.',
+  },
   {
     q: 'Já estou na Shopify (ou Yampi, Nuvemshop…). Preciso migrar tudo?',
     a: 'Não obrigatoriamente. Em muitos casos a gente integra o que falta (ERP, automações, CRM próprio) e mantém a plataforma atual rodando. Migração só quando o custo mensal já dói e o catálogo justifica.',
@@ -47,40 +52,41 @@ const STORE_SLIDES: StackSlide[] = [
 
 const SCENARIOS = [
   {
+    icon: Cpu,
+    title: 'Loja + sistema próprio',
+    desc: 'Checkout, CRM, gestão de pedidos e estoque rodando dentro do seu sistema. Pra quem quer sair do aluguel de plataforma de vez.',
+    flagship: true,
+  },
+  {
     icon: ShoppingCart,
-    title: 'Loja nova do zero',
-    desc: 'Ainda não vende online. A gente sobe sua loja com pagamento, frete, fiscal e marketing já configurados.',
+    title: 'Loja com plataforma',
+    desc: 'Vitrine personalizada em Shopify, WooCommerce ou Nuvemshop, com pagamento, frete, fiscal e marketing já configurados. Caminho de entrada antes do sistema próprio.',
   },
   {
     icon: RefreshCw,
     title: 'Migração de plataforma',
     desc: 'Sua loja está numa plataforma que não escala mais. Levamos catálogo, clientes e SEO sem perder ranking.',
   },
-  {
-    icon: TrendingUp,
-    title: 'Otimização de conversão',
-    desc: 'Tem tráfego mas converte pouco. Auditoria de funil, melhorias de UX, A/B testing e checkout otimizado.',
-  },
 ];
 
 const RESULTS = [
-  { value: '+R$ 150k', label: 'faturamento mensal · Ponto Patta' },
-  { value: '+R$ 80k',  label: 'faturamento mensal · Noodrops' },
-  { value: '4–8 sem',  label: 'do briefing à loja no ar' },
+  { value: '4–8 sem', label: 'do briefing à loja no ar' },
+  { value: '100%',    label: 'do código é seu · sem fidelidade' },
+  { value: '0%',      label: 'royalty sobre suas vendas' },
 ];
 
 const PLATFORMS = [
   {
     name: 'WooCommerce',
-    use: 'Catálogos médios/grandes, controle total de plugins e SEO. Ideal quando você quer flexibilidade brasileira.',
+    use: 'Catálogos médios e grandes, controle total de plugins e SEO. Boa quando você quer flexibilidade pra integrar fiscal, ERP e marketing BR.',
   },
   {
     name: 'Shopify',
     use: 'Lojas DTC com tráfego pago intenso. Setup rápido, apps maduros, foco em conversão.',
   },
   {
-    name: 'Custom (Next.js)',
-    use: 'Quando o negócio precisa de algo único: assinaturas, configurador de produto, integração pesada com ERP.',
+    name: 'Nuvemshop',
+    use: 'Operação enxuta focada no mercado brasileiro. Integrações fiscais e logísticas BR já maduras, curva de aprendizado curta.',
   },
 ];
 
@@ -88,7 +94,7 @@ const HOW = [
   {
     icon: Search,
     title: 'Diagnóstico da operação',
-    desc: 'Catálogo, gateway, fiscal, frete, ERP. Mapeamos o que já existe e o que precisa entrar. Saída: plano de plataforma e integrações.',
+    desc: 'Catálogo, gateway, fiscal, frete, ERP. Mapeamos o que já existe e o que precisa entrar. Saída: plano técnico (plataforma ou sistema próprio) e cronograma.',
   },
   {
     icon: PenTool,
@@ -125,7 +131,7 @@ export default async function EcommercePage({
                 </span>
               </h1>
               <p className="text-[17px] lg:text-[19px] text-text-secondary leading-[1.6] max-w-2xl mx-auto mb-8">
-                Do catálogo ao checkout, com pagamento, frete e marketing integrados. Construímos lojas que faturam R$80k a R$150k por mês. Calcule seu projeto abaixo.
+                Loja virtual com sistema próprio: checkout, CRM e operação inteira dentro do seu domínio, sem alugar peça por peça. Quando o orçamento ainda não cabe, começamos por Shopify, WooCommerce ou Nuvemshop e migramos quando a loja crescer. Monte o esboço do seu projeto abaixo.
               </p>
             </Reveal>
 
@@ -134,7 +140,7 @@ export default async function EcommercePage({
                 href="#orcamento"
                 className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
               >
-                Calcular minha loja
+                Montar meu projeto
                 <ArrowDown className="w-4 h-4" />
               </a>
             </Reveal>
@@ -156,11 +162,11 @@ export default async function EcommercePage({
         footer={
           <div className="max-w-2xl rounded-2xl border border-black/[0.08] bg-white/40 px-6 py-5 lg:px-8 lg:py-6">
             <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-text-dim mb-2">
-              Conta típica de uma DTC de R$ 80k–R$ 200k/mês
+              Conta típica de uma loja com bom volume
             </p>
             <p className="text-[15px] lg:text-[16px] text-text-primary leading-snug">
               <span className="font-semibold">R$ 1.500 a R$ 3.000/mês fixos</span>, mais{' '}
-              <span className="font-semibold">3,4% sobre tudo que vende</span>. Numa loja sob medida, isso vira investimento único, sem teto de crescimento e sem alugar pedaços da sua operação.
+              <span className="font-semibold">3,4% sobre tudo que vende</span>. Numa loja com sistema próprio, isso vira investimento único, sem teto de crescimento e sem alugar pedaços da sua operação.
             </p>
           </div>
         }
@@ -200,9 +206,19 @@ export default async function EcommercePage({
             {SCENARIOS.map((s, i) => (
               <Reveal key={s.title} delay={i * 90}>
                 <article
-                  className="rounded-2xl border border-black/[0.08] p-6 lg:p-7 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
+                  className="relative rounded-2xl p-6 lg:p-7 h-full"
+                  style={{
+                    background: s.flagship
+                      ? 'linear-gradient(180deg, rgba(59,130,246,0.06) 0%, hsl(55 100% 97%) 70%)'
+                      : 'hsl(55 100% 97%)',
+                    border: s.flagship ? '1.5px solid rgba(59,130,246,0.35)' : '1px solid rgba(25,25,24,0.08)',
+                  }}
                 >
+                  {s.flagship && (
+                    <span className="absolute top-4 right-4 font-mono text-[9px] text-primary uppercase tracking-widest px-2 py-1 rounded-full" style={{ background: 'rgba(59,130,246,0.10)', border: '1px solid rgba(59,130,246,0.25)' }}>
+                      caminho default
+                    </span>
+                  )}
                   <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
                     <s.icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
                   </div>
@@ -223,13 +239,13 @@ export default async function EcommercePage({
       <section className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
-            <SectionMarker number="02" label="Plataformas que usamos" />
+            <SectionMarker number="02" label="Quando começar pela plataforma" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4 max-w-2xl">
-              Cada loja tem a plataforma que faz{' '}
-              <span className="font-bricolage">sentido.</span>
+              Nem todo projeto começa com{' '}
+              <span className="font-bricolage">sistema próprio.</span>
             </h2>
             <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mb-12">
-              Não casamos com uma plataforma só. Recomendamos com base em catálogo, ticket médio e modelo de venda.
+              Quando o orçamento ainda pede um primeiro passo mais acessível, partimos por uma destas plataformas e migramos pro sistema próprio quando a loja crescer. Mesmo cuidado de design, integrações e operação.
             </p>
           </Reveal>
 
@@ -297,17 +313,19 @@ export default async function EcommercePage({
         surface="elevated"
       />
 
+      <BrandbookCombo companion="loja" surface="elevated" />
+
       {/* ── Pricing form ── */}
       <section id="orcamento" className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-10 lg:mb-12">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
-                <span className="block">Monte sua loja,</span>
-                <span className="block font-bricolage">veja o investimento na hora.</span>
+                <span className="block">Monte seu projeto,</span>
+                <span className="block font-bricolage">veja o esboço de investimento.</span>
               </h2>
               <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
-                Quatro perguntas para entender seu cenário. No final você vê a faixa estimada e pode pedir a proposta detalhada.
+                Seis perguntas pra mapear seu cenário. No final você vê o escopo organizado e uma faixa preliminar; o valor exato a gente fecha junto na conversa.
               </p>
             </div>
           </Reveal>

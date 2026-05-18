@@ -1,4 +1,4 @@
-import type { PricingSchema } from '@/components/ui/pricing-form';
+import type { InclusionGroup, PricingSchema, TimelinePhase } from '@/components/ui/pricing-form';
 
 // Faixas preliminares — ajustar com base no histórico real de propostas.
 // Estrutura: base + adicional por canal + adicional por integração + multiplicador por urgência.
@@ -34,13 +34,98 @@ function calc(sel: Record<string, string | string[]>): [number, number] {
   return [min, max];
 }
 
+const CHANNEL_LABEL: Record<string, string> = {
+  whatsapp:  'WhatsApp',
+  email:     'E-mail',
+  instagram: 'Instagram DM',
+  site:      'Chat no site',
+  interno:   'Sistema interno',
+};
+
+const INTEG_LABEL: Record<string, string> = {
+  crm:      'CRM (HubSpot, Pipedrive, RD…)',
+  planilha: 'Google Sheets / Excel',
+  erp:      'ERP / Financeiro',
+  notion:   'Notion / Airtable',
+  calendar: 'Google Calendar',
+  custom:   'Outro sistema sob medida',
+};
+
+function inclusions(sel: Record<string, string | string[]>): InclusionGroup[] {
+  const scope = (sel.scope as string) ?? 'intermed';
+  const channels = (sel.channels as string[]) ?? [];
+  const integrations = (sel.integrations as string[]) ?? [];
+
+  const principal: string[] = [];
+  if (scope === 'simples')  principal.push('1 fluxo automatizado direto, sem IA');
+  if (scope === 'intermed') principal.push('2 a 3 fluxos automatizados com IA leve (classificação e resposta automática)');
+  if (scope === 'avancado') principal.push('Agente de IA com lógica condicional e múltiplas integrações');
+  principal.push('Handoff pra humano com contexto da conversa quando o agente não tiver confiança');
+  principal.push('Documentação dos fluxos e treinamento do seu time');
+
+  const groups: InclusionGroup[] = [
+    { title: 'Escopo principal', items: principal },
+  ];
+
+  if (channels.length > 0) {
+    groups.push({
+      title: `Canais (${channels.length})`,
+      items: channels.map((id) => CHANNEL_LABEL[id] ?? id),
+    });
+  }
+
+  if (integrations.length > 0) {
+    groups.push({
+      title: `Integrações (${integrations.length})`,
+      items: integrations.map((id) => INTEG_LABEL[id] ?? id),
+    });
+  }
+
+  groups.push({
+    title: 'Pós go-live',
+    items: ['Monitoramento da primeira semana', 'Ajustes finos depois de ver o agente operando real'],
+  });
+
+  return groups;
+}
+
+function timeline(sel: Record<string, string | string[]>): TimelinePhase[] {
+  const urgency = (sel.urgency as string) ?? 'normal';
+  if (urgency === 'urgente') {
+    return [
+      { range: 'Dia 1–2', title: 'Mapeamento', desc: 'Diagrama do fluxo atual e do alvo.' },
+      { range: 'Dia 3–6', title: 'Construção', desc: 'Integrações, prompts e gatilhos.' },
+      { range: 'Dia 7',   title: 'Go-live',    desc: 'Subida em produção monitorada.' },
+    ];
+  }
+  if (urgency === 'rapido') {
+    return [
+      { range: 'Semana 1',   title: 'Mapeamento', desc: 'Fluxo atual, decisões e ferramentas.' },
+      { range: 'Semana 1–2', title: 'Construção', desc: 'Desenho do agente, integrações e testes.' },
+      { range: 'Semana 2',   title: 'Go-live',    desc: 'Entrega + acompanhamento da primeira semana.' },
+    ];
+  }
+  return [
+    { range: 'Semana 1',   title: 'Mapeamento', desc: 'Fluxo atual, integrações e onde o humano entra.' },
+    { range: 'Semana 1–2', title: 'Construção', desc: 'Desenho do agente, integrações e testes em homologação.' },
+    { range: 'Semana 3',   title: 'Go-live',    desc: 'Produção + monitoramento da primeira semana + handoff.' },
+  ];
+}
+
+function reportTitle(sel: Record<string, string | string[]>): string {
+  const scope = (sel.scope as string) ?? 'intermed';
+  if (scope === 'simples')  return 'Sua automação direta';
+  if (scope === 'avancado') return 'Seu agente de IA';
+  return 'Sua automação inteligente';
+}
+
 export const agentesPricingSchema: PricingSchema = {
   serviceTag: 'agentes-automacao',
   copy: {
     eyebrow: 'Orçamento de Automação',
     revealTitle: 'Investimento estimado',
     revealSubtitle:
-      'Faixa preliminar baseada nas suas escolhas. Deixe seu contato para receber a proposta detalhada — sem call obrigatória.',
+      'Faixa preliminar baseada nas suas escolhas. Deixe seu contato para receber a proposta detalhada, sem call obrigatória.',
     submitLabel: 'Receber proposta',
     successTitle: 'Recebemos seu pedido.',
     successBody:
@@ -85,7 +170,7 @@ export const agentesPricingSchema: PricingSchema = {
         { value: 'erp',     label: 'ERP / Financeiro' },
         { value: 'notion',  label: 'Notion / Airtable' },
         { value: 'calendar',label: 'Google Calendar' },
-        { value: 'custom',  label: 'API custom' },
+        { value: 'custom',  label: 'Outro sistema sob medida' },
       ],
     },
     {
@@ -101,4 +186,7 @@ export const agentesPricingSchema: PricingSchema = {
     },
   ],
   calc,
+  inclusions,
+  timeline,
+  reportTitle,
 };

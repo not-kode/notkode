@@ -11,46 +11,46 @@ import { ProductFAQ } from '@/components/ui/product-faq';
 const AGENTES_FAQS = [
   {
     q: 'WhatsApp oficial é obrigatório?',
-    a: 'Não. A API oficial faz sentido quando o cliente já tem volume e verba pra arcar com os custos (a Meta cobra por mensagem e o ciclo de aprovação é mais longo). Pra automação interna ou volume menor, integramos com outros canais (e-mail, Telegram, formulário) sem esse overhead.',
+    a: 'Não. Faz sentido quando você já tem volume alto de mensagem e quer o selo verde oficial (aí a Meta cobra por mensagem). Pra automação interna ou volume menor, dá pra fazer com outros canais (e-mail, formulário, Telegram) sem esse custo.',
   },
   {
-    q: 'Vai funcionar com o CRM/ERP que eu já uso?',
-    a: 'Sim, na grande maioria dos casos. Trabalhamos com qualquer ferramenta que tenha API ou webhook (RD, HubSpot, Pipedrive, Bling, Omie, Tiny, planilha Google, Notion, Airtable…). Se não tiver, escrevemos a ponte.',
+    q: 'Vai funcionar com o sistema que eu já uso?',
+    a: 'Sim, na grande maioria dos casos. Conectamos no CRM, no ERP, na planilha do Google, no Notion, na agenda. Se você usa HubSpot, RD, Pipedrive, Bling, Omie, Tiny ou qualquer ferramenta conhecida, integramos. Sistema mais incomum a gente avalia na conversa.',
   },
   {
-    q: 'Posso ajustar a automação depois, sem chamar vocês?',
-    a: 'Sim. Entregamos com documentação e treinamento do seu time. Quem usa n8n/Make consegue mexer em respostas, gatilhos e mensagens sem precisar de dev. Mudanças estruturais maiores valem uma conversa com a gente.',
+    q: 'Posso ajustar a automação depois sem chamar vocês?',
+    a: 'Sim. Entregamos com documentação e treinamento do seu time. Mexer em mensagem, gatilho ou resposta a equipe consegue sozinha. Mudança maior na lógica vale uma conversa com a gente.',
   },
   {
     q: 'Quanto tempo até a primeira automação estar rodando?',
-    a: 'Automações simples ficam prontas em 1 a 2 semanas. Integrações com IA, agentes complexos ou pilhas com muitas ferramentas chegam a 4–6 semanas. Na primeira conversa estimamos o seu caso.',
+    a: 'Automação simples fica pronta em 1 a 2 semanas. Agente com IA e várias integrações pode chegar a 4 a 6 semanas. Na primeira conversa a gente estima o seu caso com base no que você precisa.',
   },
   {
     q: 'E se o cliente perguntar algo que o agente não sabe responder?',
-    a: 'O agente nunca finge. Quando não tem confiança na resposta, transfere pra um humano com o contexto da conversa já anexado. Seu time recebe o lead já meio resolvido, não do zero.',
+    a: 'O agente nunca inventa. Quando não tem certeza, passa pra alguém do seu time com a conversa já anotada. Seu time recebe o lead meio resolvido, não do zero.',
   },
 ];
 
 const USE_CASES = [
   {
     icon: MessageSquare,
-    title: 'Atendimento via WhatsApp',
-    desc: 'Agente que responde dúvidas comuns, qualifica leads e passa para o time só quando precisa de humano.',
+    title: 'Atendimento no WhatsApp',
+    desc: 'Responde dúvidas comuns na hora, qualifica o lead e só passa pro seu time quando precisa de gente. Funciona inclusive de madrugada.',
   },
   {
     icon: Workflow,
-    title: 'Integração entre sistemas',
-    desc: 'Fluxos n8n que conectam CRM, financeiro, e-mail e planilhas, sem precisar copiar dado de um lugar para outro.',
+    title: 'Pedidos e clientes em um só lugar',
+    desc: 'Dado que aparece no WhatsApp já entra na planilha ou no seu sistema, sem ninguém precisar copiar manualmente. Acabou a duplicação.',
   },
   {
     icon: Bot,
-    title: 'Assistente interno com IA',
-    desc: 'Um bot que sua equipe usa para consultar dados, gerar relatórios e fazer tarefas repetitivas em segundos.',
+    title: 'Assistente interno do seu time',
+    desc: 'Sua equipe pergunta em linguagem normal e o agente busca o dado, gera o relatório ou avisa o cliente. Em segundos.',
   },
   {
     icon: Zap,
-    title: 'Automação de tarefas',
-    desc: 'De preencher planilha a enviar e-mail de cobrança. O que sua equipe faz manual pode rodar sozinho.',
+    title: 'Cobrança e tarefas no piloto automático',
+    desc: 'De cobrar atrasado a mandar lembrete de reunião. O que hoje é manual e cansa o time pode rodar sozinho.',
   },
 ];
 
@@ -61,13 +61,11 @@ const RESULTS = [
 ];
 
 const STACK = [
-  { name: 'n8n',                  use: 'Orquestração de fluxos entre sistemas. Nosso default para automação séria.' },
-  { name: 'Make / Zapier',        use: 'Automação rápida quando o fluxo cabe em conectores prontos.' },
-  { name: 'OpenAI · Claude',      use: 'Modelos de linguagem para classificar mensagens, redigir respostas e raciocinar.' },
-  { name: 'WhatsApp Business API',use: 'Mensagens transacionais e conversacionais com o cliente, com selo oficial.' },
-  { name: 'Google Sheets / Drive',use: 'Banco improvisado simples e acessível para o cliente conferir/editar.' },
-  { name: 'Notion · Airtable',    use: 'Bases estruturadas quando o time já vive nessas ferramentas.' },
-  { name: 'APIs custom',          use: 'Quando o sistema do cliente não tem conector, escrevemos a ponte.' },
+  { name: 'WhatsApp oficial',     use: 'Pra quem já tem volume e precisa do selo verde. Mensagens com o cliente direto na conta oficial da Meta.' },
+  { name: 'Inteligência artificial', use: 'O cérebro do agente. Entende a mensagem do cliente, decide o que fazer e escreve a resposta no tom da sua marca.' },
+  { name: 'Automação n8n',        use: 'A engrenagem que conecta um sistema ao outro. Sem ninguém precisar abrir aba, copiar e colar.' },
+  { name: 'Planilhas e Drive',    use: 'Quando a operação ainda roda em Google Sheets, a gente integra. Você continua editando do jeito que já edita.' },
+  { name: 'Seu CRM/ERP atual',    use: 'HubSpot, RD, Pipedrive, Bling, Omie, Tiny, Notion, Airtable. Conectamos no que você já usa.' },
 ];
 
 const HOW = [
@@ -79,7 +77,7 @@ const HOW = [
   {
     icon: PenTool,
     title: 'Desenho do agente',
-    desc: 'Definimos gatilhos, decisões, integrações e quando o humano entra. Você aprova antes da gente codar.',
+    desc: 'Mostramos pra você como o agente vai responder, em quais momentos pergunta, quando passa pro humano. Você aprova antes da gente construir.',
   },
   {
     icon: Rocket,
@@ -107,19 +105,19 @@ export default async function AgentesAutomacaoPage({
             {/* LEFT — text + CTA */}
             <Reveal className="min-w-0">
               <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.08] tracking-[-0.03em] mb-5 break-words">
-                <span className="block mb-1">Sua equipe parou de fazer</span>
+                <span className="block mb-1">Cliente atendido, pedido organizado,</span>
                 <span className="block">
-                  o que a <span className="font-bricolage">máquina</span> faz melhor.
+                  cobrança feita, <span className="font-bricolage">sem precisar de você.</span>
                 </span>
               </h1>
               <p className="text-[16px] lg:text-[17px] text-text-secondary leading-[1.6] mb-7">
-                Chatbots inteligentes, agentes de IA e automações que respondem clientes, organizam pedidos e eliminam tarefas repetitivas. Veja a faixa de investimento na hora.
+                A gente automatiza o atendimento no WhatsApp, a organização dos pedidos, a cobrança e as tarefas repetitivas que comem o dia da sua equipe. Você ganha horas de volta e o cliente é respondido na hora, inclusive de madrugada.
               </p>
               <a
                 href="#orcamento"
                 className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
               >
-                Calcular meu projeto
+                Montar meu projeto
                 <ArrowDown className="w-4 h-4" />
               </a>
             </Reveal>
@@ -193,12 +191,13 @@ export default async function AgentesAutomacaoPage({
       <section className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
-            <SectionMarker number="02" label="Stack que usamos" />
+            <SectionMarker number="02" label="O que tem por trás" />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-4 max-w-2xl">
-              As ferramentas certas para cada <span className="font-bricolage">caso.</span>
+              Ferramentas conhecidas, no jeito{' '}
+              <span className="font-bricolage">que faz sentido pra você.</span>
             </h2>
             <p className="text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mb-12">
-              Não casamos com um único stack. Escolhemos a ferramenta certa para o problema certo, e te entregamos uma documentação clara de como tudo funciona.
+              Não inventamos roda. Conectamos no que você já usa e escolhemos a tecnologia certa pro seu caso. Você recebe documentação clara de como tudo funciona, sem caixa-preta.
             </p>
           </Reveal>
 
@@ -272,10 +271,10 @@ export default async function AgentesAutomacaoPage({
             <div className="max-w-3xl mx-auto text-center mb-10 lg:mb-12">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
                 <span className="block">Monte o escopo,</span>
-                <span className="block font-bricolage">veja a faixa na hora.</span>
+                <span className="block font-bricolage">veja a faixa preliminar.</span>
               </h2>
               <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
-                Quatro perguntas curtas para entender o que você precisa. No final você vê a faixa de investimento e pode pedir a proposta detalhada.
+                Quatro perguntas curtas pra mapear o que você precisa automatizar. No final você vê o escopo organizado e uma faixa preliminar; a proposta detalhada chega no seu WhatsApp em poucas horas.
               </p>
             </div>
           </Reveal>

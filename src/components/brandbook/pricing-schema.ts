@@ -1,4 +1,4 @@
-import type { PricingSchema } from '@/components/ui/pricing-form';
+import type { InclusionGroup, PricingSchema, TimelinePhase } from '@/components/ui/pricing-form';
 
 const SCOPE_BASE: Record<string, [number, number]> = {
   logo:      [1200, 2500],   // só logo + variações
@@ -29,6 +29,87 @@ function calc(sel: Record<string, string | string[]>): [number, number] {
   const min = Math.round((baseMin + appsCost) * stageMult * urgMult);
   const max = Math.round((baseMax + appsCost * 1.4) * stageMult * urgMult);
   return [min, max];
+}
+
+const APP_LABEL: Record<string, string> = {
+  papelaria:     'Papelaria (cartão, assinatura de e-mail)',
+  social:        'Templates de redes sociais',
+  apresentacao:  'Template de apresentação',
+  sinalizacao:   'Sinalização e ambientação',
+  embalagem:     'Embalagem ou rótulo',
+  merchandising: 'Merchandising (uniforme, brindes)',
+};
+
+function inclusions(sel: Record<string, string | string[]>): InclusionGroup[] {
+  const scope = (sel.scope as string) ?? 'essencial';
+  const applications = (sel.applications as string[]) ?? [];
+
+  const principal: string[] = [];
+  if (scope === 'logo') {
+    principal.push('Marca principal + variações (horizontal, vertical, monograma, reduzida)');
+    principal.push('Arquivos vetoriais (SVG, PDF, PNG)');
+  }
+  if (scope === 'essencial') {
+    principal.push('Logo + variações completas');
+    principal.push('Sistema de cores (primária, secundária, neutras) com hex/RGB');
+    principal.push('Tipografia escolhida pra marca (display + corpo)');
+  }
+  if (scope === 'completo') {
+    principal.push('Logo + variações completas');
+    principal.push('Paleta de cores e sistema tipográfico completos');
+    principal.push('Brandbook (manual de uso, espaçamento, proporções, usos corretos e proibidos)');
+    principal.push('Diretrizes de tom de voz e aplicações práticas');
+  }
+
+  const groups: InclusionGroup[] = [
+    { title: 'Escopo principal', items: principal },
+  ];
+
+  if (applications.length > 0) {
+    groups.push({
+      title: `Aplicações (${applications.length})`,
+      items: applications.map((a) => APP_LABEL[a] ?? a),
+    });
+  }
+
+  groups.push({
+    title: 'Entrega final',
+    items: ['Arquivos editáveis vetoriais', 'PDF do brandbook pronto pra equipe usar', 'Sem dependência de software pago'],
+  });
+
+  return groups;
+}
+
+function timeline(sel: Record<string, string | string[]>): TimelinePhase[] {
+  const urgency = (sel.urgency as string) ?? 'normal';
+  if (urgency === 'urgente') {
+    return [
+      { range: 'Semana 1',   title: 'Imersão',     desc: 'Briefing, referências e moodboard.' },
+      { range: 'Semana 1–2', title: 'Concepção',   desc: '2 a 3 caminhos de logo + paleta.' },
+      { range: 'Semana 2',   title: 'Entrega',     desc: 'Brandbook finalizado e arquivos editáveis.' },
+    ];
+  }
+  if (urgency === 'rapido') {
+    return [
+      { range: 'Semana 1',   title: 'Imersão',     desc: 'Briefing, referências, moodboard e direções.' },
+      { range: 'Semana 2',   title: 'Concepção',   desc: 'Apresentação de caminhos e escolha do final.' },
+      { range: 'Semana 3',   title: 'Entrega',     desc: 'Brandbook + aplicações + arquivos editáveis.' },
+    ];
+  }
+  return [
+    { range: 'Semana 1',   title: 'Imersão',     desc: 'Briefing, moodboard, valores de marca e direções criativas.' },
+    { range: 'Semana 2',   title: 'Concepção',   desc: 'Apresentação de 2 a 3 caminhos, escolha e refino.' },
+    { range: 'Semana 3–4', title: 'Entrega',     desc: 'Brandbook completo, aplicações e arquivos editáveis.' },
+  ];
+}
+
+function reportTitle(sel: Record<string, string | string[]>): string {
+  const scope = (sel.scope as string) ?? 'essencial';
+  const stage = (sel.stage as string) ?? 'nova';
+  if (stage === 'rebrand') return 'Seu rebrand';
+  if (scope === 'logo')      return 'Sua marca essencial';
+  if (scope === 'completo')  return 'Seu brandbook completo';
+  return 'Sua identidade essencial';
 }
 
 export const brandbookPricingSchema: PricingSchema = {
@@ -93,4 +174,7 @@ export const brandbookPricingSchema: PricingSchema = {
     },
   ],
   calc,
+  inclusions,
+  timeline,
+  reportTitle,
 };

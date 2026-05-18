@@ -88,9 +88,9 @@
     border: 1px solid rgba(25, 25, 24, 0.08);
   }
   .glass-strong {
-    background: rgba(255, 254, 242, 0.92);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
+    background: rgba(255, 254, 242, 0.98);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
     border: 1px solid rgba(25, 25, 24, 0.12);
   }
 
@@ -177,6 +177,14 @@
   0%   { opacity: 0; transform: translateY(8px) scale(0.97); }
   60%  { opacity: 1; }
   100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pf-slide-in-right {
+  0%   { opacity: 0; transform: translateX(24px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes pf-slide-in-left {
+  0%   { opacity: 0; transform: translateX(-24px); }
+  100% { opacity: 1; transform: translateX(0); }
 }
 @keyframes flow-dash {
   from { stroke-dashoffset: 0;   }

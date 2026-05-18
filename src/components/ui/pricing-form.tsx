@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle, Sparkles } from 'lucide-react';
 
 // ── Schema types ──────────────────────────────────────────────────────────
@@ -35,11 +35,44 @@ export type PricingField =
 
 export type PricingSelection = Record<string, string | string[]>;
 
+export type BreakdownItem = {
+  /** Short label for the line ("Catálogo médio", "4 integrações", "Prazo rápido") */
+  label: string;
+  /** How it impacts the total ("× 1.25", "+ R$ 3.600", "base R$ 6k – 14k") */
+  impact: string;
+  /** Optional: dim the line when impact is zero/neutral */
+  muted?: boolean;
+};
+
+export type InclusionGroup = {
+  /** Group title ("Escopo principal", "Integrações", "Pós go-live") */
+  title: string;
+  /** Items inside the group */
+  items: string[];
+};
+
+export type TimelinePhase = {
+  /** "Semana 1–2", "Sprint 1" */
+  range: string;
+  /** "Diagnóstico", "Construção", "Go-live" */
+  title: string;
+  /** One-line description of what happens in this phase */
+  desc: string;
+};
+
 export type PricingSchema = {
   serviceTag: string;
   fields: PricingField[];
   /** receives current selection and returns [min, max] in BRL */
   calc: (selection: PricingSelection) => [number, number];
+  /** optional: explain what's pushing the price on the reveal screen */
+  breakdown?: (selection: PricingSelection) => BreakdownItem[];
+  /** optional: build the "what's included" visual scope from selection */
+  inclusions?: (selection: PricingSelection) => InclusionGroup[];
+  /** optional: build the project timeline from selection */
+  timeline?: (selection: PricingSelection) => TimelinePhase[];
+  /** optional: title shown on the reveal screen header (e.g. "Sua loja sob medida") */
+  reportTitle?: (selection: PricingSelection) => string;
   copy?: {
     /** small label above the heading on each step (e.g. "Orçamento") */
     eyebrow?: string;
@@ -120,6 +153,7 @@ function buildWhatsAppMessage(
 export function PricingForm({ schema }: { schema: PricingSchema }) {
   const totalSteps = schema.fields.length + 1; // +1 = reveal/identify
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [selection, setSelection] = useState<PricingSelection>(() => buildInitialSelection(schema));
   const [name, setName]         = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -144,6 +178,41 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   const canAdvance = currentField
     ? isFieldComplete(currentField, selection[currentField.id])
     : Boolean(name && whatsapp && email && status !== 'submitting');
+
+  const goNext = useCallback(() => {
+    if (!canAdvance) return;
+    setDirection(1);
+    setStep((s) => Math.min(totalSteps - 1, s + 1));
+  }, [canAdvance, totalSteps]);
+
+  const goBack = useCallback(() => {
+    setDirection(-1);
+    setStep((s) => Math.max(0, s - 1));
+  }, []);
+
+  // Keyboard navigation: Enter advances (when not in a textarea), arrows move steps
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const inField = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+      if (e.key === 'Enter') {
+        // On the reveal step, only intercept if not inside a textarea (let multiline work)
+        if (isRevealStep && target?.tagName === 'TEXTAREA') return;
+        if (canAdvance) {
+          e.preventDefault();
+          if (isRevealStep) submit();
+          else goNext();
+        }
+      } else if (e.key === 'ArrowRight' && !inField) {
+        if (canAdvance) goNext();
+      } else if (e.key === 'ArrowLeft' && !inField) {
+        goBack();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canAdvance, isRevealStep, goNext, goBack]);
 
   const submit = async () => {
     if (!canAdvance) return;
@@ -277,13 +346,11 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
     >
       {/* ── Progress bar ── */}
       <div className="px-6 lg:px-10 pt-7 pb-3">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-3">
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
             Etapa {step + 1} de {totalSteps}
           </span>
-          <span className="font-mono text-[10px] text-text-dim">
-            ❯ {schema.serviceTag}.sh
-          </span>
+          <LiveEstimatePill min={min} max={max} visible={step > 0 && !isRevealStep} />
         </div>
         <div className="flex gap-1.5">
           {Array.from({ length: totalSteps }).map((_, i) => (
@@ -297,43 +364,51 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       </div>
 
       {/* ── Step content ── */}
-      <div className="px-6 lg:px-10 py-8 lg:py-10 min-h-[340px]">
-        {currentField && (
-          <FieldStep
-            field={currentField}
-            value={selection[currentField.id]}
-            onSingle={(v) => setSingle(currentField.id, v)}
-            onToggle={(v) => toggleMulti(currentField.id, v)}
-            eyebrow={copy.eyebrow}
-          />
-        )}
+      <div className="px-6 lg:px-10 py-8 lg:py-10 min-h-[340px] overflow-hidden">
+        <div
+          key={step}
+          style={{
+            animation: `pf-slide-${direction > 0 ? 'in-right' : 'in-left'} 320ms cubic-bezier(0.16, 1, 0.3, 1)`,
+          }}
+        >
+          {currentField && (
+            <FieldStep
+              field={currentField}
+              value={selection[currentField.id]}
+              onSingle={(v) => setSingle(currentField.id, v)}
+              onToggle={(v) => toggleMulti(currentField.id, v)}
+              eyebrow={copy.eyebrow}
+            />
+          )}
 
-        {isRevealStep && (
-          <RevealStep
-            min={min}
-            max={max}
-            name={name}
-            whatsapp={whatsapp}
-            email={email}
-            notes={notes}
-            onName={setName}
-            onWhats={setWhatsapp}
-            onEmail={setEmail}
-            onNotes={setNotes}
-            title={copy.revealTitle ?? 'Seu investimento estimado'}
-            subtitle={
-              copy.revealSubtitle ??
-              'Faixa preliminar baseada nas suas escolhas. Para receber a proposta detalhada, deixa seu contato.'
-            }
-            eyebrow={copy.eyebrow}
-          />
-        )}
+          {isRevealStep && (
+            <RevealStep
+              schema={schema}
+              selection={selection}
+              min={min}
+              max={max}
+              name={name}
+              whatsapp={whatsapp}
+              email={email}
+              notes={notes}
+              onName={setName}
+              onWhats={setWhatsapp}
+              onEmail={setEmail}
+              onNotes={setNotes}
+              title={copy.revealTitle ?? 'Seu investimento estimado'}
+              subtitle={
+                copy.revealSubtitle ??
+                'Faixa preliminar baseada nas suas escolhas. Para receber a proposta detalhada, deixa seu contato.'
+              }
+            />
+          )}
+        </div>
       </div>
 
       {/* ── Footer nav ── */}
       <div className="flex items-center justify-between gap-3 px-6 lg:px-10 py-5 border-t border-black/[0.06] bg-black/[0.02]">
         <button
-          onClick={() => setStep((s) => Math.max(0, s - 1))}
+          onClick={goBack}
           disabled={step === 0}
           className="font-mono text-[12px] text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
         >
@@ -361,7 +436,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
           </button>
         ) : (
           <button
-            onClick={() => setStep((s) => Math.min(totalSteps - 1, s + 1))}
+            onClick={goNext}
             disabled={!canAdvance}
             className="font-bricolage inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"
           >
@@ -471,93 +546,243 @@ function FieldStep({
   );
 }
 
+function LiveEstimatePill({ min, max, visible }: { min: number; max: number; visible: boolean }) {
+  const prevRef = useRef<string>('');
+  const current = `${min}-${max}`;
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    if (prevRef.current && prevRef.current !== current) {
+      setPulse(true);
+      const t = setTimeout(() => setPulse(false), 320);
+      return () => clearTimeout(t);
+    }
+    prevRef.current = current;
+  }, [current, visible]);
+
+  if (!visible) return <span aria-hidden />;
+
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-transform duration-200"
+      style={{
+        background: 'rgba(59,130,246,0.10)',
+        border: '1px solid rgba(59,130,246,0.25)',
+        transform: pulse ? 'scale(1.05)' : 'scale(1)',
+      }}
+    >
+      <Sparkles className="w-3 h-3 text-primary" strokeWidth={2.2} />
+      <span className="font-mono text-[10px] text-primary uppercase tracking-widest">
+        estimativa
+      </span>
+      <span className="font-mono text-[11px] text-text-primary font-semibold">
+        {fmt(min)} – {fmt(max)}
+      </span>
+    </span>
+  );
+}
+
 function RevealStep({
+  schema, selection,
   min, max, name, whatsapp, email, notes,
   onName, onWhats, onEmail, onNotes,
-  title, subtitle, eyebrow,
+  title, subtitle,
 }: {
+  schema: PricingSchema;
+  selection: PricingSelection;
   min: number; max: number;
   name: string; whatsapp: string; email: string; notes: string;
   onName: (v: string) => void; onWhats: (v: string) => void;
   onEmail: (v: string) => void; onNotes: (v: string) => void;
   title: string; subtitle: string;
-  eyebrow?: string;
 }) {
-  return (
-    <div>
-      {eyebrow && (
-        <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest block mb-3">
-          {eyebrow}
-        </span>
-      )}
+  const avg = Math.round(((min + max) / 2) / 100) * 100;
+  const inclusions = schema.inclusions?.(selection) ?? [];
+  const timeline = schema.timeline?.(selection) ?? [];
+  const reportTitle = schema.reportTitle?.(selection) ?? 'Proposta preliminar';
+  const protocol = `#NTK-${(Math.abs(hashString(JSON.stringify(selection))) % 9000 + 1000).toString()}`;
+  const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 
-      {/* Reveal */}
+  return (
+    <div style={{ animation: 'priceReveal 600ms cubic-bezier(0.16, 1, 0.3, 1)' }}>
+
+      {/* ── Report header strip ── */}
       <div
-        className="rounded-2xl border border-primary/30 px-6 py-7 lg:px-8 lg:py-8 mb-7 text-center"
-        style={{
-          background: 'linear-gradient(135deg, rgba(59,130,246,0.06), rgba(59,130,246,0.02))',
-          animation: 'priceReveal 600ms cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
+        className="rounded-t-2xl border border-black/[0.08] border-b-0 px-5 py-3 flex items-center justify-between"
+        style={{ background: 'rgba(25,25,24,0.025)' }}
       >
-        <div className="inline-flex items-center gap-1.5 mb-3 text-primary">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span className="font-mono text-[10px] uppercase tracking-widest">{title}</span>
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+          <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
+            proposta-preliminar.{schema.serviceTag}
+          </span>
         </div>
-        <div className="font-bricolage text-[2rem] md:text-[2.5rem] lg:text-[2.75rem] font-bold text-text-primary leading-tight tracking-tight">
-          {fmt(min)} <span className="text-text-muted font-normal">–</span> {fmt(max)}
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[10px] text-text-dim">{protocol}</span>
+          <span className="font-mono text-[10px] text-text-dim hidden sm:inline">·</span>
+          <span className="font-mono text-[10px] text-text-dim hidden sm:inline">{today}</span>
         </div>
-        <p className="text-[13px] text-text-muted mt-3 max-w-md mx-auto leading-relaxed">
+      </div>
+
+      {/* ── Hero do valor ── */}
+      <div
+        className="border border-black/[0.08] border-b-0 px-6 lg:px-10 py-9 lg:py-11 text-center"
+        style={{ background: 'linear-gradient(180deg, rgba(59,130,246,0.05) 0%, transparent 100%)' }}
+      >
+        <h3 className="font-bricolage text-[1.5rem] lg:text-[2rem] text-text-primary leading-tight tracking-tight mb-7">
+          {reportTitle}
+        </h3>
+        <p className="font-mono text-[10px] text-primary uppercase tracking-widest mb-2 inline-flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3" />
+          {title}
+        </p>
+        <div className="font-bricolage text-[2.5rem] md:text-[3rem] lg:text-[3.5rem] font-bold text-text-primary leading-none tracking-tight">
+          {fmt(avg)}
+        </div>
+        <p className="font-mono text-[11px] text-text-muted mt-3">
+          faixa {fmt(min)} – {fmt(max)}
+        </p>
+        <p className="text-[12px] text-text-muted mt-4 max-w-md mx-auto leading-relaxed">
           {subtitle}
         </p>
       </div>
 
-      {/* Identification */}
-      <div className="space-y-3">
-        <div className="grid sm:grid-cols-2 gap-3">
-          <Field label="Seu nome">
+      {/* ── Escopo ── */}
+      {inclusions.length > 0 && (
+        <div className="border border-black/[0.08] border-b-0 px-6 lg:px-10 py-7" style={{ background: 'hsl(55 100% 97%)' }}>
+          <div className="flex items-center gap-2 mb-5">
+            <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
+              ❯ o que está incluído
+            </span>
+            <div className="flex-1 h-px bg-black/[0.06]" />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-5">
+            {inclusions.map((group, gi) => (
+              <div key={gi}>
+                <p className="font-bricolage text-[14px] font-semibold text-text-primary mb-2.5">
+                  {group.title}
+                </p>
+                <ul className="space-y-1.5">
+                  {group.items.map((it, ii) => (
+                    <li key={ii} className="flex items-start gap-2 text-[13px] text-text-secondary leading-snug">
+                      <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" strokeWidth={2.5} />
+                      <span>{it}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Cronograma ── */}
+      {timeline.length > 0 && (
+        <div className="border border-black/[0.08] border-b-0 px-6 lg:px-10 py-7" style={{ background: 'rgba(25,25,24,0.02)' }}>
+          <div className="flex items-center gap-2 mb-6">
+            <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
+              ❯ cronograma estimado
+            </span>
+            <div className="flex-1 h-px bg-black/[0.06]" />
+          </div>
+
+          {/* Timeline track (desktop horizontal, mobile vertical) */}
+          <div className="hidden sm:grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-3 relative" style={{ gridTemplateColumns: `repeat(${timeline.length}, minmax(0,1fr))` }}>
+            <div className="absolute left-2 right-2 top-[7px] h-px bg-primary/25" />
+            {timeline.map((p, i) => (
+              <div key={i} className="relative">
+                <div className="w-3.5 h-3.5 rounded-full bg-primary border-2 border-[hsl(55_100%_97%)] mb-3 relative z-10" />
+                <p className="font-mono text-[10px] text-primary uppercase tracking-widest mb-1">{p.range}</p>
+                <p className="font-bricolage text-[14px] font-semibold text-text-primary mb-1 leading-tight">{p.title}</p>
+                <p className="text-[12px] text-text-secondary leading-snug">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile — stacked */}
+          <ol className="sm:hidden space-y-4 relative">
+            {timeline.map((p, i) => (
+              <li key={i} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <div className="w-3 h-3 rounded-full bg-primary mt-1.5" />
+                  {i < timeline.length - 1 && <div className="flex-1 w-px bg-primary/20 mt-1" />}
+                </div>
+                <div className="pb-1">
+                  <p className="font-mono text-[10px] text-primary uppercase tracking-widest mb-0.5">{p.range}</p>
+                  <p className="font-bricolage text-[14px] font-semibold text-text-primary mb-0.5 leading-tight">{p.title}</p>
+                  <p className="text-[12px] text-text-secondary leading-snug">{p.desc}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* ── Próximo passo: identificação ── */}
+      <div className="rounded-b-2xl border border-black/[0.08] px-6 lg:px-10 py-7" style={{ background: 'hsl(55 100% 97%)' }}>
+        <div className="flex items-center gap-2 mb-5">
+          <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
+            ❯ próximo passo
+          </span>
+          <div className="flex-1 h-px bg-black/[0.06]" />
+        </div>
+        <p className="text-[13px] text-text-secondary mb-5 leading-relaxed max-w-lg">
+          Esse é o esboço do seu projeto. Pra fechar o investimento exato, a gente conversa pra validar o que você preencheu e entender o contexto da sua operação.
+        </p>
+        <div className="space-y-3">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="Seu nome">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => onName(e.target.value)}
+                placeholder="Como te chama?"
+                className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
+                style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+              />
+            </Field>
+            <Field label="WhatsApp">
+              <input
+                type="tel"
+                value={whatsapp}
+                onChange={(e) => onWhats(e.target.value)}
+                placeholder="(11) 99999-9999"
+                className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
+                style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+              />
+            </Field>
+          </div>
+          <Field label="E-mail">
             <input
-              type="text"
-              value={name}
-              onChange={(e) => onName(e.target.value)}
-              placeholder="Como te chama?"
+              type="email"
+              value={email}
+              onChange={(e) => onEmail(e.target.value)}
+              placeholder="seu@email.com"
               className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
               style={{ border: '1px solid rgba(25,25,24,0.10)' }}
             />
           </Field>
-          <Field label="WhatsApp">
-            <input
-              type="tel"
-              value={whatsapp}
-              onChange={(e) => onWhats(e.target.value)}
-              placeholder="(11) 99999-9999"
-              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
+          <Field label="Algo a acrescentar? (opcional)">
+            <textarea
+              value={notes}
+              onChange={(e) => onNotes(e.target.value)}
+              rows={2}
+              placeholder="Contexto, prazo, links..."
+              className="w-full px-4 py-3 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors leading-relaxed resize-none"
               style={{ border: '1px solid rgba(25,25,24,0.10)' }}
             />
           </Field>
         </div>
-        <Field label="E-mail">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => onEmail(e.target.value)}
-            placeholder="seu@email.com"
-            className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-            style={{ border: '1px solid rgba(25,25,24,0.10)' }}
-          />
-        </Field>
-        <Field label="Algo a acrescentar? (opcional)">
-          <textarea
-            value={notes}
-            onChange={(e) => onNotes(e.target.value)}
-            rows={2}
-            placeholder="Contexto, prazo, links..."
-            className="w-full px-4 py-3 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors leading-relaxed resize-none"
-            style={{ border: '1px solid rgba(25,25,24,0.10)' }}
-          />
-        </Field>
       </div>
     </div>
   );
+}
+
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

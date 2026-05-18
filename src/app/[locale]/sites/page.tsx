@@ -10,6 +10,7 @@ import { ProdutosHeroBackground } from '@/components/produtos-digitais/produtos-
 import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showcase';
 import { SitesPricingForm } from '@/components/sites/sites-pricing-form';
 import { ProductFAQ } from '@/components/ui/product-faq';
+import { BrandbookCombo } from '@/components/ui/brandbook-combo';
 
 const SITES_FAQS = [
   {
@@ -345,6 +346,8 @@ export default async function SitesPage({
         faqs={SITES_FAQS}
         surface="base"
       />
+
+      <BrandbookCombo companion="site" surface="base" />
 
       {/* ── Pricing form ── */}
       <section id="orcamento" className="bg-surface-elevated">

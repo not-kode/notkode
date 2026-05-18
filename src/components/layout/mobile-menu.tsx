@@ -101,20 +101,6 @@ export function MobileMenu() {
           </ul>
         </nav>
 
-        {/* CTA at bottom */}
-        <div className="px-5 pb-8 pt-4">
-          <Link
-            href={{ pathname: '/sistemas-ia', hash: 'diagnostico' }}
-            onClick={close}
-            className="font-bricolage w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide hover:bg-primary/90 transition-colors"
-          >
-            {t('contato')}
-            <ArrowUpRight className="w-4 h-4" />
-          </Link>
-          <p className="font-mono text-[10px] text-text-dim text-center mt-3">
-            resposta em até 24h · sem compromisso
-          </p>
-        </div>
       </aside>
     </>
   );

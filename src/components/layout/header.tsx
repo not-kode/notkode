@@ -10,7 +10,7 @@ export function Header() {
   const t = useTranslations('Nav');
 
   return (
-    <header className="sticky top-0 z-50 glass border-b border-black/10">
+    <header className="sticky top-0 z-50 glass-strong border-b border-black/10">
       <div className="container mx-auto flex h-16 items-center justify-between gap-6 px-5 lg:px-8">
         <Link href="/" className="flex items-center">
           <Logo variant="horizontal-dark" width={120} priority />

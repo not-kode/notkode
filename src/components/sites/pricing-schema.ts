@@ -1,4 +1,4 @@
-import type { PricingSchema } from '@/components/ui/pricing-form';
+import type { InclusionGroup, PricingSchema, TimelinePhase } from '@/components/ui/pricing-form';
 
 const TYPE_BASE: Record<string, [number, number]> = {
   landing:       [1800, 3500],
@@ -35,6 +35,93 @@ function calc(sel: Record<string, string | string[]>): [number, number] {
   const min = Math.round((baseMin * sizeMult + extrasCost) * mult);
   const max = Math.round((baseMax * sizeMult + extrasCost * 1.4) * mult);
   return [min, max];
+}
+
+const TYPE_LABEL: Record<string, string> = {
+  landing:       'Landing Page',
+  institucional: 'Site Institucional',
+  blog:          'Site + Blog',
+  multilingue:   'Site Multilíngue',
+};
+
+const SIZE_LABEL: Record<string, string> = {
+  pequeno: 'até 3 páginas',
+  medio:   '4 a 7 páginas',
+  grande:  '8 a 15 páginas',
+};
+
+const EXTRA_LABEL: Record<string, string> = {
+  copy:      'Copywriting profissional',
+  seo:       'SEO técnico avançado',
+  analytics: 'GA4 + Pixel + Hotjar',
+  whatsapp:  'Integração WhatsApp',
+  crm:       'Integração com CRM',
+  animacoes: 'Animações premium',
+};
+
+function inclusions(sel: Record<string, string | string[]>): InclusionGroup[] {
+  const type = (sel.type as string) ?? 'institucional';
+  const size = (sel.size as string) ?? 'medio';
+  const extras = (sel.extras as string[]) ?? [];
+
+  const principal: string[] = [
+    TYPE_LABEL[type] ?? type,
+    `Estrutura ${SIZE_LABEL[size] ?? size}`,
+    'Design responsivo (mobile, tablet, desktop)',
+    'Painel pra editar conteúdo sem chamar dev',
+  ];
+
+  const tecnico: string[] = [
+    'Hospedagem configurada (Vercel ou similar)',
+    'Domínio próprio apontado',
+    'SSL/HTTPS ativo',
+    'Performance otimizada (Lighthouse 90+)',
+  ];
+
+  const groups: InclusionGroup[] = [
+    { title: 'Escopo principal', items: principal },
+    { title: 'Stack técnico', items: tecnico },
+  ];
+
+  if (extras.length > 0) {
+    groups.push({
+      title: `Extras (${extras.length})`,
+      items: extras.map((e) => EXTRA_LABEL[e] ?? e),
+    });
+  }
+
+  return groups;
+}
+
+function timeline(sel: Record<string, string | string[]>): TimelinePhase[] {
+  const urgency = (sel.urgency as string) ?? 'normal';
+  if (urgency === 'urgente') {
+    return [
+      { range: 'Semana 1',   title: 'Briefing + design', desc: 'Direção visual e wireframes aprovados.' },
+      { range: 'Semana 1–2', title: 'Construção',         desc: 'Páginas, conteúdo e integrações.' },
+      { range: 'Semana 2',   title: 'Go-live',            desc: 'Revisão final e ar.' },
+    ];
+  }
+  if (urgency === 'rapido') {
+    return [
+      { range: 'Semana 1',   title: 'Briefing + design', desc: 'Moodboard, wireframes e protótipo.' },
+      { range: 'Semana 2',   title: 'Construção',         desc: 'Todas as páginas e integrações.' },
+      { range: 'Semana 3',   title: 'Go-live',            desc: 'Revisão final, lançamento e ajustes.' },
+    ];
+  }
+  return [
+    { range: 'Semana 1',   title: 'Briefing + design', desc: 'Direção visual, wireframes e protótipo aprovados.' },
+    { range: 'Semana 2–4', title: 'Construção',         desc: 'Páginas, conteúdo, integrações e testes.' },
+    { range: 'Semana 5',   title: 'Go-live',            desc: 'Revisão final, lançamento e ajustes pós-go-live.' },
+  ];
+}
+
+function reportTitle(sel: Record<string, string | string[]>): string {
+  const type = (sel.type as string) ?? 'institucional';
+  if (type === 'landing')     return 'Sua landing de conversão';
+  if (type === 'blog')        return 'Seu site com blog';
+  if (type === 'multilingue') return 'Seu site multilíngue';
+  return 'Seu site institucional';
 }
 
 export const sitesPricingSchema: PricingSchema = {
@@ -101,4 +188,7 @@ export const sitesPricingSchema: PricingSchema = {
     },
   ],
   calc,
+  inclusions,
+  timeline,
+  reportTitle,
 };

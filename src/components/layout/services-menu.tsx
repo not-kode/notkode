@@ -11,7 +11,6 @@ import {
   ShoppingCart,
   Palette,
   ArrowUpRight,
-  Sparkles,
   X,
 } from 'lucide-react';
 
@@ -83,47 +82,6 @@ export function ServicesMenu() {
         <div className="relative h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] overflow-y-auto">
           <div className="container mx-auto px-5 lg:px-8 py-10 lg:py-14 max-w-6xl">
 
-            {/* Featured banner — Sistemas com IA */}
-            <Link
-              href="/sistemas-ia"
-              onClick={() => setOpen(false)}
-              className="group relative block rounded-2xl overflow-hidden mb-10 lg:mb-12 transition-all duration-300 hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, rgba(59,130,246,0.10), rgba(59,130,246,0.03))',
-                border: '1px solid rgba(59,130,246,0.25)',
-                boxShadow: '0 20px 60px -20px rgba(59,130,246,0.20)',
-              }}
-            >
-              <div className="relative p-6 lg:p-8 flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
-                <div className="flex-1 min-w-0">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full mb-3"
-                       style={{ background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.25)' }}>
-                    <Sparkles className="w-3 h-3 text-primary" strokeWidth={2} />
-                    <span className="font-mono text-[9px] text-primary uppercase tracking-widest font-semibold">
-                      Produto âncora
-                    </span>
-                  </div>
-                  <h3 className="font-bricolage text-[1.5rem] lg:text-[2rem] font-bold text-text-primary leading-tight tracking-tight mb-2">
-                    {t('sistemasIA')}
-                  </h3>
-                  <p className="text-[14px] lg:text-[15px] text-text-secondary leading-relaxed max-w-xl">
-                    Substitua dezenas de ferramentas por um sistema interno sob medida — com IA que aprende com o seu negócio.
-                  </p>
-                </div>
-                <div className="shrink-0">
-                  <span className="font-bricolage inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide group-hover:bg-primary/90 transition-colors">
-                    Conhecer
-                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                  </span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Section label */}
-            <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-5">
-              ❯ outros serviços
-            </p>
-
             {/* 2x2 grid */}
             <div className="grid sm:grid-cols-2 gap-4 lg:gap-5">
               {services.map((s) => (
@@ -164,20 +122,6 @@ export function ServicesMenu() {
               ))}
             </div>
 
-            {/* Footer micro-CTA */}
-            <div className="mt-10 lg:mt-12 pt-6 border-t border-black/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <p className="font-mono text-[11px] text-text-dim">
-                ❯ não sabe por onde começar?
-              </p>
-              <Link
-                href={{ pathname: '/sistemas-ia', hash: 'diagnostico' }}
-                onClick={() => setOpen(false)}
-                className="group inline-flex items-center gap-2 text-[13px] text-text-secondary hover:text-primary transition-colors"
-              >
-                <span>Agendar diagnóstico de 30 min</span>
-                <ArrowUpRight className="w-3.5 h-3.5 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
           </div>
         </div>
       </div>

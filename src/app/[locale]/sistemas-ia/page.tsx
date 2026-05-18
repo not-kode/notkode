@@ -11,6 +11,7 @@ import { FeaturedCase } from '@/components/home/featured-case';
 import { Process } from '@/components/home/process';
 import { FAQLazy as FAQ } from '@/components/sistemas-ia/faq-lazy';
 import { SistemasQualificationForm } from '@/components/sistemas-ia/sistemas-qualification-form';
+import { BrandbookCombo } from '@/components/ui/brandbook-combo';
 
 export default async function SistemasIAPage({
   params,
@@ -96,6 +97,8 @@ export default async function SistemasIAPage({
 
       {/* ── Beat 6: objeções ── */}
       <FAQ />
+
+      <BrandbookCombo companion="sistema" surface="base" />
 
       {/* ── Form de interesse (qualification form) ── */}
       <section id="diagnostico" className="bg-surface-elevated">
