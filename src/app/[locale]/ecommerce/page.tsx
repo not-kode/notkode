@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
+
+export const metadata: Metadata = {
+  title: 'Loja virtual sob medida · Notkode',
+  description:
+    'Loja com sistema próprio: checkout, CRM e operação inteira dentro do seu domínio. Sem alugar peça por peça. Quando o orçamento ainda não cabe, partimos de Shopify, WooCommerce ou Nuvemshop.',
+};
 import { ArrowDown, ShoppingCart, RefreshCw, Cpu, CreditCard, Search, PenTool, Rocket } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';

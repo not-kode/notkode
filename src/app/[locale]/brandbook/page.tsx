@@ -1,6 +1,13 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { ArrowDown, Palette, Type, BookOpen, Layout, ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
+
+export const metadata: Metadata = {
+  title: 'Identidade visual e brandbook · Notkode',
+  description:
+    'Logo, paleta, tipografia e manual de marca. Pronto em 2 a 3 semanas, com arquivos editáveis na sua mão. Combo com site, sistema ou loja sai com desconto.',
+};
 import { Reveal } from '@/components/ui/reveal';
 import { SobreHeroBackground } from '@/components/sobre/sobre-hero-background';
 import { BrandbookPreviewLazy as BrandbookPreview } from '@/components/design/brandbook-preview-lazy';

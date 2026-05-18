@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { ArrowUpRight, ArrowDown, TrendingUp, Users, Zap, Shield, Code2, Sparkles, type LucideIcon } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Parcerias e white-label · Notkode',
+  description:
+    'Agência de marketing ou consultoria que precisa entregar tecnologia? A Notkode constrói o que sua equipe não tem time pra fazer, com sua marca na frente.',
+};
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { ParceriasHeroBackground } from '@/components/parcerias/parcerias-hero-background';

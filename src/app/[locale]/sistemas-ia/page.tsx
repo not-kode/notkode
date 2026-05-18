@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { ArrowUpRight, ArrowDown } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Sistemas internos com IA · Notkode',
+  description:
+    'Substitua dezenas de ferramentas por um sistema interno sob medida, com IA que aprende com o seu negócio. CRM, atendimento, operação e relatórios numa base que é sua.',
+};
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { SistemasHeroBackground } from '@/components/sistemas-ia/sistemas-hero-background';

@@ -405,6 +405,18 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
         </div>
       </div>
 
+      {/* ── Consent line (visible only on reveal step) ── */}
+      {isRevealStep && (
+        <div className="px-6 lg:px-10 pb-4 -mt-2">
+          <p className="font-mono text-[10px] text-text-dim leading-relaxed">
+            Ao enviar, você concorda que a gente entre em contato e processe seus dados conforme a{' '}
+            <a href="/politica-privacidade" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">
+              política de privacidade
+            </a>.
+          </p>
+        </div>
+      )}
+
       {/* ── Footer nav ── */}
       <div className="flex items-center justify-between gap-3 px-6 lg:px-10 py-5 border-t border-black/[0.06] bg-black/[0.02]">
         <button

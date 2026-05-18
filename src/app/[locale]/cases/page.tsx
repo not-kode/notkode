@@ -1,6 +1,13 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
+
+export const metadata: Metadata = {
+  title: 'Cases · Notkode',
+  description:
+    'Sistemas, lojas e automações entregues. Veja como a Notkode resolveu o problema de empresas como a sua.',
+};
 import { Reveal } from '@/components/ui/reveal';
 import { CasesGridLazy as CasesGrid } from '@/components/cases/cases-grid-lazy';
 import { CasesHeroBackground } from '@/components/cases/cases-hero-background';

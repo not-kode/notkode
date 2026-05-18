@@ -1,5 +1,12 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { ArrowUpRight, Linkedin } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Sobre a Notkode · Quem somos',
+  description:
+    'A Notkode é um estúdio de tecnologia que constrói sistemas internos, automações e identidade visual sob medida. Conheça quem está por trás.',
+};
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { TimelineHorizontalLazy as TimelineHorizontal } from '@/components/sobre/timeline-horizontal-lazy';

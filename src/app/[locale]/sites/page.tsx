@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import {
   ArrowDown, Layout, FileText, BookOpen, Globe2, Search, PenTool, Rocket,
@@ -11,6 +12,12 @@ import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showca
 import { SitesPricingForm } from '@/components/sites/sites-pricing-form';
 import { ProductFAQ } from '@/components/ui/product-faq';
 import { BrandbookCombo } from '@/components/ui/brandbook-combo';
+
+export const metadata: Metadata = {
+  title: 'Sites institucionais e landings · Notkode',
+  description:
+    'Sites, landings e blogs construídos pra converter. Design responsivo, performance Lighthouse 90+, painel pra editar conteúdo sem chamar dev.',
+};
 
 const SITES_FAQS = [
   {

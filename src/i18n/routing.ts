@@ -32,6 +32,10 @@ export const routing = defineRouting({
       en: '/about',
     },
     '/blog': '/blog',
+    '/politica-privacidade': {
+      pt: '/politica-privacidade',
+      en: '/privacy-policy',
+    },
   },
 });
 

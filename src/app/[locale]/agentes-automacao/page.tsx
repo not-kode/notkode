@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
+
+export const metadata: Metadata = {
+  title: 'Agentes de IA e automações · Notkode',
+  description:
+    'Chatbots, agentes de IA e automações que respondem clientes, organizam pedidos e eliminam tarefas repetitivas. Cliente atendido, pedido organizado, cobrança feita, sem precisar de você.',
+};
 import { ArrowDown, Bot, Workflow, MessageSquare, Zap, Search, PenTool, Rocket } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';

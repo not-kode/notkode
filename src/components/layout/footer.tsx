@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { Logo } from '@/components/brand/logo';
+import { Link } from '@/i18n/routing';
 
 export function Footer() {
   const t = useTranslations('Footer');
@@ -16,6 +17,9 @@ export function Footer() {
         <div className="flex flex-col md:items-end gap-1 font-mono text-[11px] text-text-dim">
           <span>{t('rights')}</span>
           <span>{t('cnpj')} · {t('location')}</span>
+          <Link href="/politica-privacidade" className="hover:text-primary transition-colors mt-1">
+            política de privacidade
+          </Link>
         </div>
       </div>
     </footer>

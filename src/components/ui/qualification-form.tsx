@@ -314,6 +314,18 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
         )}
       </div>
 
+      {/* Consent line on final step */}
+      {step === 2 && (
+        <div className="px-6 lg:px-8 pb-4 -mt-2">
+          <p className="font-mono text-[10px] text-text-dim leading-relaxed">
+            Ao enviar, você concorda que a gente entre em contato e processe seus dados conforme a{' '}
+            <a href="/politica-privacidade" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">
+              política de privacidade
+            </a>.
+          </p>
+        </div>
+      )}
+
       {/* Footer with navigation */}
       <div className="flex items-center justify-between gap-3 px-6 lg:px-8 py-5 border-t border-black/[0.06] bg-black/[0.02]">
         <button
