@@ -101,11 +101,15 @@ export default async function SobrePage({
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-28">
           <div className="grid lg:grid-cols-[1fr_2fr] gap-12 lg:gap-20">
             <Reveal>
-              <SectionMarker number="01" label="Missão" />
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">01</span>
+                <span className="h-px w-6 bg-text-dim/30" />
+                <span className="font-mono text-[10px] text-text-primary uppercase tracking-widest font-medium">Propósito</span>
+              </div>
             </Reveal>
             <Reveal delay={100}>
               <p className="text-[1.4rem] md:text-[1.75rem] lg:text-[1.9rem] font-semibold leading-[1.3] tracking-[-0.015em] text-text-primary">
-                Devolver às empresas o controle da sua tecnologia. Construir software que reflete o jeito único de cada operação, com IA que aprende, e código que fica nas mãos certas —{' '}
+                Devolver às empresas o controle da sua tecnologia. Construir software que reflete o jeito único de cada operação, com IA que aprende, e código que fica nas mãos certas:{' '}
                 as do <span className="font-bricolage">cliente.</span>
               </p>
             </Reveal>
