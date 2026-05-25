@@ -1,6 +1,4 @@
-'use client';
-
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Reveal } from './reveal';
 
@@ -17,55 +15,10 @@ interface ProcessTimelineProps {
 }
 
 export function ProcessTimeline({ steps, className }: ProcessTimelineProps) {
-  const lineRef = useRef<HTMLDivElement>(null);
-  const [lineWidth, setLineWidth] = useState(0);
-  const triggered = useRef(false);
-
-  useEffect(() => {
-    const el = lineRef.current;
-    if (!el) return;
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setLineWidth(100);
-      return;
-    }
-
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting || triggered.current) return;
-        triggered.current = true;
-
-        const start = performance.now();
-        const duration = 1400;
-
-        function tick(now: number) {
-          const progress = Math.min((now - start) / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 2);
-          setLineWidth(eased * 100);
-          if (progress < 1) requestAnimationFrame(tick);
-        }
-
-        requestAnimationFrame(tick);
-      },
-      { threshold: 0.2 }
-    );
-
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
 
   return (
     <div className={cn('relative', className)}>
-      {/* Linha conectora — de centro a centro dos ícones (top-8 = metade do w-16 h-16) */}
-      <div className="hidden md:block absolute top-8 left-[16.67%] right-[16.67%] h-px bg-black/[0.07]">
-        <div
-          ref={lineRef}
-          className="absolute inset-y-0 left-0 bg-primary/50 transition-none"
-          style={{ width: `${lineWidth}%` }}
-        />
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-10 lg:gap-14">
+<div className="grid md:grid-cols-3 gap-10 lg:gap-14">
         {steps.map((step, i) => (
           <Reveal key={step.title} delay={i * 140}>
             <article className="relative flex flex-col items-center text-center">
