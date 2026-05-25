@@ -8,6 +8,9 @@ import {
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { ProcessTimeline } from '@/components/ui/process-timeline';
+import { CountUp } from '@/components/ui/count-up';
+import { DotPattern } from '@/components/ui/dot-pattern';
+import { TiltCard } from '@/components/ui/tilt-card';
 import { ProdutosHeroBackground } from '@/components/produtos-digitais/produtos-hero-background';
 import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showcase';
 import { SitesPricingForm } from '@/components/sites/sites-pricing-form';
@@ -166,16 +169,17 @@ export default async function SitesPage({
       </section>
 
       {/* ── Stats ── */}
-      <section className="bg-surface-elevated">
-        <div className="container mx-auto px-5 lg:px-8 py-16 lg:py-20">
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-4xl mx-auto">
+      <section className="relative bg-surface-elevated overflow-hidden">
+        <DotPattern />
+        <div className="relative z-10 container mx-auto px-5 lg:px-8 py-16 lg:py-20">
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-3xl mx-auto">
             {STATS.map((s, i) => (
               <Reveal key={s.label} delay={i * 100}>
                 <div className="text-center">
-                  <div className="font-bricolage text-[2.25rem] lg:text-[2.75rem] font-bold text-primary leading-none mb-2 tracking-tight">
-                    {s.value}
+                  <div className="font-bricolage text-[2.75rem] lg:text-[3.25rem] font-bold text-primary leading-none mb-2 tracking-tight">
+                    <CountUp value={s.value} />
                   </div>
-                  <div className="font-mono text-[12px] text-text-muted">
+                  <div className="font-mono text-[12px] text-text-muted uppercase tracking-widest leading-snug">
                     {s.label}
                   </div>
                 </div>
@@ -203,9 +207,10 @@ export default async function SitesPage({
           <div className="grid md:grid-cols-2 gap-4 lg:gap-5 max-w-5xl mx-auto">
             {TYPES.map((t, i) => (
               <Reveal key={t.recommendation} delay={i * 90}>
-                <article
-                  className="group h-full rounded-2xl border border-black/[0.08] p-6 lg:p-7 hover:border-primary/30 hover:-translate-y-1 transition-all duration-300"
+                <TiltCard
+                  className="h-full rounded-2xl border border-black/[0.08] p-6 lg:p-7"
                   style={{ background: 'hsl(55 100% 97%)' }}
+                  intensity={5}
                 >
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -232,7 +237,7 @@ export default async function SitesPage({
                   <p className="text-[13px] lg:text-[14px] text-text-secondary leading-snug">
                     {t.oneLiner}
                   </p>
-                </article>
+                </TiltCard>
               </Reveal>
             ))}
           </div>
@@ -257,7 +262,7 @@ export default async function SitesPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-5xl mx-auto">
             {AI_PILLARS.map(({ Icon, label, desc }, i) => (
               <Reveal key={label} delay={i * 80}>
-                <div className="h-full text-center px-5 py-7 lg:py-8 rounded-2xl border border-black/[0.08] bg-white/40">
+                <TiltCard className="h-full text-center px-5 py-7 lg:py-8 rounded-2xl border border-black/[0.08] bg-white/40" intensity={4}>
                   <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6 text-primary" strokeWidth={1.6} />
                   </div>
@@ -267,7 +272,7 @@ export default async function SitesPage({
                   <p className="text-[13px] text-text-secondary leading-relaxed">
                     {desc}
                   </p>
-                </div>
+                </TiltCard>
               </Reveal>
             ))}
           </div>
@@ -312,7 +317,7 @@ export default async function SitesPage({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 max-w-5xl mx-auto">
             {MAINTENANCE.map(({ Icon, label, desc }, i) => (
               <Reveal key={label} delay={i * 90}>
-                <div className="h-full p-6 lg:p-7 rounded-2xl border border-black/[0.08] bg-white/40">
+                <TiltCard className="h-full p-6 lg:p-7 rounded-2xl border border-black/[0.08] bg-white/40" intensity={4}>
                   <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
                   </div>
@@ -322,7 +327,7 @@ export default async function SitesPage({
                   <p className="text-[14px] text-text-secondary leading-relaxed">
                     {desc}
                   </p>
-                </div>
+                </TiltCard>
               </Reveal>
             ))}
           </div>
