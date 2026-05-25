@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
+import { ProcessTimeline } from '@/components/ui/process-timeline';
 import { ProdutosHeroBackground } from '@/components/produtos-digitais/produtos-hero-background';
 import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showcase';
 import { SitesPricingForm } from '@/components/sites/sites-pricing-form';
@@ -101,17 +102,20 @@ const MAINTENANCE = [
 
 const HOW = [
   {
-    icon: Search,
+    iconNode: <Search className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '01',
     title: 'Briefing & Arquitetura',
     desc: 'Entendemos o objetivo do site, público e estrutura de páginas. Saída: sitemap + wireframe de cada página.',
   },
   {
-    icon: PenTool,
+    iconNode: <PenTool className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '02',
     title: 'Design & Desenvolvimento',
     desc: 'UI no Figma, código limpo, SEO técnico e responsivo do início. Revisões semanais antes do go-live.',
   },
   {
-    icon: Rocket,
+    iconNode: <Rocket className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '03',
     title: 'Lançamento & Crescimento',
     desc: 'Subimos no ar, configuramos analytics e te treinamos para editar conteúdo. Suporte nos primeiros 30 dias.',
   },
@@ -286,29 +290,7 @@ export default async function SitesPage({
             </h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-5 lg:gap-6">
-            {HOW.map((step, i) => (
-              <Reveal key={step.title} delay={i * 100}>
-                <article
-                  className="rounded-2xl border border-black/[0.08] p-6 lg:p-7 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="font-mono text-[11px] text-text-dim">0{i + 1}</span>
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <step.icon className="w-4 h-4 text-primary" strokeWidth={1.7} />
-                    </div>
-                  </div>
-                  <h3 className="text-[17px] lg:text-[18px] font-semibold tracking-tight text-text-primary mb-2">
-                    {step.title}
-                  </h3>
-                  <p className="text-[14px] text-text-secondary leading-relaxed">
-                    {step.desc}
-                  </p>
-                </article>
-              </Reveal>
-            ))}
-          </div>
+          <ProcessTimeline steps={HOW} />
         </div>
       </section>
 
