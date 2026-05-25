@@ -8,6 +8,10 @@ export const metadata: Metadata = {
 };
 import { ArrowDown, ShoppingCart, RefreshCw, Cpu, CreditCard, Search, PenTool, Rocket } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
+import { CountUp } from '@/components/ui/count-up';
+import { ProcessTimeline } from '@/components/ui/process-timeline';
+import { TiltCard } from '@/components/ui/tilt-card';
+import { DotPattern } from '@/components/ui/dot-pattern';
 import { SectionMarker } from '@/components/ui/section-marker';
 import { ProdutosHeroBackground } from '@/components/produtos-digitais/produtos-hero-background';
 import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showcase';
@@ -85,31 +89,43 @@ const RESULTS = [
 const PLATFORMS = [
   {
     name: 'WooCommerce',
+    initial: 'Woo',
+    color: '#7C3AED',
+    bg: 'rgba(124,58,237,0.10)',
     use: 'Catálogos médios e grandes, controle total de plugins e SEO. Boa quando você quer flexibilidade pra integrar fiscal, ERP e marketing BR.',
   },
   {
     name: 'Shopify',
+    initial: 'Sh',
+    color: '#16A34A',
+    bg: 'rgba(22,163,74,0.10)',
     use: 'Lojas DTC com tráfego pago intenso. Setup rápido, apps maduros, foco em conversão.',
   },
   {
     name: 'Nuvemshop',
+    initial: 'Nu',
+    color: '#2563EB',
+    bg: 'rgba(37,99,235,0.10)',
     use: 'Operação enxuta focada no mercado brasileiro. Integrações fiscais e logísticas BR já maduras, curva de aprendizado curta.',
   },
 ];
 
 const HOW = [
   {
-    icon: Search,
+    iconNode: <Search className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '01',
     title: 'Diagnóstico da operação',
     desc: 'Catálogo, gateway, fiscal, frete, ERP. Mapeamos o que já existe e o que precisa entrar. Saída: plano técnico (plataforma ou sistema próprio) e cronograma.',
   },
   {
-    icon: PenTool,
+    iconNode: <PenTool className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '02',
     title: 'Construção da loja',
     desc: 'Design focado em conversão, integração de pagamento + frete + fiscal, painel de admin destravado e testes de checkout.',
   },
   {
-    icon: Rocket,
+    iconNode: <Rocket className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '03',
     title: 'Go-live + crescimento',
     desc: 'Lançamento monitorado, configuração de pixels e e-mail marketing, primeiros 30 dias acompanhados de perto.',
   },
@@ -160,11 +176,18 @@ export default async function EcommercePage({
       </section>
 
       {/* ── Beat 2: Frankenstein de assinaturas — nomeia a dor do ICP ── */}
+      <div className="relative">
+        {/* Warning stripe — calls attention to the pain section */}
+        <div
+          className="absolute top-0 inset-x-0 h-[3px]"
+          style={{ background: 'linear-gradient(to right, rgba(239,68,68,0.0) 0%, rgba(239,68,68,0.45) 30%, rgba(239,68,68,0.45) 70%, rgba(239,68,68,0.0) 100%)' }}
+        />
       <PainNamingBlock
+        eyebrow="O custo escondido do seu crescimento"
         title={<><span className="block">Sua loja virou um</span><span className="block font-bricolage">Frankenstein de assinaturas.</span></>}
         intro="Plataforma, app de cupom, app de frete, gateway, ERP, plugin disso, plugin daquilo. Cada um cobra. Cada um cresce com o faturamento. Cada um tira um pedaço da margem antes de você ver o lucro."
         variant="tally"
-        surface="base"
+        surface="elevated"
         pains={FRANKENSTEIN_LINES}
         footer={
           <div className="max-w-2xl rounded-2xl border border-black/[0.08] bg-white/40 px-6 py-5 lg:px-8 lg:py-6">
@@ -178,18 +201,20 @@ export default async function EcommercePage({
           </div>
         }
       />
+      </div>
 
       {/* ── Resultados ── */}
-      <section className="bg-surface-elevated">
-        <div className="container mx-auto px-5 lg:px-8 py-16 lg:py-20">
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-4xl mx-auto">
+      <section className="relative bg-surface-elevated overflow-hidden">
+        <DotPattern />
+        <div className="relative z-10 container mx-auto px-5 lg:px-8 py-16 lg:py-20">
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-3xl mx-auto">
             {RESULTS.map((r, i) => (
               <Reveal key={r.label} delay={i * 100}>
                 <div className="text-center">
-                  <div className="font-bricolage text-[2.25rem] lg:text-[2.75rem] font-bold text-primary leading-none mb-2 tracking-tight">
-                    {r.value}
+                  <div className="font-bricolage text-[2.75rem] lg:text-[3.25rem] font-bold text-primary leading-none mb-2 tracking-tight">
+                    <CountUp value={r.value} />
                   </div>
-                  <div className="font-mono text-[12px] text-text-muted">
+                  <div className="font-mono text-[12px] text-text-muted uppercase tracking-widest leading-snug">
                     {r.label}
                   </div>
                 </div>
@@ -212,7 +237,7 @@ export default async function EcommercePage({
           <div className="grid md:grid-cols-3 gap-5 lg:gap-6">
             {SCENARIOS.map((s, i) => (
               <Reveal key={s.title} delay={i * 90}>
-                <article
+                <TiltCard
                   className="relative rounded-2xl p-6 lg:p-7 h-full"
                   style={{
                     background: s.flagship
@@ -220,6 +245,7 @@ export default async function EcommercePage({
                       : 'hsl(55 100% 97%)',
                     border: s.flagship ? '1.5px solid rgba(59,130,246,0.35)' : '1px solid rgba(25,25,24,0.08)',
                   }}
+                  intensity={5}
                 >
                   {s.flagship && (
                     <span className="absolute top-4 right-4 font-mono text-[9px] text-primary uppercase tracking-widest px-2 py-1 rounded-full" style={{ background: 'rgba(59,130,246,0.10)', border: '1px solid rgba(59,130,246,0.25)' }}>
@@ -235,7 +261,7 @@ export default async function EcommercePage({
                   <p className="text-[14px] text-text-secondary leading-relaxed">
                     {s.desc}
                   </p>
-                </article>
+                </TiltCard>
               </Reveal>
             ))}
           </div>
@@ -259,18 +285,28 @@ export default async function EcommercePage({
           <div className="grid md:grid-cols-3 gap-4 lg:gap-5">
             {PLATFORMS.map((p, i) => (
               <Reveal key={p.name} delay={i * 80}>
-                <div
-                  className="rounded-xl border border-black/[0.08] p-5 lg:p-6 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
+                <TiltCard
+                  className="rounded-xl border border-black/[0.07] p-5 lg:p-6 h-full"
+                  style={{ background: `radial-gradient(ellipse 80% 70% at 90% 10%, ${p.bg.replace('0.10', '0.13')} 0%, transparent 65%), hsl(55 100% 97%)` }}
+                  intensity={4}
                 >
-                  <p className="font-bricolage text-[16px] font-semibold text-text-primary mb-2 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-primary" strokeWidth={1.7} />
-                    {p.name}
-                  </p>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: p.bg }}
+                    >
+                      <span className="font-bricolage font-bold text-[11px]" style={{ color: p.color }}>
+                        {p.initial}
+                      </span>
+                    </div>
+                    <p className="font-bricolage text-[16px] font-semibold text-text-primary">
+                      {p.name}
+                    </p>
+                  </div>
                   <p className="text-[13px] text-text-secondary leading-relaxed">
                     {p.use}
                   </p>
-                </div>
+                </TiltCard>
               </Reveal>
             ))}
           </div>
@@ -287,29 +323,7 @@ export default async function EcommercePage({
             </h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-5 lg:gap-6">
-            {HOW.map((step, i) => (
-              <Reveal key={step.title} delay={i * 100}>
-                <article
-                  className="rounded-2xl border border-black/[0.08] p-6 lg:p-7 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="font-mono text-[11px] text-text-dim">0{i + 1}</span>
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <step.icon className="w-4 h-4 text-primary" strokeWidth={1.7} />
-                    </div>
-                  </div>
-                  <h3 className="text-[17px] lg:text-[18px] font-semibold tracking-tight text-text-primary mb-2">
-                    {step.title}
-                  </h3>
-                  <p className="text-[14px] text-text-secondary leading-relaxed">
-                    {step.desc}
-                  </p>
-                </article>
-              </Reveal>
-            ))}
-          </div>
+          <ProcessTimeline steps={HOW} />
         </div>
       </section>
 

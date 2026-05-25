@@ -15,12 +15,14 @@ const PAGES = [
 export function BrandbookPreview() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
   // Update active page based on scroll position
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const onScroll = () => {
+      if (el.scrollTop > 20) setHasScrolled(true);
       const sections = el.querySelectorAll('[data-page]');
       const containerCenter = el.scrollTop + el.clientHeight / 3;
       let bestIdx = 0;
@@ -119,11 +121,11 @@ export function BrandbookPreview() {
           </aside>
 
           {/* Scrollable content */}
-          <div
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto"
-            style={{ height: '520px' }}
-          >
+          <div className="relative flex-1" style={{ height: '520px' }}>
+            <div
+              ref={scrollRef}
+              className="h-full overflow-y-auto"
+            >
             {/* PAGE 01 — Cover */}
             <section data-page="capa" className="min-h-[520px] flex flex-col justify-center px-8 lg:px-16 py-10">
               <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-6">
@@ -276,6 +278,24 @@ export function BrandbookPreview() {
             {/* Bottom marker */}
             <div className="px-8 lg:px-16 py-6 text-center" style={{ background: 'rgba(25,25,24,0.02)' }}>
               <p className="font-mono text-[10px] text-text-dim">— fim do brandbook · v1.0 —</p>
+            </div>
+            </div>
+
+            {/* Scroll hint overlay — fades out after first scroll */}
+            <div
+              className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end pb-4 pointer-events-none transition-opacity duration-500"
+              style={{
+                opacity: hasScrolled ? 0 : 1,
+                background: 'linear-gradient(to top, rgba(255,254,242,0.92) 0%, transparent 100%)',
+                height: '80px',
+              }}
+            >
+              <span className="font-mono text-[10px] text-text-secondary flex items-center gap-1.5">
+                role para ver mais
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+                  <path d="M5 1v8M2 6l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
             </div>
           </div>
         </div>

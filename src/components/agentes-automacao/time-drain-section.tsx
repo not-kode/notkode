@@ -41,53 +41,64 @@ export function TimeDrainSection() {
 
         {/* Animated flow: data being copied between tools */}
         <Reveal delay={120}>
-          <div className="relative mx-auto max-w-3xl mb-16 lg:mb-20" aria-hidden="true">
+          <div className="mx-auto max-w-3xl mb-16 lg:mb-20" aria-hidden="true">
+
             {/* Desktop horizontal flow */}
             <div className="hidden md:block">
-              <svg viewBox="0 0 600 120" className="w-full h-auto">
-                {/* Connecting dashed line */}
-                <line
-                  x1="75" y1="60" x2="525" y2="60"
-                  stroke="rgba(0,0,0,0.15)"
-                  strokeWidth="1.5"
-                  strokeDasharray="4 6"
-                />
-                {/* Three traveling dots, staggered */}
-                {[0, 1, 2].map((i) => (
-                  <circle key={i} r="6" fill="hsl(217 91% 60%)">
-                    <animateMotion
-                      dur="6s"
-                      repeatCount="indefinite"
-                      begin={`${i * 2}s`}
-                      path="M 75 60 L 525 60"
-                      keyTimes="0;1"
-                      keySplines="0.4 0 0.6 1"
-                      calcMode="spline"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0;1;1;0"
-                      keyTimes="0;0.1;0.9;1"
-                      dur="6s"
-                      repeatCount="indefinite"
-                      begin={`${i * 2}s`}
-                    />
-                  </circle>
-                ))}
-              </svg>
-              {/* Stage labels positioned over the SVG */}
-              <div className="absolute inset-0 flex items-center justify-between px-[8%]">
-                {STAGES.map(({ Icon, label, color }) => (
-                  <div key={label} className="flex flex-col items-center gap-2">
-                    <div
-                      className="w-12 h-12 rounded-full bg-white border border-black/[0.08] flex items-center justify-center shadow-sm"
-                    >
-                      <Icon className="w-5 h-5" style={{ color }} strokeWidth={1.8} />
-                    </div>
-                    <span className="font-mono text-[11px] text-text-secondary tracking-tight">
-                      {label}
-                    </span>
+              {/* Icon row — linha SVG fica exatamente atrás dos círculos */}
+              <div className="relative flex justify-between items-center px-[8%]">
+                {/* Linha + dots animados — stretches entre o primeiro e último ícone */}
+                <svg
+                  className="absolute inset-0 w-full pointer-events-none"
+                  height="48"
+                  preserveAspectRatio="none"
+                >
+                  <line
+                    x1="8%" y1="24" x2="92%" y2="24"
+                    stroke="rgba(0,0,0,0.12)"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 6"
+                  />
+                  {[0, 1, 2].map((i) => (
+                    <circle key={i} r="5" fill="#3b82f6">
+                      <animateMotion
+                        dur="5s"
+                        repeatCount="indefinite"
+                        begin={`${i * 1.67}s`}
+                        path="M 8% 24 L 92% 24"
+                        keyTimes="0;1"
+                        keySplines="0.4 0 0.6 1"
+                        calcMode="spline"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0;1;1;0"
+                        keyTimes="0;0.08;0.92;1"
+                        dur="5s"
+                        repeatCount="indefinite"
+                        begin={`${i * 1.67}s`}
+                      />
+                    </circle>
+                  ))}
+                </svg>
+
+                {/* Ícones em cima da linha */}
+                {STAGES.map(({ Icon, color }) => (
+                  <div
+                    key={color}
+                    className="relative z-10 w-12 h-12 rounded-full bg-white border border-black/[0.08] flex items-center justify-center shadow-sm"
+                  >
+                    <Icon className="w-5 h-5" style={{ color }} strokeWidth={1.8} />
                   </div>
+                ))}
+              </div>
+
+              {/* Labels em linha separada, alinhados com os ícones */}
+              <div className="flex justify-between px-[8%] mt-2.5">
+                {STAGES.map(({ label }) => (
+                  <span key={label} className="font-mono text-[11px] text-text-secondary tracking-tight text-center" style={{ minWidth: 48 }}>
+                    {label}
+                  </span>
                 ))}
               </div>
             </div>
@@ -109,8 +120,8 @@ export function TimeDrainSection() {
               ))}
             </div>
 
-            {/* Caption under the flow */}
-            <p className="text-center text-[13px] text-text-muted mt-4 max-w-md mx-auto">
+            {/* Caption */}
+            <p className="text-center text-[13px] text-text-muted mt-5 max-w-md mx-auto">
               Cada cópia, cada janela, cada ctrl-c-ctrl-v. Multiplique por dia, por pessoa, por semana.
             </p>
           </div>
@@ -139,15 +150,7 @@ export function TimeDrainSection() {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes drainPulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 1; }
-        }
-        .drain-pulse {
-          animation: drainPulse 1.6s ease-in-out infinite;
-        }
-      `}</style>
+
     </section>
   );
 }

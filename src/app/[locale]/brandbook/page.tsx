@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { ArrowDown, Palette, Type, BookOpen, Layout, ArrowUpRight } from 'lucide-react';
+import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 
 export const metadata: Metadata = {
@@ -9,7 +9,10 @@ export const metadata: Metadata = {
     'Logo, paleta, tipografia e manual de marca. Pronto em 2 a 3 semanas, com arquivos editáveis na sua mão. Combo com site, sistema ou loja sai com desconto.',
 };
 import { Reveal } from '@/components/ui/reveal';
-import { SobreHeroBackground } from '@/components/sobre/sobre-hero-background';
+import { CountUp } from '@/components/ui/count-up';
+import { TiltCard } from '@/components/ui/tilt-card';
+import { DotPattern } from '@/components/ui/dot-pattern';
+import { BrandbookHeroBackground } from '@/components/design/brandbook-hero-background';
 import { BrandbookPreviewLazy as BrandbookPreview } from '@/components/design/brandbook-preview-lazy';
 import { BrandbookPricingForm } from '@/components/brandbook/brandbook-pricing-form';
 import { ProductFAQ } from '@/components/ui/product-faq';
@@ -29,27 +32,10 @@ const BRANDBOOK_FAQS = [
   },
 ];
 
-const DELIVERABLES = [
-  {
-    icon: Palette,
-    title: 'Logo + variações',
-    desc: 'Marca principal, secundária, monograma e versões reduzidas. Vetores em SVG, PDF e PNG.',
-  },
-  {
-    icon: Type,
-    title: 'Paleta e tipografia',
-    desc: 'Cores (primária, secundária, neutras) com hex/RGB e fontes escolhidas para a marca.',
-  },
-  {
-    icon: BookOpen,
-    title: 'Brandbook completo',
-    desc: 'Manual de identidade com regras de uso: espaçamento, proporções, usos corretos e proibidos.',
-  },
-  {
-    icon: Layout,
-    title: 'Aplicações práticas',
-    desc: 'Templates pra social, papelaria (cartão, assinatura) e apresentações, prontos pra usar.',
-  },
+const STATS = [
+  { value: '30+', label: 'identidades entregues' },
+  { value: '2', label: 'a 3 semanas do briefing' },
+  { value: '100%', label: 'arquivos vetoriais editáveis' },
 ];
 
 export default async function BrandbookPage({
@@ -62,9 +48,9 @@ export default async function BrandbookPage({
 
   return (
     <>
-      {/* ── Hero (slim) ── */}
+      {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-surface-base">
-        <SobreHeroBackground />
+        <BrandbookHeroBackground />
         <div className="relative z-10 container mx-auto px-5 lg:px-8 pt-24 lg:pt-28 pb-16 lg:pb-20">
           <div className="max-w-3xl mx-auto text-center">
             <Reveal>
@@ -85,15 +71,6 @@ export default async function BrandbookPage({
                 Montar meu brandbook
                 <ArrowDown className="w-4 h-4" />
               </a>
-
-              {/* Stats inline (não card grid) */}
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono text-[11px] text-text-muted uppercase tracking-widest">
-                <span>2–3 sem · briefing à entrega</span>
-                <span className="hidden sm:inline text-text-dim">·</span>
-                <span>arquivos vetoriais editáveis</span>
-                <span className="hidden sm:inline text-text-dim">·</span>
-                <span>+30 identidades entregues</span>
-              </div>
             </Reveal>
           </div>
         </div>
@@ -124,7 +101,7 @@ export default async function BrandbookPage({
       <section className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-20 lg:py-24">
           <Reveal>
-            <div className="max-w-3xl mx-auto text-center mb-10">
+            <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em]">
                 Tudo que sua marca{' '}
                 precisa para <span className="font-bricolage">existir.</span>
@@ -133,22 +110,173 @@ export default async function BrandbookPage({
           </Reveal>
 
           <div className="grid md:grid-cols-2 gap-5 lg:gap-6 max-w-4xl mx-auto">
-            {DELIVERABLES.map((d, i) => (
-              <Reveal key={d.title} delay={i * 80}>
-                <article
-                  className="rounded-2xl border border-black/[0.08] p-6 lg:p-7 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
+
+            {/* Card 1 — Logo: fundo escuro, destaque */}
+            <Reveal delay={0}>
+              <TiltCard
+                className="relative overflow-hidden rounded-2xl p-6 lg:p-8 h-full min-h-[240px]"
+                style={{ background: '#191918', border: '1px solid rgba(255,255,255,0.08)' }}
+                intensity={5}
+              >
+                {/* Marca geométrica — lado direito do card, sem tocar no texto */}
+                <div className="absolute right-0 top-0 bottom-0 w-[45%] flex items-center justify-center pointer-events-none">
+                  <svg width="160" height="160" viewBox="0 0 160 160" fill="none" className="opacity-30">
+                    <circle cx="80" cy="80" r="70" stroke="#3B82F6" strokeWidth="2.5" />
+                    <polygon points="80,20 136,116 24,116" stroke="#60A5FA" strokeWidth="2.5" fill="none" />
+                    <circle cx="80" cy="80" r="20" stroke="#93C5FD" strokeWidth="2" />
+                    <circle cx="80" cy="80" r="5" fill="#3B82F6" />
+                  </svg>
+                </div>
+                {/* Fade suave entre texto e decoração */}
+                <div className="absolute inset-y-0 right-[45%] w-16 pointer-events-none" style={{ background: 'linear-gradient(to right, #191918 0%, transparent 100%)' }} />
+                <div className="relative z-10 max-w-[52%]">
+                  <span className="font-mono text-[10px] text-white/30 uppercase tracking-[0.16em] mb-5 block">01</span>
+                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-white mb-2">
+                    Logo + variações
+                  </h3>
+                  <p className="text-[14px] text-white/60 leading-relaxed">
+                    Marca principal, secundária, monograma e versões reduzidas. Vetores em SVG, PDF e PNG.
+                  </p>
+                </div>
+              </TiltCard>
+            </Reveal>
+
+            {/* Card 2 — Paleta + Tipografia: swatches reais visíveis + "Aa" grande */}
+            <Reveal delay={80}>
+              <TiltCard
+                className="relative overflow-hidden rounded-2xl border border-black/[0.08] p-6 lg:p-8 h-full min-h-[240px] flex flex-col"
+                style={{ background: 'hsl(55 100% 97%)' }}
+                intensity={5}
+              >
+                {/* "Aa" grande como backdrop tipográfico */}
+                <div
+                  className="absolute right-2 top-2 font-bricolage font-bold leading-none pointer-events-none select-none"
+                  style={{ fontSize: 120, color: '#191918', opacity: 0.06 }}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <d.icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
+                  Aa
+                </div>
+                <div className="relative z-10 flex flex-col flex-1">
+                  <span className="font-mono text-[10px] text-text-dim uppercase tracking-[0.16em] mb-5 block">02</span>
+                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
+                    Paleta e tipografia
+                  </h3>
+                  <p className="text-[14px] text-text-secondary leading-relaxed mb-5">
+                    Cores (primária, secundária, neutras) com hex/RGB e fontes escolhidas para a marca.
+                  </p>
+                  {/* Swatches visíveis na parte inferior */}
+                  <div className="mt-auto flex gap-2">
+                    {[
+                      { bg: '#191918', label: '#191918' },
+                      { bg: '#3B82F6', label: '#3B82F6' },
+                      { bg: '#60A5FA', label: '#60A5FA' },
+                      { bg: '#F3F2E7', label: '#F3F2E7' },
+                      { bg: '#FFFEF2', label: '#FFFEF2' },
+                    ].map((s) => (
+                      <div key={s.bg} className="flex flex-col items-center gap-1.5">
+                        <div
+                          className="w-8 h-8 rounded-full border border-black/10 shadow-sm"
+                          style={{ background: s.bg }}
+                        />
+                        <span className="font-mono text-[8px] text-text-dim">{s.label.slice(0, 5)}</span>
+                      </div>
+                    ))}
                   </div>
-                  <h3 className="text-[17px] lg:text-[18px] font-semibold tracking-tight text-text-primary mb-2">
-                    {d.title}
+                </div>
+              </TiltCard>
+            </Reveal>
+
+            {/* Card 3 — Brandbook completo: fundo azul suave, manual visível */}
+            <Reveal delay={160}>
+              <TiltCard
+                className="relative overflow-hidden rounded-2xl border border-primary/20 p-6 lg:p-8 h-full min-h-[240px]"
+                style={{ background: 'linear-gradient(145deg, rgba(59,130,246,0.07) 0%, hsl(55 100% 97%) 60%)' }}
+                intensity={5}
+              >
+                {/* Manual ilustrado grande */}
+                <svg
+                  className="absolute right-3 bottom-3 pointer-events-none opacity-20"
+                  width="160" height="160" viewBox="0 0 140 150" fill="none"
+                >
+                  <rect x="10" y="5" width="85" height="110" rx="5" stroke="#3B82F6" strokeWidth="2.5" fill="rgba(59,130,246,0.08)" />
+                  <rect x="20" y="5" width="85" height="110" rx="5" stroke="#3B82F6" strokeWidth="2" fill="rgba(59,130,246,0.05)" />
+                  <line x1="34" y1="30" x2="90" y2="30" stroke="#3B82F6" strokeWidth="2.5" />
+                  <line x1="34" y1="46" x2="80" y2="46" stroke="#3B82F6" strokeWidth="1.5" />
+                  <line x1="34" y1="58" x2="86" y2="58" stroke="#3B82F6" strokeWidth="1.5" />
+                  <line x1="34" y1="70" x2="74" y2="70" stroke="#3B82F6" strokeWidth="1.5" />
+                  <rect x="34" y="84" width="22" height="22" rx="3" stroke="#3B82F6" strokeWidth="1.5" fill="rgba(59,130,246,0.12)" />
+                  <rect x="62" y="84" width="22" height="22" rx="3" stroke="#3B82F6" strokeWidth="1.5" fill="rgba(59,130,246,0.12)" />
+                </svg>
+                <div className="relative z-10">
+                  <span className="font-mono text-[10px] text-primary/60 uppercase tracking-[0.16em] mb-5 block">03</span>
+                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
+                    Brandbook completo
+                  </h3>
+                  <p className="text-[14px] text-text-secondary leading-relaxed max-w-xs">
+                    Manual de identidade com regras de uso: espaçamento, proporções, usos corretos e proibidos.
+                  </p>
+                </div>
+              </TiltCard>
+            </Reveal>
+
+            {/* Card 4 — Aplicações: grid de mockups no lado direito */}
+            <Reveal delay={240}>
+              <TiltCard
+                className="relative overflow-hidden rounded-2xl border border-black/[0.08] p-6 lg:p-8 h-full min-h-[240px]"
+                style={{ background: 'hsl(55 100% 97%)' }}
+                intensity={5}
+              >
+                {/* Grid ocupa o lado direito sem tocar no texto */}
+                <div className="absolute right-0 top-0 bottom-0 w-[42%] flex items-center justify-center pointer-events-none opacity-[0.22]">
+                  <svg width="140" height="120" viewBox="0 0 130 110" fill="none">
+                    {[0, 1, 2].map((row) =>
+                      [0, 1, 2].map((col) => (
+                        <rect
+                          key={`${row}-${col}`}
+                          x={col * 44 + 2}
+                          y={row * 36 + 2}
+                          width="38"
+                          height="30"
+                          rx="6"
+                          stroke="#191918"
+                          strokeWidth="2"
+                          fill="rgba(25,25,24,0.05)"
+                        />
+                      ))
+                    )}
+                  </svg>
+                </div>
+                {/* Fade entre texto e decoração */}
+                <div className="absolute inset-y-0 right-[42%] w-12 pointer-events-none" style={{ background: 'linear-gradient(to right, hsl(55 100% 97%) 0%, transparent 100%)' }} />
+                <div className="relative z-10 max-w-[55%]">
+                  <span className="font-mono text-[10px] text-text-dim uppercase tracking-[0.16em] mb-5 block">04</span>
+                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
+                    Aplicações práticas
                   </h3>
                   <p className="text-[14px] text-text-secondary leading-relaxed">
-                    {d.desc}
+                    Templates pra social, papelaria (cartão, assinatura) e apresentações, prontos pra usar.
                   </p>
-                </article>
+                </div>
+              </TiltCard>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats inline ── */}
+      <section className="relative bg-surface-elevated border-t border-black/[0.05] overflow-hidden">
+        <DotPattern />
+        <div className="relative z-10 container mx-auto px-5 lg:px-8 py-14 lg:py-16">
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12 max-w-3xl mx-auto">
+            {STATS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 100}>
+                <div className="text-center">
+                  <div className="font-bricolage text-[2.5rem] lg:text-[3rem] font-bold text-primary leading-none mb-2 tracking-tight">
+                    <CountUp value={s.value} />
+                  </div>
+                  <div className="font-mono text-[12px] text-text-muted uppercase tracking-widest leading-snug">
+                    {s.label}
+                  </div>
+                </div>
               </Reveal>
             ))}
           </div>

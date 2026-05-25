@@ -38,9 +38,22 @@ interface FormData {
 
 const DEFAULT_SIZES = ['1–10 pessoas', '11–50 pessoas', '51–200 pessoas', '200+ pessoas'];
 
+function formatWhatsApp(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   const [step, setStep] = useState<Step>(0);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [data, setData] = useState<FormData>({
     needs: [],
     name: '',
@@ -63,7 +76,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
 
   const canContinue =
     (step === 0 && data.needs.length > 0) ||
-    (step === 1 && data.name && data.email && data.whatsapp) ||
+    (step === 1 && data.name && isValidEmail(data.email) && data.whatsapp.replace(/\D/g, '').length >= 10) ||
     (step === 2 && data.timing);
 
   const submit = async () => {
@@ -245,17 +258,25 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
                     type="email"
                     value={data.email}
                     onChange={(e) => update('email', e.target.value)}
+                    onBlur={() => setEmailTouched(true)}
                     placeholder="seu@email.com"
-                    className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-                    style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+                    className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
+                    style={{
+                      border: emailTouched && data.email && !isValidEmail(data.email)
+                        ? '1px solid rgba(239,68,68,0.6)'
+                        : '1px solid rgba(25,25,24,0.10)',
+                    }}
                   />
+                  {emailTouched && data.email && !isValidEmail(data.email) && (
+                    <span className="font-mono text-[10px] text-red-500 mt-1 block">E-mail inválido</span>
+                  )}
                 </Field>
 
                 <Field label="WhatsApp">
                   <input
                     type="tel"
                     value={data.whatsapp}
-                    onChange={(e) => update('whatsapp', e.target.value)}
+                    onChange={(e) => update('whatsapp', formatWhatsApp(e.target.value))}
                     placeholder="(11) 99999-9999"
                     className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
                     style={{ border: '1px solid rgba(25,25,24,0.10)' }}
@@ -362,7 +383,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
               </>
             ) : (
               <>
-                Enviar diagnóstico
+                Quero meu diagnóstico
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}

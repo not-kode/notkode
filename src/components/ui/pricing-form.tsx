@@ -91,6 +91,18 @@ export type PricingSchema = {
 const fmt = (n: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
 
+function formatWhatsApp(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 function buildInitialSelection(schema: PricingSchema): PricingSelection {
   const sel: PricingSelection = {};
   for (const f of schema.fields) {
@@ -177,7 +189,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
 
   const canAdvance = currentField
     ? isFieldComplete(currentField, selection[currentField.id])
-    : Boolean(name && whatsapp && email && status !== 'submitting');
+    : Boolean(name && whatsapp.replace(/\D/g, '').length >= 10 && isValidEmail(email) && status !== 'submitting');
 
   const goNext = useCallback(() => {
     if (!canAdvance) return;
@@ -609,6 +621,7 @@ function RevealStep({
   onEmail: (v: string) => void; onNotes: (v: string) => void;
   title: string; subtitle: string;
 }) {
+  const [emailTouched, setEmailTouched] = useState(false);
   const avg = Math.round(((min + max) / 2) / 100) * 100;
   const inclusions = schema.inclusions?.(selection) ?? [];
   const timeline = schema.timeline?.(selection) ?? [];
@@ -758,7 +771,7 @@ function RevealStep({
               <input
                 type="tel"
                 value={whatsapp}
-                onChange={(e) => onWhats(e.target.value)}
+                onChange={(e) => onWhats(formatWhatsApp(e.target.value))}
                 placeholder="(11) 99999-9999"
                 className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
                 style={{ border: '1px solid rgba(25,25,24,0.10)' }}
@@ -770,10 +783,18 @@ function RevealStep({
               type="email"
               value={email}
               onChange={(e) => onEmail(e.target.value)}
+              onBlur={() => setEmailTouched(true)}
               placeholder="seu@email.com"
-              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-              style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
+              style={{
+                border: emailTouched && email && !isValidEmail(email)
+                  ? '1px solid rgba(239,68,68,0.6)'
+                  : '1px solid rgba(25,25,24,0.10)',
+              }}
             />
+            {emailTouched && email && !isValidEmail(email) && (
+              <span className="font-mono text-[10px] text-red-500 mt-1 block">E-mail inválido</span>
+            )}
           </Field>
           <Field label="Algo a acrescentar? (opcional)">
             <textarea

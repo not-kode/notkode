@@ -1,7 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { Logo } from '@/components/brand/logo';
-import { Button } from '@/components/ui/button';
 import { LanguageToggle } from './language-toggle';
 import { ServicesMenu } from './services-menu';
 import { MobileMenu } from './mobile-menu';
@@ -22,9 +21,6 @@ export function Header() {
             {t('sistemasIA')}
           </Link>
           <ServicesMenu />
-          <Link href="/cases" className="text-text-secondary hover:text-primary transition-colors">
-            {t('cases')}
-          </Link>
           <Link href="/parcerias" className="text-text-secondary hover:text-primary transition-colors">
             {t('parcerias')}
           </Link>
@@ -33,12 +29,9 @@ export function Header() {
           </Link>
         </nav>
 
-        {/* Right side: language + CTA + mobile menu */}
+        {/* Right side: language + mobile menu */}
         <div className="flex items-center gap-2 lg:gap-3">
           <LanguageToggle />
-          <Link href={{ pathname: '/sistemas-ia', hash: 'diagnostico' }} className="hidden sm:block">
-            <Button size="sm">{t('contato')}</Button>
-          </Link>
           <MobileMenu />
         </div>
       </div>

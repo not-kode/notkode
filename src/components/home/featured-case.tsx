@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { ArrowRight, Quote } from 'lucide-react';
+import { Quote } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/ui/reveal';
 
@@ -67,13 +67,6 @@ export async function FeaturedCase({ locale }: { locale: string }) {
                 <Metric num="03" value={t('caseMetric3Value')} label={t('caseMetric3Label')} />
               </div>
 
-              <Link
-                href="/cases"
-                className="group mt-10 inline-flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all"
-              >
-                {t('caseCta')}
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Link>
             </div>
           </Reveal>
         </div>

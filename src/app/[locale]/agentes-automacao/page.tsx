@@ -6,10 +6,13 @@ export const metadata: Metadata = {
   description:
     'Chatbots, agentes de IA e automações que respondem clientes, organizam pedidos e eliminam tarefas repetitivas. Cliente atendido, pedido organizado, cobrança feita, sem precisar de você.',
 };
-import { ArrowDown, Bot, Workflow, MessageSquare, Zap, Search, PenTool, Rocket } from 'lucide-react';
+import { ArrowDown, Bot, Workflow, MessageSquare, Zap, Search, PenTool, Rocket, Sparkles, FileSpreadsheet, Database } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
+import { TiltCard } from '@/components/ui/tilt-card';
+import { ProcessTimeline } from '@/components/ui/process-timeline';
+import { CountUp } from '@/components/ui/count-up';
 import { SectionMarker } from '@/components/ui/section-marker';
-import { ParceriasHeroBackground } from '@/components/parcerias/parcerias-hero-background';
+import { AgentesHeroBackground } from '@/components/agentes-automacao/agentes-hero-background';
 import { AutomationFlowDiagram } from '@/components/agentes-automacao/flow-diagram';
 import { AgentesPricingForm } from '@/components/agentes-automacao/agentes-pricing-form';
 import { TimeDrainSection } from '@/components/agentes-automacao/time-drain-section';
@@ -43,21 +46,33 @@ const USE_CASES = [
     icon: MessageSquare,
     title: 'Atendimento no WhatsApp',
     desc: 'Responde dúvidas comuns na hora, qualifica o lead e só passa pro seu time quando precisa de gente. Funciona inclusive de madrugada.',
+    gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(34,197,94,0.13) 0%, transparent 65%), hsl(55 100% 97%)',
+    iconColor: 'rgba(34,197,94,0.15)',
+    iconStroke: '#16a34a',
   },
   {
     icon: Workflow,
     title: 'Pedidos e clientes em um só lugar',
     desc: 'Dado que aparece no WhatsApp já entra na planilha ou no seu sistema, sem ninguém precisar copiar manualmente. Acabou a duplicação.',
+    gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(59,130,246,0.14) 0%, transparent 65%), hsl(55 100% 97%)',
+    iconColor: 'rgba(59,130,246,0.15)',
+    iconStroke: '#2563eb',
   },
   {
     icon: Bot,
     title: 'Assistente interno do seu time',
     desc: 'Sua equipe pergunta em linguagem normal e o agente busca o dado, gera o relatório ou avisa o cliente. Em segundos.',
+    gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(139,92,246,0.13) 0%, transparent 65%), hsl(55 100% 97%)',
+    iconColor: 'rgba(139,92,246,0.15)',
+    iconStroke: '#7c3aed',
   },
   {
     icon: Zap,
     title: 'Cobrança e tarefas no piloto automático',
     desc: 'De cobrar atrasado a mandar lembrete de reunião. O que hoje é manual e cansa o time pode rodar sozinho.',
+    gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(245,158,11,0.13) 0%, transparent 65%), hsl(55 100% 97%)',
+    iconColor: 'rgba(245,158,11,0.15)',
+    iconStroke: '#d97706',
   },
 ];
 
@@ -68,26 +83,29 @@ const RESULTS = [
 ];
 
 const STACK = [
-  { name: 'WhatsApp oficial',     use: 'Pra quem já tem volume e precisa do selo verde. Mensagens com o cliente direto na conta oficial da Meta.' },
-  { name: 'Inteligência artificial', use: 'O cérebro do agente. Entende a mensagem do cliente, decide o que fazer e escreve a resposta no tom da sua marca.' },
-  { name: 'Automação n8n',        use: 'A engrenagem que conecta um sistema ao outro. Sem ninguém precisar abrir aba, copiar e colar.' },
-  { name: 'Planilhas e Drive',    use: 'Quando a operação ainda roda em Google Sheets, a gente integra. Você continua editando do jeito que já edita.' },
-  { name: 'Seu CRM/ERP atual',    use: 'HubSpot, RD, Pipedrive, Bling, Omie, Tiny, Notion, Airtable. Conectamos no que você já usa.' },
+  { icon: MessageSquare, name: 'WhatsApp oficial',     use: 'Pra quem já tem volume e precisa do selo verde. Mensagens com o cliente direto na conta oficial da Meta.',   gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(34,197,94,0.13) 0%, transparent 65%), hsl(55 100% 97%)',   iconColor: 'rgba(34,197,94,0.15)',   iconStroke: '#16a34a' },
+  { icon: Sparkles,      name: 'Inteligência artificial', use: 'O cérebro do agente. Entende a mensagem do cliente, decide o que fazer e escreve a resposta no tom da sua marca.', gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(139,92,246,0.13) 0%, transparent 65%), hsl(55 100% 97%)', iconColor: 'rgba(139,92,246,0.15)', iconStroke: '#7c3aed' },
+  { icon: Workflow,      name: 'Automação n8n',        use: 'A engrenagem que conecta um sistema ao outro. Sem ninguém precisar abrir aba, copiar e colar.',              gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(245,158,11,0.13) 0%, transparent 65%), hsl(55 100% 97%)', iconColor: 'rgba(245,158,11,0.15)', iconStroke: '#d97706' },
+  { icon: FileSpreadsheet, name: 'Planilhas e Drive',  use: 'Quando a operação ainda roda em Google Sheets, a gente integra. Você continua editando do jeito que já edita.', gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(59,130,246,0.13) 0%, transparent 65%), hsl(55 100% 97%)',  iconColor: 'rgba(59,130,246,0.15)',  iconStroke: '#2563eb' },
+  { icon: Database,      name: 'Seu CRM/ERP atual',   use: 'HubSpot, RD, Pipedrive, Bling, Omie, Tiny, Notion, Airtable. Conectamos no que você já usa.',                  gradient: 'radial-gradient(ellipse 80% 70% at 90% 10%, rgba(8,145,178,0.13) 0%, transparent 65%), hsl(55 100% 97%)',  iconColor: 'rgba(8,145,178,0.15)',   iconStroke: '#0891b2' },
 ];
 
 const HOW = [
   {
-    icon: Search,
+    iconNode: <Search className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '01',
     title: 'Mapeamento',
     desc: 'Mergulhamos no fluxo atual: o que sua equipe faz, em quais ferramentas, onde trava. Saída: um diagrama do antes/depois.',
   },
   {
-    icon: PenTool,
+    iconNode: <PenTool className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '02',
     title: 'Desenho do agente',
     desc: 'Mostramos pra você como o agente vai responder, em quais momentos pergunta, quando passa pro humano. Você aprova antes da gente construir.',
   },
   {
-    icon: Rocket,
+    iconNode: <Rocket className="w-7 h-7 text-primary" strokeWidth={1.5} />,
+    number: '03',
     title: 'Entrega + handoff',
     desc: 'Subimos em produção, monitoramos a primeira semana e treinamos seu time para operar sozinho.',
   },
@@ -105,16 +123,17 @@ export default async function AgentesAutomacaoPage({
     <>
       {/* ── Hero — split: text left + chat visual right ── */}
       <section className="relative overflow-hidden bg-surface-base">
-        <ParceriasHeroBackground />
+        <AgentesHeroBackground />
         <div className="relative z-10 container mx-auto px-5 lg:px-8 pt-24 lg:pt-28 pb-20 lg:pb-24">
           <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-10 lg:gap-14 items-center">
 
             {/* LEFT — text + CTA */}
             <Reveal className="min-w-0">
-              <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.08] tracking-[-0.03em] mb-5 break-words">
-                <span className="block mb-1">Cliente atendido, pedido organizado,</span>
+              <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.08] tracking-[-0.03em] mb-5">
+                <span className="block mb-1">Cliente atendido,</span>
+                <span className="block mb-1">pedido organizado,</span>
                 <span className="block">
-                  cobrança feita, <span className="font-bricolage">sem precisar de você.</span>
+                  cobrança feita <span className="font-bricolage">sem precisar de você.</span>
                 </span>
               </h1>
               <p className="text-[16px] lg:text-[17px] text-text-secondary leading-[1.6] mb-7">
@@ -148,10 +167,10 @@ export default async function AgentesAutomacaoPage({
             {RESULTS.map((r, i) => (
               <Reveal key={r.label} delay={i * 100}>
                 <div className="text-center">
-                  <div className="font-bricolage text-[2.25rem] lg:text-[2.75rem] font-bold text-primary leading-none mb-2 tracking-tight">
-                    {r.value}
+                  <div className="font-bricolage text-[2.75rem] lg:text-[3.25rem] font-bold text-primary leading-none mb-2 tracking-tight">
+                    <CountUp value={r.value} />
                   </div>
-                  <div className="font-mono text-[12px] text-text-muted">
+                  <div className="font-mono text-[12px] text-text-muted uppercase tracking-widest leading-snug">
                     {r.label}
                   </div>
                 </div>
@@ -174,12 +193,16 @@ export default async function AgentesAutomacaoPage({
           <div className="grid md:grid-cols-2 gap-5 lg:gap-6">
             {USE_CASES.map((uc, i) => (
               <Reveal key={uc.title} delay={i * 90}>
-                <article
-                  className="rounded-2xl border border-black/[0.08] p-6 lg:p-7 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
+                <TiltCard
+                  className="rounded-2xl border border-black/[0.07] p-6 lg:p-7 h-full"
+                  style={{ background: uc.gradient }}
+                  intensity={5}
                 >
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
-                    <uc.icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
+                    style={{ background: uc.iconColor }}
+                  >
+                    <uc.icon className="w-5 h-5" style={{ color: uc.iconStroke }} strokeWidth={1.7} />
                   </div>
                   <h3 className="text-[18px] lg:text-[19px] font-semibold tracking-tight text-text-primary mb-2">
                     {uc.title}
@@ -187,7 +210,7 @@ export default async function AgentesAutomacaoPage({
                   <p className="text-[14px] text-text-secondary leading-relaxed">
                     {uc.desc}
                   </p>
-                </article>
+                </TiltCard>
               </Reveal>
             ))}
           </div>
@@ -211,17 +234,21 @@ export default async function AgentesAutomacaoPage({
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
             {STACK.map((s, i) => (
               <Reveal key={s.name} delay={i * 60}>
-                <div
-                  className="rounded-xl border border-black/[0.08] p-5 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
+                <TiltCard
+                  className="rounded-xl border border-black/[0.07] p-5 h-full"
+                  style={{ background: s.gradient }}
+                  intensity={4}
                 >
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{ background: s.iconColor }}>
+                    <s.icon className="w-4 h-4" style={{ color: s.iconStroke }} strokeWidth={1.7} />
+                  </div>
                   <p className="font-bricolage text-[15px] font-semibold text-text-primary mb-1.5">
                     {s.name}
                   </p>
                   <p className="text-[13px] text-text-secondary leading-relaxed">
                     {s.use}
                   </p>
-                </div>
+                </TiltCard>
               </Reveal>
             ))}
           </div>
@@ -238,29 +265,7 @@ export default async function AgentesAutomacaoPage({
             </h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-3 gap-5 lg:gap-6">
-            {HOW.map((step, i) => (
-              <Reveal key={step.title} delay={i * 100}>
-                <article
-                  className="rounded-2xl border border-black/[0.08] p-6 lg:p-7 h-full"
-                  style={{ background: 'hsl(55 100% 97%)' }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="font-mono text-[11px] text-text-dim">0{i + 1}</span>
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <step.icon className="w-4.5 h-4.5 text-primary" strokeWidth={1.7} />
-                    </div>
-                  </div>
-                  <h3 className="text-[17px] lg:text-[18px] font-semibold tracking-tight text-text-primary mb-2">
-                    {step.title}
-                  </h3>
-                  <p className="text-[14px] text-text-secondary leading-relaxed">
-                    {step.desc}
-                  </p>
-                </article>
-              </Reveal>
-            ))}
-          </div>
+          <ProcessTimeline steps={HOW} />
         </div>
       </section>
 

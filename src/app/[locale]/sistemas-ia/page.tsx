@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { ArrowUpRight, ArrowDown } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Sistemas internos com IA · Notkode',
@@ -62,11 +62,11 @@ export default async function SistemasIAPage({
                   <ArrowDown className="w-4 h-4" />
                 </a>
                 <a
-                  href="#o-que-voce-vai-ter"
+                  href="#diagnostico"
                   className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border-hairline-strong text-text-primary font-bold text-[13px] uppercase tracking-wide hover:bg-black/[0.04] transition-all duration-200"
                 >
-                  Ver como funciona
-                  <ArrowUpRight className="w-4 h-4" />
+                  Solicitar diagnóstico
+                  <ArrowDown className="w-4 h-4" />
                 </a>
               </div>
             </Reveal>

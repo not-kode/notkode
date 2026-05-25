@@ -48,13 +48,6 @@ export async function Hero({ locale }: { locale: string }) {
                   {t('heroPrimaryCta')}
                   <ArrowUpRight className="w-4 h-4" />
                 </a>
-                <a
-                  href="#cases"
-                  className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border-hairline-strong text-text-primary font-bold text-[13px] uppercase tracking-wide hover:bg-black/[0.04] transition-all duration-200"
-                >
-                  {t('heroSecondaryCta')}
-                  <ArrowUpRight className="w-4 h-4" />
-                </a>
               </div>
             </Reveal>
           </div>

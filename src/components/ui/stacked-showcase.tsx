@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 
@@ -24,7 +24,14 @@ export type StackSlide = {
  */
 export function StackedShowcase({ slides }: { slides: StackSlide[] }) {
   const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
   const total = slides.length;
+
+  useEffect(() => {
+    if (paused || total <= 1) return;
+    const id = setInterval(() => setActive(a => (a + 1) % total), 4500);
+    return () => clearInterval(id);
+  }, [paused, total]);
 
   // Offset (in stack order): 0 = front, 1 = mid, 2 = back, etc.
   const offsetOf = (i: number) => (i - active + total) % total;
@@ -68,7 +75,11 @@ export function StackedShowcase({ slides }: { slides: StackSlide[] }) {
   const current = slides[active];
 
   return (
-    <div className="relative max-w-4xl mx-auto">
+    <div
+      className="relative max-w-4xl mx-auto"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       {/* Soft glow */}
       <div
         className="absolute -inset-x-6 -inset-y-12 rounded-[48px] pointer-events-none"
