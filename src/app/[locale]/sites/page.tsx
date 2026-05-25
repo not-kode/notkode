@@ -63,24 +63,28 @@ const TYPES = [
     scenario: 'Sua marca está nascendo ou ganhando cara nova.',
     recommendation: 'Site institucional',
     oneLiner: 'A vitrine que faz a marca parecer maior do que o time é hoje.',
+    color: '#3B82F6', bg: 'rgba(59,130,246,0.12)',
   },
   {
     icon: FileText,
     scenario: 'Você roda ads e o lead precisa cair direto no funil.',
     recommendation: 'Landing Page',
     oneLiner: 'Uma página, uma missão: converter. Pronta pra rodar campanha na segunda.',
+    color: '#F59E0B', bg: 'rgba(245,158,11,0.12)',
   },
   {
     icon: BookOpen,
     scenario: 'Você quer aparecer no Google sem brigar com ad budget.',
     recommendation: 'Site + Blog',
     oneLiner: 'Tráfego orgânico que não depende de verba de mídia.',
+    color: '#10B981', bg: 'rgba(16,185,129,0.12)',
   },
   {
     icon: Globe2,
     scenario: 'Seu cliente fala outro idioma, ou vai falar logo.',
     recommendation: 'Site multilíngue',
     oneLiner: 'Tradução tratada como conteúdo, não como Google Translate.',
+    color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',
   },
 ];
 
@@ -91,16 +95,16 @@ const STATS = [
 ];
 
 const AI_PILLARS = [
-  { Icon: Wand2,     label: 'Design',  desc: 'Direção visual e UI prototipadas com IA antes da primeira linha de código.' },
-  { Icon: Code2,     label: 'Código',  desc: 'Stack custom em Next.js, gerado e revisado por humano com IA acelerando cada etapa.' },
-  { Icon: Sparkles,  label: 'Copy',    desc: 'Texto que vende, escrito junto, calibrado por dado e teste, não por achismo.' },
-  { Icon: GaugeIcon, label: 'Otimização', desc: 'SEO, performance e responsivo aplicados desde o primeiro commit.' },
+  { Icon: Wand2,     label: 'Design',      desc: 'Direção visual e UI prototipadas com IA antes da primeira linha de código.', color: '#EC4899', bg: 'rgba(236,72,153,0.10)' },
+  { Icon: Code2,     label: 'Código',      desc: 'Stack custom em Next.js, gerado e revisado por humano com IA acelerando cada etapa.', color: '#3B82F6', bg: 'rgba(59,130,246,0.10)' },
+  { Icon: Sparkles,  label: 'Copy',        desc: 'Texto que vende, escrito junto, calibrado por dado e teste, não por achismo.', color: '#F59E0B', bg: 'rgba(245,158,11,0.10)' },
+  { Icon: GaugeIcon, label: 'Otimização',  desc: 'SEO, performance e responsivo aplicados desde o primeiro commit.', color: '#10B981', bg: 'rgba(16,185,129,0.10)' },
 ];
 
 const MAINTENANCE = [
-  { Icon: RefreshCw,    label: 'Atualizações de conteúdo', desc: 'Trocar copy, imagens, criar nova página ou seção sem refazer proposta a cada vez.' },
-  { Icon: FlaskConical, label: 'Testes de hero e copy',    desc: 'A/B tests pra saber o que converte. Decisão por dado, não por achismo.' },
-  { Icon: ShieldCheck,  label: 'Manutenção técnica',       desc: 'Segurança, uptime, performance e correções monitoradas, pra você não precisar pensar nisso.' },
+  { Icon: RefreshCw,    label: 'Atualizações de conteúdo', desc: 'Trocar copy, imagens, criar nova página ou seção sem refazer proposta a cada vez.', color: '#3B82F6', bg: 'rgba(59,130,246,0.10)' },
+  { Icon: FlaskConical, label: 'Testes de hero e copy',    desc: 'A/B tests pra saber o que converte. Decisão por dado, não por achismo.', color: '#8B5CF6', bg: 'rgba(139,92,246,0.10)' },
+  { Icon: ShieldCheck,  label: 'Manutenção técnica',       desc: 'Segurança, uptime, performance e correções monitoradas, pra você não precisar pensar nisso.', color: '#10B981', bg: 'rgba(16,185,129,0.10)' },
 ];
 
 const HOW = [
@@ -209,12 +213,12 @@ export default async function SitesPage({
               <Reveal key={t.recommendation} delay={i * 90}>
                 <TiltCard
                   className="h-full rounded-2xl border border-black/[0.08] p-6 lg:p-7"
-                  style={{ background: 'hsl(55 100% 97%)' }}
+                  style={{ background: `radial-gradient(ellipse 80% 70% at 95% 5%, ${t.bg} 0%, transparent 65%), hsl(55 100% 97%)` }}
                   intensity={5}
                 >
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <t.icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: t.bg }}>
+                      <t.icon className="w-5 h-5" style={{ color: t.color }} strokeWidth={1.7} />
                     </div>
                     <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim">
                       Cenário {String(i + 1).padStart(2, '0')}
@@ -260,11 +264,11 @@ export default async function SitesPage({
           </Reveal>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-5xl mx-auto">
-            {AI_PILLARS.map(({ Icon, label, desc }, i) => (
+            {AI_PILLARS.map(({ Icon, label, desc, color, bg }, i) => (
               <Reveal key={label} delay={i * 80}>
-                <TiltCard className="h-full text-center px-5 py-7 lg:py-8 rounded-2xl border border-black/[0.08] bg-white/40" intensity={4}>
-                  <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-primary" strokeWidth={1.6} />
+                <TiltCard className="h-full text-center px-5 py-7 lg:py-8 rounded-2xl border border-black/[0.08]" style={{ background: `radial-gradient(ellipse 90% 60% at 50% 0%, ${bg} 0%, transparent 70%), hsl(55 100% 97%)` }} intensity={4}>
+                  <div className="mx-auto w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: bg }}>
+                    <Icon className="w-6 h-6" style={{ color }} strokeWidth={1.6} />
                   </div>
                   <p className="font-bricolage text-[17px] font-semibold text-text-primary mb-2">
                     {label}
@@ -315,11 +319,11 @@ export default async function SitesPage({
           </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 max-w-5xl mx-auto">
-            {MAINTENANCE.map(({ Icon, label, desc }, i) => (
+            {MAINTENANCE.map(({ Icon, label, desc, color, bg }, i) => (
               <Reveal key={label} delay={i * 90}>
-                <TiltCard className="h-full p-6 lg:p-7 rounded-2xl border border-black/[0.08] bg-white/40" intensity={4}>
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5 text-primary" strokeWidth={1.7} />
+                <TiltCard className="h-full p-6 lg:p-7 rounded-2xl border border-black/[0.08]" style={{ background: `radial-gradient(ellipse 80% 70% at 95% 5%, ${bg} 0%, transparent 65%), hsl(55 100% 97%)` }} intensity={4}>
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: bg }}>
+                    <Icon className="w-5 h-5" style={{ color }} strokeWidth={1.7} />
                   </div>
                   <p className="font-bricolage text-[17px] font-semibold text-text-primary mb-2">
                     {label}
