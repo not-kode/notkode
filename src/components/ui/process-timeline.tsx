@@ -56,8 +56,8 @@ export function ProcessTimeline({ steps, className }: ProcessTimelineProps) {
 
   return (
     <div className={cn('relative', className)}>
-      {/* Linha conectora desktop — centralizada nos ícones (h-16 = 4rem, center = 2rem = top-8) */}
-      <div className="hidden md:block absolute top-8 left-[calc(16.667%+2rem)] right-[calc(16.667%+2rem)] h-px bg-black/[0.07]">
+      {/* Linha conectora — de centro a centro dos ícones (top-8 = metade do w-16 h-16) */}
+      <div className="hidden md:block absolute top-8 left-[16.67%] right-[16.67%] h-px bg-black/[0.07]">
         <div
           ref={lineRef}
           className="absolute inset-y-0 left-0 bg-primary/50 transition-none"
@@ -68,7 +68,7 @@ export function ProcessTimeline({ steps, className }: ProcessTimelineProps) {
       <div className="grid md:grid-cols-3 gap-10 lg:gap-14">
         {steps.map((step, i) => (
           <Reveal key={step.title} delay={i * 140}>
-            <article className="relative flex flex-col items-center md:items-start text-center md:text-left">
+            <article className="relative flex flex-col items-center text-center">
 
               {/* Ícone — maior, mais presença */}
               <div className="relative mb-6 shrink-0 z-10">
