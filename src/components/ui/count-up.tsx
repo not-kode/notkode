@@ -58,7 +58,7 @@ export function CountUp({ value, duration = 1400, className }: CountUpProps) {
 
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <span ref={ref} className={className}>
