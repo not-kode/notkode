@@ -180,7 +180,7 @@ export default async function EcommercePage({
         {/* Warning stripe — calls attention to the pain section */}
         <div
           className="absolute top-0 inset-x-0 h-[3px]"
-          style={{ background: 'linear-gradient(to right, rgba(239,68,68,0.0) 0%, rgba(239,68,68,0.45) 30%, rgba(239,68,68,0.45) 70%, rgba(239,68,68,0.0) 100%)' }}
+          style={{ background: 'linear-gradient(to right, rgba(59,130,246,0.0) 0%, rgba(59,130,246,0.35) 30%, rgba(59,130,246,0.35) 70%, rgba(59,130,246,0.0) 100%)' }}
         />
       <PainNamingBlock
         eyebrow="O custo escondido do seu crescimento"
