@@ -45,17 +45,19 @@ export async function FeaturedCase({ locale }: { locale: string }) {
                 </div>
               </div>
 
-              <blockquote className="relative pl-6 border-l-2 border-primary/40 max-w-xl">
-                <Quote className="absolute -left-3 -top-1 w-5 h-5 text-primary bg-surface-base" />
-                <p className="text-base text-text-primary italic mb-3 leading-relaxed">
-                  {t('caseQuote')}
-                </p>
-                <footer className="font-mono text-xs text-text-muted">
-                  <span className="text-text-primary font-semibold">{t('caseAuthor')}</span>
-                  {' · '}
-                  {t('caseAuthorRole')}
-                </footer>
-              </blockquote>
+              {!t('caseQuote').startsWith('[') && (
+                <blockquote className="relative pl-6 border-l-2 border-primary/40 max-w-xl">
+                  <Quote className="absolute -left-3 -top-1 w-5 h-5 text-primary bg-surface-base" />
+                  <p className="text-base text-text-primary italic mb-3 leading-relaxed">
+                    {t('caseQuote')}
+                  </p>
+                  <footer className="font-mono text-xs text-text-muted">
+                    <span className="text-text-primary font-semibold">{t('caseAuthor')}</span>
+                    {' · '}
+                    {t('caseAuthorRole')}
+                  </footer>
+                </blockquote>
+              )}
             </div>
           </Reveal>
 
