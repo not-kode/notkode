@@ -2,25 +2,19 @@
 
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-react';
-
-// ── Schema ────────────────────────────────────────────────────────────────
+import { useTranslations } from 'next-intl';
 
 export type QualificationOption = { id: string; label: string };
 
 export type QualificationSchema = {
-  /** identifier sent with the lead payload (e.g. 'sistemas-ia', 'parcerias') */
   serviceTag: string;
-  /** Step 1 — multi-select needs/goals */
   needs: { title: string; subtitle: string; options: QualificationOption[] };
-  /** Step 2 — identity (always: name + email + whatsapp; company optional) */
   identity?: { title?: string; subtitle?: string; companySizes?: string[] };
-  /** Step 3 — context (timing + description) */
   context: { title?: string; subtitle?: string; timings: QualificationOption[] };
-  /** WhatsApp message after submit */
   whatsappMessage?: string;
-  /** copy on success screen */
   successTitle?: string;
   successBody?: string;
+  submitLabel?: string;
 };
 
 type Step = 0 | 1 | 2;
@@ -36,8 +30,6 @@ interface FormData {
   timing: string;
 }
 
-const DEFAULT_SIZES = ['1–10 pessoas', '11–50 pessoas', '51–200 pessoas', '200+ pessoas'];
-
 function formatWhatsApp(raw: string): string {
   const digits = raw.replace(/\D/g, '').slice(0, 11);
   if (digits.length <= 2) return digits.length ? `(${digits}` : '';
@@ -51,6 +43,14 @@ function isValidEmail(email: string): boolean {
 }
 
 export function QualificationForm({ schema }: { schema: QualificationSchema }) {
+  const t = useTranslations('QualificationForm');
+  const defaultSizes = [
+    t('sizeOption1'),
+    t('sizeOption2'),
+    t('sizeOption3'),
+    t('sizeOption4'),
+  ];
+
   const [step, setStep] = useState<Step>(0);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [emailTouched, setEmailTouched] = useState(false);
@@ -99,10 +99,35 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
     setStatus('success');
   };
 
-  // Success screen
   if (status === 'success') {
+    const needLabels = data.needs
+      .map((id) => schema.needs.options.find((o) => o.id === id)?.label)
+      .filter(Boolean) as string[];
+    const timingLabel = schema.context.timings.find((tt) => tt.id === data.timing)?.label;
+    const name = data.name.trim();
+    const company = data.company.trim();
+    const greeting = name
+      ? (company
+          ? t('waGreetingWithCompany', { name, company })
+          : t('waGreeting', { name }))
+      : '';
+    const interestLine = needLabels.length ? `*${t('waInterestLabel')}:* ${needLabels.join(', ')}` : null;
+    const timingLine = timingLabel ? `*${t('waTimingLabel')}:* ${timingLabel}` : null;
+    const personalized = [
+      greeting,
+      '',
+      t('waFormFilled'),
+      '',
+      interestLine,
+      timingLine,
+    ]
+      .filter((l) => l !== null && l !== '')
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n');
     const message =
-      schema.whatsappMessage ?? 'Acabei de preencher o formulário no site, vim para acelerar o contato.';
+      personalized.trim().length > 0
+        ? personalized
+        : (schema.whatsappMessage ?? t('waFallbackMessage'));
     return (
       <div
         className="rounded-2xl border border-black/[0.08] p-8 lg:p-10 text-center"
@@ -112,11 +137,16 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           <Check className="w-8 h-8 text-primary" strokeWidth={2.5} />
         </div>
         <h3 className="text-[1.5rem] lg:text-[1.75rem] font-semibold tracking-tight text-text-primary mb-3">
-          {schema.successTitle ?? 'Recebemos sua mensagem.'}
+          {schema.successTitle ?? t('successTitleDefault')}
         </h3>
         <p className="text-[15px] text-text-secondary leading-relaxed mb-6 max-w-md mx-auto">
-          {schema.successBody ??
-            <>Em até <strong>24 horas</strong> alguém do nosso time entra em contato pelo e-mail e WhatsApp para agendar um diagnóstico gratuito de 30 minutos.</>}
+          {schema.successBody ?? (
+            <>
+              {t('successBodyBefore')}
+              <strong>{t('successBodyBold')}</strong>
+              {t('successBodyAfter')}
+            </>
+          )}
         </p>
         <a
           href={`https://wa.me/5511951381254?text=${encodeURIComponent(message)}`}
@@ -125,13 +155,13 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           className="font-bricolage inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#25D366] text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px transition-all duration-200"
         >
           <MessageCircle className="w-4 h-4" />
-          Falar agora no WhatsApp
+          {t('successCta')}
         </a>
       </div>
     );
   }
 
-  const sizes = schema.identity?.companySizes ?? DEFAULT_SIZES;
+  const sizes = schema.identity?.companySizes ?? defaultSizes;
 
   return (
     <div
@@ -142,7 +172,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
       <div className="px-6 lg:px-8 pt-6 pb-2">
         <div className="flex items-center justify-between mb-2">
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
-            Etapa {step + 1} de 3
+            {t('stepLabel', { step: step + 1, total: 3 })}
           </span>
           <span className="font-mono text-[10px] text-text-dim">
             ❯ {schema.serviceTag}.sh
@@ -207,44 +237,44 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
         {step === 1 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
-              {schema.identity?.title ?? 'Quem é você?'}
+              {schema.identity?.title ?? t('identityTitle')}
             </h3>
             <p className="text-[14px] text-text-secondary mb-6">
-              {schema.identity?.subtitle ?? 'Só o essencial pra a gente entrar em contato.'}
+              {schema.identity?.subtitle ?? t('identitySubtitle')}
             </p>
 
             <div className="space-y-4">
-              <Field label="Seu nome">
+              <Field label={t('fieldName')}>
                 <input
                   type="text"
                   value={data.name}
                   onChange={(e) => update('name', e.target.value)}
-                  placeholder="Como gostaria de ser chamado?"
+                  placeholder={t('fieldNamePlaceholder')}
                   className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
                   style={{ border: '1px solid rgba(25,25,24,0.10)' }}
                 />
               </Field>
 
               <div className="grid sm:grid-cols-2 gap-3">
-                <Field label="Empresa">
+                <Field label={t('fieldCompany')}>
                   <input
                     type="text"
                     value={data.company}
                     onChange={(e) => update('company', e.target.value)}
-                    placeholder="Nome da empresa"
+                    placeholder={t('fieldCompanyPlaceholder')}
                     className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
                     style={{ border: '1px solid rgba(25,25,24,0.10)' }}
                   />
                 </Field>
 
-                <Field label="Tamanho">
+                <Field label={t('fieldSize')}>
                   <select
                     value={data.companySize}
                     onChange={(e) => update('companySize', e.target.value)}
                     className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors appearance-none cursor-pointer"
                     style={{ border: '1px solid rgba(25,25,24,0.10)' }}
                   >
-                    <option value="">Selecione</option>
+                    <option value="">{t('fieldSizeSelect')}</option>
                     {sizes.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
@@ -253,13 +283,13 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
-                <Field label="E-mail">
+                <Field label={t('fieldEmail')}>
                   <input
                     type="email"
                     value={data.email}
                     onChange={(e) => update('email', e.target.value)}
                     onBlur={() => setEmailTouched(true)}
-                    placeholder="seu@email.com"
+                    placeholder={t('fieldEmailPlaceholder')}
                     className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
                     style={{
                       border: emailTouched && data.email && !isValidEmail(data.email)
@@ -268,16 +298,16 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
                     }}
                   />
                   {emailTouched && data.email && !isValidEmail(data.email) && (
-                    <span className="font-mono text-[10px] text-red-500 mt-1 block">E-mail inválido</span>
+                    <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldEmailInvalid')}</span>
                   )}
                 </Field>
 
-                <Field label="WhatsApp">
+                <Field label={t('fieldWhatsapp')}>
                   <input
                     type="tel"
                     value={data.whatsapp}
                     onChange={(e) => update('whatsapp', formatWhatsApp(e.target.value))}
-                    placeholder="(11) 99999-9999"
+                    placeholder={t('fieldWhatsappPlaceholder')}
                     className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
                     style={{ border: '1px solid rgba(25,25,24,0.10)' }}
                   />
@@ -290,42 +320,42 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
         {step === 2 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
-              {schema.context.title ?? 'Contexto do projeto.'}
+              {schema.context.title ?? t('contextTitleDefault')}
             </h3>
             <p className="text-[14px] text-text-secondary mb-6">
-              {schema.context.subtitle ?? 'Quanto mais detalhes, melhor preparamos a conversa.'}
+              {schema.context.subtitle ?? t('contextSubtitleDefault')}
             </p>
 
             <div className="space-y-4">
-              <Field label="Quando você quer começar?">
+              <Field label={t('contextTimingLabel')}>
                 <div className="grid sm:grid-cols-2 gap-2">
-                  {schema.context.timings.map((t) => {
-                    const active = data.timing === t.id;
+                  {schema.context.timings.map((tt) => {
+                    const active = data.timing === tt.id;
                     return (
                       <button
-                        key={t.id}
+                        key={tt.id}
                         type="button"
-                        onClick={() => update('timing', t.id)}
+                        onClick={() => update('timing', tt.id)}
                         className="text-left px-4 py-2.5 rounded-lg text-[13px] transition-all"
                         style={{
-                          background: active ? 'rgba(59,130,246,0.08)' : 'rgba(25,25,24,0.03)',
-                          border: active ? '1.5px solid rgba(59,130,246,0.5)' : '1.5px solid rgba(25,25,24,0.08)',
+                          background: active ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.6)',
+                          border: active ? '1.5px solid rgba(59,130,246,0.5)' : '1.5px solid rgba(25,25,24,0.10)',
                           color: active ? '#191918' : 'rgba(25,25,24,0.65)',
                         }}
                       >
-                        {t.label}
+                        {tt.label}
                       </button>
                     );
                   })}
                 </div>
               </Field>
 
-              <Field label="Conte um pouco do seu desafio (opcional)">
+              <Field label={t('contextDescriptionLabel')}>
                 <textarea
                   value={data.description}
                   onChange={(e) => update('description', e.target.value)}
                   rows={4}
-                  placeholder="Ex: hoje uso planilhas + WhatsApp + Trello, mas não dá conta de organizar 200 pedidos por mês..."
+                  placeholder={t('contextDescriptionPlaceholder')}
                   className="w-full px-4 py-3 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors leading-relaxed resize-none"
                   style={{ border: '1px solid rgba(25,25,24,0.10)' }}
                 />
@@ -339,10 +369,11 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
       {step === 2 && (
         <div className="px-6 lg:px-8 pb-4 -mt-2">
           <p className="font-mono text-[10px] text-text-dim leading-relaxed">
-            Ao enviar, você concorda que a gente entre em contato e processe seus dados conforme a{' '}
+            {t('consentBefore')}
             <a href="/politica-privacidade" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">
-              política de privacidade
-            </a>.
+              {t('consentLink')}
+            </a>
+            {t('consentAfter')}
           </p>
         </div>
       )}
@@ -356,7 +387,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           className="font-mono text-[12px] text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Voltar
+          {t('navBack')}
         </button>
 
         {step < 2 ? (
@@ -366,7 +397,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
             disabled={!canContinue}
             className="font-bricolage inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"
           >
-            Continuar
+            {t('navContinue')}
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         ) : (
@@ -379,11 +410,11 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
             {status === 'submitting' ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Enviando…
+                {t('navSubmitting')}
               </>
             ) : (
               <>
-                Quero meu diagnóstico
+                {schema.submitLabel ?? t('navSubmit')}
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}

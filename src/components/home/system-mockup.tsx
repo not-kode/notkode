@@ -39,7 +39,7 @@ export function SystemMockup() {
             <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
           </div>
           <span className="font-mono text-[11px] text-white/25 flex-1 text-center select-none">
-            notkode/sistema-v2 — dashboard
+            notkode/sistema-v2, dashboard
           </span>
           <span className="font-mono text-[10px] text-[#22C55E] select-none">● production</span>
         </div>

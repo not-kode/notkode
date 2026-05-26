@@ -139,7 +139,7 @@ export function buildLeadEmail(input: LeadEmailInput): { subject: string; html: 
   const footer = audience === 'lead' ? `
     <div style="padding:20px 28px;background:rgba(25,25,24,0.02);text-align:center">
       <div style="font-size:13px;color:#666;line-height:1.6">
-        Qualquer coisa, é só responder esse e-mail — chega direto na nossa caixa.
+        Qualquer coisa, é só responder esse e-mail, chega direto na nossa caixa.
       </div>
       <div style="font-family:'JetBrains Mono',Menlo,monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#999;margin-top:10px">
         ❯ equipe notkode
@@ -200,7 +200,7 @@ export function buildLeadEmail(input: LeadEmailInput): { subject: string; html: 
   }
   if (timeline.length > 0) {
     textLines.push('Cronograma:');
-    for (const p of timeline) textLines.push(`  ${p.range} — ${p.title}: ${p.desc}`);
+    for (const p of timeline) textLines.push(`  ${p.range}, ${p.title}: ${p.desc}`);
     textLines.push('');
   }
   if (lead.notes) {

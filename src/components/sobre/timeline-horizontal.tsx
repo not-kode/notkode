@@ -1,51 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { SectionMarker } from '@/components/ui/section-marker';
 
-const TIMELINE = [
-  {
-    year: '2020',
-    label: 'Fundação',
-    description: 'Nasce a Notkode em São Paulo. Foco em design digital e desenvolvimento web.',
-  },
-  {
-    year: '2021',
-    label: 'No-Code',
-    description: 'Descoberta do movimento No-Code — território ainda inexplorado no Brasil.',
-  },
-  {
-    year: '2022',
-    label: 'IA antes do hype',
-    description: 'Acesso antecipado ao ChatGPT. Aposta em IA aplicada a negócios.',
-  },
-  {
-    year: '2023',
-    label: 'Pivô IA + Tech',
-    description: 'Avanço de 100% em tecnologia e IA. Arsenal completo de ferramentas, integrações e modelos.',
-    highlight: true,
-  },
-  {
-    year: '2023',
-    label: 'Internacional',
-    description: 'Primeiros projetos para clientes nos EUA, Canadá e Inglaterra.',
-  },
-  {
-    year: '2024',
-    label: 'Era dos Agentes',
-    description: 'Consolidação em desenvolvimento pautado por IA e agentes inteligentes.',
-  },
-  {
-    year: '2025',
-    label: 'Sistemas com IA',
-    description: 'Lançamento do produto âncora: sistemas internos personalizados com IA nativa.',
-  },
-  {
-    year: '2026',
-    label: 'Hoje',
-    description: '50+ projetos entregues. 4 países atendidos. Tecnologia sob medida com IA dentro.',
-  },
-];
+const YEARS = ['2020', '2021', '2022', '2023', '2023', '2024', '2025', '2026'];
+const HIGHLIGHT_INDEX = 3;
+
+function useTimeline() {
+  const t = useTranslations('Sobre');
+  return YEARS.map((year, i) => ({
+    year,
+    label: t(`tl${i + 1}Label` as 'tl1Label'),
+    description: t(`tl${i + 1}Desc` as 'tl1Desc'),
+    highlight: i === HIGHLIGHT_INDEX,
+  }));
+}
 
 export function TimelineHorizontal() {
   return (
@@ -58,15 +28,17 @@ export function TimelineHorizontal() {
 
 // ─── Mobile: vertical stacked timeline ─────────────────────────────────────
 function MobileTimeline() {
+  const t = useTranslations('Sobre');
+  const TIMELINE = useTimeline();
   return (
     <section className="lg:hidden relative bg-surface-base">
       <div className="container mx-auto px-5 py-20">
         {/* Header */}
         <div className="mb-10">
-          <SectionMarker number="02" label="Nossa história" />
+          <SectionMarker number="02" label={t('timelineEyebrow')} />
           <h2 className="text-[1.75rem] md:text-[2.25rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4">
-            Seis anos construindo{' '}
-            <span className="font-bricolage">tecnologia sob medida.</span>
+            {t('timelineTitlePre')}{' '}
+            <span className="font-bricolage">{t('timelineTitleAccent')}</span>
           </h2>
         </div>
 
@@ -120,7 +92,7 @@ function MobileTimeline() {
                   {item.highlight && (
                     <div className="mt-3 pt-2 border-t border-primary/15">
                       <span className="font-mono text-[9px] text-primary uppercase tracking-widest">
-                        marco decisivo
+                        {t('timelineMilestone')}
                       </span>
                     </div>
                   )}
@@ -136,6 +108,8 @@ function MobileTimeline() {
 
 // ─── Desktop: horizontal scroll-pinned timeline ───────────────────────────
 function DesktopHorizontalTimeline() {
+  const t = useTranslations('Sobre');
+  const TIMELINE = useTimeline();
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef   = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
@@ -178,10 +152,10 @@ function DesktopHorizontalTimeline() {
     >
       <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
         <div className="container mx-auto px-5 lg:px-8 mb-12 lg:mb-16">
-          <SectionMarker number="02" label="Nossa história" />
+          <SectionMarker number="02" label={t('timelineEyebrow')} />
           <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 max-w-2xl">
-            Seis anos construindo{' '}
-            <span className="font-bricolage">tecnologia sob medida.</span>
+            {t('timelineTitlePre')}{' '}
+            <span className="font-bricolage">{t('timelineTitleAccent')}</span>
           </h2>
         </div>
 
@@ -253,7 +227,7 @@ function DesktopHorizontalTimeline() {
               />
             </div>
             <span className="font-mono text-[10px] text-text-dim hidden lg:inline">
-              continue rolando ↓
+              {t('timelineKeepScrolling')}
             </span>
           </div>
         </div>

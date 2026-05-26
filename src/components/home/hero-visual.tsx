@@ -42,7 +42,7 @@ export function HeroVisual() {
             <div className="w-2.5 h-2.5 rounded-full bg-white/18" />
           </div>
           <span className="font-mono text-[11px] text-text-dim flex-1 text-center select-none">
-            sistema.notkode.ai — dashboard
+            sistema.notkode.ai, dashboard
           </span>
           <div className="flex items-center gap-1.5">
             <span className="status-dot" />

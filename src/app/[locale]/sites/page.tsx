@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import {
   ArrowDown, Layout, FileText, BookOpen, Globe2, Search, PenTool, Rocket,
   Sparkles, Code2, Wand2, Gauge as GaugeIcon,
@@ -17,115 +17,21 @@ import { SitesPricingForm } from '@/components/sites/sites-pricing-form';
 import { ProductFAQ } from '@/components/ui/product-faq';
 import { BrandbookCombo } from '@/components/ui/brandbook-combo';
 
-export const metadata: Metadata = {
-  title: 'Sites institucionais e landings · Notkode',
-  description:
-    'Sites, landings e blogs construídos pra converter. Design responsivo, performance Lighthouse 90+, painel pra editar conteúdo sem chamar dev.',
-};
-
-const SITES_FAQS = [
-  {
-    q: 'Quanto tempo até o site estar no ar?',
-    a: 'Entre 2 e 4 semanas para landing pages e sites institucionais médios. Sites com blog ou multilíngue podem levar 5 a 8 semanas. Na primeira conversa estimamos o seu caso.',
-  },
-  {
-    q: 'Preciso já ter logo e identidade visual?',
-    a: 'Não, mas ajuda. Se não tiver, fazemos o brandbook simples junto (logo, paleta, tipografia, aplicações básicas) como combo. Veja a página de Identidade & Brandbook.',
-  },
-  {
-    q: 'Framer, WordPress ou Next.js: como vocês decidem?',
-    a: 'Pelo objetivo, não pela ferramenta. Framer quando marketing quer publicar sozinho com animações ricas. WordPress quando há blog volumoso ou equipe acostumada. Next.js quando performance, SEO técnico ou integração custom importam. Mostramos os trade-offs antes de fechar.',
-  },
-  {
-    q: 'O domínio fica no meu nome? E a hospedagem?',
-    a: 'Tudo no seu nome. Domínio, conta de hospedagem, credenciais. A Notkode não trava nada. Se um dia você decidir trocar de fornecedor, sai com tudo na mão.',
-  },
-  {
-    q: 'E o conteúdo (textos, imagens)? Vocês fazem ou eu?',
-    a: 'Depende do escopo. No pacote padrão fazemos a estrutura e copy de cada página com base em briefing seu. Imagens próprias são bem-vindas; se não tiver, usamos banco de imagens curado ou contratamos foto/render à parte.',
-  },
-  {
-    q: 'Como funciona a manutenção depois do site no ar?',
-    a: 'Plano mensal opcional que cobre atualizações de conteúdo (trocar copy, imagens, criar nova seção), testes A/B de hero e copy, e manutenção técnica (segurança, performance, uptime). Sem fidelidade, e você pode pausar quando quiser.',
-  },
-];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Sites' });
+  return { title: t('metaTitle'), description: t('metaDesc') };
+}
 
 const SITE_SLIDES: StackSlide[] = [
   { id: 'propay',  name: 'ProPay',              url: 'propay.com.br',           image: '/images/portfolio/propay.jpg',  segment: 'RH & folha' },
   { id: 'solojet', name: 'Solojet Aviação',     url: 'solojetaviacao.com.br',   image: '/images/portfolio/solojet.jpg', segment: 'aviação executiva' },
   { id: 'azure',   name: 'Azure Investimentos', url: 'azureinvestimentos.com',  image: '/images/portfolio/azure.jpg',   segment: 'assessoria BTG' },
   { id: 'simbos',  name: 'SimbOS',              url: 'simbos.vercel.app',       image: '/images/portfolio/simbos.jpg',  segment: 'SaaS · AI workspace' },
-];
-
-const TYPES = [
-  {
-    icon: Layout,
-    scenario: 'Sua marca está nascendo ou ganhando cara nova.',
-    recommendation: 'Site institucional',
-    oneLiner: 'A vitrine que faz a marca parecer maior do que o time é hoje.',
-    color: '#3B82F6', bg: 'rgba(59,130,246,0.12)',
-  },
-  {
-    icon: FileText,
-    scenario: 'Você roda ads e o lead precisa cair direto no funil.',
-    recommendation: 'Landing Page',
-    oneLiner: 'Uma página, uma missão: converter. Pronta pra rodar campanha na segunda.',
-    color: '#F59E0B', bg: 'rgba(245,158,11,0.12)',
-  },
-  {
-    icon: BookOpen,
-    scenario: 'Você quer aparecer no Google sem brigar com ad budget.',
-    recommendation: 'Site + Blog',
-    oneLiner: 'Tráfego orgânico que não depende de verba de mídia.',
-    color: '#10B981', bg: 'rgba(16,185,129,0.12)',
-  },
-  {
-    icon: Globe2,
-    scenario: 'Seu cliente fala outro idioma, ou vai falar logo.',
-    recommendation: 'Site multilíngue',
-    oneLiner: 'Tradução tratada como conteúdo, não como Google Translate.',
-    color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',
-  },
-];
-
-const STATS = [
-  { value: '2–4 sem', label: 'do briefing ao site no ar' },
-  { value: '60+',     label: 'sites entregues' },
-  { value: '95+',     label: 'pontuação média no PageSpeed' },
-];
-
-const AI_PILLARS = [
-  { Icon: Wand2,     label: 'Design',      desc: 'Direção visual e UI prototipadas com IA antes da primeira linha de código.', color: '#EC4899', bg: 'rgba(236,72,153,0.10)' },
-  { Icon: Code2,     label: 'Código',      desc: 'Stack custom em Next.js, gerado e revisado por humano com IA acelerando cada etapa.', color: '#3B82F6', bg: 'rgba(59,130,246,0.10)' },
-  { Icon: Sparkles,  label: 'Copy',        desc: 'Texto que vende, escrito junto, calibrado por dado e teste, não por achismo.', color: '#F59E0B', bg: 'rgba(245,158,11,0.10)' },
-  { Icon: GaugeIcon, label: 'Otimização',  desc: 'SEO, performance e responsivo aplicados desde o primeiro commit.', color: '#10B981', bg: 'rgba(16,185,129,0.10)' },
-];
-
-const MAINTENANCE = [
-  { Icon: RefreshCw,    label: 'Atualizações de conteúdo', desc: 'Trocar copy, imagens, criar nova página ou seção sem refazer proposta a cada vez.', color: '#3B82F6', bg: 'rgba(59,130,246,0.10)' },
-  { Icon: FlaskConical, label: 'Testes de hero e copy',    desc: 'A/B tests pra saber o que converte. Decisão por dado, não por achismo.', color: '#8B5CF6', bg: 'rgba(139,92,246,0.10)' },
-  { Icon: ShieldCheck,  label: 'Manutenção técnica',       desc: 'Segurança, uptime, performance e correções monitoradas, pra você não precisar pensar nisso.', color: '#10B981', bg: 'rgba(16,185,129,0.10)' },
-];
-
-const HOW = [
-  {
-    iconNode: <Search className="w-7 h-7 text-primary" strokeWidth={1.5} />,
-    number: '01',
-    title: 'Briefing & Arquitetura',
-    desc: 'Entendemos o objetivo do site, público e estrutura de páginas. Saída: sitemap + wireframe de cada página.',
-  },
-  {
-    iconNode: <PenTool className="w-7 h-7 text-primary" strokeWidth={1.5} />,
-    number: '02',
-    title: 'Design & Desenvolvimento',
-    desc: 'UI no Figma, código limpo, SEO técnico e responsivo do início. Revisões semanais antes do go-live.',
-  },
-  {
-    iconNode: <Rocket className="w-7 h-7 text-primary" strokeWidth={1.5} />,
-    number: '03',
-    title: 'Lançamento & Crescimento',
-    desc: 'Subimos no ar, configuramos analytics e te treinamos para editar conteúdo. Suporte nos primeiros 30 dias.',
-  },
 ];
 
 export default async function SitesPage({
@@ -135,23 +41,64 @@ export default async function SitesPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'Sites' });
+
+  const TYPES = [
+    { icon: Layout,   scenario: t('type1Scenario'), recommendation: t('type1Name'), oneLiner: t('type1OneLiner'), color: '#3B82F6', bg: 'rgba(59,130,246,0.12)' },
+    { icon: FileText, scenario: t('type2Scenario'), recommendation: t('type2Name'), oneLiner: t('type2OneLiner'), color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+    { icon: BookOpen, scenario: t('type3Scenario'), recommendation: t('type3Name'), oneLiner: t('type3OneLiner'), color: '#10B981', bg: 'rgba(16,185,129,0.12)' },
+    { icon: Globe2,   scenario: t('type4Scenario'), recommendation: t('type4Name'), oneLiner: t('type4OneLiner'), color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
+  ];
+
+  const STATS = [
+    { value: t('stat1Value'), label: t('stat1Label') },
+    { value: t('stat2Value'), label: t('stat2Label') },
+    { value: t('stat3Value'), label: t('stat3Label') },
+  ];
+
+  const AI_PILLARS = [
+    { Icon: Wand2,     label: t('aiPillar1Label'), desc: t('aiPillar1Desc'), color: '#EC4899', bg: 'rgba(236,72,153,0.10)' },
+    { Icon: Code2,     label: t('aiPillar2Label'), desc: t('aiPillar2Desc'), color: '#3B82F6', bg: 'rgba(59,130,246,0.10)' },
+    { Icon: Sparkles,  label: t('aiPillar3Label'), desc: t('aiPillar3Desc'), color: '#F59E0B', bg: 'rgba(245,158,11,0.10)' },
+    { Icon: GaugeIcon, label: t('aiPillar4Label'), desc: t('aiPillar4Desc'), color: '#10B981', bg: 'rgba(16,185,129,0.10)' },
+  ];
+
+  const MAINTENANCE = [
+    { Icon: RefreshCw,    label: t('maint1Label'), desc: t('maint1Desc'), color: '#3B82F6', bg: 'rgba(59,130,246,0.10)' },
+    { Icon: FlaskConical, label: t('maint2Label'), desc: t('maint2Desc'), color: '#8B5CF6', bg: 'rgba(139,92,246,0.10)' },
+    { Icon: ShieldCheck,  label: t('maint3Label'), desc: t('maint3Desc'), color: '#10B981', bg: 'rgba(16,185,129,0.10)' },
+  ];
+
+  const HOW = [
+    { iconNode: <Search className="w-7 h-7 text-primary" strokeWidth={1.5} />,  number: '01', title: t('how1Title'), desc: t('how1Desc') },
+    { iconNode: <PenTool className="w-7 h-7 text-primary" strokeWidth={1.5} />, number: '02', title: t('how2Title'), desc: t('how2Desc') },
+    { iconNode: <Rocket className="w-7 h-7 text-primary" strokeWidth={1.5} />,  number: '03', title: t('how3Title'), desc: t('how3Desc') },
+  ];
+
+  const SITES_FAQS = [
+    { q: t('faq1Q'), a: t('faq1A') },
+    { q: t('faq2Q'), a: t('faq2A') },
+    { q: t('faq3Q'), a: t('faq3A') },
+    { q: t('faq4Q'), a: t('faq4A') },
+    { q: t('faq5Q'), a: t('faq5A') },
+    { q: t('faq6Q'), a: t('faq6A') },
+  ];
 
   return (
     <>
-      {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-surface-base">
         <ProdutosHeroBackground />
         <div className="relative z-10 container mx-auto px-5 lg:px-8 pt-24 lg:pt-28 pb-20 lg:pb-28">
           <div className="max-w-3xl mx-auto text-center mb-14 lg:mb-16">
             <Reveal>
               <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.5rem] font-bold leading-[1.06] tracking-[-0.03em] mb-6">
-                <span className="block mb-1">Seu site no ar em</span>
+                <span className="block mb-1">{t('heroTitleLine1')}</span>
                 <span className="block">
-                  poucas <span className="font-bricolage">semanas.</span>
+                  {t('heroTitleLine2')} <span className="font-bricolage">{t('heroTitleAccent')}</span>
                 </span>
               </h1>
               <p className="text-[17px] lg:text-[19px] text-text-secondary leading-[1.6] max-w-2xl mx-auto mb-8">
-                LP pra campanha que começa segunda, ou institucional que vai com a marca nova. A gente desenha pelo objetivo do seu cliente, não pelo template que dá menos trabalho.
+                {t('heroDesc')}
               </p>
             </Reveal>
 
@@ -160,7 +107,7 @@ export default async function SitesPage({
                 href="#orcamento"
                 className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
               >
-                Calcular meu site
+                {t('heroCta')}
                 <ArrowDown className="w-4 h-4" />
               </a>
             </Reveal>
@@ -172,7 +119,6 @@ export default async function SitesPage({
         </div>
       </section>
 
-      {/* ── Stats ── */}
       <section className="relative bg-surface-elevated overflow-hidden">
         <DotPattern />
         <div className="relative z-10 container mx-auto px-5 lg:px-8 py-16 lg:py-20">
@@ -183,9 +129,7 @@ export default async function SitesPage({
                   <div className="font-bricolage text-[2.75rem] lg:text-[3.25rem] font-bold text-primary leading-none mb-2 tracking-tight">
                     <CountUp value={s.value} />
                   </div>
-                  <div className="font-mono text-[12px] text-text-muted uppercase tracking-widest leading-snug">
-                    {s.label}
-                  </div>
+                  <div className="font-mono text-[12px] text-text-muted uppercase tracking-widest leading-snug">{s.label}</div>
                 </div>
               </Reveal>
             ))}
@@ -193,54 +137,43 @@ export default async function SitesPage({
         </div>
       </section>
 
-      {/* ── Tipos como decisão (cenário → recomendação) ── */}
       <section className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
-                <span className="block">A escolha <span className="font-bricolage">não é</span> de template.</span>
-                <span className="block font-bricolage">É de momento.</span>
+                <span className="block">{t('typesTitleLine1Pre')} <span className="font-bricolage">{t('typesTitleLine1Accent')}</span> {t('typesTitleLine1Post')}</span>
+                <span className="block font-bricolage">{t('typesTitleLine2')}</span>
               </h2>
-              <p className="mt-5 text-[16px] lg:text-[17px] leading-relaxed text-text-secondary max-w-2xl mx-auto">
-                Antes de pensar em ferramenta, entenda em qual desses quatro momentos sua marca está. O formato certo cai sozinho.
-              </p>
+              <p className="mt-5 text-[16px] lg:text-[17px] leading-relaxed text-text-secondary max-w-2xl mx-auto">{t('typesDesc')}</p>
             </div>
           </Reveal>
 
           <div className="grid md:grid-cols-2 gap-4 lg:gap-5 max-w-5xl mx-auto">
-            {TYPES.map((t, i) => (
-              <Reveal key={t.recommendation} delay={i * 90}>
+            {TYPES.map((tt, i) => (
+              <Reveal key={tt.recommendation} delay={i * 90}>
                 <TiltCard
                   className="h-full rounded-2xl border border-black/[0.08] p-6 lg:p-7"
-                  style={{ background: `radial-gradient(ellipse 80% 70% at 95% 5%, ${t.bg} 0%, transparent 65%), hsl(55 100% 97%)` }}
+                  style={{ background: `radial-gradient(ellipse 80% 70% at 95% 5%, ${tt.bg} 0%, transparent 65%), hsl(55 100% 97%)` }}
                   intensity={5}
                 >
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: t.bg }}>
-                      <t.icon className="w-5 h-5" style={{ color: t.color }} strokeWidth={1.7} />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: tt.bg }}>
+                      <tt.icon className="w-5 h-5" style={{ color: tt.color }} strokeWidth={1.7} />
                     </div>
                     <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim">
-                      Cenário {String(i + 1).padStart(2, '0')}
+                      {t('typesScenarioLabel')} {String(i + 1).padStart(2, '0')}
                     </span>
                   </div>
 
-                  <p className="text-[16px] lg:text-[17px] font-semibold text-text-primary leading-snug mb-5">
-                    {t.scenario}
-                  </p>
+                  <p className="text-[16px] lg:text-[17px] font-semibold text-text-primary leading-snug mb-5">{tt.scenario}</p>
 
                   <div className="flex items-center gap-2 text-primary mb-2">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.16em]">
-                      A gente entrega
-                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.16em]">{t('typesDeliverLabel')}</span>
                     <span className="h-px flex-1 bg-primary/20" />
                   </div>
-                  <p className="font-bricolage text-[20px] lg:text-[22px] font-semibold text-text-primary mb-2">
-                    {t.recommendation}
-                  </p>
-                  <p className="text-[13px] lg:text-[14px] text-text-secondary leading-snug">
-                    {t.oneLiner}
-                  </p>
+                  <p className="font-bricolage text-[20px] lg:text-[22px] font-semibold text-text-primary mb-2">{tt.recommendation}</p>
+                  <p className="text-[13px] lg:text-[14px] text-text-secondary leading-snug">{tt.oneLiner}</p>
                 </TiltCard>
               </Reveal>
             ))}
@@ -248,18 +181,15 @@ export default async function SitesPage({
         </div>
       </section>
 
-      {/* ── Construção com IA: o foco real da Notkode em 2026 ── */}
       <section className="relative bg-surface-elevated overflow-hidden">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-14 lg:mb-16">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
-                <span className="block font-bricolage">Construído com IA,</span>
-                <span className="block">de ponta a ponta.</span>
+                <span className="block font-bricolage">{t('aiTitleAccent')}</span>
+                <span className="block">{t('aiTitlePost')}</span>
               </h2>
-              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
-                IA aplicada no processo, do design ao código, da copy à otimização. É por isso que entregamos em 2 a 4 semanas o que outras agências levam três meses. Sem comprometer qualidade.
-              </p>
+              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">{t('aiDesc')}</p>
             </div>
           </Reveal>
 
@@ -270,32 +200,25 @@ export default async function SitesPage({
                   <div className="mx-auto w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: bg }}>
                     <Icon className="w-6 h-6" style={{ color }} strokeWidth={1.6} />
                   </div>
-                  <p className="font-bricolage text-[17px] font-semibold text-text-primary mb-2">
-                    {label}
-                  </p>
-                  <p className="text-[13px] text-text-secondary leading-relaxed">
-                    {desc}
-                  </p>
+                  <p className="font-bricolage text-[17px] font-semibold text-text-primary mb-2">{label}</p>
+                  <p className="text-[13px] text-text-secondary leading-relaxed">{desc}</p>
                 </TiltCard>
               </Reveal>
             ))}
           </div>
 
           <Reveal delay={400}>
-            <p className="text-center text-[13px] text-text-muted max-w-xl mx-auto mt-10">
-              Cliente que prefere Framer ou WordPress, a gente atende. Mas o default é construção custom acelerada por IA.
-            </p>
+            <p className="text-center text-[13px] text-text-muted max-w-xl mx-auto mt-10">{t('aiFooter')}</p>
           </Reveal>
         </div>
       </section>
 
-      {/* ── Como entregamos ── */}
       <section className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
-            <SectionMarker number="03" label="Como entregamos" />
+            <SectionMarker number="03" label={t('howEyebrow')} />
             <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mt-4 mb-12 max-w-2xl">
-              Três etapas do briefing <span className="font-bricolage">ao ar.</span>
+              {t('howTitlePre')} <span className="font-bricolage">{t('howTitleAccent')}</span>
             </h2>
           </Reveal>
 
@@ -303,18 +226,15 @@ export default async function SitesPage({
         </div>
       </section>
 
-      {/* ── Manutenção contínua: produto que a Notkode vende além do go-live ── */}
       <section className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-14">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
-                <span className="block">Site no ar é o <span className="font-bricolage">começo</span>,</span>
-                <span className="block font-bricolage">não o fim.</span>
+                <span className="block">{t('maintTitleLine1Pre')} <span className="font-bricolage">{t('maintTitleLine1Accent')}</span>{t('maintTitleLine1Post')}</span>
+                <span className="block font-bricolage">{t('maintTitleLine2')}</span>
               </h2>
-              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
-                Plano de manutenção opcional pra deixar o site evoluindo com o negócio. Sem chamar uma nova proposta toda vez que precisar trocar uma seção ou testar um hero novo.
-              </p>
+              <p className="mt-5 text-[16px] lg:text-[17px] text-text-secondary leading-relaxed max-w-2xl mx-auto">{t('maintDesc')}</p>
             </div>
           </Reveal>
 
@@ -325,12 +245,8 @@ export default async function SitesPage({
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: bg }}>
                     <Icon className="w-5 h-5" style={{ color }} strokeWidth={1.7} />
                   </div>
-                  <p className="font-bricolage text-[17px] font-semibold text-text-primary mb-2">
-                    {label}
-                  </p>
-                  <p className="text-[14px] text-text-secondary leading-relaxed">
-                    {desc}
-                  </p>
+                  <p className="font-bricolage text-[17px] font-semibold text-text-primary mb-2">{label}</p>
+                  <p className="text-[14px] text-text-secondary leading-relaxed">{desc}</p>
                 </TiltCard>
               </Reveal>
             ))}
@@ -338,27 +254,23 @@ export default async function SitesPage({
         </div>
       </section>
 
-      {/* ── Beat 6: objeções comuns de quem vai contratar site ── */}
       <ProductFAQ
-        title={<><span className="block">O que todo cliente</span><span className="block font-bricolage">pergunta antes de fechar.</span></>}
+        title={<><span className="block">{t('faqTitleLine1')}</span><span className="block font-bricolage">{t('faqTitleAccent')}</span></>}
         faqs={SITES_FAQS}
         surface="base"
       />
 
       <BrandbookCombo companion="site" surface="base" />
 
-      {/* ── Pricing form ── */}
       <section id="orcamento" className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-10 lg:mb-12">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
-                <span className="block">Monte seu site,</span>
-                <span className="block font-bricolage">veja a faixa na hora.</span>
+                <span className="block">{t('pricingTitleLine1')}</span>
+                <span className="block font-bricolage">{t('pricingTitleAccent')}</span>
               </h2>
-              <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
-                Quatro perguntas curtas. No final você vê o investimento estimado e pode pedir a proposta detalhada.
-              </p>
+              <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">{t('pricingDesc')}</p>
             </div>
           </Reveal>
 

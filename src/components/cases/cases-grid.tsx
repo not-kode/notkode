@@ -2,25 +2,34 @@
 
 import { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { CASES, type CaseItem, type CaseCategory } from '@/data/cases';
 
-const FILTERS: (CaseCategory | 'Todos')[] = ['Todos', 'SaaS', 'E-commerce', 'Website'];
+const FILTER_IDS = ['Todos', 'SaaS', 'E-commerce', 'Website'] as const;
+type FilterId = typeof FILTER_IDS[number];
 
 export function CasesGrid() {
-  const [active, setActive] = useState<CaseCategory | 'Todos'>('Todos');
+  const t = useTranslations('Cases');
+  const [active, setActive] = useState<FilterId>('Todos');
 
   const filtered = active === 'Todos' ? CASES : CASES.filter((c) => c.category === active);
 
+  const labelFor = (f: FilterId): string => {
+    if (f === 'Todos') return t('gridFilterAll');
+    if (f === 'SaaS') return t('gridFilterSaaS');
+    if (f === 'E-commerce') return t('gridFilterEcommerce');
+    return t('gridFilterWebsite');
+  };
+
   return (
     <div>
-      {/* Filter pills */}
       <div className="flex flex-wrap items-center gap-2 mb-12">
         <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest mr-3">
-          Filtrar:
+          {t('gridFilterLabel')}
         </span>
-        {FILTERS.map((f) => {
-          const count = f === 'Todos' ? CASES.length : CASES.filter((c) => c.category === f).length;
+        {FILTER_IDS.map((f) => {
+          const count = f === 'Todos' ? CASES.length : CASES.filter((c) => c.category === f as CaseCategory).length;
           const isActive = active === f;
           return (
             <button
@@ -33,7 +42,7 @@ export function CasesGrid() {
                 border: isActive ? '1px solid #3B82F6' : '1px solid rgba(25,25,24,0.12)',
               }}
             >
-              {f}
+              {labelFor(f)}
               <span className={isActive ? 'opacity-70' : 'opacity-40'}>
                 {String(count).padStart(2, '0')}
               </span>
@@ -42,7 +51,6 @@ export function CasesGrid() {
         })}
       </div>
 
-      {/* Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
         {filtered.map((c, i) => (
           <CaseCard key={c.slug} item={c} index={i} />
@@ -50,7 +58,7 @@ export function CasesGrid() {
       </div>
 
       {filtered.length === 0 && (
-        <p className="text-center text-text-muted py-12">Nenhum case nesta categoria.</p>
+        <p className="text-center text-text-muted py-12">{t('gridEmpty')}</p>
       )}
     </div>
   );

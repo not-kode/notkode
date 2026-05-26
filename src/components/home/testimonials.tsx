@@ -29,15 +29,15 @@ export async function Testimonials({ locale }: { locale: string }) {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
-                <span className="font-mono text-[10px] text-white/25 ml-3">depoimento.mp4</span>
-                <span className="font-mono text-[10px] text-white/15 ml-auto">▶ play</span>
+                <span className="font-mono text-[10px] text-white/25 ml-3">{t('testimonialsVideoFile')}</span>
+                <span className="font-mono text-[10px] text-white/15 ml-auto">{t('testimonialsVideoPlay')}</span>
               </div>
 
               {/* Video */}
               <div className="relative w-full" style={{ paddingBottom: '56.25%', background: '#0a0a0f' }}>
                 <iframe
                   src="https://www.youtube.com/embed/YoIYH7y2p54?rel=0&modestbranding=1"
-                  title="Depoimento em vídeo — Notkode"
+                  title={t('testimonialsVideoTitle')}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="absolute inset-0 w-full h-full"
@@ -50,7 +50,7 @@ export async function Testimonials({ locale }: { locale: string }) {
                 className="flex items-center justify-between px-4 h-9"
                 style={{ background: 'rgba(14,14,18,0.96)', borderTop: '1px solid rgba(255,255,255,0.06)' }}
               >
-                <span className="font-mono text-[10px] text-white/25">notkode.com.br</span>
+                <span className="font-mono text-[10px] text-white/25">{t('testimonialsVideoUrl')}</span>
                 <span className="font-mono text-[10px] text-white/20">{'// video testimonial'}</span>
               </div>
             </div>
@@ -65,8 +65,8 @@ export async function Testimonials({ locale }: { locale: string }) {
               <div className="mt-4">
                 <TestimonialsCarousel
                   items={items}
-                  titleMain="Histórias de quem construiu com a"
-                  titleAccent="Notkode."
+                  titleMain={t('testimonialsTitlePre')}
+                  titleAccent={t('testimonialsTitleAccent')}
                 />
               </div>
             </Reveal>

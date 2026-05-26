@@ -42,7 +42,7 @@ export function ToolChaos() {
           {/* LEFT — ferramentas desconectadas */}
           <Reveal>
             <div className="space-y-2">
-              <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-4">Hoje — ferramentas isoladas</p>
+              <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-4">Hoje, ferramentas isoladas</p>
               {TOOLS.map((tool) => (
                 <div
                   key={tool.name}
@@ -78,7 +78,7 @@ export function ToolChaos() {
           {/* RIGHT — sistema unificado */}
           <Reveal delay={150}>
             <div>
-              <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-4">Com Notkode — tudo em um</p>
+              <p className="font-mono text-[10px] text-text-dim uppercase tracking-widest mb-4">Com Notkode, tudo em um</p>
               <div
                 className="rounded-2xl overflow-hidden"
                 style={{ border: '1px solid rgba(59,130,246,0.25)', background: 'rgba(59,130,246,0.04)' }}

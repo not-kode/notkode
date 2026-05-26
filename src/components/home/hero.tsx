@@ -17,16 +17,19 @@ export async function Hero({ locale }: { locale: string }) {
           <Reveal className="min-w-0">
             <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.15] lg:leading-[1.12] tracking-[-0.025em] break-words text-text-primary">
               <span className="lg:block">
-                <span className="font-bricolage font-normal">Tecnologia</span>{' '}
-                de ponta,
+                {t('homeHeroLine1Pre')}
+                <span className="font-bricolage font-normal">{t('homeHeroLine1Accent')}</span>
+                {t('homeHeroLine1Post')}
               </span>{' '}
               <span className="lg:block">
-                entregue na{' '}
-                <span className="font-bricolage font-normal">velocidade</span>
+                {t('homeHeroLine2Pre')}
+                <span className="font-bricolage font-normal">{t('homeHeroLine2Accent')}</span>
+                {t('homeHeroLine2Post')}
               </span>{' '}
               <span className="lg:block">
-                que <span className="font-bricolage font-normal">sua empresa</span>{' '}
-                precisa.
+                {t('homeHeroLine3Pre')}
+                <span className="font-bricolage font-normal">{t('homeHeroLine3Accent')}</span>
+                {t('homeHeroLine3Post')}
               </span>
             </h1>
           </Reveal>

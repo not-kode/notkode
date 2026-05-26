@@ -43,7 +43,7 @@ export function AgencyVisual() {
             <div className="w-2 h-2 rounded-full bg-white/20" />
           </div>
           <span className="font-mono text-[10px] text-white/25 flex-1 text-center select-none">
-            notkode/parceria — white-label
+            notkode/parceria, white-label
           </span>
         </div>
 

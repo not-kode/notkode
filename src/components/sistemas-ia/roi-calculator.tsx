@@ -9,14 +9,14 @@ import { ArrowUpRight } from 'lucide-react';
 // Preços reais verificados em mai/2025 — plano intermediário por ferramenta
 // Ferramentas por usuário calculadas para um time de 3 pessoas
 const TOOLS = [
-  { id: 'crm',       label: 'CRM — RD Station Pro / Pipedrive Growth',     cost: 382  }, // R$ 127/usuário × 3
-  { id: 'whatsapp',  label: 'WhatsApp API — Z-API / Twilio',               cost: 121  }, // média Z-API + Twilio 1k conv.
-  { id: 'erp',       label: 'ERP / Financeiro — Omie / Conta Azul',        cost: 305  }, // média R$ 299 + R$ 310
+  { id: 'crm',       label: 'CRM, RD Station Pro / Pipedrive Growth',     cost: 382  }, // R$ 127/usuário × 3
+  { id: 'whatsapp',  label: 'WhatsApp API, Z-API / Twilio',               cost: 121  }, // média Z-API + Twilio 1k conv.
+  { id: 'erp',       label: 'ERP / Financeiro, Omie / Conta Azul',        cost: 305  }, // média R$ 299 + R$ 310
   { id: 'sheets',    label: 'Planilhas & Google Workspace',                 cost: 0    }, // horas manuais — sem custo fixo
-  { id: 'tasks',     label: 'Gestão de tarefas — Notion / Monday.com',     cost: 330  }, // R$ 110/usuário × 3
-  { id: 'email',     label: 'E-mail marketing — RD Station / Mailchimp',   cost: 307  }, // média R$ 529 + R$ 85
-  { id: 'analytics', label: 'Analytics — Metabase / Power BI Pro',         cost: 325  }, // média R$ 570 + R$ 80
-  { id: 'support',   label: 'Suporte ao cliente — Zendesk / Freshdesk',    cost: 337  }, // média R$ 359 + R$ 314
+  { id: 'tasks',     label: 'Gestão de tarefas, Notion / Monday.com',     cost: 330  }, // R$ 110/usuário × 3
+  { id: 'email',     label: 'E-mail marketing, RD Station / Mailchimp',   cost: 307  }, // média R$ 529 + R$ 85
+  { id: 'analytics', label: 'Analytics, Metabase / Power BI Pro',         cost: 325  }, // média R$ 570 + R$ 80
+  { id: 'support',   label: 'Suporte ao cliente, Zendesk / Freshdesk',    cost: 337  }, // média R$ 359 + R$ 314
 ];
 
 const HOURLY_RATE = 60; // R$/h — custo médio colaborador operacional CLT
@@ -55,7 +55,7 @@ export function ROICalculator() {
             <span className="font-bricolage">em ferramentas avulsas?</span>
           </h2>
           <p className="text-base text-text-secondary leading-relaxed mb-12 max-w-xl">
-            Selecione as ferramentas que você usa. Veja o que sai todo mês — e quando um sistema próprio se paga.
+            Selecione as ferramentas que você usa. Veja o que sai todo mês, e quando um sistema próprio se paga.
           </p>
         </Reveal>
 

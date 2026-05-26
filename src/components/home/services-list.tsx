@@ -58,8 +58,8 @@ export async function ServicesList({ locale }: { locale: string }) {
             <div className="lg:sticky lg:top-24 lg:self-start">
               <SectionMarker number="03" label={t('servicesEyebrow')} />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-4">
-                Tudo que sua empresa precisa,{' '}
-                <span className="font-bricolage font-normal">sob medida</span>.
+                {t('servicesTitlePre')}{' '}
+                <span className="font-bricolage font-normal">{t('servicesTitleAccent')}</span>{t('servicesTitlePost')}
               </h2>
               <p className="text-base text-text-secondary leading-relaxed">
                 {t('servicesDesc')}
