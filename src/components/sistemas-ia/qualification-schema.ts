@@ -1,34 +1,34 @@
 import type { QualificationSchema } from '@/components/ui/qualification-form';
 
-export const sistemasQualificationSchema: QualificationSchema = {
-  serviceTag: 'sistemas-ia',
-  whatsappMessage:
-    'Acabei de preencher o formulário de Sistemas com IA no site, quero acelerar.',
-  successTitle: 'Recebemos seu pedido.',
-  needs: {
-    title: 'O que você precisa resolver?',
-    subtitle: 'Pode marcar mais de uma. Marca a última se ainda não sabe direito.',
-    options: [
-      { id: 'centralizar',  label: 'Centralizar várias ferramentas num só sistema' },
-      { id: 'crm',          label: 'CRM / Vendas sob medida' },
-      { id: 'atendimento',  label: 'Atendimento com IA integrado' },
-      { id: 'operacao',     label: 'Operação / Pedidos / Logística' },
-      { id: 'relatorios',   label: 'Relatórios e BI internos' },
-      { id: 'nao_sei',      label: 'Ainda não sei direito' },
-    ],
-  },
-  identity: {
-    title: 'Quem é você?',
-    subtitle: 'Só o essencial pra a gente entrar em contato.',
-  },
-  context: {
-    title: 'Contexto do projeto.',
-    subtitle: 'Quanto mais detalhes, melhor preparamos a conversa.',
-    timings: [
-      { id: 'imediato', label: 'Quero começar agora' },
-      { id: '30dias',   label: 'Em até 30 dias' },
-      { id: '60dias',   label: 'Em 60+ dias' },
-      { id: 'pesquisa', label: 'Apenas pesquisando' },
-    ],
-  },
-};
+type TFn = (key: string) => string;
+
+export function getSistemasQualificationSchema(t: TFn): QualificationSchema {
+  return {
+    serviceTag: 'sistemas-ia',
+    whatsappMessage: t('qualWhatsappMessage'),
+    successTitle: t('qualSuccessTitle'),
+    needs: {
+      title: t('qualNeedsTitle'),
+      subtitle: t('qualNeedsSubtitle'),
+      options: [
+        { id: 'centralizar',  label: t('qualNeedCentralizar') },
+        { id: 'crm',          label: t('qualNeedCrm') },
+        { id: 'atendimento',  label: t('qualNeedAtendimento') },
+        { id: 'operacao',     label: t('qualNeedOperacao') },
+        { id: 'relatorios',   label: t('qualNeedRelatorios') },
+        { id: 'nao_sei',      label: t('qualNeedNaoSei') },
+      ],
+    },
+    identity: {},
+    context: {
+      title: t('qualContextTitle'),
+      subtitle: t('qualContextSubtitle'),
+      timings: [
+        { id: 'imediato', label: t('qualTimingImediato') },
+        { id: '30dias',   label: t('qualTiming30dias') },
+        { id: '60dias',   label: t('qualTiming60dias') },
+        { id: 'pesquisa', label: t('qualTimingPesquisa') },
+      ],
+    },
+  };
+}

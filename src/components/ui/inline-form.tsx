@@ -48,7 +48,7 @@ export function InlineForm({
           Recebemos seu pedido.
         </h3>
         <p className="text-[14px] text-text-secondary leading-relaxed mb-6 max-w-md mx-auto">
-          Em algumas horas você recebe uma proposta inicial no seu WhatsApp ou e-mail. Sem call obrigatória — direto ao ponto.
+          Em algumas horas você recebe uma proposta inicial no seu WhatsApp ou e-mail. Sem call obrigatória, direto ao ponto.
         </p>
         <a
           href="https://wa.me/5511951381254?text=Acabei de preencher o formulário no site, quero acelerar."

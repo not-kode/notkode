@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 
 /* ─────────────────────────────────────────────
@@ -19,26 +20,26 @@ interface Props {
 }
 
 /* ─────────────────────────────────────────────
-   Visual 1 — Module configurator (custom-built)
+   Visual 1, Module configurator (custom-built)
 ───────────────────────────────────────────── */
-const V1_MODULES = [
-  { label: 'CRM & Vendas',        active: true  },
-  { label: 'Financeiro',          active: true  },
-  { label: 'WhatsApp Automático', active: true  },
-  { label: 'Relatórios',          active: true  },
-  { label: 'Estoque',             active: false },
-  { label: 'Portal do Cliente',   active: false },
-];
-
 function Visual1() {
+  const t = useTranslations('Home');
+  const V1_MODULES = [
+    { label: t('pshV1ModCrm'),     active: true  },
+    { label: t('pshV1ModFin'),     active: true  },
+    { label: t('pshV1ModWa'),      active: true  },
+    { label: t('pshV1ModReports'), active: true  },
+    { label: t('pshV1ModStock'),   active: false },
+    { label: t('pshV1ModPortal'),  active: false },
+  ];
   return (
     <div className="flex items-center justify-center w-full h-full p-8" aria-hidden>
       <div className="w-full max-w-[320px]">
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <div className="font-mono text-[10px] text-text-dim tracking-widest uppercase mb-0.5">Seu sistema</div>
-            <div className="text-[13px] font-semibold text-text-primary">Configuração sob medida</div>
+            <div className="font-mono text-[10px] text-text-dim tracking-widest uppercase mb-0.5">{t('pshV1Eyebrow')}</div>
+            <div className="text-[13px] font-semibold text-text-primary">{t('pshV1Title')}</div>
           </div>
           <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
             <span className="text-white text-[11px] font-bold">N</span>
@@ -72,7 +73,7 @@ function Visual1() {
                 className="font-mono text-[9px] tracking-wider uppercase"
                 style={{ color: m.active ? 'rgba(59,130,246,0.7)' : 'rgba(25,25,24,0.22)' }}
               >
-                {m.active ? 'ativo' : '+ add'}
+                {m.active ? t('pshV1Active') : t('pshV1Add')}
               </span>
             </div>
           ))}
@@ -80,8 +81,8 @@ function Visual1() {
 
         {/* Footer */}
         <div className="mt-4 pt-3 border-t border-black/[0.06] flex items-center justify-between">
-          <span className="font-mono text-[10px] text-text-dim">4 módulos ativos</span>
-          <span className="font-mono text-[10px] text-primary">personalizado ✓</span>
+          <span className="font-mono text-[10px] text-text-dim">{t('pshV1Footer')}</span>
+          <span className="font-mono text-[10px] text-primary">{t('pshV1Custom')}</span>
         </div>
       </div>
     </div>
@@ -89,36 +90,24 @@ function Visual1() {
 }
 
 /* ─────────────────────────────────────────────
-   Visual 2 — IA Nativa (business scenarios)
+   Visual 2, IA Nativa (business scenarios)
 ───────────────────────────────────────────── */
-const V2_SCENARIOS = [
-  {
-    input:  '"Qual o status do pedido 4521?"',
-    output: 'Responde cliente + atualiza CRM',
-    color:  '#22C55E',
-  },
-  {
-    input:  '"Relatório de vendas de março"',
-    output: 'Gera PDF e envia por e-mail',
-    color:  '#3B82F6',
-  },
-  {
-    input:  'Nova lead via formulário',
-    output: 'Cria tarefa + notifica vendedor',
-    color:  '#F59E0B',
-  },
-];
-
 function Visual2() {
+  const t = useTranslations('Home');
+  const V2_SCENARIOS = [
+    { input: t('pshV2Input1'), output: t('pshV2Output1'), color: '#22C55E' },
+    { input: t('pshV2Input2'), output: t('pshV2Output2'), color: '#3B82F6' },
+    { input: t('pshV2Input3'), output: t('pshV2Output3'), color: '#F59E0B' },
+  ];
   return (
     <div className="flex flex-col justify-center h-full px-7 py-6 gap-3" aria-hidden>
-      <div className="font-mono text-[10px] text-text-dim tracking-widest uppercase mb-1">Agente IA — exemplos reais</div>
+      <div className="font-mono text-[10px] text-text-dim tracking-widest uppercase mb-1">{t('pshV2Eyebrow')}</div>
       {V2_SCENARIOS.map((s, i) => (
         <div key={i} className="flex items-stretch gap-0">
           {/* Input */}
           <div className="flex-1 rounded-l-lg px-3 py-2.5 text-[11px] font-mono text-text-secondary leading-snug"
             style={{ background: 'rgba(25,25,24,0.04)', border: '1px solid rgba(25,25,24,0.08)', borderRight: 'none' }}>
-            <div className="text-text-dim text-[9px] uppercase tracking-wider mb-1">entrada</div>
+            <div className="text-text-dim text-[9px] uppercase tracking-wider mb-1">{t('pshV2InputLabel')}</div>
             {s.input}
           </div>
           {/* Arrow */}
@@ -129,22 +118,23 @@ function Visual2() {
           {/* Output */}
           <div className="flex-1 rounded-r-lg px-3 py-2.5 text-[11px] font-mono leading-snug"
             style={{ background: `${s.color}0d`, border: `1px solid ${s.color}30`, borderLeft: 'none', color: 'rgba(25,25,24,0.65)' }}>
-            <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: s.color }}>resultado</div>
+            <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: s.color }}>{t('pshV2ResultLabel')}</div>
             {s.output}
           </div>
         </div>
       ))}
       <div className="mt-1 font-mono text-[10px] text-text-dim text-center">
-        integrado ao seu sistema — sem ferramentas extras
+        {t('pshV2Footer')}
       </div>
     </div>
   );
 }
 
 /* ─────────────────────────────────────────────
-   Visual 3 — Propriedade total terminal
+   Visual 3, Propriedade total terminal
 ───────────────────────────────────────────── */
 function Visual3() {
+  const t = useTranslations('Home');
   return (
     <div className="flex items-center justify-center p-8 h-full" aria-hidden>
       <div
@@ -172,25 +162,25 @@ function Visual3() {
           <div className="space-y-1 mb-4">
             <div>
               <span style={{ color: '#22C55E' }}>✓</span>
-              <span className="text-white/55 ml-2">código 100% seu</span>
+              <span className="text-white/55 ml-2">{t('pshV3Bullet1')}</span>
             </div>
             <div>
               <span style={{ color: '#22C55E' }}>✓</span>
-              <span className="text-white/55 ml-2">deploy em qualquer servidor</span>
+              <span className="text-white/55 ml-2">{t('pshV3Bullet2')}</span>
             </div>
             <div>
               <span style={{ color: '#22C55E' }}>✓</span>
-              <span className="text-white/55 ml-2">zero vendor lock-in</span>
+              <span className="text-white/55 ml-2">{t('pshV3Bullet3')}</span>
             </div>
             <div>
               <span style={{ color: '#22C55E' }}>✓</span>
-              <span className="text-white/55 ml-2">sem mensalidade de plataforma</span>
+              <span className="text-white/55 ml-2">{t('pshV3Bullet4')}</span>
             </div>
           </div>
 
           <div className="border-t border-white/[0.07] pt-3">
             <span style={{ color: '#3B82F6' }}>{'>'}</span>
-            <span className="text-white/55 ml-2">você tem controle total</span>
+            <span className="text-white/55 ml-2">{t('pshV3Footer')}</span>
             <span className="text-white/55 cursor-blink">_</span>
           </div>
         </div>
@@ -200,27 +190,27 @@ function Visual3() {
 }
 
 /* ─────────────────────────────────────────────
-   Visual 4 — Escala (growth comparison)
+   Visual 4, Escala (growth comparison)
 ───────────────────────────────────────────── */
-const V4_ROWS = [
-  { label: 'Usuários',   before: '50',       after: '5.000',    unit: '' },
-  { label: 'Módulos',    before: '3',        after: '11',       unit: '' },
-  { label: 'Dados/mês',  before: '1 GB',     after: '180 GB',   unit: '' },
-  { label: 'Reescrita',  before: 'zero',     after: 'zero',     same: true },
-];
-
 function Visual4() {
+  const t = useTranslations('Home');
+  const V4_ROWS = [
+    { label: t('pshV4RowUsers'),   before: '50',  after: '5.000' },
+    { label: t('pshV4RowModules'), before: '3',   after: '11' },
+    { label: t('pshV4RowData'),    before: '1 GB', after: '180 GB' },
+    { label: t('pshV4RowRewrite'), before: t('pshV4RowRewriteValue'), after: t('pshV4RowRewriteValue'), same: true },
+  ];
   return (
     <div className="flex flex-col justify-center h-full px-8 py-6" aria-hidden>
-      <div className="font-mono text-[10px] text-text-dim tracking-widest uppercase mb-4">Crescimento real — mesma base</div>
+      <div className="font-mono text-[10px] text-text-dim tracking-widest uppercase mb-4">{t('pshV4Eyebrow')}</div>
 
       {/* Table */}
       <div className="w-full">
         {/* Header */}
         <div className="grid grid-cols-[1fr_80px_80px] gap-2 mb-2 px-3">
           <div />
-          <div className="font-mono text-[9px] text-text-dim uppercase tracking-wider text-center">Hoje</div>
-          <div className="font-mono text-[9px] text-primary uppercase tracking-wider text-center">Em 1 ano</div>
+          <div className="font-mono text-[9px] text-text-dim uppercase tracking-wider text-center">{t('pshV4ColToday')}</div>
+          <div className="font-mono text-[9px] text-primary uppercase tracking-wider text-center">{t('pshV4ColYear')}</div>
         </div>
 
         <div className="space-y-1.5">
@@ -245,7 +235,7 @@ function Visual4() {
       </div>
 
       <div className="mt-4 pt-3 border-t border-black/[0.06] font-mono text-[10px] text-text-dim text-center">
-        arquitetura preparada desde o dia 1
+        {t('pshV4Footer')}
       </div>
     </div>
   );

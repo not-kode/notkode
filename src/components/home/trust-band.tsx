@@ -21,7 +21,7 @@ const CLIENTS: Client[] = [
 const TRACK = [...CLIENTS, ...CLIENTS];
 
 export async function TrustBand({ locale }: { locale: string }) {
-  await getTranslations({ locale, namespace: 'Home' });
+  const t = await getTranslations({ locale, namespace: 'Home' });
 
   return (
     <section className="bg-surface-base overflow-hidden">
@@ -32,7 +32,7 @@ export async function TrustBand({ locale }: { locale: string }) {
             {/* Label */}
             <div className="shrink-0 max-w-[130px] lg:max-w-[148px]">
               <p className="text-[11px] text-text-dim leading-[1.6] tracking-wide uppercase">
-                empresas que<br />confiaram na<br />Notkode.
+                {t('trustBandLine1')}<br />{t('trustBandLine2')}<br />{t('trustBandLine3')}
               </p>
             </div>
 

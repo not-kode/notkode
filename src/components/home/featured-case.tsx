@@ -3,8 +3,39 @@ import { Quote } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/ui/reveal';
 
-export async function FeaturedCase({ locale }: { locale: string }) {
+export type FeaturedCaseOverrides = {
+  eyebrow?: string;
+  title?: string;
+  segment?: string;
+  problem?: string;
+  solution?: string;
+  quote?: string;
+  author?: string;
+  authorRole?: string;
+  metrics?: { value: string; label: string }[];
+};
+
+export async function FeaturedCase({
+  locale,
+  overrides,
+}: {
+  locale: string;
+  overrides?: FeaturedCaseOverrides;
+}) {
   const t = await getTranslations({ locale, namespace: 'Home' });
+  const eyebrow = overrides?.eyebrow ?? t('caseEyebrow');
+  const title = overrides?.title ?? t('caseTitle');
+  const segment = overrides?.segment ?? t('caseSegment');
+  const problem = overrides?.problem ?? t('caseProblem');
+  const solution = overrides?.solution ?? t('caseSolution');
+  const quote = overrides?.quote ?? t('caseQuote');
+  const author = overrides?.author ?? t('caseAuthor');
+  const authorRole = overrides?.authorRole ?? t('caseAuthorRole');
+  const metrics = overrides?.metrics ?? [
+    { value: t('caseMetric1Value'), label: t('caseMetric1Label') },
+    { value: t('caseMetric2Value'), label: t('caseMetric2Label') },
+    { value: t('caseMetric3Value'), label: t('caseMetric3Label') },
+  ];
 
   return (
     <section id="cases" className="relative overflow-hidden bg-surface-base scroll-mt-24">
@@ -13,7 +44,7 @@ export async function FeaturedCase({ locale }: { locale: string }) {
           <div className="inline-flex items-center gap-2.5 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-muted">
-              {t('caseEyebrow')}
+              {eyebrow}
             </span>
           </div>
         </Reveal>
@@ -23,10 +54,10 @@ export async function FeaturedCase({ locale }: { locale: string }) {
             <div>
               <div className="flex items-center gap-3 mb-5">
                 <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em]">
-                  <span className="font-bricolage">{t('caseTitle')}</span>
+                  <span className="font-bricolage">{title}</span>
                 </h2>
                 <span className="font-mono text-xs text-text-muted px-3 py-1 rounded-full border-hairline-strong">
-                  {t('caseSegment')}
+                  {segment}
                 </span>
               </div>
 
@@ -35,26 +66,26 @@ export async function FeaturedCase({ locale }: { locale: string }) {
                   <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim block mb-2">
                     {'// problema'}
                   </span>
-                  <p className="text-base">{t('caseProblem')}</p>
+                  <p className="text-base">{problem}</p>
                 </div>
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-dim block mb-2">
                     {'// solução'}
                   </span>
-                  <p className="text-base text-text-primary">{t('caseSolution')}</p>
+                  <p className="text-base text-text-primary">{solution}</p>
                 </div>
               </div>
 
-              {!t('caseQuote').startsWith('[') && (
+              {!quote.startsWith('[') && (
                 <blockquote className="relative pl-6 border-l-2 border-primary/40 max-w-xl">
                   <Quote className="absolute -left-3 -top-1 w-5 h-5 text-primary bg-surface-base" />
                   <p className="text-base text-text-primary italic mb-3 leading-relaxed">
-                    {t('caseQuote')}
+                    {quote}
                   </p>
                   <footer className="font-mono text-xs text-text-muted">
-                    <span className="text-text-primary font-semibold">{t('caseAuthor')}</span>
+                    <span className="text-text-primary font-semibold">{author}</span>
                     {' · '}
-                    {t('caseAuthorRole')}
+                    {authorRole}
                   </footer>
                 </blockquote>
               )}
@@ -64,9 +95,14 @@ export async function FeaturedCase({ locale }: { locale: string }) {
           <Reveal delay={200}>
             <div className="lg:pl-8 lg:border-l lg:border-black/10">
               <div className="space-y-8">
-                <Metric num="01" value={t('caseMetric1Value')} label={t('caseMetric1Label')} />
-                <Metric num="02" value={t('caseMetric2Value')} label={t('caseMetric2Label')} />
-                <Metric num="03" value={t('caseMetric3Value')} label={t('caseMetric3Label')} />
+                {metrics.slice(0, 3).map((m, i) => (
+                  <Metric
+                    key={i}
+                    num={String(i + 1).padStart(2, '0')}
+                    value={m.value}
+                    label={m.label}
+                  />
+                ))}
               </div>
 
             </div>

@@ -3,8 +3,8 @@ const ROWS = [
   { agent: 'atendimento.agent', task: 'Lead #482 qualificado',    duration: '248ms', status: 'done'    },
   { agent: 'reports.agent',     task: 'Relatório semanal gerado', duration: '891ms', status: 'done'    },
   { agent: 'crm.sync',          task: '47 registros atualizados', duration: '1.2s',  status: 'done'    },
-  { agent: 'finance.agent',     task: 'Análise de desempenho',    duration: '—',     status: 'running' },
-  { agent: 'email.agent',       task: 'Campanha nurturing',       duration: '—',     status: 'queued'  },
+  { agent: 'finance.agent',     task: 'Análise de desempenho',    duration: '-',     status: 'running' },
+  { agent: 'email.agent',       task: 'Campanha nurturing',       duration: '-',     status: 'queued'  },
 ];
 
 const STATUS_STYLES: Record<string, string> = {

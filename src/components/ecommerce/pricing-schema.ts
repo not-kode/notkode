@@ -108,7 +108,7 @@ function breakdown(sel: Record<string, string | string[]>): BreakdownItem[] {
       impact: `+ ${fmtBRL(integrations.length * PER_INTEGRATION)}`,
     });
   } else {
-    items.push({ label: 'Sem integrações marcadas', impact: '—', muted: true });
+    items.push({ label: 'Sem integrações marcadas', impact: '-', muted: true });
   }
 
   const [dMin, dMax] = DESIGN_ADD[design] ?? [0, 0];

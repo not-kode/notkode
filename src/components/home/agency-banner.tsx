@@ -53,44 +53,41 @@ export async function AgencyBanner({ locale }: { locale: string }) {
                     <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
                     <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
                     <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
-                    <span className="font-mono text-[10px] text-white/20 ml-3">onboard.js</span>
+                    <span className="font-mono text-[10px] text-white/20 ml-3">{t('agencyMockFile')}</span>
                   </div>
-                  {/* Partnership flow — linguagem para PMEs */}
                   <div className="p-5 font-mono text-[11px] leading-[1.75] select-none">
-                    <div className="text-white/30 mb-4">{'❯ notkode parceria --iniciar'}</div>
+                    <div className="text-white/30 mb-4">{t('agencyMockCmd')}</div>
 
-                    {/* Flow — Agência → Notkode → Cliente */}
                     <div className="flex items-center gap-0 mb-5">
                       <div className="text-center w-[100px]">
                         <div className="border border-white/15 rounded px-2 py-1.5">
-                          <div className="text-white/25 text-[8px] mb-0.5 uppercase tracking-widest">você</div>
-                          <div className="text-white/60 font-semibold text-[10px]">Agência</div>
+                          <div className="text-white/25 text-[8px] mb-0.5 uppercase tracking-widest">{t('agencyMockYou')}</div>
+                          <div className="text-white/60 font-semibold text-[10px]">{t('agencyMockAgency')}</div>
                         </div>
-                        <div className="text-white/20 text-[9px] mt-1">fecha o projeto</div>
+                        <div className="text-white/20 text-[9px] mt-1">{t('agencyMockAgencyTag')}</div>
                       </div>
                       <div className="text-white/20 px-1 text-[10px] mb-4">──▶</div>
                       <div className="text-center w-[106px]">
                         <div className="border border-primary/50 rounded px-2 py-1.5 bg-primary/15">
-                          <div className="text-primary/60 text-[8px] mb-0.5 uppercase tracking-widest">nos bastidores</div>
+                          <div className="text-primary/60 text-[8px] mb-0.5 uppercase tracking-widest">{t('agencyMockBackstage')}</div>
                           <div className="text-primary font-semibold text-[10px]">Notkode</div>
                         </div>
-                        <div className="text-primary/40 text-[9px] mt-1">constrói tudo</div>
+                        <div className="text-primary/40 text-[9px] mt-1">{t('agencyMockBackstageTag')}</div>
                       </div>
                       <div className="text-white/20 px-1 text-[10px] mb-4">──▶</div>
                       <div className="text-center w-[100px]">
                         <div className="border border-white/15 rounded px-2 py-1.5">
-                          <div className="text-white/25 text-[8px] mb-0.5 uppercase tracking-widest">resultado</div>
-                          <div className="text-white/60 font-semibold text-[10px]">Cliente</div>
+                          <div className="text-white/25 text-[8px] mb-0.5 uppercase tracking-widest">{t('agencyMockResult')}</div>
+                          <div className="text-white/60 font-semibold text-[10px]">{t('agencyMockClient')}</div>
                         </div>
-                        <div className="text-white/20 text-[9px] mt-1">satisfeito</div>
+                        <div className="text-white/20 text-[9px] mt-1">{t('agencyMockClientTag')}</div>
                       </div>
                     </div>
 
-                    {/* Results — business language */}
                     <div className="space-y-1.5 pt-3 border-t border-white/[0.06]">
-                      <div><span className="text-[#22C55E]">✓ </span><span className="text-white/50">Você fecha. A gente entrega.</span></div>
-                      <div><span className="text-[#22C55E]">✓ </span><span className="text-white/50">O produto sai com a sua marca.</span></div>
-                      <div><span className="text-primary">→ </span><span className="text-white/35">Mais clientes, sem contratar ninguém<span className="cursor-blink">_</span></span></div>
+                      <div><span className="text-[#22C55E]">✓ </span><span className="text-white/50">{t('agencyMockLine1')}</span></div>
+                      <div><span className="text-[#22C55E]">✓ </span><span className="text-white/50">{t('agencyMockLine2')}</span></div>
+                      <div><span className="text-primary">→ </span><span className="text-white/35">{t('agencyMockLine3')}<span className="cursor-blink">_</span></span></div>
                     </div>
                   </div>
                 </div>
@@ -113,9 +110,9 @@ export async function AgencyBanner({ locale }: { locale: string }) {
                 </span>
               </div>
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-4 mt-2">
-                Multiplique sua{' '}
-                <span className="font-bricolage">receita</span>{' '}
-                com white-label.
+                {t('agencyTitlePre')}{' '}
+                <span className="font-bricolage">{t('agencyTitleAccent')}</span>{' '}
+                {t('agencyTitlePost')}
               </h2>
               <p className="text-sm lg:text-base text-text-secondary leading-relaxed mb-8">
                 {t('agencyDesc')}

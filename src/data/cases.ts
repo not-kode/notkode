@@ -102,7 +102,7 @@ export const CASES: CaseItem[] = [
     initial: 'AC',
     accentFrom: '#F59E0B',
     accentTo: '#FCD34D',
-    problem: 'Empresas com base de clientes grande perdiam receita por não reativar quem ficou inativo — processo manual demais.',
+    problem: 'Empresas com base de clientes grande perdiam receita por não reativar quem ficou inativo, processo manual demais.',
     solution: 'SaaS que identifica clientes inativos, segmenta por perfil e dispara automações com IA personalizadas para reativação.',
     detailMetrics: [
       { value: '+R$ 40k', label: 'receita gerada' },
@@ -279,7 +279,7 @@ export const CASES: CaseItem[] = [
     year: '2025',
     metric: 'em breve',
     metricLabel: 'case completo',
-    description: 'Plataforma para assessoria trabalhista — captação e gestão de processos.',
+    description: 'Plataforma para assessoria trabalhista, captação e gestão de processos.',
     stack: ['Framer', 'WhatsApp API', 'Airtable'],
     initial: 'RD',
     accentFrom: '#A855F7',

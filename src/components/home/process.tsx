@@ -26,8 +26,8 @@ export async function Process({ locale, reverse = false }: { locale: string; rev
             <Reveal>
               <SectionMarker number="04" label={t('processEyebrow')} />
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-4 mt-4">
-                Metodologia{' '}
-                <span className="font-bricolage">{t('processTitle').replace('Metodologia ', '')}</span>
+                {t('processTitlePre')}{' '}
+                <span className="font-bricolage">{t('processTitleAccent')}</span>
               </h2>
               <p className="text-base lg:text-lg text-text-secondary leading-relaxed mb-12">
                 {t('processDesc')}
@@ -113,36 +113,36 @@ export async function Process({ locale, reverse = false }: { locale: string; rev
                       {/* Project info */}
                       <div className="mb-4 space-y-0.5">
                         <div className="flex gap-3">
-                          <span className="text-white/25 w-16 shrink-0">Cliente</span>
-                          <span className="text-white/60">Minha Empresa Ltda</span>
+                          <span className="text-white/25 w-16 shrink-0">{t('processMockClient')}</span>
+                          <span className="text-white/60">{t('processMockClientName')}</span>
                         </div>
                         <div className="flex gap-3">
-                          <span className="text-white/25 w-16 shrink-0">Início</span>
-                          <span className="text-white/60">Semana 1</span>
+                          <span className="text-white/25 w-16 shrink-0">{t('processMockStart')}</span>
+                          <span className="text-white/60">{t('processMockWeek1')}</span>
                         </div>
                         <div className="flex gap-3">
-                          <span className="text-white/25 w-16 shrink-0">Previsão</span>
-                          <span className="text-primary">6 semanas</span>
+                          <span className="text-white/25 w-16 shrink-0">{t('processMockForecast')}</span>
+                          <span className="text-primary">{t('processMock6weeks')}</span>
                         </div>
                       </div>
 
                       {/* What the client receives */}
                       <div className="border-t border-white/[0.07] pt-3 mb-3">
-                        <div className="text-white/25 mb-2 text-[9px] uppercase tracking-wider">o que você vai receber</div>
+                        <div className="text-white/25 mb-2 text-[9px] uppercase tracking-wider">{t('processMockReceiveTitle')}</div>
                         <div className="space-y-1">
-                          <div><span className="text-[#22C55E]">✓</span><span className="text-white/55 ml-2">Sistema no seu domínio</span></div>
-                          <div><span className="text-[#22C55E]">✓</span><span className="text-white/55 ml-2">Treinamento da equipe incluso</span></div>
-                          <div><span className="text-[#22C55E]">✓</span><span className="text-white/55 ml-2">Código-fonte entregue</span></div>
-                          <div><span className="text-[#22C55E]">✓</span><span className="text-white/55 ml-2">30 dias de suporte</span></div>
+                          <div><span className="text-[#22C55E]">✓</span><span className="text-white/55 ml-2">{t('processMockReceive1')}</span></div>
+                          <div><span className="text-[#22C55E]">✓</span><span className="text-white/55 ml-2">{t('processMockReceive2')}</span></div>
+                          <div><span className="text-[#22C55E]">✓</span><span className="text-white/55 ml-2">{t('processMockReceive3')}</span></div>
+                          <div><span className="text-[#22C55E]">✓</span><span className="text-white/55 ml-2">{t('processMockReceive4')}</span></div>
                         </div>
                       </div>
 
                       {/* This week */}
                       <div className="border-t border-white/[0.07] pt-3">
-                        <div className="text-white/25 mb-2 text-[9px] uppercase tracking-wider">esta semana</div>
-                        <div><span className="text-primary">→</span><span className="text-white/60 ml-2">Tela de CRM aprovada</span></div>
-                        <div><span className="text-primary">→</span><span className="text-white/60 ml-2">Integração WhatsApp testada</span></div>
-                        <div className="mt-2 text-white/30">{'> próxima entrega: sexta-feira'}<span className="cursor-blink">_</span></div>
+                        <div className="text-white/25 mb-2 text-[9px] uppercase tracking-wider">{t('processMockThisWeekTitle')}</div>
+                        <div><span className="text-primary">→</span><span className="text-white/60 ml-2">{t('processMockWeekItem1')}</span></div>
+                        <div><span className="text-primary">→</span><span className="text-white/60 ml-2">{t('processMockWeekItem2')}</span></div>
+                        <div className="mt-2 text-white/30">{t('processMockDelivery')}<span className="cursor-blink">_</span></div>
                       </div>
                     </div>
                   </div>

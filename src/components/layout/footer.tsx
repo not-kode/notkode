@@ -46,7 +46,7 @@ export function Footer() {
           <span>{t('rights')}</span>
           <span>{t('cnpj')} · {t('location')}</span>
           <Link href="/politica-privacidade" className="hover:text-primary transition-colors mt-1">
-            política de privacidade
+            {t('privacyLink')}
           </Link>
         </div>
       </div>

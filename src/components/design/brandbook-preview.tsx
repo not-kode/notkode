@@ -188,7 +188,7 @@ export function BrandbookPreview() {
               </div>
 
               <p className="text-[12px] text-text-secondary leading-relaxed">
-                Paleta enxuta de 6 cores. Use <strong className="text-text-primary">Primary</strong> apenas para ênfase — máx. 15% da composição.
+                Paleta enxuta de 6 cores. Use <strong className="text-text-primary">Primary</strong> apenas para ênfase, máx. 15% da composição.
               </p>
             </section>
 
@@ -271,13 +271,13 @@ export function BrandbookPreview() {
               </div>
 
               <p className="text-[12px] text-text-secondary leading-relaxed">
-                Templates editáveis para social media, cartão de visita, papelaria e apresentações — todos no Figma, prontos para usar.
+                Templates editáveis para social media, cartão de visita, papelaria e apresentações, todos no Figma, prontos para usar.
               </p>
             </section>
 
             {/* Bottom marker */}
             <div className="px-8 lg:px-16 py-6 text-center" style={{ background: 'rgba(25,25,24,0.02)' }}>
-              <p className="font-mono text-[10px] text-text-dim">— fim do brandbook · v1.0 —</p>
+              <p className="font-mono text-[10px] text-text-dim">, fim do brandbook · v1.0,</p>
             </div>
             </div>
 

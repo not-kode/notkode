@@ -27,8 +27,8 @@ export async function ProductShowcase({
   ];
 
   const label       = eyebrow    ?? t('showcaseEyebrow');
-  const headingMain = titleMain  ?? 'Um sistema. Sua operação';
-  const headingAccent = titleAccent ?? 'inteira.';
+  const headingMain = titleMain  ?? t('showcaseTitleMainDefault');
+  const headingAccent = titleAccent ?? t('showcaseTitleAccentDefault');
 
   return (
     <section className="relative overflow-hidden bg-surface-elevated">

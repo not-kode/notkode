@@ -191,7 +191,7 @@ export async function POST(req: Request) {
     }
     if (leadEmailError) console.error('[lead] lead email failed:', leadEmailError);
   } else {
-    console.warn('[lead] Resend env vars missing — emails not sent');
+    console.warn('[lead] Resend env vars missing, emails not sent');
   }
 
   const persisted = supabaseError == null;

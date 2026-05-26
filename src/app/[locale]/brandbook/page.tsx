@@ -1,13 +1,7 @@
 import type { Metadata } from 'next';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ArrowDown, ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
-
-export const metadata: Metadata = {
-  title: 'Identidade visual e brandbook · Notkode',
-  description:
-    'Logo, paleta, tipografia e manual de marca. Pronto em 2 a 3 semanas, com arquivos editáveis na sua mão. Combo com site, sistema ou loja sai com desconto.',
-};
 import { Reveal } from '@/components/ui/reveal';
 import { CountUp } from '@/components/ui/count-up';
 import { TiltCard } from '@/components/ui/tilt-card';
@@ -17,26 +11,15 @@ import { BrandbookPreviewLazy as BrandbookPreview } from '@/components/design/br
 import { BrandbookPricingForm } from '@/components/brandbook/brandbook-pricing-form';
 import { ProductFAQ } from '@/components/ui/product-faq';
 
-const BRANDBOOK_FAQS = [
-  {
-    q: 'Preciso de brandbook se já tenho logo?',
-    a: 'Depende. Se você tem só o logo solto, sem paleta, tipografia ou regras de uso, qualquer designer novo vai criar inconsistência. O brandbook é o que protege a marca de virar versões soltas em apresentação, social e site.',
-  },
-  {
-    q: 'Refazem o logo do zero ou trabalham com o que já existe?',
-    a: 'Os dois caminhos. Refazer quando a marca não traduz mais quem o negócio é hoje. Refinar quando o logo já tem identidade, mas falta sistema (paleta, tipografia, aplicações).',
-  },
-  {
-    q: 'Quanto tempo até a marca estar pronta?',
-    a: 'Entre 2 e 3 semanas pro brandbook essencial. Quando sai junto com site, sistema ou loja, roda em paralelo e fica pronto antes do go-live.',
-  },
-];
-
-const STATS = [
-  { value: '30+', label: 'identidades entregues' },
-  { value: '2', label: 'a 3 semanas do briefing' },
-  { value: '100%', label: 'arquivos vetoriais editáveis' },
-];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Brandbook' });
+  return { title: t('metaTitle'), description: t('metaDesc') };
+}
 
 export default async function BrandbookPage({
   params,
@@ -45,6 +28,19 @@ export default async function BrandbookPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'Brandbook' });
+
+  const BRANDBOOK_FAQS = [
+    { q: t('faq1Q'), a: t('faq1A') },
+    { q: t('faq2Q'), a: t('faq2A') },
+    { q: t('faq3Q'), a: t('faq3A') },
+  ];
+
+  const STATS = [
+    { value: t('stat1Value'), label: t('stat1Label') },
+    { value: t('stat2Value'), label: t('stat2Label') },
+    { value: t('stat3Value'), label: t('stat3Label') },
+  ];
 
   return (
     <>
@@ -55,20 +51,18 @@ export default async function BrandbookPage({
           <div className="max-w-3xl mx-auto text-center">
             <Reveal>
               <h1 className="text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-bold leading-[1.08] tracking-[-0.03em] mb-5">
-                <span className="block mb-1">A identidade da sua empresa,</span>
+                <span className="block mb-1">{t('heroTitleLine1')}</span>
                 <span className="block">
-                  feita pra <span className="font-bricolage">durar.</span>
+                  {t('heroTitleLine2')} <span className="font-bricolage">{t('heroTitleAccent')}</span>
                 </span>
               </h1>
-              <p className="text-[16px] lg:text-[18px] text-text-secondary leading-[1.6] mx-auto mb-7 max-w-xl">
-                Logo, paleta, tipografia e manual de marca. Pronto em 2 a 3 semanas, com arquivos editáveis na sua mão.
-              </p>
+              <p className="text-[16px] lg:text-[18px] text-text-secondary leading-[1.6] mx-auto mb-7 max-w-xl">{t('heroDesc')}</p>
 
               <a
                 href="#orcamento"
                 className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
               >
-                Montar meu brandbook
+                {t('heroCta')}
                 <ArrowDown className="w-4 h-4" />
               </a>
             </Reveal>
@@ -82,12 +76,10 @@ export default async function BrandbookPage({
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-10 lg:mb-12">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-3">
-                Folheie o brandbook que{' '}
-                a gente <span className="font-bricolage">entrega.</span>
+                {t('previewTitlePre')}{' '}
+                {t('previewTitleMid')} <span className="font-bricolage">{t('previewTitleAccent')}</span>
               </h2>
-              <p className="text-[14px] lg:text-[15px] text-text-secondary leading-relaxed max-w-lg mx-auto">
-                Role para baixo dentro do documento e veja capa, logo, cores, tipografia, componentes e aplicações.
-              </p>
+              <p className="text-[14px] lg:text-[15px] text-text-secondary leading-relaxed max-w-lg mx-auto">{t('previewDesc')}</p>
             </div>
           </Reveal>
 
@@ -103,8 +95,8 @@ export default async function BrandbookPage({
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em]">
-                Tudo que sua marca{' '}
-                precisa para <span className="font-bricolage">existir.</span>
+                {t('deliverablesTitlePre')}{' '}
+                {t('deliverablesTitleMid')} <span className="font-bricolage">{t('deliverablesTitleAccent')}</span>
               </h2>
             </div>
           </Reveal>
@@ -131,12 +123,8 @@ export default async function BrandbookPage({
                 <div className="absolute inset-y-0 right-[45%] w-16 pointer-events-none" style={{ background: 'linear-gradient(to right, #191918 0%, transparent 100%)' }} />
                 <div className="relative z-10 max-w-[52%]">
                   <span className="font-mono text-[10px] text-white/30 uppercase tracking-[0.16em] mb-5 block">01</span>
-                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-white mb-2">
-                    Logo + variações
-                  </h3>
-                  <p className="text-[14px] text-white/60 leading-relaxed">
-                    Marca principal, secundária, monograma e versões reduzidas. Vetores em SVG, PDF e PNG.
-                  </p>
+                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-white mb-2">{t('card1Title')}</h3>
+                  <p className="text-[14px] text-white/60 leading-relaxed">{t('card1Desc')}</p>
                 </div>
               </TiltCard>
             </Reveal>
@@ -157,12 +145,8 @@ export default async function BrandbookPage({
                 </div>
                 <div className="relative z-10 flex flex-col flex-1">
                   <span className="font-mono text-[10px] text-text-dim uppercase tracking-[0.16em] mb-5 block">02</span>
-                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
-                    Paleta e tipografia
-                  </h3>
-                  <p className="text-[14px] text-text-secondary leading-relaxed mb-5">
-                    Cores (primária, secundária, neutras) com hex/RGB e fontes escolhidas para a marca.
-                  </p>
+                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">{t('card2Title')}</h3>
+                  <p className="text-[14px] text-text-secondary leading-relaxed mb-5">{t('card2Desc')}</p>
                   {/* Swatches visíveis na parte inferior */}
                   <div className="mt-auto flex gap-2">
                     {[
@@ -208,12 +192,8 @@ export default async function BrandbookPage({
                 </svg>
                 <div className="relative z-10">
                   <span className="font-mono text-[10px] text-primary/60 uppercase tracking-[0.16em] mb-5 block">03</span>
-                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
-                    Brandbook completo
-                  </h3>
-                  <p className="text-[14px] text-text-secondary leading-relaxed max-w-xs">
-                    Manual de identidade com regras de uso: espaçamento, proporções, usos corretos e proibidos.
-                  </p>
+                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">{t('card3Title')}</h3>
+                  <p className="text-[14px] text-text-secondary leading-relaxed max-w-xs">{t('card3Desc')}</p>
                 </div>
               </TiltCard>
             </Reveal>
@@ -249,12 +229,8 @@ export default async function BrandbookPage({
                 <div className="absolute inset-y-0 right-[42%] w-12 pointer-events-none" style={{ background: 'linear-gradient(to right, hsl(55 100% 97%) 0%, transparent 100%)' }} />
                 <div className="relative z-10 max-w-[55%]">
                   <span className="font-mono text-[10px] text-text-dim uppercase tracking-[0.16em] mb-5 block">04</span>
-                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
-                    Aplicações práticas
-                  </h3>
-                  <p className="text-[14px] text-text-secondary leading-relaxed">
-                    Templates pra social, papelaria (cartão, assinatura) e apresentações, prontos pra usar.
-                  </p>
+                  <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">{t('card4Title')}</h3>
+                  <p className="text-[14px] text-text-secondary leading-relaxed">{t('card4Desc')}</p>
                 </div>
               </TiltCard>
             </Reveal>
@@ -285,7 +261,7 @@ export default async function BrandbookPage({
 
       {/* ── FAQ enxuta ── */}
       <ProductFAQ
-        title={<><span className="block">Perguntas rápidas</span><span className="block font-bricolage">antes de fechar.</span></>}
+        title={<><span className="block">{t('faqTitleLine1')}</span><span className="block font-bricolage">{t('faqTitleAccent')}</span></>}
         faqs={BRANDBOOK_FAQS}
         surface="elevated"
       />
@@ -296,12 +272,10 @@ export default async function BrandbookPage({
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-10 lg:mb-12">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
-                <span className="block">Monte sua identidade,</span>
-                <span className="block font-bricolage">veja a faixa estimada.</span>
+                <span className="block">{t('pricingTitleLine1')}</span>
+                <span className="block font-bricolage">{t('pricingTitleAccent')}</span>
               </h2>
-              <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">
-                Algumas perguntas curtas pra mapear seu cenário. No final você vê o escopo e uma faixa preliminar.
-              </p>
+              <p className="mt-5 text-[15px] lg:text-[16px] text-text-secondary leading-relaxed max-w-2xl mx-auto">{t('pricingDesc')}</p>
             </div>
           </Reveal>
 
@@ -315,22 +289,20 @@ export default async function BrandbookPage({
       <section className="bg-surface-elevated border-t border-black/[0.06]">
         <div className="container mx-auto px-5 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
-            <p className="font-mono text-[11px] text-text-dim">
-              ❯ vai fazer site, sistema ou loja também?
-            </p>
+            <p className="font-mono text-[11px] text-text-dim">{t('comboLabel')}</p>
             <div className="flex items-center gap-3 flex-wrap justify-center">
               <Link href="/sites" className="text-[13px] text-text-secondary hover:text-primary transition-colors inline-flex items-center gap-1">
-                Site <ArrowUpRight className="w-3 h-3" />
+                {t('comboLinkSite')} <ArrowUpRight className="w-3 h-3" />
               </Link>
               <span className="text-text-dim">·</span>
               <Link href="/sistemas-ia" className="text-[13px] text-text-secondary hover:text-primary transition-colors inline-flex items-center gap-1">
-                Sistema <ArrowUpRight className="w-3 h-3" />
+                {t('comboLinkSistema')} <ArrowUpRight className="w-3 h-3" />
               </Link>
               <span className="text-text-dim">·</span>
               <Link href="/ecommerce" className="text-[13px] text-text-secondary hover:text-primary transition-colors inline-flex items-center gap-1">
-                Loja <ArrowUpRight className="w-3 h-3" />
+                {t('comboLinkLoja')} <ArrowUpRight className="w-3 h-3" />
               </Link>
-              <span className="font-mono text-[11px] text-text-dim">combo com desconto</span>
+              <span className="font-mono text-[11px] text-text-dim">{t('comboTag')}</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Check,
   FileSpreadsheet,
@@ -14,14 +15,11 @@ import {
 
 type IconConfig = {
   Icon: typeof FileSpreadsheet;
-  label: string;
+  labelKey: 'chaosIconPlanilha' | 'chaosIconWhatsApp' | 'chaosIconEmail' | 'chaosIconCrm' | 'chaosIconAgenda' | 'chaosIconFinanceiro';
   color: string;
   bg: string;
-  // Scattered (initial) position with rotation
   scatter: { x: number; y: number; rot: number };
-  // Organized (final) position in a clean horizontal row
   organized: { x: number; y: number };
-  // Idle float timing (each icon drifts independently)
   floatDelay: number;
   floatDuration: number;
 };
@@ -29,7 +27,7 @@ type IconConfig = {
 const ICONS: IconConfig[] = [
   {
     Icon: FileSpreadsheet,
-    label: 'Planilha',
+    labelKey: 'chaosIconPlanilha',
     color: '#10b981',
     bg: 'rgba(16,185,129,0.10)',
     scatter: { x: -500, y: -200, rot: -8 },
@@ -39,7 +37,7 @@ const ICONS: IconConfig[] = [
   },
   {
     Icon: MessageCircle,
-    label: 'WhatsApp',
+    labelKey: 'chaosIconWhatsApp',
     color: '#25D366',
     bg: 'rgba(37,211,102,0.10)',
     scatter: { x: 500, y: -220, rot: 12 },
@@ -49,7 +47,7 @@ const ICONS: IconConfig[] = [
   },
   {
     Icon: Mail,
-    label: 'E-mail',
+    labelKey: 'chaosIconEmail',
     color: '#EA4335',
     bg: 'rgba(234,67,53,0.08)',
     scatter: { x: -540, y: 20, rot: -15 },
@@ -59,7 +57,7 @@ const ICONS: IconConfig[] = [
   },
   {
     Icon: Database,
-    label: 'CRM',
+    labelKey: 'chaosIconCrm',
     color: '#6366F1',
     bg: 'rgba(99,102,241,0.10)',
     scatter: { x: 540, y: 30, rot: 9 },
@@ -69,7 +67,7 @@ const ICONS: IconConfig[] = [
   },
   {
     Icon: Calendar,
-    label: 'Agenda',
+    labelKey: 'chaosIconAgenda',
     color: '#F59E0B',
     bg: 'rgba(245,158,11,0.10)',
     scatter: { x: -460, y: 220, rot: -5 },
@@ -79,7 +77,7 @@ const ICONS: IconConfig[] = [
   },
   {
     Icon: DollarSign,
-    label: 'Financeiro',
+    labelKey: 'chaosIconFinanceiro',
     color: '#EAB308',
     bg: 'rgba(234,179,8,0.10)',
     scatter: { x: 480, y: 240, rot: 11 },
@@ -89,12 +87,6 @@ const ICONS: IconConfig[] = [
   },
 ];
 
-const BULLETS_PHASE_1 = [
-  'Sua empresa cresceu, mas a operação ainda é manual no dia a dia.',
-  'O time perde tempo copiando dado entre planilha, CRM, e-mail e WhatsApp.',
-  'Já tentou um SaaS pronto e nenhum encaixou no jeito que sua empresa trabalha.',
-  'Quando você quer saber algo simples, a resposta demora dias.',
-];
 
 function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -109,6 +101,13 @@ function lerp(a: number, b: number, t: number) {
 }
 
 export function ChaosToOrderSection() {
+  const t = useTranslations('SistemasIA');
+  const BULLETS_PHASE_1 = [
+    t('chaosBullet1'),
+    t('chaosBullet2'),
+    t('chaosBullet3'),
+    t('chaosBullet4'),
+  ];
   const containerRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
 
@@ -161,8 +160,8 @@ export function ChaosToOrderSection() {
         {/* ── Phase 1 — Você se reconhece aqui? (caos visual) ── */}
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-[1.75rem] md:text-[2.25rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-7">
-            Você se reconhece{' '}
-            <span className="font-bricolage">aqui?</span>
+            {t('chaosPhase1Heading')}{' '}
+            <span className="font-bricolage">{t('chaosPhase1HeadingAccent')}</span>
           </h2>
           <ul className="space-y-3.5 text-left max-w-md mx-auto mb-10">
             {BULLETS_PHASE_1.map((item, i) => (
@@ -183,17 +182,18 @@ export function ChaosToOrderSection() {
         {/* ── Phase 2 — Sua operação ficou pra trás + system preview ── */}
         <div className="mt-20 max-w-xl mx-auto text-center">
             <h2 className="text-[1.75rem] md:text-[2.25rem] font-semibold leading-[1.1] tracking-[-0.02em] mb-2">
-              Sua empresa cresceu.
+              {t('chaosPhase2HeadingLine1')}
             </h2>
             <h2 className="text-[1.75rem] md:text-[2.25rem] font-semibold leading-[1.1] tracking-[-0.02em] mb-7">
-              <span className="font-bricolage">Sua operação</span> ficou pra trás.
+              <span className="font-bricolage">{t('chaosPhase2HeadingAccent')}</span>
             </h2>
             <p className="text-[15px] text-text-secondary leading-[1.7] mb-7">
-              Ferramentas acumuladas que não conversam. Dados que vivem na cabeça das pessoas. SaaS prontos que nunca encaixam.
+              {t('chaosPhase2Body')}
             </p>
             <p className="text-[16px] text-text-primary font-medium mb-10">
-              A gente entra construindo um sistema único, sob medida, onde tudo isso vira{' '}
-              <span className="text-primary">uma operação só.</span>
+              {t('chaosPhase2OutroBefore')}
+              <span className="text-primary">{t('chaosPhase2OutroAccent')}</span>
+              {t('chaosPhase2OutroAfter')}
             </p>
 
             {/* System preview — partial mockup showing menu+nav */}
@@ -202,7 +202,7 @@ export function ChaosToOrderSection() {
             {/* Pull-down arrow */}
             <div className="flex flex-col items-center mt-8">
               <span className="font-mono text-[10.5px] text-text-muted tracking-tight mb-1.5">
-                ↓ veja o que você vai ter
+                {t('chaosEndNudge')}
               </span>
               <ArrowDown className="w-5 h-5 text-primary animate-bounce" strokeWidth={2.5} />
             </div>
@@ -252,7 +252,7 @@ export function ChaosToOrderSection() {
 
           {/* ── Floating tag icons (always rendered, morph between scatter and organized) ── */}
           <div className="hidden lg:block absolute inset-0 pointer-events-none">
-            {ICONS.map(({ Icon, label, color, bg, scatter, organized, floatDelay, floatDuration }, i) => {
+            {ICONS.map(({ Icon, labelKey, color, bg, scatter, organized, floatDelay, floatDuration }, i) => {
               const x = lerp(scatter.x, organized.x, morph);
               const y = lerp(scatter.y, organized.y, morph);
               const rot = scatter.rot * (1 - morph);
@@ -286,7 +286,7 @@ export function ChaosToOrderSection() {
                         <Icon className="w-[13px] h-[13px]" style={{ color }} strokeWidth={2.2} />
                       </span>
                       <span className="font-mono text-[11px] text-text-secondary tracking-tight whitespace-nowrap">
-                        {label}
+                        {t(labelKey)}
                       </span>
                     </div>
                   </div>
@@ -307,8 +307,8 @@ export function ChaosToOrderSection() {
           >
             <div className="relative z-10 max-w-xl text-center">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.12] tracking-[-0.02em] mb-8">
-                Você se reconhece{' '}
-                <span className="font-bricolage">aqui?</span>
+                {t('chaosPhase1Heading')}{' '}
+                <span className="font-bricolage">{t('chaosPhase1HeadingAccent')}</span>
               </h2>
               <ul className="space-y-4 text-left">
                 {BULLETS_PHASE_1.map((item, i) => (
@@ -336,17 +336,18 @@ export function ChaosToOrderSection() {
           >
             <div className="relative z-10 max-w-2xl text-center -translate-y-12 lg:-translate-y-16">
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.1] tracking-[-0.02em] mb-2">
-                Sua empresa cresceu.
+                {t('chaosPhase2HeadingLine1')}
               </h2>
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.5rem] font-semibold leading-[1.1] tracking-[-0.02em] mb-8">
-                <span className="font-bricolage">Sua operação</span> ficou pra trás.
+                <span className="font-bricolage">{t('chaosPhase2HeadingAccent')}</span>
               </h2>
               <p className="text-[15px] lg:text-[17px] text-text-secondary leading-[1.7] max-w-xl mx-auto">
-                Ferramentas acumuladas que não conversam. Dados que vivem na cabeça das pessoas. SaaS prontos que nunca encaixam.
+                {t('chaosPhase2Body')}
               </p>
               <p className="text-[16px] lg:text-[18px] text-text-primary font-medium mt-7 max-w-xl mx-auto">
-                A gente entra construindo um sistema único, sob medida, onde tudo isso vira{' '}
-                <span className="text-primary">uma operação só.</span>
+                {t('chaosPhase2OutroBefore')}
+                <span className="text-primary">{t('chaosPhase2OutroAccent')}</span>
+                {t('chaosPhase2OutroAfter')}
               </p>
             </div>
           </div>
@@ -357,7 +358,7 @@ export function ChaosToOrderSection() {
             style={{ opacity: endNudge }}
           >
             <span className="font-mono text-[11px] text-text-muted tracking-tight mb-1.5">
-              ↓ veja o que você vai ter
+              {t('chaosEndNudge')}
             </span>
             <ArrowDown className="w-5 h-5 text-primary animate-bounce" strokeWidth={2.5} />
           </div>
@@ -369,10 +370,11 @@ export function ChaosToOrderSection() {
 }
 
 /* ─────────────────────────────────────────────
-   MOBILE — Chaos visual (Phase 1)
+   MOBILE, Chaos visual (Phase 1)
    Scattered icons + messy connection lines
 ───────────────────────────────────────────── */
 function ChaosVisualMobile() {
+  const t = useTranslations('SistemasIA');
   // Scattered positions in canvas (% of width/height) — simétrico em torno do centro
   const positions = [
     { x: 24, y: 14, rot: -8 },  // Planilha (top-left)
@@ -430,7 +432,7 @@ function ChaosVisualMobile() {
       </svg>
 
       {/* Scattered icon tags */}
-      {ICONS.map(({ Icon, label, color, bg }, i) => {
+      {ICONS.map(({ Icon, labelKey, color, bg }, i) => {
         const p = positions[i];
         return (
           <div
@@ -458,7 +460,7 @@ function ChaosVisualMobile() {
                 <Icon className="w-[10px] h-[10px]" style={{ color }} strokeWidth={2.2} />
               </span>
               <span className="font-mono text-[10px] text-text-secondary tracking-tight whitespace-nowrap">
-                {label}
+                {t(labelKey)}
               </span>
             </div>
           </div>
@@ -469,10 +471,11 @@ function ChaosVisualMobile() {
 }
 
 /* ─────────────────────────────────────────────
-   MOBILE — System preview (Phase 2)
+   MOBILE, System preview (Phase 2)
    Partial dashboard mockup: sidebar menu + main nav
 ───────────────────────────────────────────── */
 function SystemPreviewMobile() {
+  const t = useTranslations('Mockup');
   return (
     <div className="relative mx-auto max-w-sm">
       {/* Soft cyan glow */}
@@ -501,7 +504,7 @@ function SystemPreviewMobile() {
           <div className="w-2 h-2 rounded-full bg-[#28C840]" />
           <div className="flex-1 mx-auto max-w-[60%] h-4 rounded px-2 flex items-center" style={{ background: 'rgba(25,25,24,0.05)' }}>
             <span className="font-mono text-[7px] text-text-dim truncate">
-              app.suaempresa.com.br
+              {t('browserUrlShort')}
             </span>
           </div>
         </div>
@@ -518,17 +521,17 @@ function SystemPreviewMobile() {
               <div className="w-4 h-4 rounded bg-primary flex items-center justify-center">
                 <span className="text-white text-[7px] font-bold">N</span>
               </div>
-              <span className="text-[8px] font-semibold text-text-primary truncate">Empresa</span>
+              <span className="text-[8px] font-semibold text-text-primary truncate">{t('companyShort')}</span>
             </div>
 
             {/* Nav items */}
             <nav className="space-y-1">
               {[
-                { label: 'Dashboard', active: true },
-                { label: 'Pedidos', count: '12' },
-                { label: 'Clientes' },
-                { label: 'CRM' },
-                { label: 'Relatórios' },
+                { label: t('navDashboard'), active: true },
+                { label: t('navOrders'), count: '12' },
+                { label: t('navCustomers') },
+                { label: t('navCrm') },
+                { label: t('navReports') },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -569,9 +572,9 @@ function SystemPreviewMobile() {
                 }}
               >
                 <p className="font-mono text-[6px] text-primary uppercase tracking-widest leading-none mb-0.5">
-                  IA Ativa
+                  {t('aiActiveBadge')}
                 </p>
-                <p className="text-[7px] text-text-secondary leading-tight">3 ações hoje</p>
+                <p className="text-[7px] text-text-secondary leading-tight">{t('aiActiveSubShort')}</p>
               </div>
             </div>
           </aside>
@@ -582,10 +585,10 @@ function SystemPreviewMobile() {
             <div className="flex items-center justify-between mb-3 text-left">
               <div>
                 <p className="font-mono text-[6.5px] text-text-dim uppercase tracking-widest mb-0.5">
-                  Visão geral
+                  {t('overviewLabel')}
                 </p>
                 <h4 className="text-[11px] font-semibold text-text-primary leading-tight">
-                  Olá, Camila 👋
+                  {t('greeting')}
                 </h4>
               </div>
               <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
@@ -600,7 +603,7 @@ function SystemPreviewMobile() {
                 style={{ background: 'rgba(25,25,24,0.03)', border: '1px solid rgba(25,25,24,0.06)' }}
               >
                 <p className="font-mono text-[6px] text-text-dim uppercase tracking-wider mb-0.5">
-                  Vendas
+                  {t('statSalesShort')}
                 </p>
                 <p className="text-[10px] font-bold text-text-primary leading-none">R$ 24.8k</p>
               </div>
@@ -609,7 +612,7 @@ function SystemPreviewMobile() {
                 style={{ background: 'rgba(75,210,229,0.06)', border: '1px solid rgba(75,210,229,0.20)' }}
               >
                 <p className="font-mono text-[6px] text-primary uppercase tracking-wider mb-0.5">
-                  Pedidos
+                  {t('statOrdersLabel')}
                 </p>
                 <p className="text-[10px] font-bold text-text-primary leading-none">48</p>
               </div>
@@ -621,7 +624,7 @@ function SystemPreviewMobile() {
               style={{ background: 'rgba(25,25,24,0.02)', border: '1px solid rgba(25,25,24,0.06)' }}
             >
               <p className="font-mono text-[6.5px] text-text-dim uppercase tracking-wider mb-1.5">
-                Últimos 7 dias
+                {t('chartTitleShort')}
               </p>
               <div className="flex items-end gap-0.5 h-6">
                 {[35, 50, 42, 65, 58, 80, 72].map((h, i) => (

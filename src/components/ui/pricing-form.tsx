@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle, Sparkles } from 'lucide-react';
 
 // ── Schema types ──────────────────────────────────────────────────────────
@@ -137,25 +138,34 @@ function summarizeSelection(schema: PricingSchema, selection: PricingSelection):
     .filter((s) => s.valueLabels.length > 0);
 }
 
+type WaCopy = {
+  greetingWithName: (name: string, tag: string) => string;
+  greetingNoName: (tag: string) => string;
+  scopeLabel: string;
+  rangeLabel: string;
+  closeQuestion: string;
+};
+
 function buildWhatsAppMessage(
   schema: PricingSchema,
   summary: SummaryRow[],
   min: number,
   max: number,
   name: string,
+  wa: WaCopy,
 ): string {
   const greeting = name
-    ? `Olá! Sou ${name}, acabei de preencher o formulário no site Notkode (${schema.serviceTag}).`
-    : `Olá! Acabei de preencher o formulário no site Notkode (${schema.serviceTag}).`;
+    ? wa.greetingWithName(name, schema.serviceTag)
+    : wa.greetingNoName(schema.serviceTag);
   const lines = [
     greeting,
     '',
-    'Meu escopo:',
+    wa.scopeLabel,
     ...summary.map((s) => `• ${s.label}: ${s.valueLabels.join(', ')}`),
     '',
-    `Faixa estimada: ${fmt(min)} – ${fmt(max)}`,
+    `${wa.rangeLabel} ${fmt(min)} – ${fmt(max)}`,
     '',
-    'Podemos seguir com a proposta detalhada?',
+    wa.closeQuestion,
   ];
   return lines.join('\n');
 }
@@ -163,6 +173,7 @@ function buildWhatsAppMessage(
 // ── Main component ────────────────────────────────────────────────────────
 
 export function PricingForm({ schema }: { schema: PricingSchema }) {
+  const t = useTranslations('PricingForm');
   const totalSteps = schema.fields.length + 1; // +1 = reveal/identify
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
@@ -253,7 +264,13 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   if (status === 'success') {
     const copy = schema.copy ?? {};
     const summary = summarizeSelection(schema, selection);
-    const waMessage = buildWhatsAppMessage(schema, summary, min, max, name);
+    const waMessage = buildWhatsAppMessage(schema, summary, min, max, name, {
+      greetingWithName: (n, tag) => t('waGreetingWithName', { name: n, tag }),
+      greetingNoName: (tag) => t('waGreetingNoName', { tag }),
+      scopeLabel: t('waScopeLabel'),
+      rangeLabel: t('waRangeLabel'),
+      closeQuestion: t('waCloseQuestion'),
+    });
     const waUrl = `https://wa.me/5511951381254?text=${encodeURIComponent(waMessage)}`;
 
     return (
@@ -267,10 +284,10 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             <Check className="w-7 h-7 text-primary" strokeWidth={2.5} />
           </div>
           <h3 className="text-[1.5rem] lg:text-[1.75rem] font-semibold tracking-tight text-text-primary mb-2">
-            {copy.successTitle ?? 'Sua proposta tá pronta.'}
+            {copy.successTitle ?? t('successTitleDefault')}
           </h3>
           <p className="text-[14px] text-text-secondary leading-relaxed max-w-md mx-auto">
-            {name ? `${name}, ` : ''}sua faixa está estimada abaixo. Próximo passo é confirmar tudo no WhatsApp.
+            {name ? t('successBodyWithName', { name }) : t('successBodyNoName')}
           </p>
         </div>
 
@@ -281,7 +298,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))' }}
           >
             <p className="font-mono text-[10px] uppercase tracking-widest text-primary mb-2">
-              Investimento estimado
+              {t('investmentLabel')}
             </p>
             <p className="font-bricolage text-[1.75rem] md:text-[2.25rem] font-bold text-text-primary leading-tight tracking-tight">
               {fmt(min)} <span className="text-text-muted font-normal">–</span> {fmt(max)}
@@ -293,7 +310,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
         {summary.length > 0 && (
           <div className="px-6 lg:px-10 pb-6">
             <p className="font-mono text-[10px] uppercase tracking-widest text-text-dim text-center mb-4">
-              Seu escopo
+              {t('scopeLabel')}
             </p>
             <ul className="space-y-2.5 max-w-md mx-auto">
               {summary.map((s, i) => (
@@ -312,14 +329,10 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
         {/* Próximos passos */}
         <div className="px-6 lg:px-10 pb-6">
           <p className="font-mono text-[10px] uppercase tracking-widest text-text-dim text-center mb-4">
-            O que vem agora
+            {t('nextStepsLabel')}
           </p>
           <ol className="space-y-2 max-w-md mx-auto">
-            {[
-              'Você abre o WhatsApp com o resumo já preenchido.',
-              'A gente confirma o escopo numa conversa de 15 minutos.',
-              'Em até 24h você recebe a proposta detalhada com prazo final.',
-            ].map((step, i) => (
+            {[t('nextStep1'), t('nextStep2'), t('nextStep3')].map((step, i) => (
               <li key={i} className="flex items-start gap-3 text-[14px] text-text-secondary leading-relaxed">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center font-mono text-[10px] text-primary mt-0.5">
                   {i + 1}
@@ -339,10 +352,10 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#25D366] text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px transition-all duration-200"
           >
             <MessageCircle className="w-4 h-4" />
-            Continuar pelo WhatsApp
+            {t('waCta')}
           </a>
           <p className="text-[12px] text-text-muted mt-3">
-            Mensagem com seu escopo já pré-preenchida.
+            {t('waCtaHint')}
           </p>
         </div>
       </div>
@@ -360,7 +373,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       <div className="px-6 lg:px-10 pt-7 pb-3">
         <div className="flex items-center justify-between mb-3 gap-3">
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
-            Etapa {step + 1} de {totalSteps}
+            {t('stepLabel', { step: step + 1, total: totalSteps })}
           </span>
           <LiveEstimatePill min={min} max={max} visible={step > 0 && !isRevealStep} />
         </div>
@@ -407,11 +420,8 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
               onWhats={setWhatsapp}
               onEmail={setEmail}
               onNotes={setNotes}
-              title={copy.revealTitle ?? 'Seu investimento estimado'}
-              subtitle={
-                copy.revealSubtitle ??
-                'Faixa preliminar baseada nas suas escolhas. Para receber a proposta detalhada, deixa seu contato.'
-              }
+              title={copy.revealTitle ?? t('revealTitleDefault')}
+              subtitle={copy.revealSubtitle ?? t('revealSubtitleDefault')}
             />
           )}
         </div>
@@ -421,10 +431,11 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       {isRevealStep && (
         <div className="px-6 lg:px-10 pb-4 -mt-2">
           <p className="font-mono text-[10px] text-text-dim leading-relaxed">
-            Ao enviar, você concorda que a gente entre em contato e processe seus dados conforme a{' '}
+            {t('consentBefore')}
             <a href="/politica-privacidade" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary transition-colors">
-              política de privacidade
-            </a>.
+              {t('consentLink')}
+            </a>
+            {t('consentAfter')}
           </p>
         </div>
       )}
@@ -437,7 +448,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
           className="font-mono text-[12px] text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Voltar
+          {t('navBack')}
         </button>
 
         {isRevealStep ? (
@@ -449,11 +460,11 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             {status === 'submitting' ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Enviando…
+                {t('navSubmitting')}
               </>
             ) : (
               <>
-                {copy.submitLabel ?? 'Receber proposta'}
+                {copy.submitLabel ?? t('navSubmitDefault')}
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
@@ -464,7 +475,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             disabled={!canAdvance}
             className="font-bricolage inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"
           >
-            Continuar
+            {t('navContinue')}
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
@@ -621,11 +632,12 @@ function RevealStep({
   onEmail: (v: string) => void; onNotes: (v: string) => void;
   title: string; subtitle: string;
 }) {
+  const t = useTranslations('PricingForm');
   const [emailTouched, setEmailTouched] = useState(false);
   const avg = Math.round(((min + max) / 2) / 100) * 100;
   const inclusions = schema.inclusions?.(selection) ?? [];
   const timeline = schema.timeline?.(selection) ?? [];
-  const reportTitle = schema.reportTitle?.(selection) ?? 'Proposta preliminar';
+  const reportTitle = schema.reportTitle?.(selection) ?? t('reportTitleDefault');
   const protocol = `#NTK-${(Math.abs(hashString(JSON.stringify(selection))) % 9000 + 1000).toString()}`;
   const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 
@@ -640,7 +652,7 @@ function RevealStep({
         <div className="flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-primary" />
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
-            proposta-preliminar.{schema.serviceTag}
+            {t('reportPrefix')}{schema.serviceTag}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -666,7 +678,7 @@ function RevealStep({
           {fmt(avg)}
         </div>
         <p className="font-mono text-[11px] text-text-muted mt-3">
-          faixa {fmt(min)} – {fmt(max)}
+          {t('rangeLabel')} {fmt(min)} – {fmt(max)}
         </p>
         <p className="text-[12px] text-text-muted mt-4 max-w-md mx-auto leading-relaxed">
           {subtitle}
@@ -678,7 +690,7 @@ function RevealStep({
         <div className="border border-black/[0.08] border-b-0 px-6 lg:px-10 py-7" style={{ background: 'hsl(55 100% 97%)' }}>
           <div className="flex items-center gap-2 mb-5">
             <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
-              ❯ o que está incluído
+              {t('inclusionsHeader')}
             </span>
             <div className="flex-1 h-px bg-black/[0.06]" />
           </div>
@@ -707,7 +719,7 @@ function RevealStep({
         <div className="border border-black/[0.08] border-b-0 px-6 lg:px-10 py-7" style={{ background: 'rgba(25,25,24,0.02)' }}>
           <div className="flex items-center gap-2 mb-6">
             <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
-              ❯ cronograma estimado
+              {t('timelineHeader')}
             </span>
             <div className="flex-1 h-px bg-black/[0.06]" />
           </div>
@@ -748,43 +760,43 @@ function RevealStep({
       <div className="rounded-b-2xl border border-black/[0.08] px-6 lg:px-10 py-7" style={{ background: 'hsl(55 100% 97%)' }}>
         <div className="flex items-center gap-2 mb-5">
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
-            ❯ próximo passo
+            {t('nextStepHeader')}
           </span>
           <div className="flex-1 h-px bg-black/[0.06]" />
         </div>
         <p className="text-[13px] text-text-secondary mb-5 leading-relaxed max-w-lg">
-          Esse é o esboço do seu projeto. Pra fechar o investimento exato, a gente conversa pra validar o que você preencheu e entender o contexto da sua operação.
+          {t('nextStepBody')}
         </p>
         <div className="space-y-3">
           <div className="grid sm:grid-cols-2 gap-3">
-            <Field label="Seu nome">
+            <Field label={t('fieldName')}>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => onName(e.target.value)}
-                placeholder="Como te chama?"
+                placeholder={t('fieldNamePlaceholder')}
                 className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
                 style={{ border: '1px solid rgba(25,25,24,0.10)' }}
               />
             </Field>
-            <Field label="WhatsApp">
+            <Field label={t('fieldWhatsapp')}>
               <input
                 type="tel"
                 value={whatsapp}
                 onChange={(e) => onWhats(formatWhatsApp(e.target.value))}
-                placeholder="(11) 99999-9999"
+                placeholder={t('fieldWhatsappPlaceholder')}
                 className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
                 style={{ border: '1px solid rgba(25,25,24,0.10)' }}
               />
             </Field>
           </div>
-          <Field label="E-mail">
+          <Field label={t('fieldEmail')}>
             <input
               type="email"
               value={email}
               onChange={(e) => onEmail(e.target.value)}
               onBlur={() => setEmailTouched(true)}
-              placeholder="seu@email.com"
+              placeholder={t('fieldEmailPlaceholder')}
               className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
               style={{
                 border: emailTouched && email && !isValidEmail(email)
@@ -793,15 +805,15 @@ function RevealStep({
               }}
             />
             {emailTouched && email && !isValidEmail(email) && (
-              <span className="font-mono text-[10px] text-red-500 mt-1 block">E-mail inválido</span>
+              <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldEmailInvalid')}</span>
             )}
           </Field>
-          <Field label="Algo a acrescentar? (opcional)">
+          <Field label={t('fieldNotes')}>
             <textarea
               value={notes}
               onChange={(e) => onNotes(e.target.value)}
               rows={2}
-              placeholder="Contexto, prazo, links..."
+              placeholder={t('fieldNotesPlaceholder')}
               className="w-full px-4 py-3 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors leading-relaxed resize-none"
               style={{ border: '1px solid rgba(25,25,24,0.10)' }}
             />
