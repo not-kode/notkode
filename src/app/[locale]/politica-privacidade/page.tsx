@@ -171,7 +171,7 @@ const SECTIONS_EN: Section[] = [
           <li>Source page of the submission</li>
           <li>Campaign parameters (UTMs) if you came from an ad link</li>
         </ul>
-        <p>We don't collect sensitive data (race, religion, political opinion, health, etc.) and we don't store card data. If you're under 18, don't fill out the forms without parental consent.</p>
+        <p>{"We don't collect sensitive data (race, religion, political opinion, health, etc.) and we don't store card data. If you're under 18, don't fill out the forms without parental consent."}</p>
       </>
     ),
   },
@@ -187,7 +187,7 @@ const SECTIONS_EN: Section[] = [
           <li>Track the lead until project close (or drop)</li>
           <li>Occasionally share relevant news about our work, always with a clear opt-out in every message</li>
         </ul>
-        <p>We don't sell, rent, or use your data to build advertising profiles.</p>
+        <p>{"We don't sell, rent, or use your data to build advertising profiles."}</p>
       </>
     ),
   },
@@ -203,7 +203,7 @@ const SECTIONS_EN: Section[] = [
           <li><strong>Vercel</strong>, site hosting.</li>
           <li><strong>WhatsApp</strong> (Meta), when you choose to continue the conversation there.</li>
         </ul>
-        <p>All are subject to contracts requiring the same level of protection we apply. We never pass your data to companies that aren't directly involved in serving your project.</p>
+        <p>{"All are subject to contracts requiring the same level of protection we apply. We never pass your data to companies that aren't directly involved in serving your project."}</p>
       </>
     ),
   },
@@ -246,7 +246,7 @@ const SECTIONS_EN: Section[] = [
     body: (
       <>
         <p>The site uses HTTPS on every page. Database access is restricted by server keys never exposed in the browser. Only Camila has access to the admin panel.</p>
-        <p>Even so, no system is 100% immune. If we identify an incident affecting your data, we'll notify you and ANPD within the required timeframes.</p>
+        <p>{"Even so, no system is 100% immune. If we identify an incident affecting your data, we'll notify you and ANPD within the required timeframes."}</p>
       </>
     ),
   },
@@ -255,7 +255,7 @@ const SECTIONS_EN: Section[] = [
     title: 'Cookies and tracking',
     body: (
       <>
-        <p>Today the site doesn't use analytics cookies or advertising pixels. When we start (for example, GA4 or Plausible), we'll update this policy and show a cookie notice in the footer.</p>
+        <p>{"Today the site doesn't use analytics cookies or advertising pixels. When we start (for example, GA4 or Plausible), we'll update this policy and show a cookie notice in the footer."}</p>
       </>
     ),
   },
