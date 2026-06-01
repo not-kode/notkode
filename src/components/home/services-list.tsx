@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { ArrowUpRight, Bot, Globe, ShoppingCart, Palette, MonitorDot } from 'lucide-react';
 import { Link } from '@/i18n/routing';
@@ -17,6 +18,14 @@ export async function ServicesList({ locale }: { locale: string }) {
       featured: true,
     },
     {
+      href: '/agentes-automacao' as const,
+      icon: Bot,
+      title: t('serviceAgentesTitle'),
+      desc: t('serviceAgentesDesc'),
+      cmd: 'agents',
+      featured: true,
+    },
+    {
       href: '/sites' as const,
       icon: Globe,
       title: t('serviceSitesTitle'),
@@ -33,14 +42,6 @@ export async function ServicesList({ locale }: { locale: string }) {
       featured: false,
     },
     {
-      href: '/agentes-automacao' as const,
-      icon: Bot,
-      title: t('serviceAgentesTitle'),
-      desc: t('serviceAgentesDesc'),
-      cmd: 'agents',
-      featured: false,
-    },
-    {
       href: '/brandbook' as const,
       icon: Palette,
       title: t('serviceBrandbookTitle'),
@@ -49,6 +50,8 @@ export async function ServicesList({ locale }: { locale: string }) {
       featured: false,
     },
   ];
+
+  const firstSecondaryIndex = services.findIndex((s) => !s.featured);
 
   return (
     <section id="servicos" className="bg-surface-elevated scroll-mt-24">
@@ -69,7 +72,15 @@ export async function ServicesList({ locale }: { locale: string }) {
 
           <div className="border-hairline rounded-xl bg-surface-elevated/80 backdrop-blur-sm divide-y divide-black/[0.09]">
             {services.map((s, i) => (
-              <Reveal key={s.href} delay={i * 100}>
+              <Fragment key={s.href}>
+                {i === firstSecondaryIndex && (
+                  <div className="px-6 lg:px-8 pt-7 pb-1">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-text-dim">
+                      {t('servicesSecondaryLabel')}
+                    </span>
+                  </div>
+                )}
+              <Reveal delay={i * 100}>
                 <Link
                   href={s.href}
                   className={`group flex items-start gap-5 p-6 lg:p-8 transition-all first:rounded-t-xl last:rounded-b-xl ${s.featured ? 'bg-primary/[0.04] hover:bg-primary/[0.07]' : 'hover:bg-black/[0.03]'}`}
@@ -92,6 +103,7 @@ export async function ServicesList({ locale }: { locale: string }) {
                   />
                 </Link>
               </Reveal>
+              </Fragment>
             ))}
           </div>
         </div>
