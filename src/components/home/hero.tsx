@@ -1,59 +1,52 @@
+import type React from 'react';
 import { getTranslations } from 'next-intl/server';
 import { ArrowUpRight } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { HeroBackground } from '@/components/home/hero-background';
+import { TypewriterLine } from '@/components/home/typewriter-line';
 
 export async function Hero({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: 'Home' });
+
+  // `p` = destaque na fonte especial (Parabole), sem cor
+  const tags = {
+    p: (chunks: React.ReactNode) => <span className="font-bricolage font-normal">{chunks}</span>,
+  };
 
   return (
     <section className="relative overflow-hidden">
       <HeroBackground />
 
       <div className="relative z-10 container mx-auto px-5 lg:px-8 pt-32 lg:pt-44 pb-28 lg:pb-36">
-        <div className="grid lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] gap-14 lg:gap-20 items-center">
+        <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
 
-          {/* LEFT — headline */}
+          {/* headline */}
           <Reveal className="min-w-0">
-            <h1 className="text-[2rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.15] lg:leading-[1.12] tracking-[-0.025em] break-words text-text-primary">
-              <span className="lg:block">
-                {t('homeHeroLine1Pre')}
-                <span className="font-bricolage font-normal">{t('homeHeroLine1Accent')}</span>
-                {t('homeHeroLine1Post')}
-              </span>{' '}
-              <span className="lg:block">
-                {t('homeHeroLine2Pre')}
-                <span className="font-bricolage font-normal">{t('homeHeroLine2Accent')}</span>
-                {t('homeHeroLine2Post')}
-              </span>{' '}
-              <span className="lg:block">
-                {t('homeHeroLine3Pre')}
-                <span className="font-bricolage font-normal">{t('homeHeroLine3Accent')}</span>
-                {t('homeHeroLine3Post')}
+            <h1 className="text-[2.25rem] md:text-[3.25rem] lg:text-[4rem] font-semibold leading-[1.12] lg:leading-[1.08] tracking-[-0.03em] break-words text-text-primary">
+              <span className="lg:block">{t.rich('homeHeroLine1', tags)}</span>{' '}
+              <span className="lg:block">{t.rich('homeHeroLine2', tags)}</span>
+              <span className="lg:block lg:mt-6 mt-2 inline-block">
+                <TypewriterLine
+                  className="font-medium text-[1.375rem] md:text-[2.375rem] lg:text-[3.125rem]"
+                  segments={[
+                    { text: t('homeHeroLine3a') },
+                    { text: t('homeHeroLine3b'), className: 'font-bricolage font-normal text-primary' },
+                  ]}
+                />
               </span>
             </h1>
           </Reveal>
 
-          {/* RIGHT — descrição + CTAs */}
-          <div className="flex flex-col gap-8 min-w-0">
-            <Reveal delay={120}>
-              <p className="text-[17px] text-text-secondary leading-[1.65]">
-                {t('heroDescription')}
-              </p>
-            </Reveal>
-
-            <Reveal delay={240}>
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href="#servicos"
-                  className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
-                >
-                  {t('heroPrimaryCta')}
-                  <ArrowUpRight className="w-4 h-4" />
-                </a>
-              </div>
-            </Reveal>
-          </div>
+          {/* CTA */}
+          <Reveal delay={240} className="mt-12">
+            <a
+              href="#servicos"
+              className="font-bricolage inline-flex items-center gap-2 px-7 py-4 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
+            >
+              {t('heroPrimaryCta')}
+              <ArrowUpRight className="w-4 h-4" />
+            </a>
+          </Reveal>
 
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
 import { Hero } from '@/components/home/hero';
 import { TrustBand } from '@/components/home/trust-band';
+import { AiActivation } from '@/components/home/ai-activation';
 import { ServicesList } from '@/components/home/services-list';
 import { Testimonials } from '@/components/home/testimonials';
 import { FeaturedCase } from '@/components/home/featured-case';
@@ -20,6 +21,7 @@ export default async function HomePage({
     <>
       <Hero locale={locale} />
       <TrustBand locale={locale} />
+      <AiActivation locale={locale} />
       <ServicesList locale={locale} />
       <Testimonials locale={locale} />
       <FeaturedCase locale={locale} />
