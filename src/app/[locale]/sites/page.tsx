@@ -230,6 +230,11 @@ export default async function SitesPage({
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-14">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6 bg-black/[0.04] border border-black/[0.08]">
+                <span className="font-mono text-[11px] text-text-secondary tracking-tight uppercase">
+                  {t('maintEyebrow')}
+                </span>
+              </div>
               <h2 className="text-[1.75rem] md:text-[2.25rem] lg:text-[2.75rem] font-semibold leading-[1.1] tracking-[-0.02em]">
                 <span className="block">{t('maintTitleLine1Pre')} <span className="font-bricolage">{t('maintTitleLine1Accent')}</span>{t('maintTitleLine1Post')}</span>
                 <span className="block font-bricolage">{t('maintTitleLine2')}</span>

@@ -342,7 +342,7 @@ export function ProductScrollShowcase({
       </div>
 
       {/* ── DESKTOP: scroll-sticky with auto-advance ── */}
-      <div className="hidden lg:grid lg:grid-cols-[1fr_1fr] gap-16 items-start">
+      <div className="hidden lg:grid lg:grid-cols-[1fr_1fr] gap-16 items-stretch">
 
       {/* ── Left — scrollable feature list ── */}
       <div>
@@ -380,8 +380,8 @@ export function ProductScrollShowcase({
       </div>
 
       {/* ── Right — sticky visual panel ── */}
-      <div className="hidden lg:block lg:sticky lg:top-28 lg:self-start">
-        <div className="relative rounded-2xl border border-black/[0.08] overflow-hidden bg-[hsl(55_100%_97%)] aspect-[4/3]">
+      <div className="hidden lg:block lg:sticky lg:top-28 lg:self-start lg:h-full">
+        <div className="relative rounded-2xl border border-black/[0.08] overflow-hidden bg-[hsl(55_100%_97%)] h-full min-h-[400px]">
           {VISUALS.map((VisualComp, i) => (
             <div
               key={i}

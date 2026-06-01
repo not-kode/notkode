@@ -15,7 +15,7 @@ export async function AiActivation({ locale }: { locale: string }) {
     <section className="bg-surface-base scroll-mt-24">
       <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
         <Reveal>
-          <div className="max-w-3xl">
+          <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7 bg-black/[0.04] border border-black/[0.08]">
               <span className="font-mono text-[11px] text-text-secondary tracking-tight">
                 <span className="text-text-dim">{'❯ '}</span>
