@@ -139,7 +139,7 @@ export async function POST(req: Request) {
   let supabaseError: string | null = null;
   try {
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase.from('leads').insert(row);
+    const { error } = await supabase.from('lead_submissions').insert(row);
     if (error) supabaseError = error.message;
   } catch (e) {
     supabaseError = e instanceof Error ? e.message : 'unknown error';
