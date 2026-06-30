@@ -68,13 +68,13 @@ export default async function LeadsPage() {
       )}
 
       {!error && leads.length === 0 && (
-        <p className="rounded-md border border-border-subtle/20 bg-surface-elevated px-4 py-10 text-center text-sm text-text-muted">
+        <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-10 text-center text-sm text-text-muted">
           Nenhum lead ainda. Quando alguém enviar um formulário no site, aparece aqui.
         </p>
       )}
 
       {leads.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-surface-elevated">
+        <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-white">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border-subtle/15 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">

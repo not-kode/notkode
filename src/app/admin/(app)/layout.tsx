@@ -28,7 +28,7 @@ export default function AdminAppLayout({ children }: { children: React.ReactNode
         </form>
       </aside>
 
-      <main className="bg-grid-dots flex-1 overflow-x-auto px-8 py-8">{children}</main>
+      <main className="flex-1 overflow-x-auto bg-neutral-50 px-8 py-8">{children}</main>
     </div>
   );
 }

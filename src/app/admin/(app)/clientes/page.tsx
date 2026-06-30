@@ -59,7 +59,7 @@ export default async function ClientesPage() {
       <section className="mb-10">
         <h2 className="mb-3 text-lg font-semibold">Contatos</h2>
 
-        <details className="mb-4 rounded-lg border border-border-subtle/15 bg-surface-elevated/50 p-4">
+        <details className="mb-4 rounded-lg border border-border-subtle/15 bg-neutral-50 p-4">
           <summary className="cursor-pointer text-sm font-medium text-primary">+ Novo contato</summary>
           <form action={createContact} className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             <label className="flex flex-col gap-1">
@@ -87,11 +87,11 @@ export default async function ClientesPage() {
         </details>
 
         {contacts.length === 0 ? (
-          <p className="rounded-md border border-border-subtle/20 bg-surface-elevated px-4 py-8 text-center text-sm text-text-muted">
+          <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-8 text-center text-sm text-text-muted">
             Nenhum contato ainda. Promova um lead ou crie um contato acima.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-surface-elevated">
+          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-white">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border-subtle/15 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
@@ -124,11 +124,11 @@ export default async function ClientesPage() {
       <section>
         <h2 className="mb-3 text-lg font-semibold">Empresas</h2>
         {orgs.length === 0 ? (
-          <p className="rounded-md border border-border-subtle/20 bg-surface-elevated px-4 py-8 text-center text-sm text-text-muted">
+          <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-8 text-center text-sm text-text-muted">
             Nenhuma empresa ainda.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-surface-elevated">
+          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-white">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border-subtle/15 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">

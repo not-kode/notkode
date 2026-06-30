@@ -33,7 +33,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 function Kpi({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="rounded-lg border border-border-subtle/15 bg-surface-elevated p-4">
+    <div className="rounded-lg border border-border-subtle/15 bg-white p-4">
       <p className="font-mono text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
       <p className={`mt-1 text-xl font-semibold ${tone ?? 'text-text-primary'}`}>{value}</p>
     </div>
@@ -95,7 +95,7 @@ export default async function FinanceiroPage() {
           <h2 className="text-lg font-semibold">Contratos</h2>
         </div>
 
-        <details className="mb-4 rounded-lg border border-border-subtle/15 bg-surface-elevated/50 p-4">
+        <details className="mb-4 rounded-lg border border-border-subtle/15 bg-neutral-50 p-4">
           <summary className="cursor-pointer text-sm font-medium text-primary">+ Novo contrato</summary>
           <form action={createEngagement} className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
             <label className="col-span-2 flex flex-col gap-1 md:col-span-1">
@@ -147,11 +147,11 @@ export default async function FinanceiroPage() {
         </details>
 
         {engagements.length === 0 ? (
-          <p className="rounded-md border border-border-subtle/20 bg-surface-elevated px-4 py-8 text-center text-sm text-text-muted">
+          <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-8 text-center text-sm text-text-muted">
             Nenhum contrato ainda.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-surface-elevated">
+          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-white">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border-subtle/15 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
@@ -186,7 +186,7 @@ export default async function FinanceiroPage() {
           <h2 className="text-lg font-semibold">Parcelas a receber</h2>
         </div>
 
-        <details className="mb-4 rounded-lg border border-border-subtle/15 bg-surface-elevated/50 p-4">
+        <details className="mb-4 rounded-lg border border-border-subtle/15 bg-neutral-50 p-4">
           <summary className="cursor-pointer text-sm font-medium text-primary">+ Nova parcela</summary>
           <form action={createReceivable} className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             <label className="col-span-2 flex flex-col gap-1">
@@ -219,11 +219,11 @@ export default async function FinanceiroPage() {
         </details>
 
         {receivables.length === 0 ? (
-          <p className="rounded-md border border-border-subtle/20 bg-surface-elevated px-4 py-8 text-center text-sm text-text-muted">
+          <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-8 text-center text-sm text-text-muted">
             Nenhuma parcela ainda.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-surface-elevated">
+          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-white">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border-subtle/15 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
