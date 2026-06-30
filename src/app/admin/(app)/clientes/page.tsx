@@ -59,7 +59,7 @@ export default async function ClientesPage() {
       <section className="mb-10">
         <h2 className="mb-3 text-lg font-semibold">Contatos</h2>
 
-        <details className="mb-4 rounded-lg border border-border-subtle/15 bg-neutral-50 p-4">
+        <details className="mb-4 rounded-lg border border-black/[0.06] bg-black/[0.02] p-4">
           <summary className="cursor-pointer text-sm font-medium text-primary">+ Novo contato</summary>
           <form action={createContact} className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             <label className="flex flex-col gap-1">
@@ -91,10 +91,10 @@ export default async function ClientesPage() {
             Nenhum contato ainda. Promova um lead ou crie um contato acima.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-white">
+          <div className="overflow-hidden rounded-md border border-black/[0.06] bg-white">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border-subtle/15 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
                   <th className="px-4 py-3 font-medium">Nome</th>
                   <th className="px-4 py-3 font-medium">E-mail</th>
                   <th className="px-4 py-3 font-medium">WhatsApp</th>
@@ -128,10 +128,10 @@ export default async function ClientesPage() {
             Nenhuma empresa ainda.
           </p>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-white">
+          <div className="overflow-hidden rounded-md border border-black/[0.06] bg-white">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border-subtle/15 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
                   <th className="px-4 py-3 font-medium">Empresa</th>
                   <th className="px-4 py-3 font-medium">Mercado</th>
                   <th className="px-4 py-3 font-medium">Contatos</th>

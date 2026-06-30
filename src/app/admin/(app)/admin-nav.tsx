@@ -22,7 +22,7 @@ export function AdminNav() {
             key={item.href}
             href={item.href}
             className={[
-              'group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors',
+              'group flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors',
               active
                 ? 'bg-primary/10 font-semibold text-primary'
                 : 'text-text-secondary hover:bg-black/[0.04] hover:text-text-primary',

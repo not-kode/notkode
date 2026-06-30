@@ -20,7 +20,7 @@ export default function AdminAppLayout({ children }: { children: React.ReactNode
         <form action={logoutAction} className="mt-auto border-t border-black/[0.07] pt-3">
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger"
+            className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-text-muted/30" />
             Sair
@@ -28,7 +28,7 @@ export default function AdminAppLayout({ children }: { children: React.ReactNode
         </form>
       </aside>
 
-      <main className="flex-1 overflow-x-auto bg-neutral-50 px-8 py-8">{children}</main>
+      <main className="flex-1 overflow-x-auto bg-surface-base px-8 py-8">{children}</main>
     </div>
   );
 }

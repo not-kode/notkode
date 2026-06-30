@@ -74,8 +74,8 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
               setDragId(null);
             }}
             className={[
-              'flex w-[15.5rem] shrink-0 flex-col overflow-hidden rounded-xl border transition-colors',
-              isOver ? 'border-primary/50 bg-primary/[0.05]' : 'border-black/[0.06] bg-black/[0.025]',
+              'flex w-[15.5rem] shrink-0 flex-col overflow-hidden rounded-md border transition-colors',
+              isOver ? 'border-primary/50 bg-primary/[0.05]' : 'border-black/[0.04] bg-black/[0.02]',
             ].join(' ')}
           >
             <span className={`block h-0.5 w-full ${STAGE_ACCENT[stage]}`} />
@@ -105,7 +105,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
                     setOverStage(null);
                   }}
                   className={[
-                    'cursor-grab rounded-lg border border-black/[0.08] bg-white p-3 shadow-sm transition-all active:cursor-grabbing',
+                    'cursor-grab rounded-md border border-black/[0.05] bg-white p-3 shadow-sm transition-all active:cursor-grabbing',
                     'hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md',
                     dragId === deal.id ? 'opacity-40' : '',
                   ].join(' ')}

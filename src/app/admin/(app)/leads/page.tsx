@@ -74,10 +74,10 @@ export default async function LeadsPage() {
       )}
 
       {leads.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-border-subtle/15 bg-white">
+        <div className="overflow-hidden rounded-md border border-black/[0.06] bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-subtle/15 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
+              <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
                 <th className="px-4 py-3 font-medium">Quando</th>
                 <th className="px-4 py-3 font-medium">Lead</th>
                 <th className="px-4 py-3 font-medium">Serviço</th>
