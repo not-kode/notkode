@@ -3,7 +3,7 @@ import { logoutAction } from '../actions';
 
 const NAV = [
   { href: '/admin/leads', label: 'Leads', enabled: true },
-  { href: '/admin/pipeline', label: 'Pipeline', enabled: false },
+  { href: '/admin/pipeline', label: 'Pipeline', enabled: true },
   { href: '/admin/clientes', label: 'Clientes', enabled: false },
   { href: '/admin/financeiro', label: 'Financeiro', enabled: false },
 ];
