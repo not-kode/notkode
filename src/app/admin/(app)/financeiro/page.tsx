@@ -95,7 +95,7 @@ export default async function FinanceiroPage() {
           <h2 className="text-lg font-semibold">Contratos</h2>
         </div>
 
-        <details className="mb-4 rounded-md border border-black/[0.06] bg-black/[0.02] p-4">
+        <details className="mb-4 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-4">
           <summary className="cursor-pointer text-sm font-medium text-primary">+ Novo contrato</summary>
           <form action={createEngagement} className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
             <label className="col-span-2 flex flex-col gap-1 md:col-span-1">
@@ -186,7 +186,7 @@ export default async function FinanceiroPage() {
           <h2 className="text-lg font-semibold">Parcelas a receber</h2>
         </div>
 
-        <details className="mb-4 rounded-md border border-black/[0.06] bg-black/[0.02] p-4">
+        <details className="mb-4 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-4">
           <summary className="cursor-pointer text-sm font-medium text-primary">+ Nova parcela</summary>
           <form action={createReceivable} className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             <label className="col-span-2 flex flex-col gap-1">

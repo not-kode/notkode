@@ -75,7 +75,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
             }}
             className={[
               'flex w-[15.5rem] shrink-0 flex-col overflow-hidden rounded-md border transition-colors',
-              isOver ? 'border-primary/50 bg-primary/[0.05]' : 'border-black/[0.04] bg-black/[0.02]',
+              isOver ? 'border-primary/50 bg-primary/[0.06]' : 'border-black/[0.05] bg-[#F4F5F7]',
             ].join(' ')}
           >
             <span className={`block h-0.5 w-full ${STAGE_ACCENT[stage]}`} />

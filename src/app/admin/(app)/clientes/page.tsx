@@ -59,7 +59,7 @@ export default async function ClientesPage() {
       <section className="mb-10">
         <h2 className="mb-3 text-lg font-semibold">Contatos</h2>
 
-        <details className="mb-4 rounded-lg border border-black/[0.06] bg-black/[0.02] p-4">
+        <details className="mb-4 rounded-lg border border-black/[0.06] bg-[#F4F5F7] p-4">
           <summary className="cursor-pointer text-sm font-medium text-primary">+ Novo contato</summary>
           <form action={createContact} className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             <label className="flex flex-col gap-1">

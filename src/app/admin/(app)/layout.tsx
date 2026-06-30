@@ -4,8 +4,8 @@ import { AdminNav } from './admin-nav';
 
 export default function AdminAppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-surface-base text-text-primary">
-      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-black/[0.07] bg-surface-elevated/60 px-4 py-6">
+    <div className="flex min-h-screen bg-white text-text-primary">
+      <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-black/[0.07] bg-[#F4F5F7] px-4 py-6">
         <div className="px-2">
           <Logo variant="horizontal-dark" width={118} />
           <p className="eyebrow mt-3">
@@ -28,7 +28,7 @@ export default function AdminAppLayout({ children }: { children: React.ReactNode
         </form>
       </aside>
 
-      <main className="flex-1 overflow-x-auto bg-surface-base px-8 py-8">{children}</main>
+      <main className="flex-1 overflow-x-auto bg-white px-8 py-8">{children}</main>
     </div>
   );
 }
