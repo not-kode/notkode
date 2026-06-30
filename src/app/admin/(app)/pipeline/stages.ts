@@ -13,6 +13,15 @@ export const DEAL_STAGES = [
 
 export type DealStage = (typeof DEAL_STAGES)[number];
 
+// Estágios que viram COLUNAS no funil. Ganho/perdido são desfechos (tags), não colunas.
+export const PIPELINE_STAGES = [
+  'novo',
+  'qualificado',
+  'diagnostico',
+  'proposta',
+  'negociacao',
+] as const satisfies readonly DealStage[];
+
 export const STAGE_LABELS: Record<DealStage, string> = {
   novo: 'Novo',
   qualificado: 'Qualificado',

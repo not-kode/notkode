@@ -41,9 +41,10 @@ export default async function PipelinePage() {
     whatsapp: pick(r.contacts?.contact_channels ?? null, 'whatsapp'),
   }));
 
-  const openValue = deals
-    .filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido')
-    .reduce((sum, d) => sum + (d.valor_pontual ?? 0), 0);
+  const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');
+  const openValue = openDeals.reduce((sum, d) => sum + (d.valor_pontual ?? 0), 0);
+  const won = deals.filter((d) => d.stage === 'ganho').length;
+  const lost = deals.filter((d) => d.stage === 'perdido').length;
 
   return (
     <div>
@@ -52,12 +53,23 @@ export default async function PipelinePage() {
           <span className="status-dot" />
           Pipeline de vendas
         </p>
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between gap-4">
           <h1 className="text-2xl font-semibold tracking-tight">Negócios</h1>
-          <p className="font-label text-xs text-text-muted">
-            {deals.length} negócio{deals.length === 1 ? '' : 's'} ·{' '}
-            <span className="text-text-secondary">{brl(openValue)}</span> em aberto
-          </p>
+          <div className="flex items-center gap-2 font-label text-xs text-text-muted">
+            <span>
+              {openDeals.length} em aberto · <span className="text-text-secondary">{brl(openValue)}</span>
+            </span>
+            {won > 0 && (
+              <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">
+                {won} ganho{won === 1 ? '' : 's'}
+              </span>
+            )}
+            {lost > 0 && (
+              <span className="rounded-full bg-danger/10 px-2 py-0.5 text-danger">
+                {lost} perdido{lost === 1 ? '' : 's'}
+              </span>
+            )}
+          </div>
         </div>
       </header>
 

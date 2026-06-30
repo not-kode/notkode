@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { moveDealStage } from './actions';
-import { DEAL_STAGES, STAGE_LABELS, type DealStage } from './stages';
+import { PIPELINE_STAGES, STAGE_LABELS, type DealStage } from './stages';
 
 export type BoardDeal = {
   id: string;
@@ -52,7 +52,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
 
   return (
     <div className="flex gap-3 overflow-x-auto pb-4">
-      {DEAL_STAGES.map((stage) => {
+      {PIPELINE_STAGES.map((stage) => {
         const cards = deals.filter((d) => d.stage === stage);
         const total = cards.reduce((s, d) => s + (d.valor_pontual ?? 0), 0);
         const isOver = overStage === stage;
