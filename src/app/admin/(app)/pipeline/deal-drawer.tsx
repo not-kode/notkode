@@ -64,6 +64,28 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
             {deal.name && org?.name && (
               <p className="font-label text-xs text-text-muted">{deal.name}</p>
             )}
+
+            {/* Toggle Ganhar negócio — cria o contrato no financeiro ao ligar */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isWon}
+              disabled={isWon || winPending}
+              onClick={() => {
+                const fd = new FormData();
+                fd.set('id', deal.id);
+                startWin(() => winDeal(fd));
+              }}
+              title={isWon ? 'Negócio ganho' : `Marcar como ganho — cria o contrato${deal.valor_pontual ? ` de ${brl(deal.valor_pontual)}` : ''} no financeiro`}
+              className="mt-2.5 inline-flex items-center gap-2 disabled:cursor-default"
+            >
+              <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${isWon ? 'bg-success' : 'bg-black/[0.15]'}`}>
+                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${isWon ? 'left-[1.15rem]' : 'left-0.5'}`} />
+              </span>
+              <span className={`font-label text-[11px] uppercase tracking-wider ${isWon ? 'text-success' : 'text-text-secondary'}`}>
+                {winPending ? 'Fechando…' : isWon ? 'Ganho' : 'Ganhar negócio'}
+              </span>
+            </button>
           </div>
           <button
             onClick={onClose}
@@ -167,28 +189,6 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
             {savePending ? 'Salvando…' : 'Salvar'}
           </button>
         </form>
-
-        {/* Fechar negócio */}
-        {!isWon && (
-          <div className="mt-auto border-t border-black/[0.06] bg-[#F4F5F7] px-5 py-4">
-            <p className="mb-2 font-label text-[11px] text-text-muted">
-              Ao ganhar, o contrato é criado no financeiro {deal.valor_pontual ? `(${brl(deal.valor_pontual)})` : ''} e o próximo passo vira preparar o documento.
-            </p>
-            <form action={(fd) => startWin(() => winDeal(fd))}>
-              <input type="hidden" name="id" value={deal.id} />
-              <button
-                type="submit"
-                disabled={winPending}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-success px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-success/90 disabled:opacity-60"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-                {winPending ? 'Fechando…' : 'Ganhar negócio'}
-              </button>
-            </form>
-          </div>
-        )}
       </aside>
     </div>
   );
