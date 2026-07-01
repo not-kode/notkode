@@ -178,9 +178,10 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className={labelCls}>Valor (R$)</label><input name="valor" inputMode="decimal" className={inputCls} placeholder="15000" /></div>
-              <div><label className={labelCls}>MRR (R$)</label><input name="mrr" inputMode="decimal" className={inputCls} placeholder="990" /></div>
+              <div><label className={labelCls}>Mensal / MRR (R$)</label><input name="mrr" inputMode="decimal" className={inputCls} placeholder="2500" /></div>
+              <div><label className={labelCls}>Valor avulso (R$)</label><input name="valor" inputMode="decimal" className={inputCls} placeholder="650" /></div>
             </div>
+            <p className="-mt-1 font-label text-[10px] text-text-muted">MRR = mensalidade recorrente · Valor avulso = cobrança pontual única (não entra no MRR)</p>
             <div className="grid grid-cols-2 gap-3">
               <div><label className={labelCls}>Início</label><input name="start_date" type="date" className={inputCls} /></div>
               <div><label className={labelCls}>Fim</label><input name="end_date" type="date" className={inputCls} /></div>

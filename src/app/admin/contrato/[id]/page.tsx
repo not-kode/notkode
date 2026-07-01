@@ -67,6 +67,40 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
 
   const meses = monthsBetween(eng.start_date, eng.end_date);
   const totalParcelas = parcelas.reduce((s, r) => s + r.amount, 0);
+
+  // Cláusula de pagamento montada por blocos: recorrente (MRR) e pontual (valor avulso)
+  // aparecem separados; depois o cronograma das parcelas reais.
+  const hasMrr = (eng.mrr ?? 0) > 0;
+  const valorPontual = eng.valor ?? 0;
+  const pgto: React.ReactNode[] = [];
+  if (hasMrr) {
+    pgto.push(
+      <>Pela prestação dos <strong>serviços recorrentes</strong>, a CONTRATANTE pagará o valor mensal de <strong>{brl(eng.mrr!)}</strong>, vencível todo dia 10 (dez) de cada mês{meses ? <>, totalizando <strong>{brl(eng.mrr! * meses)}</strong> ao longo dos {meses} ({meses}) meses de vigência</> : null}.</>,
+    );
+  }
+  if (valorPontual > 0) {
+    pgto.push(
+      <>Pela prestação dos <strong>serviços pontuais</strong>, a CONTRATANTE pagará o valor de <strong>{brl(valorPontual)}</strong>{hasMrr ? ', em parcela única devida junto da primeira mensalidade' : ''}.</>,
+    );
+  }
+  if (!hasMrr && valorPontual === 0 && parcelas.length > 0) {
+    pgto.push(<>O valor total dos serviços é de <strong>{brl(totalParcelas)}</strong>.</>);
+  }
+  if (parcelas.length > 0) {
+    pgto.push(
+      <>O pagamento observará o seguinte cronograma:
+        <ul className="parcelas">
+          {parcelas.map((r, i) => (
+            <li key={i}>{r.description ?? `Parcela ${i + 1}`} — <strong>{brl(r.amount)}</strong>, com vencimento em {fmtDate(r.due_date)}.</li>
+          ))}
+        </ul>
+      </>,
+    );
+  }
+  pgto.push(<>Os pagamentos serão realizados via PIX, para a chave a ser informada pela CONTRATADA.</>);
+  pgto.push(<>Em caso de atraso no pagamento, será cobrada multa de 10% (dez por cento) sobre o valor devido, acrescida de juros de mora de 1% (um por cento) ao mês.</>);
+  pgto.push(<><strong>Custos de API:</strong> os custos de uso da Meta Cloud API (cobranças por conversas iniciadas) e do modelo de IA utilizado pelo agente são de responsabilidade da CONTRATANTE, cobrados diretamente pelos respectivos provedores (Meta e provedor de IA), e não estão inclusos no valor deste contrato.</>);
+
   const missing: string[] = [];
   if (!org?.legal_name) missing.push('razão social');
   if (!org?.tax_id) missing.push('CNPJ/CPF');
@@ -121,25 +155,9 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
           </Clausula>
 
           <Clausula titulo="Cláusula Quarta – Do Valor e Condições de Pagamento">
-            {parcelas.length > 0 ? (
-              <>
-                <p>4.1. O valor total dos serviços é de <strong>{brl(totalParcelas)}</strong>, pago da seguinte forma:</p>
-                <ul className="parcelas">
-                  {parcelas.map((r, i) => (
-                    <li key={i}>{r.description ?? `Parcela ${i + 1}`} — <strong>{brl(r.amount)}</strong>, com vencimento em {fmtDate(r.due_date)}.</li>
-                  ))}
-                </ul>
-                <p>4.2. Os pagamentos deverão ser efetuados nas datas de vencimento indicadas no item 4.1.</p>
-              </>
-            ) : (
-              <>
-                <p>4.1. O valor mensal dos serviços é de <strong>{eng.mrr != null ? brl(eng.mrr) : '[VALOR]'}</strong>{eng.mrr && meses ? <>, totalizando <strong>{brl(eng.mrr * meses)}</strong> ao longo dos {meses} ({meses}) meses de vigência</> : ''}.</p>
-                <p>4.2. O pagamento da primeira mensalidade deverá ser efetuado na data de assinatura deste contrato. As mensalidades subsequentes serão devidas todo dia 10 (dez) de cada mês.</p>
-              </>
-            )}
-            <p>4.3. Os pagamentos serão realizados via PIX, para a chave a ser informada pela CONTRATADA.</p>
-            <p>4.4. Em caso de atraso no pagamento, será cobrada multa de 10% (dez por cento) sobre o valor devido, acrescida de juros de mora de 1% (um por cento) ao mês.</p>
-            <p>4.5. <strong>Custos de API:</strong> os custos de uso da Meta Cloud API (cobranças por conversas iniciadas) e do modelo de IA utilizado pelo agente são de responsabilidade da CONTRATANTE, cobrados diretamente pelos respectivos provedores (Meta e provedor de IA), e não estão inclusos no valor deste contrato.</p>
+            {pgto.map((n, i) => (
+              <div className="item" key={i}>4.{i + 1}. {n}</div>
+            ))}
           </Clausula>
 
           <Clausula titulo="Cláusula Quinta – Do Prazo Contratual e Renovação">
@@ -220,7 +238,7 @@ const CSS = `
   .parties .lead { margin-top: 18px; }
   .clausula { margin-bottom: 22px; page-break-inside: avoid; }
   .clausula h2 { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #191918; }
-  .clausula p { font-size: 13.5px; margin-bottom: 6px; text-align: justify; }
+  .clausula p, .clausula .item { font-size: 13.5px; margin-bottom: 6px; text-align: justify; }
   .parcelas { margin: 6px 0 6px 20px; }
   .parcelas li { font-size: 13.5px; margin-bottom: 3px; }
   .anexo { margin-top: 24px; padding: 14px 16px; border: 1px solid rgba(25,25,24,.12); border-radius: 8px; background: #faf9f5; }
