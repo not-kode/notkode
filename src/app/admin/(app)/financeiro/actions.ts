@@ -24,6 +24,7 @@ export async function createEngagement(formData: FormData): Promise<void> {
 
   const organization_id = String(formData.get('organization_id') ?? '') || null;
   const start_date = String(formData.get('start_date') ?? '') || null;
+  const end_date = String(formData.get('end_date') ?? '') || null;
 
   const supabase = getSupabaseAdmin();
   await supabase.from('engagements').insert({
@@ -35,9 +36,42 @@ export async function createEngagement(formData: FormData): Promise<void> {
     mrr: num(formData.get('mrr')),
     billing_cycle: String(formData.get('billing_cycle') ?? '') || null,
     start_date,
+    end_date,
   });
 
   revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
+}
+
+/** Conclui um contrato: marca como entregue e registra a data de conclusão. */
+export async function concludeEngagement(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const end_date = String(formData.get('end_date') ?? '') || new Date().toISOString().slice(0, 10);
+
+  const supabase = getSupabaseAdmin();
+  await supabase
+    .from('engagements')
+    .update({ status: 'entregue', end_date, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
+}
+
+/** Desfaz a baixa de uma parcela: volta para pendente e limpa o pagamento. */
+export async function unmarkReceivable(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  const supabase = getSupabaseAdmin();
+  await supabase
+    .from('receivables')
+    .update({ status: 'pendente', paid_at: null, paid_amount: null, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
 }
 
 /** Cria uma parcela / cobrança (receivable). */
@@ -71,6 +105,7 @@ export async function createReceivable(formData: FormData): Promise<void> {
   });
 
   revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
 }
 
 /** Marca uma parcela como recebida (baixa). */
@@ -91,4 +126,5 @@ export async function markReceivablePaid(formData: FormData): Promise<void> {
     .eq('id', id);
 
   revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
 }

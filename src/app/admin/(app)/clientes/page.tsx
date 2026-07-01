@@ -1,155 +1,83 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { createContact } from './actions';
+import { ClientesView, type ClientView } from './clientes-view';
 
 export const dynamic = 'force-dynamic';
 
 type Channel = { kind: string; value: string; is_primary: boolean };
-type Contact = {
-  id: string;
-  name: string | null;
-  source: string | null;
-  contact_channels: Channel[] | null;
-  contact_organizations: { organizations: { name: string | null } | null }[] | null;
+type OrgRow = {
+  id: string; name: string | null; market: string | null;
+  legal_name: string | null; tax_id: string | null; state_registration: string | null;
+  address_street: string | null; address_number: string | null; address_district: string | null;
+  address_city: string | null; address_state: string | null; address_zip: string | null;
+  legal_rep: string | null;
 };
-type Org = { id: string; name: string | null; market: string | null };
+type EngRow = {
+  id: string; organization_id: string | null; title: string | null; type: string; status: string;
+  valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
+};
+type RecRow = {
+  id: string; engagement_id: string | null; description: string | null; amount: number;
+  due_date: string; status: string; paid_amount: number | null; paid_at: string | null;
+};
+type CoRow = {
+  organization_id: string; role: string | null;
+  contacts: { id: string; name: string | null; contact_channels: Channel[] | null } | null;
+};
 
-function channel(c: Contact, kind: string): string | null {
-  const list = c.contact_channels ?? [];
-  const primary = list.find((ch) => ch.kind === kind && ch.is_primary) ?? list.find((ch) => ch.kind === kind);
-  return primary?.value ?? null;
-}
-function orgName(c: Contact): string | null {
-  return c.contact_organizations?.[0]?.organizations?.name ?? null;
+function pick(channels: Channel[] | null, kind: string): string | null {
+  const list = channels ?? [];
+  return (list.find((c) => c.kind === kind && c.is_primary) ?? list.find((c) => c.kind === kind))?.value ?? null;
 }
 
 export default async function ClientesPage() {
   const supabase = getSupabaseAdmin();
-  const [{ data: contactData }, { data: orgData }, { data: dealData }, { data: linkData }] = await Promise.all([
+  const [{ data: orgData }, { data: engData }, { data: recData }, { data: coData }] = await Promise.all([
     supabase
-      .from('contacts')
-      .select('id, name, source, contact_channels(kind, value, is_primary), contact_organizations(organizations(name))')
-      .order('created_at', { ascending: false }),
-    supabase.from('organizations').select('id, name, market').order('name'),
-    supabase.from('deals').select('contact_id'),
-    supabase.from('contact_organizations').select('organization_id'),
+      .from('organizations')
+      .select('id, name, market, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep')
+      .order('name'),
+    supabase
+      .from('engagements')
+      .select('id, organization_id, title, type, status, valor, mrr, start_date, end_date, notes')
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('receivables')
+      .select('id, engagement_id, description, amount, due_date, status, paid_amount, paid_at')
+      .order('due_date', { ascending: true }),
+    supabase
+      .from('contact_organizations')
+      .select('organization_id, role, contacts(id, name, contact_channels(kind, value, is_primary))'),
   ]);
 
-  const contacts = (contactData ?? []) as unknown as Contact[];
-  const orgs = (orgData ?? []) as Org[];
-  const deals = (dealData ?? []) as { contact_id: string | null }[];
-  const links = (linkData ?? []) as { organization_id: string }[];
+  const orgs = (orgData ?? []) as OrgRow[];
+  const engs = (engData ?? []) as EngRow[];
+  const recs = (recData ?? []) as RecRow[];
+  const cos = (coData ?? []) as unknown as CoRow[];
 
-  const dealCount = (contactId: string) => deals.filter((d) => d.contact_id === contactId).length;
-  const orgContacts = (orgId: string) => links.filter((l) => l.organization_id === orgId).length;
+  const clients: ClientView[] = orgs.map((o) => ({
+    ...o,
+    contacts: cos
+      .filter((c) => c.organization_id === o.id && c.contacts)
+      .map((c) => ({
+        id: c.contacts!.id,
+        name: c.contacts!.name,
+        role: c.role,
+        email: pick(c.contacts!.contact_channels ?? null, 'email'),
+        whatsapp: pick(c.contacts!.contact_channels ?? null, 'whatsapp'),
+      })),
+    contratos: engs
+      .filter((e) => e.organization_id === o.id)
+      .map((e) => ({
+        id: e.id, title: e.title, type: e.type, status: e.status,
+        valor: e.valor, mrr: e.mrr, start_date: e.start_date, end_date: e.end_date, notes: e.notes,
+        parcelas: recs
+          .filter((r) => r.engagement_id === e.id)
+          .map((r) => ({
+            id: r.id, description: r.description, amount: r.amount, due_date: r.due_date,
+            status: r.status, paid_amount: r.paid_amount, paid_at: r.paid_at,
+          })),
+      })),
+  }));
 
-  const inputCls =
-    'rounded-md border border-border-subtle/20 bg-surface-base px-3 py-2 text-sm outline-none focus:border-primary';
-  const labelCls = 'font-mono text-[11px] uppercase tracking-wider text-text-muted';
-
-  return (
-    <div className="max-w-6xl">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Clientes</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {contacts.length} contato{contacts.length === 1 ? '' : 's'} · {orgs.length} empresa{orgs.length === 1 ? '' : 's'}
-        </p>
-      </header>
-
-      {/* ── Contatos ──────────────────────────────────────────── */}
-      <section className="mb-10">
-        <h2 className="mb-3 text-lg font-semibold">Contatos</h2>
-
-        <details className="mb-4 rounded-lg border border-black/[0.06] bg-[#F4F5F7] p-4">
-          <summary className="cursor-pointer text-sm font-medium text-primary">+ Novo contato</summary>
-          <form action={createContact} className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <label className="flex flex-col gap-1">
-              <span className={labelCls}>Nome</span>
-              <input name="name" required className={inputCls} placeholder="Nome do contato" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className={labelCls}>E-mail</span>
-              <input name="email" type="email" className={inputCls} placeholder="email@exemplo.com" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className={labelCls}>WhatsApp</span>
-              <input name="whatsapp" className={inputCls} placeholder="(11) 99999-9999" />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className={labelCls}>Empresa</span>
-              <input name="company" className={inputCls} placeholder="Nome da empresa" />
-            </label>
-            <div className="col-span-2 md:col-span-4">
-              <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-cyan-600">
-                Criar contato
-              </button>
-            </div>
-          </form>
-        </details>
-
-        {contacts.length === 0 ? (
-          <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-8 text-center text-sm text-text-muted">
-            Nenhum contato ainda. Promova um lead ou crie um contato acima.
-          </p>
-        ) : (
-          <div className="overflow-hidden rounded-md border border-black/[0.06] bg-white">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
-                  <th className="px-4 py-3 font-medium">Nome</th>
-                  <th className="px-4 py-3 font-medium">E-mail</th>
-                  <th className="px-4 py-3 font-medium">WhatsApp</th>
-                  <th className="px-4 py-3 font-medium">Empresa</th>
-                  <th className="px-4 py-3 font-medium">Origem</th>
-                  <th className="px-4 py-3 font-medium">Negócios</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts.map((c) => (
-                  <tr key={c.id} className="border-b border-border-subtle/10 last:border-0">
-                    <td className="px-4 py-3 font-medium text-text-primary">{c.name ?? '—'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{channel(c, 'email') ?? '—'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{channel(c, 'whatsapp') ?? '—'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{orgName(c) ?? '—'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{c.source ?? '—'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{dealCount(c.id) || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      {/* ── Empresas ──────────────────────────────────────────── */}
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">Empresas</h2>
-        {orgs.length === 0 ? (
-          <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-8 text-center text-sm text-text-muted">
-            Nenhuma empresa ainda.
-          </p>
-        ) : (
-          <div className="overflow-hidden rounded-md border border-black/[0.06] bg-white">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
-                  <th className="px-4 py-3 font-medium">Empresa</th>
-                  <th className="px-4 py-3 font-medium">Mercado</th>
-                  <th className="px-4 py-3 font-medium">Contatos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orgs.map((o) => (
-                  <tr key={o.id} className="border-b border-border-subtle/10 last:border-0">
-                    <td className="px-4 py-3 font-medium text-text-primary">{o.name ?? '—'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{o.market ?? '—'}</td>
-                    <td className="px-4 py-3 text-text-secondary">{orgContacts(o.id) || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-    </div>
-  );
+  return <ClientesView clients={clients} />;
 }

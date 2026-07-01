@@ -3,6 +3,22 @@
 import { useEffect, useState, useTransition } from 'react';
 import { moveDealStage } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, type DealStage } from './stages';
+import { DealDrawer } from './deal-drawer';
+
+export type OrgInfo = {
+  id: string;
+  name: string | null;
+  legal_name: string | null;
+  tax_id: string | null;
+  state_registration: string | null;
+  address_street: string | null;
+  address_number: string | null;
+  address_district: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  address_zip: string | null;
+  legal_rep: string | null;
+};
 
 export type BoardDeal = {
   id: string;
@@ -10,9 +26,13 @@ export type BoardDeal = {
   service_tag: string | null;
   source: string | null;
   valor_pontual: number | null;
+  mrr: number | null;
+  notes: string | null;
+  organization_id: string | null;
   name: string | null;
   email: string | null;
   whatsapp: string | null;
+  org: OrgInfo | null;
 };
 
 // Filete de acento no topo de cada coluna — segue a paleta da marca.
@@ -33,10 +53,13 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
   const [deals, setDeals] = useState(initialDeals);
   const [overStage, setOverStage] = useState<DealStage | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   // Mantém o servidor como fonte da verdade após revalidação.
   useEffect(() => setDeals(initialDeals), [initialDeals]);
+
+  const selected = deals.find((d) => d.id === selectedId) ?? null;
 
   function move(id: string, toStage: DealStage) {
     const current = deals.find((d) => d.id === id);
@@ -51,6 +74,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
   }
 
   return (
+    <>
     <div className="flex gap-3 overflow-x-auto pb-4">
       {PIPELINE_STAGES.map((stage) => {
         const cards = deals.filter((d) => d.stage === stage);
@@ -95,6 +119,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
                 <article
                   key={deal.id}
                   draggable
+                  onClick={() => setSelectedId(deal.id)}
                   onDragStart={(e) => {
                     e.dataTransfer.setData('text/plain', deal.id);
                     e.dataTransfer.effectAllowed = 'move';
@@ -143,5 +168,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
         );
       })}
     </div>
+    {selected && <DealDrawer deal={selected} onClose={() => setSelectedId(null)} />}
+    </>
   );
 }

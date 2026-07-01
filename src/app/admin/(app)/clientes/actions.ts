@@ -3,6 +3,31 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
+// Dados cadastrais da empresa (usados para gerar contratos).
+const ORG_FIELDS = [
+  'name', 'legal_name', 'tax_id', 'state_registration',
+  'address_street', 'address_number', 'address_district',
+  'address_city', 'address_state', 'address_zip', 'legal_rep',
+] as const;
+
+/** Atualiza dados cadastrais de uma empresa (a partir do drawer do cliente). */
+export async function updateOrganization(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  for (const f of ORG_FIELDS) {
+    const v = formData.get(f);
+    if (v != null) patch[f] = String(v).trim() || null;
+  }
+
+  const supabase = getSupabaseAdmin();
+  await supabase.from('organizations').update(patch).eq('id', id);
+
+  revalidatePath('/admin/clientes');
+  revalidatePath('/admin/pipeline');
+}
+
 /** Cria um contato manualmente (+ canais e vínculo de empresa, se informados). */
 export async function createContact(formData: FormData): Promise<void> {
   const name = String(formData.get('name') ?? '').trim();

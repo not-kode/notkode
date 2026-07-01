@@ -5,13 +5,31 @@ import { PipelineBoard, type BoardDeal } from './board';
 export const dynamic = 'force-dynamic';
 
 type Channel = { kind: string; value: string; is_primary: boolean };
+type OrgRow = {
+  id: string;
+  name: string | null;
+  legal_name: string | null;
+  tax_id: string | null;
+  state_registration: string | null;
+  address_street: string | null;
+  address_number: string | null;
+  address_district: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  address_zip: string | null;
+  legal_rep: string | null;
+};
 type DealRow = {
   id: string;
   stage: DealStage;
   service_tag: string | null;
   source: string | null;
   valor_pontual: number | null;
+  mrr: number | null;
+  notes: string | null;
+  organization_id: string | null;
   contacts: { name: string | null; contact_channels: Channel[] | null } | null;
+  organizations: OrgRow | null;
 };
 
 const brl = (n: number) =>
@@ -26,7 +44,11 @@ export default async function PipelinePage() {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('deals')
-    .select('id, stage, service_tag, source, valor_pontual, contacts(name, contact_channels(kind, value, is_primary))')
+    .select(
+      'id, stage, service_tag, source, valor_pontual, mrr, notes, organization_id, ' +
+        'contacts(name, contact_channels(kind, value, is_primary)), ' +
+        'organizations(id, name, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep)',
+    )
     .order('created_at', { ascending: false });
 
   const rows = (data ?? []) as unknown as DealRow[];
@@ -36,9 +58,13 @@ export default async function PipelinePage() {
     service_tag: r.service_tag,
     source: r.source,
     valor_pontual: r.valor_pontual,
+    mrr: r.mrr,
+    notes: r.notes,
+    organization_id: r.organization_id,
     name: r.contacts?.name ?? null,
     email: pick(r.contacts?.contact_channels ?? null, 'email'),
     whatsapp: pick(r.contacts?.contact_channels ?? null, 'whatsapp'),
+    org: r.organizations ?? null,
   }));
 
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');
