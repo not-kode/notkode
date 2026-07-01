@@ -7,8 +7,21 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 const ORG_FIELDS = [
   'name', 'legal_name', 'tax_id', 'state_registration',
   'address_street', 'address_number', 'address_district',
-  'address_city', 'address_state', 'address_zip', 'legal_rep',
+  'address_city', 'address_state', 'address_zip', 'legal_rep', 'legal_rep_cpf',
 ] as const;
+
+/** Edita objeto/escopo e renovação de um contrato (para gerar o documento). */
+export async function updateEngagementContract(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (formData.get('scope') != null) patch.scope = String(formData.get('scope')).trim() || null;
+  if (formData.get('renewal_note') != null) patch.renewal_note = String(formData.get('renewal_note')).trim() || null;
+
+  const supabase = getSupabaseAdmin();
+  await supabase.from('engagements').update(patch).eq('id', id);
+  revalidatePath('/admin/clientes');
+}
 
 /** Atualiza dados cadastrais de uma empresa (a partir do drawer do cliente). */
 export async function updateOrganization(formData: FormData): Promise<void> {

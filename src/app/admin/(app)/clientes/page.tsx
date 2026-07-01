@@ -9,11 +9,12 @@ type OrgRow = {
   legal_name: string | null; tax_id: string | null; state_registration: string | null;
   address_street: string | null; address_number: string | null; address_district: string | null;
   address_city: string | null; address_state: string | null; address_zip: string | null;
-  legal_rep: string | null;
+  legal_rep: string | null; legal_rep_cpf: string | null;
 };
 type EngRow = {
   id: string; organization_id: string | null; title: string | null; type: string; status: string;
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
+  scope: string | null; renewal_note: string | null;
 };
 type RecRow = {
   id: string; engagement_id: string | null; description: string | null; amount: number;
@@ -34,11 +35,11 @@ export default async function ClientesPage() {
   const [{ data: orgData }, { data: engData }, { data: recData }, { data: coData }] = await Promise.all([
     supabase
       .from('organizations')
-      .select('id, name, market, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep')
+      .select('id, name, market, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep, legal_rep_cpf')
       .order('name'),
     supabase
       .from('engagements')
-      .select('id, organization_id, title, type, status, valor, mrr, start_date, end_date, notes')
+      .select('id, organization_id, title, type, status, valor, mrr, start_date, end_date, notes, scope, renewal_note')
       .order('created_at', { ascending: true }),
     supabase
       .from('receivables')
@@ -70,6 +71,7 @@ export default async function ClientesPage() {
       .map((e) => ({
         id: e.id, title: e.title, type: e.type, status: e.status,
         valor: e.valor, mrr: e.mrr, start_date: e.start_date, end_date: e.end_date, notes: e.notes,
+        scope: e.scope, renewal_note: e.renewal_note,
         parcelas: recs
           .filter((r) => r.engagement_id === e.id)
           .map((r) => ({

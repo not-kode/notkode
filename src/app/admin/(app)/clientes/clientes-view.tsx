@@ -2,13 +2,14 @@
 
 import { useState, useTransition, type ReactNode } from 'react';
 import { createEngagement, concludeEngagement, markReceivablePaid, unmarkReceivable } from '../financeiro/actions';
-import { updateOrganization } from './actions';
+import { updateOrganization, updateEngagementContract } from './actions';
 
 export type ClientContact = { id: string; name: string | null; role: string | null; email: string | null; whatsapp: string | null };
 export type Parcela = { id: string; description: string | null; amount: number; due_date: string; status: string; paid_amount: number | null; paid_at: string | null };
 export type Contrato = {
   id: string; title: string | null; type: string; status: string;
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
+  scope: string | null; renewal_note: string | null;
   parcelas: Parcela[];
 };
 export type ClientView = {
@@ -16,7 +17,7 @@ export type ClientView = {
   legal_name: string | null; tax_id: string | null; state_registration: string | null;
   address_street: string | null; address_number: string | null; address_district: string | null;
   address_city: string | null; address_state: string | null; address_zip: string | null;
-  legal_rep: string | null;
+  legal_rep: string | null; legal_rep_cpf: string | null;
   contacts: ClientContact[]; contratos: Contrato[];
 };
 
@@ -123,7 +124,10 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
           <Field label="CNPJ / CPF" name="tax_id" defaultValue={client.tax_id} placeholder="00.000.000/0001-00" />
           <Field label="Inscr. estadual" name="state_registration" defaultValue={client.state_registration} placeholder="Isento" />
         </div>
-        <Field label="Representante legal" name="legal_rep" defaultValue={client.legal_rep} placeholder="Nome de quem assina" />
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Representante legal" name="legal_rep" defaultValue={client.legal_rep} placeholder="Quem assina" />
+          <Field label="CPF do signatário" name="legal_rep_cpf" defaultValue={client.legal_rep_cpf} placeholder="000.000.000-00" />
+        </div>
         <div className="grid grid-cols-[1fr_5rem] gap-3">
           <Field label="Logradouro" name="address_street" defaultValue={client.address_street} placeholder="Rua / Av." />
           <Field label="Número" name="address_number" defaultValue={client.address_number} />
@@ -189,7 +193,7 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
           <p className="rounded-md border border-black/[0.06] bg-white px-3 py-4 text-center text-xs text-text-muted">Nenhum contrato.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {client.contratos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} pending={pending} />)}
+            {client.contratos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} pending={pending} />)}
           </div>
         )}
       </div>
@@ -197,8 +201,9 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
   );
 }
 
-function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; pending: boolean }) {
+function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; pending: boolean }) {
   const isConcluded = eng.status === 'entregue' || eng.status === 'encerrado';
+  const [editing, setEditing] = useState(false);
   const total = eng.parcelas.reduce((s, r) => s + r.amount, 0);
   const recebido = eng.parcelas.filter((r) => r.status === 'recebido').reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
   return (
@@ -212,8 +217,9 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, pending }: { eng:
         {' · '}{eng.mrr ? `${brl(eng.mrr)}/mês` : eng.valor != null ? brl(eng.valor) : '—'}
       </p>
 
-      <div className="mt-2 flex gap-2">
-        <button type="button" disabled title="Disponível na próxima etapa" className="cursor-not-allowed rounded-md border border-black/[0.08] bg-black/[0.02] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-muted">Gerar contrato · em breve</button>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <a href={`/admin/contrato/${eng.id}`} target="_blank" rel="noopener noreferrer" className="rounded-md bg-primary/10 px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-primary transition hover:bg-primary/20">Gerar contrato ↗</a>
+        <button type="button" onClick={() => setEditing((v) => !v)} className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">{editing ? 'fechar' : 'objeto/renovação'}</button>
         {!isConcluded && (
           <form action={onConclude}>
             <input type="hidden" name="id" value={eng.id} />
@@ -221,6 +227,21 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, pending }: { eng:
           </form>
         )}
       </div>
+
+      {editing && (
+        <form action={(fd) => { onSaveContract(fd); setEditing(false); }} className="mt-3 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
+          <input type="hidden" name="id" value={eng.id} />
+          <div>
+            <label className={labelCls}>Objeto / escopo (Cláusula 1)</label>
+            <textarea name="scope" defaultValue={eng.scope ?? ''} rows={4} className={inputCls + ' resize-y'} placeholder="Descreva o que será entregue neste contrato…" />
+          </div>
+          <div>
+            <label className={labelCls}>Renovação (Cláusula 5)</label>
+            <textarea name="renewal_note" defaultValue={eng.renewal_note ?? ''} rows={2} className={inputCls + ' resize-y'} placeholder="Ex: renovação por R$ X/mês após o período…" />
+          </div>
+          <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar</button>
+        </form>
+      )}
 
       {eng.parcelas.length > 0 && (
         <div className="mt-3 border-t border-black/[0.06] pt-2.5">
