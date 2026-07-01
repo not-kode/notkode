@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, type ReactNode } from 'react';
-import { createEngagement, concludeEngagement, markReceivablePaid, unmarkReceivable } from '../financeiro/actions';
+import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable } from '../financeiro/actions';
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
 
 export type ClientContact = { id: string; name: string | null; role: string | null; email: string | null; whatsapp: string | null };
@@ -193,7 +193,7 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
           <p className="rounded-md border border-black/[0.06] bg-white px-3 py-4 text-center text-xs text-text-muted">Nenhum contrato.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {client.contratos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} pending={pending} />)}
+            {client.contratos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} pending={pending} />)}
           </div>
         )}
       </div>
@@ -201,9 +201,10 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
   );
 }
 
-function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; pending: boolean }) {
+function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, onAddParcela, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; pending: boolean }) {
   const isConcluded = eng.status === 'entregue' || eng.status === 'encerrado';
   const [editing, setEditing] = useState(false);
+  const [addingParcela, setAddingParcela] = useState(false);
   const total = eng.parcelas.reduce((s, r) => s + r.amount, 0);
   const recebido = eng.parcelas.filter((r) => r.status === 'recebido').reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
   return (
@@ -263,12 +264,28 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, p
         )}
       </div>
 
-      {eng.parcelas.length > 0 && (
-        <div className="mt-3 border-t border-black/[0.06] pt-2.5">
-          <div className="mb-1.5 flex items-center justify-between">
-            <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Parcelas ({eng.parcelas.length})</p>
-            <p className="font-label text-[10px] text-text-muted">{brl(recebido)} / {brl(total)}</p>
+      <div className="mt-3 border-t border-black/[0.06] pt-2.5">
+        <div className="mb-1.5 flex items-center justify-between">
+          <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Parcelas ({eng.parcelas.length})</p>
+          <div className="flex items-center gap-2">
+            {eng.parcelas.length > 0 && <p className="font-label text-[10px] text-text-muted">{brl(recebido)} / {brl(total)}</p>}
+            <button onClick={() => setAddingParcela((v) => !v)} className="font-label text-[10px] font-medium text-primary hover:underline">{addingParcela ? 'cancelar' : '+ parcela'}</button>
           </div>
+        </div>
+
+        {addingParcela && (
+          <form action={(fd) => { onAddParcela(fd); setAddingParcela(false); }} className="mb-2 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2.5">
+            <input type="hidden" name="engagement_id" value={eng.id} />
+            <input name="description" className={inputCls} placeholder="Descrição — ex: Mensalidade 07/2026" />
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+              <input name="amount" inputMode="decimal" required className={inputCls} placeholder="Valor (R$)" />
+              <input name="due_date" type="date" required className={inputCls} />
+              <button type="submit" disabled={pending} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Add</button>
+            </div>
+          </form>
+        )}
+
+        {eng.parcelas.length > 0 ? (
           <ul className="flex flex-col gap-1">
             {eng.parcelas.map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-2 text-xs">
@@ -284,8 +301,10 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, p
               </li>
             ))}
           </ul>
-        </div>
-      )}
+        ) : (
+          !addingParcela && <p className="text-xs text-text-muted">Sem parcelas ainda.</p>
+        )}
+      </div>
     </div>
   );
 }
