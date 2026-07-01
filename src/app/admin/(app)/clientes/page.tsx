@@ -14,7 +14,7 @@ type OrgRow = {
 type EngRow = {
   id: string; organization_id: string | null; title: string | null; type: string; status: string;
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
-  scope: string | null; renewal_note: string | null;
+  scope: string | null; renewal_note: string | null; proposal_path: string | null; proposal_name: string | null;
 };
 type RecRow = {
   id: string; engagement_id: string | null; description: string | null; amount: number;
@@ -39,7 +39,7 @@ export default async function ClientesPage() {
       .order('name'),
     supabase
       .from('engagements')
-      .select('id, organization_id, title, type, status, valor, mrr, start_date, end_date, notes, scope, renewal_note')
+      .select('id, organization_id, title, type, status, valor, mrr, start_date, end_date, notes, scope, renewal_note, proposal_path, proposal_name')
       .order('created_at', { ascending: true }),
     supabase
       .from('receivables')
@@ -71,7 +71,7 @@ export default async function ClientesPage() {
       .map((e) => ({
         id: e.id, title: e.title, type: e.type, status: e.status,
         valor: e.valor, mrr: e.mrr, start_date: e.start_date, end_date: e.end_date, notes: e.notes,
-        scope: e.scope, renewal_note: e.renewal_note,
+        scope: e.scope, renewal_note: e.renewal_note, proposal_path: e.proposal_path, proposal_name: e.proposal_name,
         parcelas: recs
           .filter((r) => r.engagement_id === e.id)
           .map((r) => ({

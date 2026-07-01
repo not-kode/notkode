@@ -17,6 +17,7 @@ const CONTRATADA = {
 type Eng = {
   id: string; title: string | null; type: string; valor: number | null; mrr: number | null;
   start_date: string | null; end_date: string | null; scope: string | null; renewal_note: string | null;
+  proposal_path: string | null; proposal_name: string | null;
   organizations: {
     name: string | null; legal_name: string | null; tax_id: string | null; legal_rep: string | null; legal_rep_cpf: string | null;
     address_street: string | null; address_number: string | null; address_district: string | null;
@@ -53,7 +54,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   const [{ data: engData }, { data: recData }] = await Promise.all([
     supabase
       .from('engagements')
-      .select('id, title, type, valor, mrr, start_date, end_date, scope, renewal_note, organizations(name, legal_name, tax_id, legal_rep, legal_rep_cpf, address_street, address_number, address_district, address_city, address_state, address_zip)')
+      .select('id, title, type, valor, mrr, start_date, end_date, scope, renewal_note, proposal_path, proposal_name, organizations(name, legal_name, tax_id, legal_rep, legal_rep_cpf, address_street, address_number, address_district, address_city, address_state, address_zip)')
       .eq('id', id)
       .single(),
     supabase.from('receivables').select('description, amount, due_date').eq('engagement_id', id).order('due_date'),
@@ -98,6 +99,9 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
 
           <Clausula titulo="Cláusula Primeira – Do Objeto">
             <p>{eng.scope ?? 'O presente contrato tem por objeto a prestação dos serviços descritos abaixo, conforme escopo acordado entre as partes.'}</p>
+            {eng.proposal_path && (
+              <p>O escopo detalhado dos serviços consta na Proposta Comercial anexa, que integra este contrato como <strong>Anexo I</strong>.</p>
+            )}
           </Clausula>
 
           <Clausula titulo="Cláusula Segunda – Das Obrigações da Contratante">
@@ -161,6 +165,13 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
             <p>8.1. As partes elegem o foro da Comarca de São Paulo – SP para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.</p>
           </Clausula>
 
+          {eng.proposal_path && (
+            <div className="anexo">
+              <p><strong>Anexo I – Proposta Comercial.</strong> A Proposta Comercial{eng.proposal_name ? ` (${eng.proposal_name})` : ''} anexa faz parte integrante deste contrato, detalhando o escopo dos serviços contratados.</p>
+              <a className="no-print anexo-link" href={`/admin/proposta/${eng.id}`} target="_blank" rel="noopener noreferrer">Abrir proposta anexa ↗</a>
+            </div>
+          )}
+
           <p className="close">E por estarem assim justos e contratados, as partes assinam o presente instrumento.</p>
           <p className="local">São Paulo, _______ de ____________________ de ______.</p>
 
@@ -212,6 +223,9 @@ const CSS = `
   .clausula p { font-size: 13.5px; margin-bottom: 6px; text-align: justify; }
   .parcelas { margin: 6px 0 6px 20px; }
   .parcelas li { font-size: 13.5px; margin-bottom: 3px; }
+  .anexo { margin-top: 24px; padding: 14px 16px; border: 1px solid rgba(25,25,24,.12); border-radius: 8px; background: #faf9f5; }
+  .anexo p { font-size: 13px; }
+  .anexo-link { display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 600; color: #3B82F6; text-decoration: none; }
   .close { margin-top: 28px; font-size: 13.5px; }
   .local { margin-top: 28px; font-size: 13.5px; }
   .signs { display: flex; gap: 48px; margin-top: 64px; page-break-inside: avoid; }

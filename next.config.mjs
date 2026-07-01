@@ -5,6 +5,10 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Uploads de proposta (HTML/PDF) via server action — libera acima do 1MB padrão.
+    serverActions: { bodySizeLimit: '10mb' },
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [

@@ -10,6 +10,44 @@ const ORG_FIELDS = [
   'address_city', 'address_state', 'address_zip', 'legal_rep', 'legal_rep_cpf',
 ] as const;
 
+/** Sobe o arquivo da proposta e o vincula ao contrato (bucket privado 'propostas'). */
+export async function uploadProposal(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  const file = formData.get('file');
+  if (!id || !(file instanceof File) || file.size === 0) return;
+
+  const supabase = getSupabaseAdmin();
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+  const path = `${id}/${Date.now()}.${ext}`;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  const { error } = await supabase.storage.from('propostas').upload(path, bytes, {
+    contentType: file.type || 'application/octet-stream',
+    upsert: true,
+  });
+  if (error) throw new Error(`Falha no upload: ${error.message}`);
+
+  await supabase
+    .from('engagements')
+    .update({ proposal_path: path, proposal_name: file.name, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  revalidatePath('/admin/clientes');
+}
+
+/** Remove a proposta anexada ao contrato. */
+export async function removeProposal(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase.from('engagements').select('proposal_path').eq('id', id).single();
+  if (data?.proposal_path) await supabase.storage.from('propostas').remove([data.proposal_path]);
+  await supabase
+    .from('engagements')
+    .update({ proposal_path: null, proposal_name: null, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  revalidatePath('/admin/clientes');
+}
+
 /** Edita objeto/escopo e renovação de um contrato (para gerar o documento). */
 export async function updateEngagementContract(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');

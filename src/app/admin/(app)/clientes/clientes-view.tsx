@@ -2,14 +2,14 @@
 
 import { useState, useTransition, type ReactNode } from 'react';
 import { createEngagement, concludeEngagement, markReceivablePaid, unmarkReceivable } from '../financeiro/actions';
-import { updateOrganization, updateEngagementContract } from './actions';
+import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
 
 export type ClientContact = { id: string; name: string | null; role: string | null; email: string | null; whatsapp: string | null };
 export type Parcela = { id: string; description: string | null; amount: number; due_date: string; status: string; paid_amount: number | null; paid_at: string | null };
 export type Contrato = {
   id: string; title: string | null; type: string; status: string;
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
-  scope: string | null; renewal_note: string | null;
+  scope: string | null; renewal_note: string | null; proposal_path: string | null; proposal_name: string | null;
   parcelas: Parcela[];
 };
 export type ClientView = {
@@ -242,6 +242,26 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, p
           <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar</button>
         </form>
       )}
+
+      {/* Proposta anexa */}
+      <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-black/[0.06] pt-2.5">
+        {eng.proposal_path ? (
+          <>
+            <a href={`/admin/proposta/${eng.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md bg-black/[0.04] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:text-primary">📎 Ver proposta</a>
+            {eng.proposal_name && <span className="max-w-[9rem] truncate font-label text-[10px] text-text-muted">{eng.proposal_name}</span>}
+            <form action={removeProposal}>
+              <input type="hidden" name="id" value={eng.id} />
+              <button type="submit" className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger">remover</button>
+            </form>
+          </>
+        ) : (
+          <form action={uploadProposal} className="flex items-center gap-2">
+            <input type="hidden" name="id" value={eng.id} />
+            <input type="file" name="file" accept=".pdf,.html,.htm,application/pdf,text/html" required className="max-w-[12rem] text-[10px] file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-[10px] file:font-medium file:text-primary" />
+            <button type="submit" className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">anexar</button>
+          </form>
+        )}
+      </div>
 
       {eng.parcelas.length > 0 && (
         <div className="mt-3 border-t border-black/[0.06] pt-2.5">
