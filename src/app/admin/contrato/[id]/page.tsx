@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { PrintButton } from './print-button';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS, obligationLines } from '../defaults';
+import { loadAnexoProposta } from '../anexo';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +67,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   if (!eng) notFound();
   const org = eng.organizations;
   const parcelas = (recData ?? []) as Rec[];
+  const anexo = await loadAnexoProposta(supabase, eng.proposal_path);
 
   const meses = monthsBetween(eng.start_date, eng.end_date);
   const totalParcelas = parcelas.reduce((s, r) => s + r.amount, 0);
@@ -114,6 +116,12 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="doc">
+        {anexo && (
+          <>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" />
+            <style>{anexo.css}</style>
+          </>
+        )}
         <style>{CSS}</style>
         <PrintButton />
 
@@ -190,8 +198,10 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
 
           {eng.proposal_path && (
             <div className="anexo">
-              <p><strong>Anexo I – Proposta Comercial.</strong> A Proposta Comercial{eng.proposal_name ? ` (${eng.proposal_name})` : ''} anexa faz parte integrante deste contrato, detalhando o escopo dos serviços contratados.</p>
-              <a className="no-print anexo-link" href={`/admin/proposta/${eng.id}`} target="_blank" rel="noopener noreferrer">Abrir proposta anexa ↗</a>
+              <p><strong>Anexo I – Proposta Comercial.</strong> A Proposta Comercial{eng.proposal_name ? ` (${eng.proposal_name})` : ''} anexa faz parte integrante deste contrato, detalhando o escopo dos serviços contratados{anexo ? ', e segue reproduzida ao final deste instrumento' : ''}.</p>
+              {!anexo && eng.proposal_path && (
+                <a className="no-print anexo-link" href={`/admin/proposta/${eng.id}`} target="_blank" rel="noopener noreferrer">Abrir proposta anexa ↗</a>
+              )}
             </div>
           )}
 
@@ -215,6 +225,10 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
         </main>
+
+        {anexo && (
+          <div className="nk-anexo" dangerouslySetInnerHTML={{ __html: anexo.body }} />
+        )}
     </div>
   );
 }
