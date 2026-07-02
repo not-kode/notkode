@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { PrintButton } from './print-button';
+import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS, obligationLines } from '../defaults';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,7 @@ const CONTRATADA = {
 type Eng = {
   id: string; title: string | null; type: string; valor: number | null; mrr: number | null;
   start_date: string | null; end_date: string | null; scope: string | null; renewal_note: string | null;
+  client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
   organizations: {
     name: string | null; legal_name: string | null; tax_id: string | null; legal_rep: string | null; legal_rep_cpf: string | null;
@@ -54,7 +56,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   const [{ data: engData }, { data: recData }] = await Promise.all([
     supabase
       .from('engagements')
-      .select('id, title, type, valor, mrr, start_date, end_date, scope, renewal_note, proposal_path, proposal_name, organizations(name, legal_name, tax_id, legal_rep, legal_rep_cpf, address_street, address_number, address_district, address_city, address_state, address_zip)')
+      .select('id, title, type, valor, mrr, start_date, end_date, scope, renewal_note, client_obligations, provider_obligations, proposal_path, proposal_name, organizations(name, legal_name, tax_id, legal_rep, legal_rep_cpf, address_street, address_number, address_district, address_city, address_state, address_zip)')
       .eq('id', id)
       .single(),
     supabase.from('receivables').select('description, amount, due_date').eq('engagement_id', id).order('due_date'),
@@ -67,10 +69,13 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
 
   const meses = monthsBetween(eng.start_date, eng.end_date);
   const totalParcelas = parcelas.reduce((s, r) => s + r.amount, 0);
+  const hasMrr = (eng.mrr ?? 0) > 0;
+
+  const obrigContratante = obligationLines(eng.client_obligations, DEFAULT_CLIENT_OBLIGATIONS);
+  const obrigContratada = obligationLines(eng.provider_obligations, DEFAULT_PROVIDER_OBLIGATIONS);
 
   // Cláusula de pagamento montada por blocos: recorrente (MRR) e pontual (valor avulso)
   // aparecem separados; depois o cronograma das parcelas reais.
-  const hasMrr = (eng.mrr ?? 0) > 0;
   const valorPontual = eng.valor ?? 0;
   const pgto: React.ReactNode[] = [];
   if (hasMrr) {
@@ -99,7 +104,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   }
   pgto.push(<>Os pagamentos serão realizados via PIX, para a chave a ser informada pela CONTRATADA.</>);
   pgto.push(<>Em caso de atraso no pagamento, será cobrada multa de 10% (dez por cento) sobre o valor devido, acrescida de juros de mora de 1% (um por cento) ao mês.</>);
-  pgto.push(<><strong>Custos de API:</strong> os custos de uso da Meta Cloud API (cobranças por conversas iniciadas) e do modelo de IA utilizado pelo agente são de responsabilidade da CONTRATANTE, cobrados diretamente pelos respectivos provedores (Meta e provedor de IA), e não estão inclusos no valor deste contrato.</>);
+  pgto.push(<><strong>Custos de terceiros:</strong> eventuais custos de uso de APIs, integrações e modelos de IA de provedores terceiros, quando aplicáveis ao escopo contratado, são de responsabilidade da CONTRATANTE, cobrados diretamente pelos respectivos provedores, e não estão inclusos no valor deste contrato.</>);
 
   const missing: string[] = [];
   if (!org?.legal_name) missing.push('razão social');
@@ -139,19 +144,15 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
           </Clausula>
 
           <Clausula titulo="Cláusula Segunda – Das Obrigações da Contratante">
-            <p>2.1. Efetuar o pagamento de acordo com o estipulado na Cláusula Quarta deste contrato.</p>
-            <p>2.2. Fornecer acesso ao Meta Business Manager da empresa e os documentos necessários para a verificação junto à Meta (CNPJ e documento comprovante do negócio), em até 5 (cinco) dias úteis após a assinatura deste contrato.</p>
-            <p>2.3. Fornecer todas as informações, acessos e materiais necessários para a execução do projeto no prazo de até 7 (sete) dias úteis contados da assinatura deste contrato.</p>
-            <p>2.4. Aprovar com agilidade os materiais e ajustes enviados pela CONTRATADA, em até 48 (quarenta e oito) horas após o envio.</p>
-            <p>2.5. Não solicitar serviços fora do escopo estabelecido na Cláusula Primeira, salvo mediante acordo prévio e remuneração adicional.</p>
+            {obrigContratante.map((linha, i) => (
+              <p key={i}>2.{i + 1}. {linha}</p>
+            ))}
           </Clausula>
 
           <Clausula titulo="Cláusula Terceira – Das Obrigações da Contratada">
-            <p>3.1. Executar os serviços descritos neste contrato utilizando as melhores práticas técnicas, visando qualidade e satisfação da CONTRATANTE.</p>
-            <p>3.2. Concluir o desenvolvimento e a implementação completa do sistema no prazo de até 60 (sessenta) dias corridos, contados da data de assinatura e do recebimento de todos os acessos e materiais necessários.</p>
-            <p>3.3. Iniciar a migração da Landing Page do RD Station em até 48 (quarenta e oito) horas após o recebimento dos acessos necessários, de forma a viabilizar o cancelamento do contrato com o RD Station pela CONTRATANTE.</p>
-            <p>3.4. Manter o sistema em operação durante todo o período contratual, garantindo disponibilidade e suporte técnico contínuo.</p>
-            <p>3.5. Utilizar a forma escrita para todas as comunicações relevantes com a CONTRATANTE, preservando o histórico de orientações e aprovações.</p>
+            {obrigContratada.map((linha, i) => (
+              <p key={i}>3.{i + 1}. {linha}</p>
+            ))}
           </Clausula>
 
           <Clausula titulo="Cláusula Quarta – Do Valor e Condições de Pagamento">
@@ -163,19 +164,23 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
           <Clausula titulo="Cláusula Quinta – Do Prazo Contratual e Renovação">
             <p>5.1. Este contrato tem vigência {meses ? <>de <strong>{meses} ({meses}) meses</strong></> : 'conforme acordado entre as partes'}{eng.start_date ? `, com início em ${fmtDate(eng.start_date)}` : ', com início na data de sua assinatura'}{eng.end_date ? ` e término em ${fmtDate(eng.end_date)}` : ''}.</p>
             {eng.renewal_note && <p>5.2. {eng.renewal_note}</p>}
-            <p>{eng.renewal_note ? '5.3.' : '5.2.'} O prazo de entrega previsto na Cláusula Terceira poderá ser prorrogado por acordo mútuo, mediante formalização de Termo Aditivo, especialmente em caso de atraso no fornecimento de acessos ou materiais pela CONTRATANTE.</p>
+            <p>{eng.renewal_note ? '5.3.' : '5.2.'} Os prazos e entregas previstos poderão ser prorrogados por acordo mútuo, mediante formalização de Termo Aditivo, especialmente em caso de atraso no fornecimento de acessos ou materiais pela CONTRATANTE.</p>
           </Clausula>
 
           <Clausula titulo="Cláusula Sexta – Da Rescisão e Multa">
             <p>6.1. Qualquer das partes poderá rescindir o presente contrato mediante notificação prévia por escrito com antecedência mínima de 30 (trinta) dias.</p>
-            <p>6.2. Em caso de rescisão antecipada por iniciativa da CONTRATANTE, antes do término da vigência, será devida multa compensatória equivalente a 3 (três) mensalidades do valor vigente, a título de ressarcimento pelos investimentos realizados no desenvolvimento do sistema.</p>
-            <p>6.3. Em caso de inadimplência superior a 30 (trinta) dias, a CONTRATADA poderá suspender o acesso ao sistema e rescindir o contrato, mantendo o direito ao recebimento dos valores em aberto acrescidos das penalidades previstas na Cláusula Quarta.</p>
-            <p>6.4. Se a CONTRATANTE não fornecer os acessos e informações necessários em tempo hábil, o prazo de entrega será ajustado proporcionalmente, sem penalidade para a CONTRATADA.</p>
+            {hasMrr ? (
+              <p>6.2. Em caso de rescisão antecipada por iniciativa da CONTRATANTE, antes do término da vigência, será devida multa compensatória equivalente a 3 (três) mensalidades do valor vigente, a título de ressarcimento pelos serviços prestados e investimentos realizados.</p>
+            ) : (
+              <p>6.2. Em caso de rescisão antecipada por iniciativa da CONTRATANTE, serão devidos os valores correspondentes aos serviços já executados até a data da rescisão, acrescidos das despesas comprovadamente incorridas pela CONTRATADA.</p>
+            )}
+            <p>6.3. Em caso de inadimplência superior a 30 (trinta) dias, a CONTRATADA poderá suspender a prestação dos serviços e o acesso aos entregáveis e rescindir o contrato, mantendo o direito ao recebimento dos valores em aberto acrescidos das penalidades previstas na Cláusula Quarta.</p>
+            <p>6.4. Se a CONTRATANTE não fornecer os acessos e informações necessários em tempo hábil, os prazos serão ajustados proporcionalmente, sem penalidade para a CONTRATADA.</p>
           </Clausula>
 
           <Clausula titulo="Cláusula Sétima – Da Propriedade Intelectual e Titularidade dos Dados">
-            <p>7.1. Após o pagamento integral de cada período, a CONTRATANTE terá propriedade exclusiva de todo o sistema desenvolvido, incluindo código-fonte, configurações e materiais produzidos no âmbito deste contrato.</p>
-            <p>7.2. Todos os dados, leads, histórico de atendimento e informações de clientes gerados no sistema são de propriedade exclusiva da CONTRATANTE, que poderá exportá-los a qualquer momento.</p>
+            <p>7.1. Após o pagamento integral dos valores devidos, a CONTRATANTE terá propriedade exclusiva dos entregáveis produzidos no âmbito deste contrato, incluindo, quando aplicável, código-fonte, configurações e materiais desenvolvidos.</p>
+            <p>7.2. Todos os dados, leads, históricos de atendimento e informações geradas no âmbito dos serviços são de propriedade exclusiva da CONTRATANTE, que poderá exportá-los a qualquer momento.</p>
             <p>7.3. A CONTRATADA se compromete a manter sigilo sobre todas as informações confidenciais da CONTRATANTE a que tiver acesso em razão deste contrato.</p>
           </Clausula>
 

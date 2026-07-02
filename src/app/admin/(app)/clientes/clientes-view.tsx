@@ -3,13 +3,15 @@
 import { useState, useTransition, type ReactNode } from 'react';
 import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable } from '../financeiro/actions';
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
+import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 
 export type ClientContact = { id: string; name: string | null; role: string | null; email: string | null; whatsapp: string | null };
 export type Parcela = { id: string; description: string | null; amount: number; due_date: string; status: string; paid_amount: number | null; paid_at: string | null };
 export type Contrato = {
   id: string; title: string | null; type: string; status: string;
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
-  scope: string | null; renewal_note: string | null; proposal_path: string | null; proposal_name: string | null;
+  scope: string | null; renewal_note: string | null; client_obligations: string | null; provider_obligations: string | null;
+  proposal_path: string | null; proposal_name: string | null;
   parcelas: Parcela[];
 };
 export type ClientView = {
@@ -223,7 +225,7 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, o
 
       <div className="mt-2 flex flex-wrap gap-2">
         <a href={`/admin/contrato/${eng.id}`} target="_blank" rel="noopener noreferrer" className="rounded-md bg-primary/10 px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-primary transition hover:bg-primary/20">Gerar contrato ↗</a>
-        <button type="button" onClick={() => setEditing((v) => !v)} className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">{editing ? 'fechar' : 'objeto/renovação'}</button>
+        <button type="button" onClick={() => setEditing((v) => !v)} className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">{editing ? 'fechar' : 'objeto/cláusulas'}</button>
         {!isConcluded && (
           <form action={onConclude}>
             <input type="hidden" name="id" value={eng.id} />
@@ -242,6 +244,16 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, o
           <div>
             <label className={labelCls}>Renovação (Cláusula 5)</label>
             <textarea name="renewal_note" defaultValue={eng.renewal_note ?? ''} rows={2} className={inputCls + ' resize-y'} placeholder="Ex: renovação por R$ X/mês após o período…" />
+          </div>
+          <div>
+            <label className={labelCls}>Obrigações da CONTRATANTE (Cláusula 2)</label>
+            <textarea name="client_obligations" defaultValue={eng.client_obligations ?? DEFAULT_CLIENT_OBLIGATIONS} rows={5} className={inputCls + ' resize-y'} />
+            <p className="mt-1 font-label text-[10px] text-text-muted">Uma obrigação por linha — o contrato numera automático (2.1, 2.2…). Texto padrão genérico; ajuste conforme o caso.</p>
+          </div>
+          <div>
+            <label className={labelCls}>Obrigações da CONTRATADA (Cláusula 3)</label>
+            <textarea name="provider_obligations" defaultValue={eng.provider_obligations ?? DEFAULT_PROVIDER_OBLIGATIONS} rows={5} className={inputCls + ' resize-y'} />
+            <p className="mt-1 font-label text-[10px] text-text-muted">Uma por linha (3.1, 3.2…). O escopo detalhado vem da proposta anexa.</p>
           </div>
           <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar</button>
         </form>

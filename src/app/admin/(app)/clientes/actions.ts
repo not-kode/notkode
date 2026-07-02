@@ -55,6 +55,8 @@ export async function updateEngagementContract(formData: FormData): Promise<void
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (formData.get('scope') != null) patch.scope = String(formData.get('scope')).trim() || null;
   if (formData.get('renewal_note') != null) patch.renewal_note = String(formData.get('renewal_note')).trim() || null;
+  if (formData.get('client_obligations') != null) patch.client_obligations = String(formData.get('client_obligations')).trim() || null;
+  if (formData.get('provider_obligations') != null) patch.provider_obligations = String(formData.get('provider_obligations')).trim() || null;
 
   const supabase = getSupabaseAdmin();
   await supabase.from('engagements').update(patch).eq('id', id);
