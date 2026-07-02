@@ -80,7 +80,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   const pgto: React.ReactNode[] = [];
   if (hasMrr) {
     pgto.push(
-      <>Pela prestação dos <strong>serviços recorrentes</strong>, a CONTRATANTE pagará o valor mensal de <strong>{brl(eng.mrr!)}</strong>, vencível todo dia 10 (dez) de cada mês{meses ? <>, totalizando <strong>{brl(eng.mrr! * meses)}</strong> ao longo dos {meses} ({meses}) meses de vigência</> : null}.</>,
+      <>Pela prestação dos <strong>serviços recorrentes</strong>, a CONTRATANTE pagará o valor mensal de <strong>{brl(eng.mrr!)}</strong>, vencível todo dia 10 (dez) de cada mês{meses ? <>, totalizando <strong>{brl(eng.mrr! * meses)}</strong> ao longo dos {meses} meses de vigência</> : null}.</>,
     );
   }
   if (valorPontual > 0) {
@@ -162,7 +162,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
           </Clausula>
 
           <Clausula titulo="Cláusula Quinta – Do Prazo Contratual e Renovação">
-            <p>5.1. Este contrato tem vigência {meses ? <>de <strong>{meses} ({meses}) meses</strong></> : 'conforme acordado entre as partes'}{eng.start_date ? `, com início em ${fmtDate(eng.start_date)}` : ', com início na data de sua assinatura'}{eng.end_date ? ` e término em ${fmtDate(eng.end_date)}` : ''}.</p>
+            <p>5.1. Este contrato tem vigência {meses ? <>de <strong>{meses} meses</strong></> : 'conforme acordado entre as partes'}{eng.start_date ? `, com início em ${fmtDate(eng.start_date)}` : ', com início na data de sua assinatura'}{eng.end_date ? ` e término em ${fmtDate(eng.end_date)}` : ''}.</p>
             {eng.renewal_note && <p>5.2. {eng.renewal_note}</p>}
             <p>{eng.renewal_note ? '5.3.' : '5.2.'} Os prazos e entregas previstos poderão ser prorrogados por acordo mútuo, mediante formalização de Termo Aditivo, especialmente em caso de atraso no fornecimento de acessos ou materiais pela CONTRATANTE.</p>
           </Clausula>
