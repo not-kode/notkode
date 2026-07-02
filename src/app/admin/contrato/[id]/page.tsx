@@ -74,6 +74,10 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   const obrigContratante = obligationLines(eng.client_obligations, DEFAULT_CLIENT_OBLIGATIONS);
   const obrigContratada = obligationLines(eng.provider_obligations, DEFAULT_PROVIDER_OBLIGATIONS);
 
+  const dataHoje = new Date().toLocaleDateString('pt-BR', {
+    timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'long', year: 'numeric',
+  });
+
   // Cláusula de pagamento montada por blocos: recorrente (MRR) e pontual (valor avulso)
   // aparecem separados; depois o cronograma das parcelas reais.
   const valorPontual = eng.valor ?? 0;
@@ -196,7 +200,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
           )}
 
           <p className="close">E por estarem assim justos e contratados, as partes assinam o presente instrumento.</p>
-          <p className="local">São Paulo, _______ de ____________________ de ______.</p>
+          <p className="local">São Paulo, {dataHoje}.</p>
 
           <div className="signs">
             <div className="sign">

@@ -101,6 +101,7 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
 function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => void }) {
   const [pending, start] = useTransition();
   const [newContract, setNewContract] = useState(false);
+  const [tab, setTab] = useState<'contratos' | 'cadastro'>(client.contratos.length > 0 ? 'contratos' : 'cadastro');
 
   const markPaid = (id: string, amount: number) => {
     const fd = new FormData();
@@ -114,92 +115,115 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
     start(() => unmarkReceivable(fd));
   };
 
-  return (
-    <Drawer title={client.name ?? 'Cliente'} eyebrow="Cliente" onClose={onClose}>
-      {/* Dados cadastrais */}
-      <form action={(fd) => start(() => updateOrganization(fd))} className="flex flex-col gap-3">
-        <input type="hidden" name="id" value={client.id} />
-        <Field label="Nome (como aparece no sistema)" name="name" defaultValue={client.name} placeholder="Nome do cliente" />
-        <p className="mt-1 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Dados para o contrato</p>
-        <Field label="Razão social" name="legal_name" defaultValue={client.legal_name} placeholder="Empresa LTDA" />
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="CNPJ / CPF" name="tax_id" defaultValue={client.tax_id} placeholder="00.000.000/0001-00" />
-          <Field label="Inscr. estadual" name="state_registration" defaultValue={client.state_registration} placeholder="Isento" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Representante legal" name="legal_rep" defaultValue={client.legal_rep} placeholder="Quem assina" />
-          <Field label="CPF do signatário" name="legal_rep_cpf" defaultValue={client.legal_rep_cpf} placeholder="000.000.000-00" />
-        </div>
-        <div className="grid grid-cols-[1fr_5rem] gap-3">
-          <Field label="Logradouro" name="address_street" defaultValue={client.address_street} placeholder="Rua / Av." />
-          <Field label="Número" name="address_number" defaultValue={client.address_number} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Bairro" name="address_district" defaultValue={client.address_district} />
-          <Field label="CEP" name="address_zip" defaultValue={client.address_zip} />
-        </div>
-        <div className="grid grid-cols-[1fr_4rem] gap-3">
-          <Field label="Cidade" name="address_city" defaultValue={client.address_city} />
-          <Field label="UF" name="address_state" defaultValue={client.address_state} />
-        </div>
-        <button type="submit" disabled={pending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60">{pending ? 'Salvando…' : 'Salvar cadastro'}</button>
-      </form>
+  const tabs: [typeof tab, string][] = [
+    ['contratos', `Contratos (${client.contratos.length})`],
+    ['cadastro', 'Cadastro & contatos'],
+  ];
 
-      {/* Contatos */}
-      {client.contacts.length > 0 && (
-        <div className="border-t border-black/[0.06] pt-4">
-          <p className="mb-2 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Contatos</p>
-          <ul className="flex flex-col gap-1.5">
-            {client.contacts.map((ct) => (
-              <li key={ct.id} className="rounded-md border border-black/[0.06] bg-white px-3 py-2">
-                <p className="text-sm font-medium text-text-primary">{ct.name ?? '—'} {ct.role && <span className="font-label text-[10px] font-normal text-text-muted">· {ct.role}</span>}</p>
-                {(ct.email || ct.whatsapp) && <p className="font-label text-[10px] text-text-muted">{[ct.whatsapp, ct.email].filter(Boolean).join(' · ')}</p>}
-              </li>
-            ))}
-          </ul>
-        </div>
+  return (
+    <Drawer title={client.name ?? 'Cliente'} eyebrow="Cliente" onClose={onClose} wide>
+      {/* Abas */}
+      <div className="flex gap-1 border-b border-black/[0.06] pb-3">
+        {tabs.map(([k, l]) => (
+          <button
+            key={k}
+            onClick={() => setTab(k)}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${tab === k ? 'bg-primary/10 text-primary' : 'text-text-muted hover:bg-black/[0.03] hover:text-text-secondary'}`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'cadastro' && (
+        <>
+          {/* Dados cadastrais */}
+          <form action={(fd) => start(() => updateOrganization(fd))} className="flex flex-col gap-3">
+            <input type="hidden" name="id" value={client.id} />
+            <Field label="Nome (como aparece no sistema)" name="name" defaultValue={client.name} placeholder="Nome do cliente" />
+            <p className="mt-1 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Dados para o contrato</p>
+            <Field label="Razão social" name="legal_name" defaultValue={client.legal_name} placeholder="Empresa LTDA" />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="CNPJ / CPF" name="tax_id" defaultValue={client.tax_id} placeholder="00.000.000/0001-00" />
+              <Field label="Inscr. estadual" name="state_registration" defaultValue={client.state_registration} placeholder="Isento" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Representante legal" name="legal_rep" defaultValue={client.legal_rep} placeholder="Quem assina" />
+              <Field label="CPF do signatário" name="legal_rep_cpf" defaultValue={client.legal_rep_cpf} placeholder="000.000.000-00" />
+            </div>
+            <div className="grid grid-cols-[1fr_5rem] gap-3">
+              <Field label="Logradouro" name="address_street" defaultValue={client.address_street} placeholder="Rua / Av." />
+              <Field label="Número" name="address_number" defaultValue={client.address_number} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Bairro" name="address_district" defaultValue={client.address_district} />
+              <Field label="CEP" name="address_zip" defaultValue={client.address_zip} />
+            </div>
+            <div className="grid grid-cols-[1fr_4rem] gap-3">
+              <Field label="Cidade" name="address_city" defaultValue={client.address_city} />
+              <Field label="UF" name="address_state" defaultValue={client.address_state} />
+            </div>
+            <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60">{pending ? 'Salvando…' : 'Salvar cadastro'}</button>
+          </form>
+
+          {/* Contatos */}
+          {client.contacts.length > 0 && (
+            <div className="border-t border-black/[0.06] pt-4">
+              <p className="mb-2 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Contatos</p>
+              <ul className="flex flex-col gap-1.5">
+                {client.contacts.map((ct) => (
+                  <li key={ct.id} className="rounded-md border border-black/[0.06] bg-white px-3 py-2">
+                    <p className="text-sm font-medium text-text-primary">{ct.name ?? '—'} {ct.role && <span className="font-label text-[10px] font-normal text-text-muted">· {ct.role}</span>}</p>
+                    {(ct.email || ct.whatsapp) && <p className="font-label text-[10px] text-text-muted">{[ct.whatsapp, ct.email].filter(Boolean).join(' · ')}</p>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
 
-      {/* Contratos */}
-      <div className="border-t border-black/[0.06] pt-4">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Contratos ({client.contratos.length})</p>
-          <button onClick={() => setNewContract((v) => !v)} className="font-label text-[11px] font-medium text-primary hover:underline">{newContract ? 'cancelar' : '+ novo contrato'}</button>
-        </div>
-
-        {newContract && (
-          <form action={(fd) => start(async () => { await createEngagement(fd); setNewContract(false); })} className="mb-3 flex flex-col gap-3 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
-            <input type="hidden" name="organization_id" value={client.id} />
-            <Field label="Título" name="title" placeholder="Ex: Sistema de gestão" />
-            <div className="grid grid-cols-2 gap-3">
-              <div><label className={labelCls}>Tipo</label>
-                <select name="type" className={inputCls} defaultValue="recorrente"><option value="recorrente">Recorrente</option><option value="pontual">Pontual</option></select>
-              </div>
-              <div><label className={labelCls}>Status</label>
-                <select name="status" className={inputCls} defaultValue="ativo">{Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><label className={labelCls}>Mensal / MRR (R$)</label><input name="mrr" inputMode="decimal" className={inputCls} placeholder="2500" /></div>
-              <div><label className={labelCls}>Valor avulso (R$)</label><input name="valor" inputMode="decimal" className={inputCls} placeholder="650" /></div>
-            </div>
-            <p className="-mt-1 font-label text-[10px] text-text-muted">MRR = mensalidade recorrente · Valor avulso = cobrança pontual única (não entra no MRR)</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div><label className={labelCls}>Início</label><input name="start_date" type="date" className={inputCls} /></div>
-              <div><label className={labelCls}>Fim</label><input name="end_date" type="date" className={inputCls} /></div>
-            </div>
-            <button type="submit" disabled={pending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Criar contrato</button>
-          </form>
-        )}
-
-        {client.contratos.length === 0 ? (
-          <p className="rounded-md border border-black/[0.06] bg-white px-3 py-4 text-center text-xs text-text-muted">Nenhum contrato.</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {client.contratos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} pending={pending} />)}
+      {tab === 'contratos' && (
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">{client.contratos.length} contrato{client.contratos.length === 1 ? '' : 's'}</p>
+            <button onClick={() => setNewContract((v) => !v)} className="rounded-md border border-primary/30 px-2.5 py-1 font-label text-[11px] font-medium text-primary transition-colors hover:bg-primary/10">{newContract ? 'cancelar' : '+ novo contrato'}</button>
           </div>
-        )}
-      </div>
+
+          {newContract && (
+            <form action={(fd) => start(async () => { await createEngagement(fd); setNewContract(false); })} className="mb-4 flex flex-col gap-3 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-4">
+              <input type="hidden" name="organization_id" value={client.id} />
+              <Field label="Título" name="title" placeholder="Ex: Sistema de gestão" />
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className={labelCls}>Tipo</label>
+                  <select name="type" className={inputCls} defaultValue="recorrente"><option value="recorrente">Recorrente</option><option value="pontual">Pontual</option></select>
+                </div>
+                <div><label className={labelCls}>Status</label>
+                  <select name="status" className={inputCls} defaultValue="ativo">{Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className={labelCls}>Mensal / MRR (R$)</label><input name="mrr" inputMode="decimal" className={inputCls} placeholder="2500" /></div>
+                <div><label className={labelCls}>Valor avulso (R$)</label><input name="valor" inputMode="decimal" className={inputCls} placeholder="650" /></div>
+              </div>
+              <p className="-mt-1 font-label text-[10px] text-text-muted">MRR = mensalidade recorrente · Valor avulso = cobrança pontual única (não entra no MRR)</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className={labelCls}>Início</label><input name="start_date" type="date" className={inputCls} /></div>
+                <div><label className={labelCls}>Fim</label><input name="end_date" type="date" className={inputCls} /></div>
+              </div>
+              <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Criar contrato</button>
+            </form>
+          )}
+
+          {client.contratos.length === 0 ? (
+            <p className="rounded-md border border-black/[0.06] bg-white px-3 py-8 text-center text-xs text-text-muted">Nenhum contrato ainda. Use <strong className="font-medium text-text-secondary">+ novo contrato</strong> para criar o primeiro.</p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {client.contratos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} pending={pending} />)}
+            </div>
+          )}
+        </div>
+      )}
     </Drawer>
   );
 }
