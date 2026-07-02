@@ -133,7 +133,8 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
           )}
 
           <header className="head">
-            <div className="brand">Not<span>kode</span></div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="brand-logo" src="/brand/logos/logo-horizontal-dark.png" alt="Notkode" />
             <div className="doc-title">Contrato de Prestação de Serviços</div>
             {eng.title && <div className="doc-sub">{eng.title}</div>}
           </header>
@@ -248,8 +249,7 @@ const CSS = `
   .page { max-width: 800px; margin: 24px auto; background: #fff; padding: 64px 72px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
   .alert { margin-bottom: 24px; padding: 12px 16px; border-radius: 8px; background: #FEF2F2; border: 1px solid #FCA5A5; color: #B91C1C; font-size: 13px; }
   .head { border-bottom: 2px solid #191918; padding-bottom: 20px; margin-bottom: 28px; }
-  .brand { font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin-bottom: 18px; }
-  .brand span { color: #3B82F6; }
+  .brand-logo { height: 30px; width: auto; display: block; margin-bottom: 18px; }
   .doc-title { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
   .doc-sub { font-size: 14px; color: #6b6b68; margin-top: 4px; }
   .parties { margin-bottom: 28px; }
@@ -273,8 +273,35 @@ const CSS = `
   .s-cpf { font-size: 12px; color: #6b6b68; }
   .s-role { font-size: 11px; letter-spacing: .1em; color: #6b6b68; margin-top: 4px; }
   @media print {
-    .doc { background: #fff; }
+    .doc { background: #fff; min-height: auto; }
     .page { box-shadow: none; margin: 0; max-width: none; padding: 32px 40px; }
     .no-print { display: none !important; }
+
+    /* Proposta embutida (Anexo) — impressão limpa, sem cortes nem fundo sobrando */
+    .nk-anexo { background: #fff !important; }
+    .nk-anexo .nkanexopage { max-width: none !important; margin: 0 !important; padding: 24px 40px !important; }
+    .nk-anexo .doc-header { padding: 8px 0 16px !important; }
+    .nk-anexo .cover { padding: 28px 0 !important; }
+    .nk-anexo .cover-title { font-size: 2.4rem !important; }
+    .nk-anexo .section { padding: 24px 0 !important; }
+    /* Não quebrar blocos no meio */
+    .nk-anexo .section,
+    .nk-anexo .problema-card,
+    .nk-anexo .projeto-header,
+    .nk-anexo .entregavel,
+    .nk-anexo .modulo,
+    .nk-anexo .valor-box,
+    .nk-anexo .roi-box,
+    .nk-anexo .warning-box,
+    .nk-anexo .infra-item,
+    .nk-anexo .infra-disclaimer,
+    .nk-anexo .invest-card,
+    .nk-anexo .invest-addon,
+    .nk-anexo .prazo-item,
+    .nk-anexo .cta-box,
+    .nk-anexo .cta-card { page-break-inside: avoid; break-inside: avoid; }
+    .nk-anexo .section-title,
+    .nk-anexo .entregaveis-title { page-break-after: avoid; }
+    .nk-anexo .doc-footer { page-break-before: avoid; }
   }
 `;
