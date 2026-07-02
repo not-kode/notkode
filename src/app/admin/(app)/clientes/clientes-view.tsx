@@ -59,7 +59,7 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
   const mrrOf = (c: ClientView) => c.contratos.filter((e) => e.status !== 'encerrado' && e.status !== 'churn' && e.status !== 'entregue').reduce((s, e) => s + (e.mrr ?? 0), 0);
 
   return (
-    <div className="max-w-6xl">
+    <div className="w-full">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold">Clientes</h1>
         <p className="mt-1 text-sm text-text-muted">{clients.length} cliente{clients.length === 1 ? '' : 's'} · dados cadastrais, contratos e contatos.</p>
@@ -68,8 +68,8 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
       {clients.length === 0 ? (
         <p className="rounded-md border border-black/[0.06] bg-white px-4 py-8 text-center text-sm text-text-muted">Nenhum cliente ainda. Ganhe um negócio no pipeline para criar um.</p>
       ) : (
-        <div className="overflow-hidden rounded-md border border-black/[0.06] bg-white">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-md border border-black/[0.06] bg-white">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-black/[0.06] text-left font-label text-[11px] uppercase tracking-wider text-text-muted">
                 <th className="px-4 py-3 font-medium">Cliente</th>

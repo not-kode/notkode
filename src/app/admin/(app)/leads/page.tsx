@@ -74,8 +74,8 @@ export default async function LeadsPage() {
       )}
 
       {leads.length > 0 && (
-        <div className="overflow-hidden rounded-md border border-black/[0.06] bg-white">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-md border border-black/[0.06] bg-white">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
                 <th className="px-4 py-3 font-medium">Quando</th>
