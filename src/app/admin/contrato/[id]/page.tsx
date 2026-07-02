@@ -233,7 +233,7 @@ function Clausula({ titulo, children }: { titulo: string; children: React.ReactN
 }
 
 const CSS = `
-  @page { margin: 16mm; }
+  @page { margin: 14mm 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   .doc { font-family: 'DM Sans', system-ui, sans-serif; color: #191918; background: #fff; line-height: 1.6; }
   .page { max-width: 780px; margin: 0 auto; background: #fff; padding: 40px 48px; }
@@ -263,7 +263,9 @@ const CSS = `
   .s-cpf { font-size: 12px; color: #6b6b68; }
   .s-role { font-size: 11px; letter-spacing: .1em; color: #6b6b68; margin-top: 4px; }
   @media print {
-    .page { margin: 0; max-width: none; padding: 0; }
+    /* Margem lateral vai no padding do conteúdo (funciona em toda página,
+       mesmo com "Margens: Nenhuma" no diálogo de impressão). Vertical no @page. */
+    .page { margin: 0; max-width: none; padding: 0 18mm; }
     .no-print { display: none !important; }
   }
 `;
