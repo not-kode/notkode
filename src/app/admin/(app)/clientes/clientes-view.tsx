@@ -232,22 +232,37 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, o
   const isConcluded = eng.status === 'entregue' || eng.status === 'encerrado';
   const [editing, setEditing] = useState(false);
   const [addingParcela, setAddingParcela] = useState(false);
+  const [attaching, setAttaching] = useState(false);
   const total = eng.parcelas.reduce((s, r) => s + r.amount, 0);
   const recebido = eng.parcelas.filter((r) => r.status === 'recebido').reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
+  const valorLabel = [
+    (eng.mrr ?? 0) > 0 ? `${brl(eng.mrr!)}/mês` : null,
+    (eng.valor ?? 0) > 0 ? `${brl(eng.valor!)} avulso` : null,
+  ].filter(Boolean).join(' · ') || '—';
   return (
-    <div className="rounded-md border border-black/[0.08] bg-white p-3.5">
+    <div className="rounded-lg border border-black/[0.08] bg-white p-4">
       <div className="flex items-start justify-between gap-2">
-        <p className="font-medium leading-tight text-text-primary">{eng.title ?? 'Contrato'}</p>
+        <p className="text-[15px] font-semibold leading-tight text-text-primary">{eng.title ?? 'Contrato'}</p>
         <span className={`shrink-0 rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${isConcluded ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{ENG_STATUS[eng.status] ?? eng.status}</span>
       </div>
-      <p className="mt-1 font-label text-[11px] text-text-muted">
-        {eng.type === 'recorrente' ? 'Recorrente' : 'Pontual'} · {fmtDate(eng.start_date)} <span className="text-text-muted/50">→</span> {fmtDate(eng.end_date)}
-        {(eng.mrr ?? 0) > 0 && <> · <span className="text-text-secondary">{brl(eng.mrr!)}/mês</span></>}
-        {(eng.valor ?? 0) > 0 && <> · <span className="text-text-secondary">{brl(eng.valor!)} avulso</span></>}
-        {(eng.mrr ?? 0) === 0 && (eng.valor ?? 0) === 0 && ' · —'}
-      </p>
 
-      <div className="mt-2 flex flex-wrap gap-2">
+      {/* Meta em grid com rótulos, respirando */}
+      <dl className="mt-3 grid grid-cols-3 gap-3">
+        <div>
+          <dt className={labelCls}>Tipo</dt>
+          <dd className="text-[13px] text-text-primary">{eng.type === 'recorrente' ? 'Recorrente' : 'Pontual'}</dd>
+        </div>
+        <div>
+          <dt className={labelCls}>Vigência</dt>
+          <dd className="text-[13px] text-text-primary">{fmtDate(eng.start_date)} <span className="text-text-muted/50">→</span> {fmtDate(eng.end_date)}</dd>
+        </div>
+        <div>
+          <dt className={labelCls}>Valor</dt>
+          <dd className="text-[13px] text-text-primary">{valorLabel}</dd>
+        </div>
+      </dl>
+
+      <div className="mt-3 flex flex-wrap gap-2 border-t border-black/[0.06] pt-3">
         <a href={`/admin/contrato/${eng.id}`} target="_blank" rel="noopener noreferrer" className="rounded-md bg-primary/10 px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-primary transition hover:bg-primary/20">Gerar contrato ↗</a>
         <button type="button" onClick={() => setEditing((v) => !v)} className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">{editing ? 'fechar' : 'objeto/cláusulas'}</button>
         {!isConcluded && (
@@ -284,21 +299,27 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, o
       )}
 
       {/* Proposta anexa */}
-      <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-black/[0.06] pt-2.5">
-        {eng.proposal_path ? (
-          <>
-            <a href={`/admin/proposta/${eng.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md bg-black/[0.04] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:text-primary">📎 Ver proposta</a>
-            {eng.proposal_name && <span className="max-w-[9rem] truncate font-label text-[10px] text-text-muted">{eng.proposal_name}</span>}
-            <form action={removeProposal}>
-              <input type="hidden" name="id" value={eng.id} />
-              <button type="submit" className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger">remover</button>
-            </form>
-          </>
-        ) : (
-          <form action={uploadProposal} className="flex items-center gap-2">
+      <div className="mt-3 border-t border-black/[0.06] pt-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Proposta anexa</p>
+          {eng.proposal_path ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <a href={`/admin/proposta/${eng.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md bg-black/[0.04] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:text-primary">📎 Ver proposta</a>
+              {eng.proposal_name && <span className="max-w-[9rem] truncate font-label text-[10px] text-text-muted">{eng.proposal_name}</span>}
+              <form action={removeProposal}>
+                <input type="hidden" name="id" value={eng.id} />
+                <button type="submit" className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger">remover</button>
+              </form>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setAttaching((v) => !v)} className="font-label text-[10px] font-medium text-primary hover:underline">{attaching ? 'cancelar' : '+ anexar'}</button>
+          )}
+        </div>
+        {!eng.proposal_path && attaching && (
+          <form action={uploadProposal} className="mt-2 flex items-center gap-2">
             <input type="hidden" name="id" value={eng.id} />
-            <input type="file" name="file" accept=".pdf,.html,.htm,application/pdf,text/html" required className="max-w-[12rem] text-[10px] file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-[10px] file:font-medium file:text-primary" />
-            <button type="submit" className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">anexar</button>
+            <input type="file" name="file" accept=".pdf,.html,.htm,application/pdf,text/html" required className="min-w-0 flex-1 text-[10px] file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-[10px] file:font-medium file:text-primary" />
+            <button type="submit" className="shrink-0 rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">enviar</button>
           </form>
         )}
       </div>
@@ -348,11 +369,11 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, o
   );
 }
 
-function Drawer({ title, eyebrow, onClose, children }: { title: string; eyebrow?: string; onClose: () => void; children: ReactNode }) {
+function Drawer({ title, eyebrow, onClose, children, wide }: { title: string; eyebrow?: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <button aria-label="Fechar" onClick={onClose} className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
-      <aside className="relative flex h-full w-full max-w-[28rem] flex-col overflow-y-auto border-l border-black/[0.06] bg-white shadow-xl">
+      <aside className={`relative flex h-full w-full flex-col overflow-y-auto border-l border-black/[0.06] bg-white shadow-xl ${wide ? 'max-w-[44rem]' : 'max-w-[28rem]'}`}>
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-black/[0.06] bg-white px-5 py-4">
           <div>
             {eyebrow && <p className="eyebrow mb-1"><span className="status-dot" />{eyebrow}</p>}
