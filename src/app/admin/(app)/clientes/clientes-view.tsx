@@ -265,11 +265,14 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
   const isConcluded = eng.status === 'entregue' || eng.status === 'encerrado';
   const isActive = isActiveStatus(eng.status);
   const isChurn = eng.status === 'churn';
+  const [menuOpen, setMenuOpen] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [editing, setEditing] = useState(false);
   const [addingParcela, setAddingParcela] = useState(false);
+  const [parcelasOpen, setParcelasOpen] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const menuItem = 'flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-text-secondary transition-colors hover:bg-black/[0.04] hover:text-text-primary';
   const total = eng.parcelas.reduce((s, r) => s + r.amount, 0);
   const recebido = eng.parcelas.filter((r) => r.status === 'recebido').reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
   const valorLabel = [
@@ -293,18 +296,56 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
 
   return (
     <div className={`rounded-lg border p-4 transition-colors ${cardTone}`}>
-      <div className="flex items-start justify-between gap-2">
-        <p className={`text-[15px] font-semibold leading-tight ${isActive ? 'text-text-primary' : 'text-text-secondary'}`}>{eng.title ?? 'Contrato'}</p>
-        <select
-          value={eng.status}
-          onChange={(ev) => onChangeStatus(eng.id, ev.target.value)}
-          disabled={pending}
-          aria-label="Status do contrato"
-          className={`shrink-0 cursor-pointer appearance-none rounded-full py-0.5 pl-2 pr-1 font-label text-[10px] uppercase tracking-wider outline-none transition-colors disabled:opacity-50 ${statusTone}`}
-        >
-          {Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-        </select>
+      {/* Cabeçalho: título · status (clicável) · menu de ações */}
+      <div className="flex items-start justify-between gap-3">
+        <p className={`min-w-0 text-[15px] font-semibold leading-tight ${isActive ? 'text-text-primary' : 'text-text-secondary'}`}>{eng.title ?? 'Contrato'}</p>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <div className="relative flex items-center">
+            <select
+              value={eng.status}
+              onChange={(ev) => onChangeStatus(eng.id, ev.target.value)}
+              disabled={pending}
+              aria-label="Status do contrato"
+              className={`cursor-pointer appearance-none rounded-full py-0.5 pl-2 pr-5 font-label text-[10px] uppercase tracking-wider outline-none transition-colors disabled:opacity-50 ${statusTone}`}
+            >
+              {Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+            <span className="pointer-events-none absolute right-1.5 text-[8px] opacity-70">▼</span>
+          </div>
+          <div className="relative">
+            <button type="button" aria-label="Ações do contrato" onClick={() => setMenuOpen((v) => !v)} className="rounded-md p-1 text-text-muted transition-colors hover:bg-black/[0.06] hover:text-text-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle cx="12" cy="19" r="1.7" /></svg>
+            </button>
+            {menuOpen && (
+              <>
+                <button type="button" aria-hidden onClick={() => setMenuOpen(false)} className="fixed inset-0 z-10 cursor-default" />
+                <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-lg border border-black/[0.08] bg-white py-1 shadow-lg">
+                  <button type="button" onClick={() => { setEditingDetails(true); setEditing(false); setMenuOpen(false); }} className={menuItem}>Editar dados</button>
+                  <button type="button" onClick={() => { setEditing(true); setEditingDetails(false); setMenuOpen(false); }} className={menuItem}>Objeto &amp; cláusulas</button>
+                  {!isConcluded && (
+                    <form action={onConclude}>
+                      <input type="hidden" name="id" value={eng.id} />
+                      <button type="submit" onClick={() => setMenuOpen(false)} className={menuItem}>Marcar como concluído</button>
+                    </form>
+                  )}
+                  <div className="my-1 border-t border-black/[0.06]" />
+                  <button type="button" onClick={() => { setConfirmDelete(true); setMenuOpen(false); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-danger transition-colors hover:bg-danger/[0.06]">Excluir contrato</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
+
+      {confirmDelete && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-md border border-danger/30 bg-danger/[0.05] px-3 py-2">
+          <span className="text-xs text-danger">Excluir este contrato e suas parcelas? Não dá pra desfazer.</span>
+          <span className="flex shrink-0 items-center gap-2">
+            <button type="button" onClick={() => { onDelete(eng.id); setConfirmDelete(false); }} disabled={pending} className="rounded-md bg-danger px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-white transition hover:bg-danger/90 disabled:opacity-50">Excluir</button>
+            <button type="button" onClick={() => setConfirmDelete(false)} className="font-label text-[10px] text-text-muted hover:text-text-secondary">cancelar</button>
+          </span>
+        </div>
+      )}
 
       {/* Meta em grid com rótulos, respirando */}
       <dl className="mt-3 grid grid-cols-3 gap-3">
@@ -322,24 +363,9 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
         </div>
       </dl>
 
-      <div className="mt-3 flex flex-wrap gap-2 border-t border-black/[0.06] pt-3">
-        <a href={`/admin/contrato/${eng.id}`} target="_blank" rel="noopener noreferrer" className="rounded-md bg-primary/10 px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-primary transition hover:bg-primary/20">Gerar contrato ↗</a>
-        <button type="button" onClick={() => setEditingDetails((v) => !v)} className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">{editingDetails ? 'fechar' : 'editar'}</button>
-        <button type="button" onClick={() => setEditing((v) => !v)} className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">{editing ? 'fechar' : 'objeto/cláusulas'}</button>
-        {!isConcluded && (
-          <form action={onConclude}>
-            <input type="hidden" name="id" value={eng.id} />
-            <button type="submit" disabled={pending} className="rounded-md border border-black/[0.12] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-text-primary/40 hover:text-text-primary disabled:opacity-50">Concluir</button>
-          </form>
-        )}
-        {confirmDelete ? (
-          <span className="ml-auto flex items-center gap-2">
-            <button type="button" onClick={() => { onDelete(eng.id); setConfirmDelete(false); }} disabled={pending} className="rounded-md bg-danger/10 px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-danger transition hover:bg-danger/20 disabled:opacity-50">confirmar exclusão</button>
-            <button type="button" onClick={() => setConfirmDelete(false)} className="font-label text-[10px] text-text-muted hover:text-text-secondary">cancelar</button>
-          </span>
-        ) : (
-          <button type="button" onClick={() => setConfirmDelete(true)} className="ml-auto rounded-md border border-transparent px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-muted transition hover:border-danger/30 hover:text-danger">excluir</button>
-        )}
+      {/* Ação principal */}
+      <div className="mt-3 border-t border-black/[0.06] pt-3">
+        <a href={`/admin/contrato/${eng.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90">Gerar contrato ↗</a>
       </div>
 
       {editingDetails && (
@@ -362,7 +388,10 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
             <div><label className={labelCls}>Início</label><input name="start_date" type="date" defaultValue={eng.start_date ?? ''} className={inputCls} /></div>
             <div><label className={labelCls}>Fim</label><input name="end_date" type="date" defaultValue={eng.end_date ?? ''} className={inputCls} /></div>
           </div>
-          <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar alterações</button>
+          <div className="flex items-center gap-3">
+            <button type="submit" disabled={pending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar alterações</button>
+            <button type="button" onClick={() => setEditingDetails(false)} className="font-label text-[11px] text-text-muted hover:text-text-secondary">cancelar</button>
+          </div>
         </form>
       )}
 
@@ -387,7 +416,10 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
             <textarea name="provider_obligations" defaultValue={eng.provider_obligations ?? DEFAULT_PROVIDER_OBLIGATIONS} rows={5} className={inputCls + ' resize-y'} />
             <p className="mt-1 font-label text-[10px] text-text-muted">Uma por linha (3.1, 3.2…). O escopo detalhado vem da proposta anexa.</p>
           </div>
-          <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar</button>
+          <div className="flex items-center gap-3">
+            <button type="submit" disabled={pending} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar</button>
+            <button type="button" onClick={() => setEditing(false)} className="font-label text-[11px] text-text-muted hover:text-text-secondary">cancelar</button>
+          </div>
         </form>
       )}
 
@@ -418,14 +450,19 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
       </div>
 
       <div className="mt-3 border-t border-black/[0.06] pt-2.5">
-        <div className="mb-1.5 flex items-center justify-between">
-          <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Parcelas ({eng.parcelas.length})</p>
-          <div className="flex items-center gap-2">
-            {eng.parcelas.length > 0 && <p className="font-label text-[10px] text-text-muted">{brl(recebido)} / {brl(total)}</p>}
+        <div className="flex items-center justify-between gap-2">
+          <button type="button" onClick={() => setParcelasOpen((v) => !v)} className="flex items-center gap-1.5 font-label text-[10px] uppercase tracking-wider text-text-muted transition-colors hover:text-text-secondary">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`transition-transform ${parcelasOpen ? 'rotate-90' : ''}`}><path d="M9 18l6-6-6-6" /></svg>
+            Parcelas ({eng.parcelas.length})
+            {eng.parcelas.length > 0 && <span className="font-normal normal-case tracking-normal text-text-muted/80">· {brl(recebido)} / {brl(total)}</span>}
+          </button>
+          {parcelasOpen && (
             <button onClick={() => setAddingParcela((v) => !v)} className="font-label text-[10px] font-medium text-primary hover:underline">{addingParcela ? 'cancelar' : '+ parcela'}</button>
-          </div>
+          )}
         </div>
 
+        {parcelasOpen && (
+        <div className="mt-2">
         {addingParcela && (
           <form action={(fd) => { onAddParcela(fd); setAddingParcela(false); }} className="mb-2 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2.5">
             <input type="hidden" name="engagement_id" value={eng.id} />
@@ -456,6 +493,8 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
           </ul>
         ) : (
           !addingParcela && <p className="text-xs text-text-muted">Sem parcelas ainda.</p>
+        )}
+        </div>
         )}
       </div>
     </div>
