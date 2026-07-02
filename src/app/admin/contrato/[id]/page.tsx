@@ -49,8 +49,9 @@ function enderecoOrg(o: NonNullable<Eng['organizations']>): string {
   return parts.join(', ');
 }
 
-export default async function ContratoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ContratoPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ mode?: string }> }) {
   const { id } = await params;
+  const forPdf = (await searchParams).mode === 'pdf';
   const supabase = getSupabaseAdmin();
 
   const [{ data: engData }, { data: recData }] = await Promise.all([
@@ -119,7 +120,8 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   return (
     <div className="doc">
         <style>{CSS}</style>
-        <PrintButton />
+        {forPdf && <style>{`@page { margin: 0 } .page { padding: 0 !important; max-width: none !important }`}</style>}
+        {!forPdf && <PrintButton id={eng.id} />}
 
         <main className="page">
           {missing.length > 0 && (
@@ -234,6 +236,7 @@ function Clausula({ titulo, children }: { titulo: string; children: React.ReactN
 
 const CSS = `
   @page { margin: 14mm 0; }
+  html, body { background: #fff !important; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   .doc { font-family: 'DM Sans', system-ui, sans-serif; color: #191918; background: #fff; line-height: 1.6; }
   .page { max-width: 780px; margin: 0 auto; background: #fff; padding: 40px 48px; }
