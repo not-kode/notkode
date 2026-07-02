@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { PrintButton } from './print-button';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS, obligationLines } from '../defaults';
-import { loadAnexoProposta } from '../anexo';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,7 +66,6 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   if (!eng) notFound();
   const org = eng.organizations;
   const parcelas = (recData ?? []) as Rec[];
-  const anexo = await loadAnexoProposta(supabase, eng.proposal_path);
 
   const meses = monthsBetween(eng.start_date, eng.end_date);
   const totalParcelas = parcelas.reduce((s, r) => s + r.amount, 0);
@@ -116,12 +114,6 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="doc">
-        {anexo && (
-          <>
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" />
-            <style>{anexo.css}</style>
-          </>
-        )}
         <style>{CSS}</style>
         <PrintButton />
 
@@ -199,10 +191,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
 
           {eng.proposal_path && (
             <div className="anexo">
-              <p><strong>Anexo I – Proposta Comercial.</strong> A Proposta Comercial{eng.proposal_name ? ` (${eng.proposal_name})` : ''} anexa faz parte integrante deste contrato, detalhando o escopo dos serviços contratados{anexo ? ', e segue reproduzida ao final deste instrumento' : ''}.</p>
-              {!anexo && eng.proposal_path && (
-                <a className="no-print anexo-link" href={`/admin/proposta/${eng.id}`} target="_blank" rel="noopener noreferrer">Abrir proposta anexa ↗</a>
-              )}
+              <p><strong>Anexo I – Proposta Comercial.</strong> A Proposta Comercial anexa faz parte integrante deste contrato, detalhando o escopo dos serviços contratados.</p>
             </div>
           )}
 
@@ -226,10 +215,6 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
         </main>
-
-        {anexo && (
-          <div className="nk-anexo" dangerouslySetInnerHTML={{ __html: anexo.body }} />
-        )}
     </div>
   );
 }
@@ -276,32 +261,5 @@ const CSS = `
     .doc { background: #fff; min-height: auto; }
     .page { box-shadow: none; margin: 0; max-width: none; padding: 32px 40px; }
     .no-print { display: none !important; }
-
-    /* Proposta embutida (Anexo) — impressão limpa, sem cortes nem fundo sobrando */
-    .nk-anexo { background: #fff !important; }
-    .nk-anexo .nkanexopage { max-width: none !important; margin: 0 !important; padding: 24px 40px !important; }
-    .nk-anexo .doc-header { padding: 8px 0 16px !important; }
-    .nk-anexo .cover { padding: 28px 0 !important; }
-    .nk-anexo .cover-title { font-size: 2.4rem !important; }
-    .nk-anexo .section { padding: 24px 0 !important; }
-    /* Não quebrar blocos no meio */
-    .nk-anexo .section,
-    .nk-anexo .problema-card,
-    .nk-anexo .projeto-header,
-    .nk-anexo .entregavel,
-    .nk-anexo .modulo,
-    .nk-anexo .valor-box,
-    .nk-anexo .roi-box,
-    .nk-anexo .warning-box,
-    .nk-anexo .infra-item,
-    .nk-anexo .infra-disclaimer,
-    .nk-anexo .invest-card,
-    .nk-anexo .invest-addon,
-    .nk-anexo .prazo-item,
-    .nk-anexo .cta-box,
-    .nk-anexo .cta-card { page-break-inside: avoid; break-inside: avoid; }
-    .nk-anexo .section-title,
-    .nk-anexo .entregaveis-title { page-break-after: avoid; }
-    .nk-anexo .doc-footer { page-break-before: avoid; }
   }
 `;
