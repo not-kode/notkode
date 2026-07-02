@@ -233,9 +233,10 @@ function Clausula({ titulo, children }: { titulo: string; children: React.ReactN
 }
 
 const CSS = `
+  @page { margin: 16mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  .doc { font-family: 'DM Sans', system-ui, sans-serif; color: #191918; background: #f3f3ee; min-height: 100vh; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .page { max-width: 800px; margin: 24px auto; background: #fff; padding: 64px 72px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+  .doc { font-family: 'DM Sans', system-ui, sans-serif; color: #191918; background: #fff; line-height: 1.6; }
+  .page { max-width: 780px; margin: 0 auto; background: #fff; padding: 40px 48px; }
   .alert { margin-bottom: 24px; padding: 12px 16px; border-radius: 8px; background: #FEF2F2; border: 1px solid #FCA5A5; color: #B91C1C; font-size: 13px; }
   .head { border-bottom: 2px solid #191918; padding-bottom: 20px; margin-bottom: 28px; }
   .brand-logo { height: 30px; width: auto; display: block; margin-bottom: 18px; }
@@ -249,7 +250,7 @@ const CSS = `
   .clausula p, .clausula .item { font-size: 13.5px; margin-bottom: 6px; text-align: justify; }
   .parcelas { margin: 6px 0 6px 20px; }
   .parcelas li { font-size: 13.5px; margin-bottom: 3px; }
-  .anexo { margin-top: 24px; padding: 14px 16px; border: 1px solid rgba(25,25,24,.12); border-radius: 8px; background: #faf9f5; }
+  .anexo { margin-top: 24px; padding: 14px 16px; border: 1px solid rgba(25,25,24,.18); border-radius: 8px; background: #fff; }
   .anexo p { font-size: 13px; }
   .anexo-link { display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 600; color: #3B82F6; text-decoration: none; }
   .close { margin-top: 28px; font-size: 13.5px; }
@@ -262,8 +263,7 @@ const CSS = `
   .s-cpf { font-size: 12px; color: #6b6b68; }
   .s-role { font-size: 11px; letter-spacing: .1em; color: #6b6b68; margin-top: 4px; }
   @media print {
-    .doc { background: #fff; min-height: auto; }
-    .page { box-shadow: none; margin: 0; max-width: none; padding: 32px 40px; }
+    .page { margin: 0; max-width: none; padding: 0; }
     .no-print { display: none !important; }
   }
 `;

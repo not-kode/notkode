@@ -43,6 +43,53 @@ export async function createEngagement(formData: FormData): Promise<void> {
   revalidatePath('/admin/clientes');
 }
 
+/** Edita os dados básicos de um contrato: título, tipo, status, valores e vigência. */
+export async function updateEngagementDetails(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+  const title = formData.get('title');
+  if (title != null && String(title).trim()) patch.title = String(title).trim();
+
+  const type = formData.get('type');
+  if (type === 'pontual' || type === 'recorrente') patch.type = type;
+
+  const status = formData.get('status');
+  if (status != null && ENGAGEMENT_STATUS.includes(String(status))) patch.status = String(status);
+
+  if (formData.has('mrr')) patch.mrr = num(formData.get('mrr'));
+  if (formData.has('valor')) patch.valor = num(formData.get('valor'));
+  if (formData.has('start_date')) patch.start_date = String(formData.get('start_date') ?? '') || null;
+  if (formData.has('end_date')) patch.end_date = String(formData.get('end_date') ?? '') || null;
+
+  const supabase = getSupabaseAdmin();
+  await supabase.from('engagements').update(patch).eq('id', id);
+
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
+}
+
+/** Exclui um contrato: remove a proposta anexa, as parcelas e o próprio contrato. */
+export async function deleteEngagement(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  const supabase = getSupabaseAdmin();
+
+  // Remove o arquivo da proposta do storage, se houver.
+  const { data: eng } = await supabase.from('engagements').select('proposal_path').eq('id', id).single();
+  if (eng?.proposal_path) await supabase.storage.from('propostas').remove([eng.proposal_path]);
+
+  // Apaga as parcelas vinculadas antes do contrato (evita órfãos / FK).
+  await supabase.from('receivables').delete().eq('engagement_id', id);
+  await supabase.from('engagements').delete().eq('id', id);
+
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
+}
+
 /** Conclui um contrato: marca como entregue e registra a data de conclusão. */
 export async function concludeEngagement(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');

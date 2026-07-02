@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, type ReactNode } from 'react';
-import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable } from '../financeiro/actions';
+import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement } from '../financeiro/actions';
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 
@@ -28,6 +28,10 @@ const ENG_STATUS: Record<string, string> = {
   revisao: 'Revisão', entregue: 'Entregue', encerrado: 'Encerrado',
   ativo: 'Ativo', pausado: 'Pausado', churn: 'Churn',
 };
+// Status que contam como contrato "vivo" (aparecem no grupo Ativos, com destaque).
+const ACTIVE_STATUSES = new Set(['aguardando', 'onboarding', 'em_desenvolvimento', 'revisao', 'ativo']);
+const isActiveStatus = (s: string) => ACTIVE_STATUSES.has(s);
+
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
 const fmtDate = (d: string | null) => {
   if (!d) return '—';
@@ -114,6 +118,20 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
     fd.set('id', id);
     start(() => unmarkReceivable(fd));
   };
+  const changeStatus = (id: string, status: string) => {
+    const fd = new FormData();
+    fd.set('id', id);
+    fd.set('status', status);
+    start(() => updateEngagementDetails(fd));
+  };
+  const remove = (id: string) => {
+    const fd = new FormData();
+    fd.set('id', id);
+    start(() => deleteEngagement(fd));
+  };
+
+  const ativos = client.contratos.filter((e) => isActiveStatus(e.status));
+  const encerrados = client.contratos.filter((e) => !isActiveStatus(e.status));
 
   const tabs: [typeof tab, string][] = [
     ['contratos', `Contratos (${client.contratos.length})`],
@@ -218,8 +236,23 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
           {client.contratos.length === 0 ? (
             <p className="rounded-md border border-black/[0.06] bg-white px-3 py-8 text-center text-xs text-text-muted">Nenhum contrato ainda. Use <strong className="font-medium text-text-secondary">+ novo contrato</strong> para criar o primeiro.</p>
           ) : (
-            <div className="flex flex-col gap-4">
-              {client.contratos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} pending={pending} />)}
+            <div className="flex flex-col gap-5">
+              {ativos.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-primary">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Ativos ({ativos.length})
+                  </p>
+                  {ativos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onChangeStatus={changeStatus} onDelete={remove} pending={pending} />)}
+                </div>
+              )}
+              {encerrados.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">
+                    <span className="h-1.5 w-1.5 rounded-full bg-text-muted/50" /> Encerrados / inativos ({encerrados.length})
+                  </p>
+                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onChangeStatus={changeStatus} onDelete={remove} pending={pending} />)}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -228,22 +261,49 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
   );
 }
 
-function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, onAddParcela, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; pending: boolean }) {
+function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onChangeStatus, onDelete, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onChangeStatus: (id: string, status: string) => void; onDelete: (id: string) => void; pending: boolean }) {
   const isConcluded = eng.status === 'entregue' || eng.status === 'encerrado';
+  const isActive = isActiveStatus(eng.status);
+  const isChurn = eng.status === 'churn';
+  const [editingDetails, setEditingDetails] = useState(false);
   const [editing, setEditing] = useState(false);
   const [addingParcela, setAddingParcela] = useState(false);
   const [attaching, setAttaching] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const total = eng.parcelas.reduce((s, r) => s + r.amount, 0);
   const recebido = eng.parcelas.filter((r) => r.status === 'recebido').reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
   const valorLabel = [
     (eng.mrr ?? 0) > 0 ? `${brl(eng.mrr!)}/mês` : null,
     (eng.valor ?? 0) > 0 ? `${brl(eng.valor!)} avulso` : null,
   ].filter(Boolean).join(' · ') || '—';
+
+  // Cor de fundo/borda por estado: ativo em azul, churn em vermelho, resto neutro esmaecido.
+  const cardTone = isActive
+    ? 'border-primary/25 bg-primary/[0.04]'
+    : isChurn
+      ? 'border-danger/20 bg-danger/[0.03]'
+      : 'border-black/[0.07] bg-black/[0.02]';
+  const statusTone = isActive
+    ? 'bg-primary/10 text-primary'
+    : isChurn
+      ? 'bg-danger/10 text-danger'
+      : isConcluded
+        ? 'bg-success/10 text-success'
+        : 'bg-black/[0.06] text-text-secondary';
+
   return (
-    <div className="rounded-lg border border-black/[0.08] bg-white p-4">
+    <div className={`rounded-lg border p-4 transition-colors ${cardTone}`}>
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[15px] font-semibold leading-tight text-text-primary">{eng.title ?? 'Contrato'}</p>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${isConcluded ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{ENG_STATUS[eng.status] ?? eng.status}</span>
+        <p className={`text-[15px] font-semibold leading-tight ${isActive ? 'text-text-primary' : 'text-text-secondary'}`}>{eng.title ?? 'Contrato'}</p>
+        <select
+          value={eng.status}
+          onChange={(ev) => onChangeStatus(eng.id, ev.target.value)}
+          disabled={pending}
+          aria-label="Status do contrato"
+          className={`shrink-0 cursor-pointer appearance-none rounded-full py-0.5 pl-2 pr-1 font-label text-[10px] uppercase tracking-wider outline-none transition-colors disabled:opacity-50 ${statusTone}`}
+        >
+          {Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
       </div>
 
       {/* Meta em grid com rótulos, respirando */}
@@ -264,6 +324,7 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, o
 
       <div className="mt-3 flex flex-wrap gap-2 border-t border-black/[0.06] pt-3">
         <a href={`/admin/contrato/${eng.id}`} target="_blank" rel="noopener noreferrer" className="rounded-md bg-primary/10 px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-primary transition hover:bg-primary/20">Gerar contrato ↗</a>
+        <button type="button" onClick={() => setEditingDetails((v) => !v)} className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">{editingDetails ? 'fechar' : 'editar'}</button>
         <button type="button" onClick={() => setEditing((v) => !v)} className="rounded-md border border-black/[0.1] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary">{editing ? 'fechar' : 'objeto/cláusulas'}</button>
         {!isConcluded && (
           <form action={onConclude}>
@@ -271,7 +332,39 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, o
             <button type="submit" disabled={pending} className="rounded-md border border-black/[0.12] px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-text-primary/40 hover:text-text-primary disabled:opacity-50">Concluir</button>
           </form>
         )}
+        {confirmDelete ? (
+          <span className="ml-auto flex items-center gap-2">
+            <button type="button" onClick={() => { onDelete(eng.id); setConfirmDelete(false); }} disabled={pending} className="rounded-md bg-danger/10 px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-danger transition hover:bg-danger/20 disabled:opacity-50">confirmar exclusão</button>
+            <button type="button" onClick={() => setConfirmDelete(false)} className="font-label text-[10px] text-text-muted hover:text-text-secondary">cancelar</button>
+          </span>
+        ) : (
+          <button type="button" onClick={() => setConfirmDelete(true)} className="ml-auto rounded-md border border-transparent px-2.5 py-1 font-label text-[10px] uppercase tracking-wider text-text-muted transition hover:border-danger/30 hover:text-danger">excluir</button>
+        )}
       </div>
+
+      {editingDetails && (
+        <form action={(fd) => { onSaveDetails(fd); setEditingDetails(false); }} className="mt-3 flex flex-col gap-3 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
+          <input type="hidden" name="id" value={eng.id} />
+          <Field label="Título" name="title" defaultValue={eng.title} placeholder="Ex: Sistema de gestão" />
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>Tipo</label>
+              <select name="type" className={inputCls} defaultValue={eng.type}><option value="recorrente">Recorrente</option><option value="pontual">Pontual</option></select>
+            </div>
+            <div><label className={labelCls}>Status</label>
+              <select name="status" className={inputCls} defaultValue={eng.status}>{Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>Mensal / MRR (R$)</label><input name="mrr" inputMode="decimal" defaultValue={eng.mrr != null ? String(eng.mrr) : ''} className={inputCls} placeholder="2500" /></div>
+            <div><label className={labelCls}>Valor avulso (R$)</label><input name="valor" inputMode="decimal" defaultValue={eng.valor != null ? String(eng.valor) : ''} className={inputCls} placeholder="650" /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>Início</label><input name="start_date" type="date" defaultValue={eng.start_date ?? ''} className={inputCls} /></div>
+            <div><label className={labelCls}>Fim</label><input name="end_date" type="date" defaultValue={eng.end_date ?? ''} className={inputCls} /></div>
+          </div>
+          <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar alterações</button>
+        </form>
+      )}
 
       {editing && (
         <form action={(fd) => { onSaveContract(fd); setEditing(false); }} className="mt-3 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
