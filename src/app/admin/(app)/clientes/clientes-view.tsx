@@ -216,7 +216,9 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveContract, o
       </div>
       <p className="mt-1 font-label text-[11px] text-text-muted">
         {eng.type === 'recorrente' ? 'Recorrente' : 'Pontual'} · {fmtDate(eng.start_date)} <span className="text-text-muted/50">→</span> {fmtDate(eng.end_date)}
-        {' · '}{eng.mrr ? `${brl(eng.mrr)}/mês` : eng.valor != null ? brl(eng.valor) : '—'}
+        {(eng.mrr ?? 0) > 0 && <> · <span className="text-text-secondary">{brl(eng.mrr!)}/mês</span></>}
+        {(eng.valor ?? 0) > 0 && <> · <span className="text-text-secondary">{brl(eng.valor!)} avulso</span></>}
+        {(eng.mrr ?? 0) === 0 && (eng.valor ?? 0) === 0 && ' · —'}
       </p>
 
       <div className="mt-2 flex flex-wrap gap-2">

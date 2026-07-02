@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escopo — Landing Page · Notkode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 17px; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #fffef2;
+    color: #191918;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.65;
+  }
+
+  :root {
+    --cream:     #fffef2;
+    --cream-2:   #f3f2e7;
+    --ink:       #191918;
+    --ink-60:    rgba(25,25,24,0.62);
+    --ink-40:    rgba(25,25,24,0.4);
+    --ink-10:    rgba(25,25,24,0.1);
+    --blue:      #3B82F6;
+    --blue-soft: #93C5FD;
+    --blue-glow: rgba(59,130,246,0.12);
+    --green:     #22C55E;
+    --border:    1px solid rgba(25,25,24,0.1);
+  }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 0 60px; }
+
+  /* Header */
+  .doc-header {
+    padding: 44px 0 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--ink);
+  }
+  .brand-logo { height: 32px; width: auto; display: block; }
+  .doc-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-40);
+    text-align: right;
+    line-height: 1.9;
+  }
+
+  /* Cover */
+  .cover {
+    padding: 80px 0 64px;
+    border-bottom: var(--border);
+  }
+  .cover-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-40);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .cover-eyebrow::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--blue);
+  }
+  .cover-title {
+    font-size: clamp(2.6rem, 5vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    margin-bottom: 24px;
+  }
+  .cover-title .accent {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-soft) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .cover-sub {
+    font-size: 18px;
+    color: var(--ink-60);
+    max-width: 580px;
+    line-height: 1.65;
+  }
+
+  /* Section */
+  .section {
+    padding: 64px 0;
+    border-bottom: var(--border);
+  }
+  .section:last-of-type { border-bottom: none; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-40);
+    margin-bottom: 36px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .section-label::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--blue);
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  .section-title .accent {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-soft) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .section-body {
+    font-size: 16px;
+    color: var(--ink-60);
+    line-height: 1.72;
+    max-width: 680px;
+    margin-bottom: 40px;
+  }
+
+  /* Tabela de entregáveis */
+  .table-wrap { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+  .table-wrap thead tr {
+    background: var(--ink);
+    color: white;
+  }
+  .table-wrap thead th {
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    text-align: left;
+  }
+  .table-wrap thead th:last-child { text-align: center; }
+  .table-wrap tbody tr:nth-child(odd)  { background: var(--cream-2); }
+  .table-wrap tbody tr:nth-child(even) { background: var(--cream); }
+  .table-wrap tbody td {
+    padding: 16px 20px;
+    border-bottom: var(--border);
+    vertical-align: top;
+  }
+  .table-wrap tbody tr:last-child td { border-bottom: none; }
+  .td-item { font-weight: 700; font-size: 15px; color: var(--ink); margin-bottom: 4px; }
+  .td-desc { font-size: 14px; color: var(--ink-60); line-height: 1.55; }
+  .td-check {
+    text-align: center;
+    font-size: 15px;
+    color: var(--green);
+    font-weight: 700;
+    vertical-align: middle;
+  }
+
+  /* Infra box */
+  .infra-box {
+    border-top: 2px solid var(--ink-10);
+    padding-top: 32px;
+  }
+  .infra-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-40);
+    margin-bottom: 20px;
+  }
+  .infra-row {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .infra-item { flex: 1; min-width: 220px; }
+  .infra-item h5 {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: var(--green);
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.22);
+  }
+  .infra-item p {
+    font-size: 13px;
+    color: var(--ink-60);
+    line-height: 1.6;
+  }
+  .infra-divider {
+    width: 1px;
+    background: var(--ink-10);
+    align-self: stretch;
+  }
+
+  /* Nota */
+  .nota {
+    font-size: 14px;
+    color: var(--ink-60);
+    line-height: 1.65;
+    padding: 16px 20px;
+    border-left: 3px solid var(--blue);
+    background: var(--blue-glow);
+    border-radius: 0 8px 8px 0;
+    margin-top: 32px;
+    max-width: 720px;
+  }
+  .nota strong { color: var(--ink); }
+
+  /* Footer */
+  .doc-footer {
+    padding: 36px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: var(--border);
+  }
+  .footer-logo { height: 24px; width: auto; display: block; }
+  .footer-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-40);
+    text-align: right;
+    line-height: 1.9;
+  }
+
+  @media print {
+    body { background: white; }
+    .section { page-break-inside: avoid; }
+    * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+
+  @media (max-width: 680px) {
+    html { font-size: 16px; }
+    .page { padding: 0 22px; }
+    .infra-row { flex-direction: column; gap: 20px; }
+    .infra-divider { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="doc-header">
+    <img src="logo-notkode.png" alt="Notkode" class="brand-logo">
+    <div class="doc-meta">
+      Escopo de Serviço · Landing Page<br>
+      Notkode · 2026
+    </div>
+  </div>
+
+  <div class="cover">
+    <div class="cover-eyebrow">Escopo de Serviço</div>
+    <div class="cover-title">
+      Landing page que<br>
+      <span class="accent">converte</span> — e é sua.
+    </div>
+    <p class="cover-sub">
+      Desenvolvemos a página do zero: <strong>design com a identidade do cliente</strong>, copy alinhada à oferta, rastreamento correto e hospedagem inclusa. Sem mensalidade de ferramenta, sem dependência de plataforma.
+    </p>
+  </div>
+
+  <div class="section">
+    <div class="section-label">O que está incluso</div>
+    <h2 class="section-title">Tudo o que <span class="accent">entregamos</span></h2>
+    <p class="section-body">
+      O processo começa com um <strong>briefing enviado ao cliente</strong> — perguntas sobre a empresa, a oferta e o público. A partir daí, construímos a página inteira: sem templates prontos, sem ajuste de tema.
+    </p>
+
+    <table class="table-wrap">
+      <thead>
+        <tr>
+          <th style="width:30%">Entregável</th>
+          <th>Descrição</th>
+          <th style="width:80px">Incluso</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="td-item">Design personalizado</div>
+          </td>
+          <td class="td-desc">Layout desenvolvido com base na identidade visual do cliente — cores, tipografia, tom. Não usamos templates: cada página é construída do zero.</td>
+          <td class="td-check">✓</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="td-item">Copy</div>
+          </td>
+          <td class="td-desc">Textos criados a partir do briefing respondido pelo cliente. Headline, proposta de valor, prova social, CTA — estrutura pensada para converter.</td>
+          <td class="td-check">✓</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="td-item">Mobile responsivo</div>
+          </td>
+          <td class="td-desc">A página funciona perfeitamente em qualquer tamanho de tela — celular, tablet e desktop — sem perda de hierarquia ou legibilidade.</td>
+          <td class="td-check">✓</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="td-item">Otimização de velocidade</div>
+          </td>
+          <td class="td-desc">Código limpo, imagens otimizadas e carregamento rápido desde a entrega. Velocidade impacta diretamente o custo por resultado nas campanhas.</td>
+          <td class="td-check">✓</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="td-item">Hospedagem</div>
+          </td>
+          <td class="td-desc">Publicada na Vercel. Sem mensalidade para o cliente no volume padrão de acesso.</td>
+          <td class="td-check">✓</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="td-item">Disparo de e-mail</div>
+          </td>
+          <td class="td-desc">Integração com Resend inclusa quando necessário — confirmação de cadastro, entrega de material, notificações. Sem custo adicional no volume padrão.</td>
+          <td class="td-check">✓</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="infra-box">
+      <div class="infra-label">Infraestrutura — sem custo mensal no uso padrão</div>
+      <div class="infra-row">
+        <div class="infra-item">
+          <h5>Vercel <span class="badge">gratuito</span></h5>
+          <p>Hospedagem da página. O plano gratuito cobre o volume padrão de tráfego — só migra para pago se o acesso escalar muito além do comum.</p>
+        </div>
+        <div class="infra-divider"></div>
+        <div class="infra-item">
+          <h5>Resend <span class="badge">gratuito</span></h5>
+          <p>Disparo de e-mails transacionais. O plano gratuito cobre o volume padrão — só entra custo se o volume de envios for alto.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="nota">
+      <strong>Sobre o briefing:</strong> antes de qualquer pixel, enviamos um formulário de briefing ao cliente. São as respostas que orientam o design, a copy e a estrutura da página — o resultado final reflete o negócio real, não uma página genérica.
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <img src="logo-notkode.png" alt="Notkode" class="footer-logo">
+    <div class="footer-meta">
+      notkode.com · escopo-landing-page<br>
+      2026 · Confidencial
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

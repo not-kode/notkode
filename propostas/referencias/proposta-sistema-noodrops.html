@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposta Comercial — Noodrops × Notkode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 17px; scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #fffef2;
+    color: #191918;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.65;
+  }
+
+  :root {
+    --cream:      #fffef2;
+    --cream-2:    #f3f2e7;
+    --cream-3:    #ede8dc;
+    --ink:        #191918;
+    --ink-60:     rgba(25,25,24,0.62);
+    --ink-40:     rgba(25,25,24,0.4);
+    --ink-20:     rgba(25,25,24,0.2);
+    --ink-10:     rgba(25,25,24,0.1);
+    --blue:       #3B82F6;
+    --blue-soft:  #93C5FD;
+    --blue-glow:  rgba(59,130,246,0.15);
+    --green:      #22C55E;
+    --border:     1px solid rgba(25,25,24,0.1);
+    --radius-sm:  8px;
+    --radius-md:  12px;
+    --radius-lg:  20px;
+  }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 0 52px; }
+
+  .icon {
+    width: 22px; height: 22px;
+    stroke: var(--blue); fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  /* Header */
+  .doc-header {
+    padding: 44px 0 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--ink);
+  }
+  .brand-logo img { height: 32px; display: block; }
+  .brand-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .brand-name span {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-soft) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .doc-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-60);
+    text-align: right;
+    line-height: 1.9;
+  }
+
+  /* Cover */
+  .cover {
+    padding: 100px 0 84px;
+    border-bottom: var(--border);
+    position: relative;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    right: -10px; top: 110px;
+    width: 280px; height: 280px;
+    background-image: radial-gradient(var(--ink-20) 1.3px, transparent 1.3px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 72%);
+    mask-image: radial-gradient(circle at center, black 30%, transparent 72%);
+    pointer-events: none;
+  }
+  .cover-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-60);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .cover-eyebrow::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--blue);
+  }
+  .cover-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(3rem, 6.5vw, 4.8rem);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    margin-bottom: 30px;
+  }
+  .cover-title .accent {
+    background: linear-gradient(135deg, #1D4ED8 0%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .cover-sub {
+    font-size: 19px;
+    color: var(--ink-60);
+    max-width: 580px;
+    line-height: 1.65;
+    margin-bottom: 52px;
+  }
+  .cover-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 11px;
+  }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-60);
+    background: var(--cream-2);
+    border: var(--border);
+    border-radius: 20px;
+    padding: 7px 15px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.15s;
+  }
+  .tag.blue {
+    color: var(--blue);
+    background: var(--blue-glow);
+    border-color: rgba(59,130,246,0.2);
+  }
+  a.tag.blue:hover {
+    background: rgba(59,130,246,0.22);
+    transform: translateY(-1px);
+  }
+
+  /* Snapshot — resumo executivo */
+  .snapshot {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 52px;
+    border-top: 2px solid var(--ink);
+  }
+  .snap-item {
+    padding: 20px 26px 4px;
+    border-right: 1px solid var(--ink-10);
+  }
+  .snap-item:first-child { padding-left: 0; }
+  .snap-item:last-child { border-right: none; padding-right: 0; }
+  .snap-item .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-60);
+    margin-bottom: 9px;
+  }
+  .snap-item .val {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .snap-item .val .accent {
+    background: linear-gradient(135deg, #1D4ED8 0%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .snap-item .sub {
+    font-size: 13.5px;
+    color: var(--ink-60);
+    line-height: 1.5;
+    margin-top: 5px;
+  }
+
+  /* Section */
+  .section {
+    padding: 76px 0;
+    border-bottom: var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-60);
+    margin-bottom: 38px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .section-label::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--blue);
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 2.3rem;
+    font-weight: 700;
+    letter-spacing: -0.028em;
+    line-height: 1.12;
+    color: var(--ink);
+    margin-bottom: 18px;
+    text-wrap: pretty;
+  }
+  .section-title .accent {
+    background: linear-gradient(135deg, #1D4ED8 0%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .section-body {
+    font-size: 16.5px;
+    color: var(--ink-60);
+    line-height: 1.72;
+    max-width: 700px;
+    margin-bottom: 44px;
+  }
+
+  /* Diagnóstico — extrato de vazamentos */
+  .vaza-table { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
+  .vaza-table th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-60);
+    text-align: left;
+    padding: 0 0 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .vaza-table th.num { text-align: right; }
+  .vaza-table th:first-child { width: 42%; }
+  .vaza-table th:nth-child(2) { width: 40%; }
+  .vaza-table td {
+    padding: 18px 24px 18px 0;
+    border-bottom: 1px solid var(--ink-10);
+    vertical-align: top;
+    font-size: 15px;
+    color: var(--ink-60);
+    line-height: 1.6;
+  }
+  .vaza-table td:last-child { padding-right: 0; }
+  .vaza-table td h5 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+  .vaza-table td strong { color: var(--ink); }
+  .vaza-table td.num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .vaza-table td.num small {
+    display: block;
+    font-size: 10.5px;
+    color: var(--ink-40);
+    margin-top: 3px;
+  }
+  .vaza-table tr.total td {
+    border-bottom: none;
+    border-top: 2px solid var(--ink);
+    padding: 20px 24px 4px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .vaza-table tr.total td.num {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #DC2626;
+    padding-right: 0;
+  }
+  .vaza-table tr.total td.num small { color: rgba(220,38,38,0.6); font-weight: 500; }
+  .vaza-conclusao {
+    font-size: 15.5px;
+    color: var(--ink-60);
+    line-height: 1.65;
+    max-width: 700px;
+  }
+  .vaza-conclusao strong { color: var(--ink); }
+
+  /* Projeto header */
+  .projeto-header {
+    margin-bottom: 44px;
+  }
+  .projeto-header-content h3 {
+    font-size: 2.3rem;
+    font-weight: 700;
+    letter-spacing: -0.028em;
+    color: var(--ink);
+    margin-bottom: 16px;
+    line-height: 1.12;
+    text-wrap: pretty;
+  }
+  .projeto-header-content h3 .accent {
+    background: linear-gradient(135deg, #1D4ED8 0%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .projeto-header-content p {
+    font-size: 16.5px;
+    color: var(--ink-60);
+    line-height: 1.72;
+    max-width: 700px;
+  }
+  .projeto-header-content p strong { color: var(--ink); }
+
+  /* Sistema modulos — terminal */
+  .term {
+    background: #0B0B0E;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 38px;
+  }
+  .term-chrome {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 18px;
+    height: 38px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .term-dot.r { background: #FF5F57; }
+  .term-dot.y { background: #FEBC2E; }
+  .term-dot.g { background: #28C840; }
+  .term-file {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.32);
+    margin-left: 10px;
+    letter-spacing: 0.06em;
+  }
+  .term-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 28px;
+    padding: 24px 26px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .term-row:last-child { border-bottom: none; }
+  .mod-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    color: #6EE7B7;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+  .mod-name .dim {
+    display: block;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 6px;
+  }
+  .mod-name.destaque { color: #FCA44A; }
+  .mod-name.destaque .dim { color: rgba(252,164,74,0.55); }
+  .mod-info h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .mod-info > p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.62;
+    margin-bottom: 13px;
+  }
+  .mod-info > p strong { color: rgba(255,255,255,0.92); font-weight: 600; }
+  .mod-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px 24px;
+  }
+  .mod-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: rgba(255,255,255,0.68);
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    line-height: 1.5;
+  }
+  .mod-item::before {
+    content: '✓';
+    color: #28C840;
+    flex-shrink: 0;
+  }
+
+  /* Ownership / valor — editorial */
+  .valor-box {
+    padding: 6px 0 0;
+    margin-bottom: 48px;
+  }
+  .valor-box-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-60);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .valor-box-label::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--blue);
+  }
+  .valor-box h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    line-height: 1.18;
+    margin-bottom: 14px;
+    max-width: 680px;
+    text-wrap: pretty;
+  }
+  .valor-box h3 .accent {
+    background: linear-gradient(135deg, #1D4ED8 0%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .valor-box p {
+    font-size: 15.5px;
+    color: var(--ink-60);
+    line-height: 1.7;
+    max-width: 700px;
+  }
+  .valor-box p strong { color: var(--ink); }
+  .valor-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 34px;
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid var(--ink-10);
+  }
+  .valor-pill {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .valor-pill .icon { width: 16px; height: 16px; stroke: var(--blue); }
+
+  /* Mapa de substituição — tabela */
+  .mapa {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 44px;
+  }
+  .mapa-head {
+    display: grid;
+    grid-template-columns: 1fr 44px 1fr;
+    gap: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-60);
+  }
+  .mapa-head .h-para { text-align: right; }
+  .mapa-row {
+    display: grid;
+    grid-template-columns: 1fr 44px 1fr;
+    align-items: center;
+    gap: 18px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .mapa-de h5 {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .mapa-de p { font-size: 13.5px; color: var(--ink-40); line-height: 1.4; }
+  .mapa-seta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--blue);
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .mapa-row.mantem .mapa-seta { color: var(--green); }
+  .mapa-para {
+    font-size: 15px;
+    color: var(--ink-60);
+    line-height: 1.45;
+    text-align: right;
+  }
+  .mapa-para strong { color: var(--ink); }
+  .mapa-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: var(--green);
+    background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.22);
+    margin-left: 6px;
+    white-space: nowrap;
+  }
+
+  /* Telas — tabela de entregáveis */
+  .telas-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 12px; align-items: start; }
+  .telas-col {
+    border: var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .telas-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 22px;
+    background: var(--ink);
+    color: white;
+    font-size: 15.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .telas-head .icon { width: 17px; height: 17px; stroke: var(--blue-soft); }
+  .telas-head .count {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.65);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .tela {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    display: flex; align-items: flex-start; gap: 11px;
+    line-height: 1.45;
+    padding: 11px 22px;
+    background: var(--cream);
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .tela:nth-child(even) { background: var(--cream-2); }
+  .telas-col .tela:last-child { border-bottom: none; }
+  .tela::before {
+    content: '✓';
+    color: var(--green);
+    font-size: 12.5px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Custos infra */
+  .infra-note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-60);
+    margin-bottom: 16px;
+  }
+  .infra-grid {
+    display: flex;
+    flex-direction: column;
+    border-top: 2px solid var(--ink);
+    margin-bottom: 26px;
+  }
+  .infra-item {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 28px;
+    padding: 17px 0;
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .infra-item h5 {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .infra-item h5 .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .badge-free { color: var(--green); background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.22); }
+  .badge-var { color: var(--blue); background: var(--blue-glow); border: 1px solid rgba(59,130,246,0.2); }
+  .badge-fix { color: var(--ink-60); background: var(--cream-3); border: var(--border); }
+  .infra-item p {
+    font-size: 15px;
+    color: var(--ink-60);
+    line-height: 1.55;
+  }
+  .infra-disclaimer {
+    font-size: 13px;
+    color: var(--ink-60);
+    line-height: 1.6;
+    padding: 16px 20px;
+    background: var(--cream-2);
+    border: var(--border);
+    border-radius: var(--radius-md);
+  }
+  .infra-disclaimer strong { color: var(--ink); }
+
+  /* Investimento */
+  .invest-intro-note {
+    font-size: 15.5px;
+    color: var(--ink-60);
+    line-height: 1.65;
+    max-width: 700px;
+    margin-bottom: 36px;
+  }
+  .invest-intro-note strong { color: var(--ink); }
+
+  /* Âncora de valor */
+  .ancora {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 0;
+    border-top: 2px solid var(--ink);
+    border-bottom: 1px solid var(--ink-10);
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .ancora .lbl { font-size: 15.5px; color: var(--ink-60); line-height: 1.5; max-width: 460px; }
+  .ancora .lbl strong { color: var(--ink); }
+  .ancora .val {
+    font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; color: var(--blue);
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+  }
+
+  .invest-card {
+    border: 2px solid var(--blue);
+    box-shadow: 0 8px 40px rgba(59,130,246,0.1);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 22px;
+  }
+  .invest-card-flag {
+    position: absolute;
+    top: 22px;
+    right: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: white;
+    background: var(--blue);
+    border-radius: 20px;
+    padding: 6px 14px;
+  }
+  .invest-card-header {
+    padding: 30px 34px 26px;
+    background: linear-gradient(180deg, rgba(59,130,246,0.08), var(--cream-2));
+    border-bottom: var(--border);
+  }
+  .invest-card-header .opt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .invest-card-header h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .invest-card-header .sub {
+    font-size: 15.5px;
+    color: var(--ink-60);
+    line-height: 1.55;
+    max-width: 600px;
+  }
+  .invest-card-body {
+    padding: 30px 34px;
+    background: var(--cream-2);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 36px;
+    align-items: start;
+  }
+  .invest-price-block { min-width: 215px; }
+  .invest-anos { display: flex; flex-direction: column; gap: 16px; }
+  .invest-ano .ano-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-40); margin-bottom: 4px;
+  }
+  .invest-price {
+    font-size: 2.3rem;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .invest-price small {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ink-40);
+  }
+  .invest-ano.dois .invest-price { font-size: 1.7rem; color: var(--ink-60); }
+  .invest-price-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-40);
+    line-height: 1.6;
+    margin-top: 6px;
+  }
+  .invest-features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px 24px;
+  }
+  .invest-feature {
+    font-size: 15px;
+    color: var(--ink-60);
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    line-height: 1.45;
+  }
+  .invest-feature::before {
+    content: '✓';
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .invest-feature.star::before { content: '★'; color: var(--blue); }
+  .invest-ano.avista {
+    padding-top: 16px;
+    border-top: 1px dashed var(--ink-20);
+  }
+  .invest-ano.avista .ano-lbl { color: var(--green); }
+  .invest-price.green { color: var(--green); }
+
+  /* ROI lado a lado */
+  .roi {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 2px solid var(--ink);
+    margin-bottom: 44px;
+  }
+  .roi-col {
+    padding: 20px 26px 6px;
+    border-right: 1px solid var(--ink-10);
+  }
+  .roi-col:first-child { padding-left: 0; }
+  .roi-col:last-child { border-right: none; padding-right: 0; }
+  .roi-col .periodo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-60);
+    margin-bottom: 12px;
+  }
+  .roi-col.destaque .periodo { color: var(--blue); }
+  .roi-col.futuro .periodo { color: var(--green); }
+  .roi-col .num {
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .roi-col .num small {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-40);
+  }
+  .roi-col p {
+    font-size: 14.5px;
+    color: var(--ink-60);
+    line-height: 1.55;
+  }
+  .roi-col p strong { color: var(--ink); }
+
+  /* Condições — tabela de definições */
+  .condicoes {
+    display: flex;
+    flex-direction: column;
+    border-top: 2px solid var(--ink);
+  }
+  .cond-item {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 28px;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--ink-10);
+  }
+  .cond-item h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-60);
+    padding-top: 4px;
+  }
+  .cond-item p {
+    font-size: 15px;
+    color: var(--ink-60);
+    line-height: 1.6;
+  }
+  .cond-item p strong { color: var(--ink); }
+
+  /* Não incluso */
+  .nao-incluso {
+    border: 1px dashed rgba(25,25,24,0.25);
+    border-left: 3px solid #D97706;
+    border-radius: var(--radius-md);
+    background: var(--cream-2);
+    padding: 20px 26px;
+    margin-bottom: 22px;
+  }
+  .nao-incluso .tag-warn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em;
+    color: #D97706; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .nao-incluso .tag-warn .icon { width: 13px; height: 13px; stroke: #D97706; }
+  .nao-incluso h4 { font-size: 1.05rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .nao-incluso p { font-size: 15px; color: var(--ink-60); line-height: 1.55; max-width: 640px; }
+  .nao-incluso p strong { color: var(--ink); }
+
+  /* Prazos */
+  .prazo-list {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .prazo-list::before {
+    content: '';
+    position: absolute;
+    left: 21px; top: 28px; bottom: 28px;
+    width: 1px;
+    background: var(--ink-10);
+  }
+  .prazo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 20px 0;
+  }
+  .prazo-dot {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--cream-2);
+    border: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-60);
+    position: relative;
+    z-index: 1;
+  }
+  .prazo-dot.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+  }
+  .prazo-content { padding-top: 9px; }
+  .prazo-content h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .prazo-quando {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--blue);
+    background: var(--blue-glow);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 10px;
+    padding: 2px 9px;
+    white-space: nowrap;
+  }
+  .prazo-content p {
+    font-size: 15px;
+    color: var(--ink-60);
+    line-height: 1.6;
+  }
+
+  /* CTA */
+  .cta-box {
+    padding: 30px 0 44px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .cta-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--blue);
+    margin-bottom: 18px;
+  }
+  .cta-title {
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .cta-body {
+    font-size: 15.5px;
+    color: var(--ink-60);
+    line-height: 1.65;
+    max-width: 500px;
+    margin: 0 auto 30px;
+  }
+  .cta-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 32px;
+    background: var(--blue);
+    color: white;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .cta-contact:hover {
+    background: rgba(59,130,246,0.88);
+    transform: translateY(-1px);
+  }
+  .cta-cards {
+    display: flex;
+    gap: 0;
+    margin-top: 8px;
+    border-top: 2px solid var(--ink);
+  }
+  .cta-card {
+    flex: 1;
+    padding: 18px 26px 4px;
+    border-right: 1px solid var(--ink-10);
+  }
+  .cta-card:first-child { padding-left: 0; }
+  .cta-card:last-child { border-right: none; padding-right: 0; }
+  .cta-card .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-40);
+    margin-bottom: 9px;
+  }
+  .cta-card .name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+  .cta-card .desc {
+    font-size: 14.5px;
+    color: var(--ink-60);
+    line-height: 1.5;
+  }
+
+  /* Footer */
+  .doc-footer {
+    padding: 38px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: var(--border);
+  }
+  .footer-brand {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-size: 1.2rem;
+  }
+  .footer-brand span {
+    background: linear-gradient(135deg, #1D4ED8 0%, var(--blue) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .footer-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-60);
+    text-align: right;
+    line-height: 1.9;
+  }
+
+  /* Destaque dor 2% */
+  .pedagio-box {
+    border: 1px solid rgba(239,68,68,0.2);
+    background: rgba(239,68,68,0.05);
+    border-radius: var(--radius-md);
+    padding: 18px 22px;
+    margin-bottom: 26px;
+    font-size: 14px;
+    color: var(--ink-60);
+    line-height: 1.62;
+  }
+  .pedagio-box strong { color: #DC2626; }
+
+  @page {
+    size: A4;
+    margin: 13mm 11mm;
+  }
+  @media print {
+    html { font-size: 13.5px; }
+    body {
+      background: white;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page { max-width: 100%; padding: 0; }
+    .doc-header { padding: 0 0 18px; }
+    .cover { padding: 48px 0 40px; }
+    .cover::after { display: none; }
+    .section { padding: 40px 0; }
+    .cover-title { font-size: 3.2rem; }
+    .vaza-table, .projeto-header, .valor-box, .term-row, .term-chrome,
+    .mapa-row, .telas-col, .infra-item, .nao-incluso,
+    .ancora, .invest-card, .roi, .condicoes,
+    .prazo-item, .cta-box, .snapshot {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .cta-contact { box-shadow: none; }
+    a { text-decoration: none; }
+    .infra-note, .section-label, .section-title, .section-body {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    .cover-title .accent, .section-title .accent, .snap-item .val .accent,
+    .valor-box h3 .accent, .projeto-header-content h3 .accent,
+    .footer-brand span {
+      background: none;
+      -webkit-background-clip: initial;
+      background-clip: initial;
+      color: var(--blue);
+    }
+  }
+
+  @media (max-width: 680px) {
+    html { font-size: 16px; }
+    .page { padding: 0 22px; }
+    .cover::after { display: none; }
+    .doc-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .doc-meta { text-align: left; }
+    /* tabela do diagnóstico empilhada */
+    .vaza-table thead { display: none; }
+    .vaza-table, .vaza-table tbody, .vaza-table tr, .vaza-table td { display: block; width: 100%; }
+    .vaza-table td { border-bottom: none; padding: 3px 0; }
+    .vaza-table tr { border-bottom: 1px solid var(--ink-10); padding: 15px 0; }
+    .vaza-table td.num { text-align: left; white-space: normal; padding: 7px 0 0; }
+    .vaza-table td.num small { display: inline; margin-left: 6px; }
+    .vaza-table tr.total { border-top: 2px solid var(--ink); border-bottom: none; }
+    .vaza-table tr.total td { border-top: none; padding: 2px 0; }
+    .vaza-table tr.total td.num { padding-top: 6px; }
+    .ancora .val { font-size: 1.35rem; }
+    .invest-price { font-size: 1.9rem; }
+    .invest-card-header { padding-right: 120px; }
+    .invest-features, .telas-wrap, .snapshot, .roi,
+    .term-row, .mod-items, .infra-item, .cond-item { grid-template-columns: 1fr; }
+    .term-row { gap: 14px; }
+    .snap-item, .roi-col { border-right: none; border-bottom: 1px solid var(--ink-10); padding-left: 0; padding-bottom: 18px; }
+    .snap-item:last-child, .roi-col:last-child { border-bottom: none; }
+    .invest-card-body { grid-template-columns: 1fr; gap: 24px; }
+    .mapa-head { display: none; }
+    .mapa-row { grid-template-columns: 1fr; gap: 8px; text-align: left; }
+    .mapa-seta { display: none; }
+    .mapa-para { text-align: left; }
+    .cta-cards { flex-direction: column; }
+    .cta-card { padding-left: 0; border-right: none; }
+    .cover-title { font-size: 2.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="brand-logo"><img src="logo-notkode.png" alt="Notkode"></div>
+    <div class="doc-meta">
+      Proposta Comercial · Noodrops<br>
+      Ref. NK-2026-062 · Junho 2026
+    </div>
+  </div>
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-eyebrow">Proposta Comercial · Para Luiz · Noodrops</div>
+    <div class="cover-title">
+      Sua loja,<br>
+      seu <span class="accent">checkout</span>,<br>
+      sem pedágio.
+    </div>
+    <p class="cover-sub">
+      Hoje a Noodrops aluga Yampi e Reportana — e entrega 2% de cada venda pra uma ferramenta que não é sua. A proposta é construir o ecommerce próprio da Noodrops, com checkout, painel e automação de WhatsApp num sistema só — e ainda colocar tráfego pra rodar.
+    </p>
+    <div class="cover-tags">
+      <a class="tag blue" href="#sistema">O Sistema ↓</a>
+      <a class="tag blue" href="#substituicao">O que substitui ↓</a>
+      <a class="tag blue" href="#investimento">Investimento ↓</a>
+    </div>
+
+    <div class="snapshot">
+      <div class="snap-item">
+        <div class="lbl">Investimento</div>
+        <div class="val"><span class="accent">12x R$2.000</span></div>
+        <div class="sub">Contrato 12 meses · dev + manutenção + tráfego</div>
+      </div>
+      <div class="snap-item">
+        <div class="lbl">Prazo</div>
+        <div class="val">Até 2 meses</div>
+        <div class="sub">Do briefing ao go-live</div>
+      </div>
+      <div class="snap-item">
+        <div class="lbl">Modelo</div>
+        <div class="val">Sistema seu</div>
+        <div class="sub">Mensalidade fixa, sem 2% por venda</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Diagnóstico -->
+  <div class="section">
+    <div class="section-label">01 · Diagnóstico</div>
+    <h2 class="section-title">Onde o dinheiro <span class="accent">vaza</span> hoje</h2>
+    <p class="section-body">
+      O produto vende e a operação roda. O problema é a conta no fim do mês: parte do faturamento sai todo mês pra ferramentas alugadas que não constroem nada que seja seu. Mapeamos os dois maiores vazamentos.
+    </p>
+
+    <table class="vaza-table">
+      <thead>
+        <tr>
+          <th>Ferramenta alugada</th>
+          <th>O que você paga</th>
+          <th class="num">Por ano</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <h5>Yampi — checkout</h5>
+            O pedágio que mais dói: <strong>cresce quanto mais você vende</strong>.
+          </td>
+          <td>R$157 fixos <strong>+ 2% sobre cada venda</strong>. Num faturamento de R$45 mil/mês, ~R$1.057/mês só de checkout.</td>
+          <td class="num">~R$12.700<small>~R$1.057/mês</small></td>
+        </tr>
+        <tr>
+          <td>
+            <h5>Reportana</h5>
+            Recuperação de carrinho e relatórios numa ferramenta genérica e alugada.
+          </td>
+          <td>R$297/mês fixos. Em 12 meses, <strong>nada disso vira ativo da Noodrops</strong>.</td>
+          <td class="num">R$3.564<small>R$297/mês</small></td>
+        </tr>
+        <tr class="total">
+          <td>Total que vaza por ano</td>
+          <td></td>
+          <td class="num">~R$16.250<small>~R$1.350/mês</small></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="vaza-conclusao">
+      São <strong>~R$1.350/mês</strong> saindo todo mês em ferramentas que você aluga e que nunca passam a ser suas. <strong>É esse dinheiro que vamos transformar em sistema próprio.</strong>
+    </p>
+  </div>
+
+
+  <!-- Sistema -->
+  <div class="section" id="sistema">
+    <div class="section-label">02 · A Solução</div>
+
+    <div class="projeto-header">
+      <div class="projeto-header-content">
+        <h3>O Sistema da Noodrops — loja, checkout e operação num lugar só</h3>
+        <p>Em vez de pagar Yampi + Reportana separadas, a Noodrops passa a ter um ecommerce próprio, construído do zero para o negócio: loja, <strong style="color:var(--ink)">checkout próprio que acaba com os 2%</strong>, painel de vendas completo e a régua de WhatsApp automática — mantendo Bling, Frenet e gateway que já funcionam. E com uma campanha de tráfego rodando pra crescer.</p>
+      </div>
+    </div>
+
+    <!-- Valor / ownership -->
+    <div class="valor-box">
+      <div class="valor-box-label">O que muda na prática</div>
+      <h3>Você para de alugar ferramentas e passa a ser <span class="accent">dono do sistema</span>.</h3>
+      <p>
+        Cada pedido, cada cliente, cada cupom e cada venda ficam dentro de casa, num painel só. O checkout passa a ser seu — conectado direto ao gateway, sem intermediário cobrando porcentagem. Não é uma assinatura que você aluga: é um ativo construído para a Noodrops, que cresce junto com a loja e nunca te cobra mais caro por vender mais.
+      </p>
+      <div class="valor-pills">
+        <div class="valor-pill"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> O sistema é seu</div>
+        <div class="valor-pill"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg> Fim dos 2% da Yampi</div>
+        <div class="valor-pill"><svg class="icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg> Tudo num painel só</div>
+        <div class="valor-pill"><svg class="icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> Custo fixo, não percentual</div>
+      </div>
+    </div>
+
+    <div class="infra-note">Módulos do sistema</div>
+    <div class="term">
+      <div class="term-chrome">
+        <span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span>
+        <span class="term-file">notkode ~ sistema-noodrops · 5 módulos</span>
+      </div>
+
+      <div class="term-row">
+        <div class="mod-name destaque"><span class="dim">[01/05] · destaque</span>checkout/</div>
+        <div class="mod-info">
+          <h4>Loja + Checkout próprio — o fim dos 2%</h4>
+          <p>A vitrine e o checkout construídos do zero, conectados direto ao seu gateway. É aqui que o pedágio da Yampi morre: você paga só a taxa do banco (que já paga hoje), <strong>sem o intermediário levando 2%</strong> de cada venda.</p>
+          <div class="mod-items">
+            <div class="mod-item">vitrine, página de produto e carrinho</div>
+            <div class="mod-item">checkout próprio com PIX e cartão</div>
+            <div class="mod-item">cupons de marketing</div>
+            <div class="mod-item">frete pela Frenet no checkout</div>
+            <div class="mod-item">confirmação automática via webhook</div>
+            <div class="mod-item">antifraude na camada do gateway</div>
+            <div class="mod-item">e-mail de confirmação (Resend)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="term-row">
+        <div class="mod-name"><span class="dim">[02/05]</span>painel/</div>
+        <div class="mod-info">
+          <h4>Painel de vendas &amp; pedidos</h4>
+          <p>Substitui o painel da Yampi — com tudo que você já usa e <strong>mais controle</strong>.</p>
+          <div class="mod-items">
+            <div class="mod-item">dashboard de faturamento e ticket médio</div>
+            <div class="mod-item">pedidos, status e detalhe</div>
+            <div class="mod-item">cobrança: reenviar / gerar novo PIX</div>
+            <div class="mod-item">relatórios (substitui a Reportana)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="term-row">
+        <div class="mod-name"><span class="dim">[03/05]</span>notificacoes/</div>
+        <div class="mod-info">
+          <h4>Régua de WhatsApp automática</h4>
+          <p>WhatsApp oficial via coexistência — <strong>mesmo número</strong>, você continua atendendo normal no celular. O sistema só dispara, automático.</p>
+          <div class="mod-items">
+            <div class="mod-item">recuperação de carrinho abandonado</div>
+            <div class="mod-item">pagamento aprovado</div>
+            <div class="mod-item">pedido enviado + rastreio (Frenet)</div>
+            <div class="mod-item">saiu para entrega / entregue</div>
+            <div class="mod-item">atualização de frete por e-mail (Resend)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="term-row">
+        <div class="mod-name"><span class="dim">[04/05]</span>trafego/</div>
+        <div class="mod-info">
+          <h4>Gestão de tráfego pago</h4>
+          <p>Uma campanha em <strong>um canal de aquisição</strong>, gerida pela Notkode com IA apoiando otimização e análise — pra vender com previsibilidade.</p>
+          <div class="mod-items">
+            <div class="mod-item">setup e gestão de 1 campanha · 1 canal</div>
+            <div class="mod-item">otimização contínua apoiada por IA</div>
+            <div class="mod-item">análise de CAC, ROAS e conversão</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="term-row">
+        <div class="mod-name"><span class="dim">[05/05]</span>integracoes/</div>
+        <div class="mod-info">
+          <h4>Integrações que já funcionam — mantidas</h4>
+          <p>Nada que está bom é jogado fora. O sistema conversa com o que você já usa.</p>
+          <div class="mod-items">
+            <div class="mod-item">Bling — NF e estoque</div>
+            <div class="mod-item">Frenet — frete e rastreio</div>
+            <div class="mod-item">gateway — pagamento direto</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Substituição -->
+  <div class="section" id="substituicao">
+    <div class="section-label">03 · O que substitui o quê</div>
+    <h2 class="section-title">Cada ferramenta, <span class="accent">no lugar certo</span></h2>
+    <p class="section-body">
+      Transparência total: o que sai, o que entra e o que continua igual. As ferramentas que funcionam bem (Bling, Frenet, gateway) permanecem — só some o que cobra caro sem virar seu.
+    </p>
+
+    <div class="mapa">
+      <div class="mapa-row">
+        <div class="mapa-de"><h5>Yampi — checkout</h5><p>R$157/mês + 2% por venda</p></div>
+        <div class="mapa-seta">→</div>
+        <div class="mapa-para"><strong>Checkout próprio</strong> + gateway direto</div>
+      </div>
+      <div class="mapa-row">
+        <div class="mapa-de"><h5>Yampi — painel, pedidos, cobrança, cupons</h5><p>gestão da loja</p></div>
+        <div class="mapa-seta">→</div>
+        <div class="mapa-para"><strong>Painel admin</strong> completo</div>
+      </div>
+      <div class="mapa-row">
+        <div class="mapa-de"><h5>Reportana</h5><p>R$297/mês · recuperação + relatórios</p></div>
+        <div class="mapa-seta">→</div>
+        <div class="mapa-para"><strong>Régua de WhatsApp</strong> + Relatórios</div>
+      </div>
+      <div class="mapa-row mantem">
+        <div class="mapa-de"><h5>Bling</h5><p>NF + estoque</p></div>
+        <div class="mapa-seta">→</div>
+        <div class="mapa-para">Mantém <span class="mapa-tag">continua</span></div>
+      </div>
+      <div class="mapa-row mantem">
+        <div class="mapa-de"><h5>Frenet</h5><p>frete + rastreio</p></div>
+        <div class="mapa-seta">→</div>
+        <div class="mapa-para">Mantém <span class="mapa-tag">continua</span></div>
+      </div>
+      <div class="mapa-row mantem">
+        <div class="mapa-de"><h5>Gateway de pagamento</h5><p>adquirência</p></div>
+        <div class="mapa-seta">→</div>
+        <div class="mapa-para">Mantém — agora <strong>direto</strong> <span class="mapa-tag">continua</span></div>
+      </div>
+    </div>
+
+    <div class="infra-note">As telas que você recebe</div>
+    <div class="telas-wrap">
+      <div class="telas-col">
+        <div class="telas-head"><svg class="icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Loja (cliente) <span class="count">6 telas</span></div>
+        <div class="tela">Vitrine / catálogo</div>
+        <div class="tela">Página de produto</div>
+        <div class="tela">Carrinho</div>
+        <div class="tela">Checkout próprio (dados → frete → pagamento)</div>
+        <div class="tela">Pagamento PIX (QR + status) / cartão</div>
+        <div class="tela">Confirmação do pedido</div>
+      </div>
+      <div class="telas-col">
+        <div class="telas-head"><svg class="icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg> Painel <span class="count">8 telas</span></div>
+        <div class="tela">Dashboard de vendas</div>
+        <div class="tela">Pedidos + status</div>
+        <div class="tela">Detalhe do pedido + cobrança</div>
+        <div class="tela">Produtos (estoque sincronizado com Bling)</div>
+        <div class="tela">Cupons</div>
+        <div class="tela">Carrinhos abandonados / recuperação</div>
+        <div class="tela">Relatórios</div>
+        <div class="tela">Configurações</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Custos infra -->
+  <div class="section">
+    <div class="section-label">04 · Custos à parte · Transparência</div>
+    <h2 class="section-title">O que <span class="accent">não</span> está no valor do sistema</h2>
+    <p class="section-body">
+      Pra não haver surpresa: alguns custos são de terceiros e ficam no nome da Noodrops, pagos conforme o uso. A maioria já existe hoje — não são novos.
+    </p>
+
+    <div class="infra-grid">
+      <div class="infra-item">
+        <h5>Verba de tráfego <span class="badge badge-var">por mês</span></h5>
+        <p>O investimento nos anúncios (a verba que vai pra Meta/Google) é pago direto pela Noodrops — sugerido a partir de ~R$1.000/mês, em 1 canal de aquisição. A gestão dessa campanha já está inclusa no valor do sistema. Se a verba investida aumentar de forma relevante, o valor de gestão e manutenção é revisto na mesma proporção.</p>
+      </div>
+      <div class="infra-item">
+        <h5>Bling <span class="badge badge-fix">R$55/mês</span></h5>
+        <p>Continua como está, no nome da Noodrops — NF e estoque. O sistema só se integra.</p>
+      </div>
+      <div class="infra-item">
+        <h5>Gateway + Frenet <span class="badge badge-var">por uso</span></h5>
+        <p>A taxa do gateway por transação e o plano da Frenet seguem iguais ao de hoje — são o custo natural de processar pagamento e enviar.</p>
+      </div>
+      <div class="infra-item">
+        <h5>WhatsApp API <span class="badge badge-free">centavos por mensagem</span></h5>
+        <p>A Meta cobra por mensagem disparada — status do pedido é a categoria mais barata (utility). Começa quase zero no volume inicial da Noodrops.</p>
+      </div>
+      <div class="infra-item">
+        <h5>Email transacional · Resend <span class="badge badge-free">gratuito no início</span></h5>
+        <p>Confirmação de pedido e atualizações de frete saem pelo Resend — <strong>3.000 emails/mês grátis</strong>. Só passa a custar quando o volume cresce.</p>
+      </div>
+      <div class="infra-item">
+        <h5>Banco de dados · Supabase / Neon <span class="badge badge-free">gratuito no início</span></h5>
+        <p>Pedidos, clientes, produtos e cupons ficam num banco Postgres gerenciado. Supabase e Neon têm plano gratuito robusto pra começar — sem custo até escalar.</p>
+      </div>
+    </div>
+
+    <div class="nao-incluso">
+      <div class="tag-warn"><svg class="icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Importante · não incluso</div>
+      <h4>Criação de criativos</h4>
+      <p>A <strong>produção dos criativos</strong> (artes, fotos e vídeos dos anúncios) <strong>não está inclusa</strong> no valor. A Notkode faz a <strong>gestão e a otimização</strong> da campanha; a criação das peças pode ser feita pela Noodrops ou contratada à parte como serviço avulso.</p>
+    </div>
+  </div>
+
+
+  <!-- Investimento -->
+  <div class="section" id="investimento">
+    <div class="section-label">05 · Investimento</div>
+    <h2 class="section-title">Pare de alugar. <span class="accent">Construa o que é seu.</span></h2>
+    <p class="section-body">
+      Um sistema sob medida como esse — loja, checkout próprio, painel, integrações e automação — sai, no mercado, como projeto de desenvolvimento avulso na faixa abaixo. Aqui ele entra diluído numa mensalidade, com manutenção e tráfego inclusos.
+    </p>
+
+    <div class="ancora">
+      <div class="lbl">Desenvolver esse sistema como <strong>projeto avulso</strong>, a preço de mercado, sairia por:</div>
+      <div class="val">~R$45.000</div>
+    </div>
+
+    <div class="invest-intro-note">
+      <strong>Como funciona:</strong> um contrato de <strong>12 meses</strong> em parcelas iguais. A mensalidade cobre a construção completa do sistema + manutenção + gestão da campanha — tudo incluído. O sistema é da Noodrops desde o primeiro dia.
+    </div>
+
+    <div class="invest-card">
+      <div class="invest-card-flag">★ Proposta</div>
+      <div class="invest-card-header">
+        <div class="opt">Sistema Próprio Noodrops + Tráfego</div>
+        <h3>Ecommerce completo, manutenção e gestão de campanha</h3>
+        <div class="sub">Sistema pronto e no ar em até 2 meses, com os 2% da Yampi eliminados. Manutenção contínua e uma campanha rodando — tudo numa mensalidade.</div>
+      </div>
+      <div class="invest-card-body">
+        <div class="invest-price-block">
+          <div class="invest-anos">
+            <div class="invest-ano um">
+              <div class="ano-lbl">Contrato 12 meses</div>
+              <div class="invest-price">12x R$2.000</div>
+              <div class="invest-price-sub">Total R$24.000<br>Dev + manutenção + tráfego, tudo incluído</div>
+            </div>
+          </div>
+        </div>
+        <div class="invest-features">
+          <div class="invest-feature star">Loja + checkout próprio (fim dos 2%)</div>
+          <div class="invest-feature star">Painel de vendas, pedidos e cobrança</div>
+          <div class="invest-feature">Cupons de marketing</div>
+          <div class="invest-feature">Relatórios (substitui a Reportana)</div>
+          <div class="invest-feature">Régua de WhatsApp automática</div>
+          <div class="invest-feature">Email transacional (confirmação + rastreio)</div>
+          <div class="invest-feature">Integração Bling, Frenet e gateway</div>
+          <div class="invest-feature">Gestão de 1 campanha · 1 canal de aquisição</div>
+          <div class="invest-feature">Migração de produtos e clientes</div>
+          <div class="invest-feature">Manutenção, suporte e evolução</div>
+          <div class="invest-feature star">O sistema é um ativo da Noodrops</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Prazo -->
+  <div class="section">
+    <div class="section-label">06 · Prazo</div>
+    <h2 class="section-title">Sistema pronto e no ar em <span class="accent">até 2 meses</span></h2>
+    <p class="section-body">
+      O desenvolvimento completo — loja, checkout próprio, painel, integrações e régua de WhatsApp — fica pronto e no ar em <strong>até 2 meses</strong>, com migração cuidadosa de produtos e clientes pra não perder venda na troca.
+    </p>
+    <div class="infra-disclaimer">
+      <strong>A partir do go-live, é uma relação contínua:</strong> manutenção, evolução do sistema e gestão da campanha de tráfego seguem mês a mês. Não é um projeto que termina e é esquecido — o sistema cresce junto com a loja.
+    </div>
+  </div>
+
+
+  <!-- CTA Final -->
+  <div class="section">
+    <div class="section-label">07 · Próximos Passos</div>
+    <div class="cta-box">
+      <div class="cta-eyebrow">● NK-2026-062</div>
+      <div class="cta-title">Pronto pra ter o que é seu?</div>
+      <div class="cta-body">
+        A gente começa pelo briefing e o levantamento dos acessos. Em até 2 meses a Noodrops está no ar com sistema próprio, sem os 2% — e com tráfego rodando.
+      </div>
+      <a class="cta-contact" href="https://wa.me/5511973493202?text=Bora%20fechar%2C%20Camila%21%20Quero%20seguir%20com%20o%20sistema%20pr%C3%B3prio%20da%20Noodrops">
+        Confirmar por WhatsApp ↗
+      </a>
+    </div>
+    <div class="cta-cards">
+      <div class="cta-card">
+        <div class="lbl">Responsável</div>
+        <div class="name">Notkode</div>
+        <div class="desc">Sistemas, IA e performance digital</div>
+      </div>
+      <div class="cta-card">
+        <div class="lbl">Cliente</div>
+        <div class="name">Noodrops · Luiz</div>
+        <div class="desc">Ecommerce — noodrops.com.br</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <div class="doc-footer">
+    <div class="footer-brand"><img src="logo-notkode.png" alt="Notkode"></div>
+    <div class="footer-meta">
+      proposta-noodrops · NK-2026-062<br>
+      Junho 2026 · Confidencial
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
