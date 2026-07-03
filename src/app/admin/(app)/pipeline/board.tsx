@@ -98,7 +98,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
               setDragId(null);
             }}
             className={[
-              'flex w-[15.5rem] shrink-0 flex-col overflow-hidden rounded-md border transition-colors',
+              'flex min-w-[14rem] flex-1 flex-col overflow-hidden rounded-md border transition-colors',
               isOver ? 'border-primary/50 bg-primary/[0.06]' : 'border-black/[0.05] bg-[#F4F5F7]',
             ].join(' ')}
           >
