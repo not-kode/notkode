@@ -49,9 +49,8 @@ function enderecoOrg(o: NonNullable<Eng['organizations']>): string {
   return parts.join(', ');
 }
 
-export default async function ContratoPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ mode?: string }> }) {
+export default async function ContratoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const forPdf = (await searchParams).mode === 'pdf';
   const supabase = getSupabaseAdmin();
 
   const [{ data: engData }, { data: recData }] = await Promise.all([
@@ -120,8 +119,7 @@ export default async function ContratoPage({ params, searchParams }: { params: P
   return (
     <div className="doc">
         <style>{CSS}</style>
-        {forPdf && <style>{`@page { margin: 0 } .page { padding: 0 !important; max-width: none !important }`}</style>}
-        {!forPdf && <PrintButton id={eng.id} />}
+        <PrintButton />
 
         <main className="page">
           {missing.length > 0 && (
