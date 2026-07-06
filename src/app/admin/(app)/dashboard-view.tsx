@@ -1,6 +1,8 @@
 // Visão geral do /admin — desempenho do SITE (tracking) separado do NEGÓCIO (CRM).
 // Componente de apresentação (server): sem estado, recebe tudo pronto.
 
+import type { ReactNode } from 'react';
+
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const nf = (n: number) => n.toLocaleString('pt-BR');
 const pct = (num: number, den: number) => (den > 0 ? `${Math.round((num / den) * 100)}%` : '—');
@@ -20,12 +22,26 @@ export type DashboardData = {
   eventosTotais: number;
 };
 
-function Kpi({ label, value, tone }: { label: string; value: string; tone?: string }) {
+const ACCENT: Record<string, string> = {
+  primary: 'border-l-primary', success: 'border-l-success', danger: 'border-l-danger', neutral: 'border-l-black/15',
+};
+
+function Kpi({ label, value, tone, accent = 'neutral' }: { label: string; value: string; tone?: string; accent?: 'primary' | 'success' | 'danger' | 'neutral' }) {
   return (
-    <div className="rounded-md border border-black/[0.06] bg-white p-4">
-      <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
-      <p className={`mt-1 text-xl font-semibold ${tone ?? 'text-text-primary'}`}>{value}</p>
+    <div className={`rounded-xl border border-black/[0.07] border-l-[3px] bg-white p-4 shadow-[0_1px_2px_rgba(20,20,18,0.05)] ${ACCENT[accent]}`}>
+      <p className="font-label text-[10.5px] uppercase tracking-[0.08em] text-text-muted">{label}</p>
+      <p className={`mt-1.5 text-[22px] font-bold leading-none tracking-tight ${tone ?? 'text-text-primary'}`}>{value}</p>
     </div>
+  );
+}
+
+// Título de seção com barra de acento (dá estrutura e contraste).
+function SectionTitle({ children, sub }: { children: ReactNode; sub?: string }) {
+  return (
+    <h2 className="flex items-center gap-2.5 text-[15px] font-semibold">
+      <span className="h-4 w-1 shrink-0 rounded-full bg-primary" />
+      <span>{children}{sub && <span className="ml-2 font-label text-[10.5px] font-normal uppercase tracking-wider text-text-muted">{sub}</span>}</span>
+    </h2>
   );
 }
 
@@ -36,7 +52,7 @@ function FunnelRow({ label, value, max, prev, tone, drop }: { label: string; val
   return (
     <div className="flex items-center gap-3">
       <div className="w-36 shrink-0 text-right font-label text-[11px] uppercase tracking-wider text-text-muted">{label}</div>
-      <div className="relative h-8 flex-1 overflow-hidden rounded-md bg-black/[0.03]">
+      <div className="relative h-8 flex-1 overflow-hidden rounded-md bg-black/[0.055]">
         <div className={`h-full rounded-md ${tone}`} style={{ width: `${w}%` }} />
         <span className="absolute inset-y-0 left-2 flex items-center text-xs font-semibold text-text-primary">{nf(value)}</span>
       </div>
@@ -67,30 +83,30 @@ export function DashboardView({ data }: { data: DashboardData }) {
   const formDrop = biggestDropIndex(data.formFunnel);
 
   return (
-    <div className="w-full">
+    <div className="-mx-4 -my-6 min-h-full bg-[#F4F5F7] px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Visão geral</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Visão geral</h1>
         <p className="mt-1 text-sm text-text-muted">Desempenho do site · últimos 30 dias.</p>
       </header>
 
       {semTracking && (
-        <p className="mb-6 rounded-md border border-warning/20 bg-warning/[0.05] px-4 py-3 text-sm text-text-secondary">
+        <p className="mb-6 rounded-lg border border-warning/25 bg-warning/[0.07] px-4 py-3 text-sm text-text-secondary">
           O rastreamento acabou de entrar no ar — as métricas do site começam a preencher conforme o site recebe acessos. O instantâneo do negócio (embaixo) já reflete os dados reais.
         </p>
       )}
 
       {/* KPIs do SITE */}
       <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="Visitas · 30d" value={nf(data.kpis.visitas)} tone="text-primary" />
-        <Kpi label="Conversão (visita→envio)" value={pct(data.kpis.formsEnviados, data.kpis.visitas)} />
-        <Kpi label="Formulários enviados" value={nf(data.kpis.formsEnviados)} tone="text-success" />
-        <Kpi label="Cliques em CTA" value={nf(data.kpis.cliquesCta)} />
+        <Kpi label="Visitas · 30d" value={nf(data.kpis.visitas)} tone="text-primary" accent="primary" />
+        <Kpi label="Conversão (visita→envio)" value={pct(data.kpis.formsEnviados, data.kpis.visitas)} accent="neutral" />
+        <Kpi label="Formulários enviados" value={nf(data.kpis.formsEnviados)} tone="text-success" accent="success" />
+        <Kpi label="Cliques em CTA" value={nf(data.kpis.cliquesCta)} accent="neutral" />
       </div>
 
       {/* Funil do SITE — só tracking, mesma janela */}
-      <section className="mb-8 rounded-lg border border-black/[0.06] bg-white p-5">
-        <h2 className="mb-4 text-lg font-semibold">Funil do site <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 30 dias</span></h2>
-        <div className="flex flex-col gap-2.5">
+      <section className="mb-6 rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
+        <SectionTitle sub="· 30 dias">Funil do site</SectionTitle>
+        <div className="mt-4 flex flex-col gap-2.5">
           <FunnelRow label="Visitas" value={data.siteFunnel[0]?.count ?? 0} max={data.siteFunnel[0]?.count ?? 1} tone="bg-primary/70" />
           {data.siteFunnel.slice(1).map((s, i) => (
             <FunnelRow key={s.label} label={s.label} value={s.count} max={data.siteFunnel[0]?.count ?? 1} prev={data.siteFunnel[i].count} tone={i === data.siteFunnel.length - 2 ? 'bg-success/70' : 'bg-primary/50'} />
@@ -100,9 +116,9 @@ export function DashboardView({ data }: { data: DashboardData }) {
       </section>
 
       {/* Onde as pessoas param no formulário — o gráfico de desistência */}
-      <section className="mb-8 rounded-lg border border-black/[0.06] bg-white p-5">
-        <h2 className="mb-1 text-lg font-semibold">Onde as pessoas param no formulário <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 30 dias</span></h2>
-        <p className="mb-4 text-xs text-text-muted">Cada passo é uma sessão distinta. A maior queda mostra onde ajustar o formulário.</p>
+      <section className="mb-6 rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
+        <SectionTitle sub="· 30 dias">Onde as pessoas param no formulário</SectionTitle>
+        <p className="mb-4 mt-1.5 text-xs text-text-muted">Cada passo é uma sessão distinta. A maior queda mostra onde ajustar o formulário.</p>
         {(data.formFunnel[0]?.count ?? 0) === 0 ? (
           <p className="rounded-md border border-black/[0.05] bg-black/[0.02] px-4 py-3 text-sm text-text-muted">Ninguém começou um formulário nos últimos 30 dias ainda.</p>
         ) : (
@@ -123,9 +139,10 @@ export function DashboardView({ data }: { data: DashboardData }) {
       </section>
 
       {/* Visitas por dia + Cliques por CTA */}
-      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="rounded-lg border border-black/[0.06] bg-white p-5">
-          <h2 className="mb-4 text-lg font-semibold">Visitas por dia <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 14 dias</span></h2>
+      <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <section className="rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
+          <SectionTitle sub="· 14 dias">Visitas por dia</SectionTitle>
+          <div className="mt-4" />
           {data.visitasPorDia.every((d) => d.count === 0) ? (
             <p className="py-8 text-center text-sm text-text-muted">Sem visitas registradas ainda.</p>
           ) : (
@@ -140,8 +157,9 @@ export function DashboardView({ data }: { data: DashboardData }) {
           )}
         </section>
 
-        <section className="rounded-lg border border-black/[0.06] bg-white p-5">
-          <h2 className="mb-4 text-lg font-semibold">Cliques por CTA</h2>
+        <section className="rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
+          <SectionTitle>Cliques por CTA</SectionTitle>
+          <div className="mt-4" />
           {data.porCta.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-muted">Nenhum clique registrado ainda.</p>
           ) : (
@@ -149,7 +167,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
               {data.porCta.map((c) => (
                 <div key={c.label} className="flex items-center gap-3">
                   <div className="w-40 shrink-0 truncate text-xs text-text-secondary" title={c.label}>{c.label}</div>
-                  <div className="relative h-6 flex-1 overflow-hidden rounded bg-black/[0.03]">
+                  <div className="relative h-6 flex-1 overflow-hidden rounded bg-black/[0.05]">
                     <div className="h-full rounded bg-primary/50" style={{ width: `${Math.round((c.count / maxCta) * 100)}%` }} />
                   </div>
                   <div className="w-8 shrink-0 text-right text-xs font-medium text-text-primary">{c.count}</div>
@@ -161,8 +179,9 @@ export function DashboardView({ data }: { data: DashboardData }) {
       </div>
 
       {/* Leads por serviço */}
-      <section className="mb-8 rounded-lg border border-black/[0.06] bg-white p-5">
-        <h2 className="mb-4 text-lg font-semibold">Leads por serviço</h2>
+      <section className="mb-6 rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
+        <SectionTitle>Leads por serviço</SectionTitle>
+        <div className="mt-4" />
         {data.porServico.length === 0 ? (
           <p className="py-8 text-center text-sm text-text-muted">Nenhum lead ainda.</p>
         ) : (
@@ -170,7 +189,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
             {data.porServico.map((s) => (
               <div key={s.tag} className="flex items-center gap-3">
                 <div className="w-40 shrink-0 truncate text-xs text-text-secondary" title={s.label}>{s.label}</div>
-                <div className="relative h-6 flex-1 overflow-hidden rounded bg-black/[0.03]">
+                <div className="relative h-6 flex-1 overflow-hidden rounded bg-black/[0.05]">
                   <div className="h-full rounded bg-primary/50" style={{ width: `${Math.round((s.count / maxServico) * 100)}%` }} />
                 </div>
                 <div className="w-8 shrink-0 text-right text-xs font-medium text-text-primary">{s.count}</div>
@@ -181,15 +200,15 @@ export function DashboardView({ data }: { data: DashboardData }) {
       </section>
 
       {/* Instantâneo do NEGÓCIO (CRM) — separado do site */}
-      <section>
-        <h2 className="mb-1 text-lg font-semibold">Instantâneo do negócio</h2>
-        <p className="mb-4 text-xs text-text-muted">Dados do CRM — independentes do tráfego do site.</p>
+      <section className="rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
+        <SectionTitle>Instantâneo do negócio</SectionTitle>
+        <p className="mb-4 mt-1.5 text-xs text-text-muted">Dados do CRM — independentes do tráfego do site.</p>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          <Kpi label="MRR ativo" value={brl(data.negocio.mrr)} tone="text-primary" />
-          <Kpi label="Atrasado" value={brl(data.negocio.atrasado)} tone={data.negocio.atrasado > 0 ? 'text-danger' : undefined} />
-          <Kpi label="Clientes ativos" value={nf(data.negocio.clientesAtivos)} />
-          <Kpi label="Leads (total)" value={nf(data.negocio.leadsTotal)} />
-          <Kpi label="Negócios ganhos" value={nf(data.negocio.ganhos)} tone="text-success" />
+          <Kpi label="MRR ativo" value={brl(data.negocio.mrr)} tone="text-primary" accent="primary" />
+          <Kpi label="Atrasado" value={brl(data.negocio.atrasado)} tone={data.negocio.atrasado > 0 ? 'text-danger' : undefined} accent={data.negocio.atrasado > 0 ? 'danger' : 'neutral'} />
+          <Kpi label="Clientes ativos" value={nf(data.negocio.clientesAtivos)} accent="neutral" />
+          <Kpi label="Leads (total)" value={nf(data.negocio.leadsTotal)} accent="neutral" />
+          <Kpi label="Negócios ganhos" value={nf(data.negocio.ganhos)} tone="text-success" accent="success" />
         </div>
       </section>
     </div>
