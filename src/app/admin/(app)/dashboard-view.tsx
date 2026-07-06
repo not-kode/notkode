@@ -1,19 +1,22 @@
-// Visão geral do /admin — funil do site + métricas do negócio.
+// Visão geral do /admin — desempenho do SITE (tracking) separado do NEGÓCIO (CRM).
 // Componente de apresentação (server): sem estado, recebe tudo pronto.
 
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+const nf = (n: number) => n.toLocaleString('pt-BR');
 const pct = (num: number, den: number) => (den > 0 ? `${Math.round((num / den) * 100)}%` : '—');
 
-export type Funnel = { visitas: number; cliques: number; forms: number; promovidos: number; ganhos: number };
-export type ServiceCount = { tag: string; label: string; count: number };
-export type DayCount = { day: string; count: number };
 export type FunnelStep = { label: string; count: number };
+export type ServiceCount = { tag: string; label: string; count: number };
+export type CtaCount = { label: string; count: number };
+export type DayCount = { day: string; count: number };
 export type DashboardData = {
-  funnel: Funnel;
+  kpis: { visitas: number; conversao: number; formsEnviados: number; cliquesCta: number };
+  siteFunnel: FunnelStep[];
   formFunnel: FunnelStep[];
-  porServico: ServiceCount[];
   visitasPorDia: DayCount[];
-  kpis: { mrr: number; atrasado: number; clientesAtivos: number; leadsTotal: number };
+  porCta: CtaCount[];
+  porServico: ServiceCount[];
+  negocio: { mrr: number; atrasado: number; clientesAtivos: number; leadsTotal: number; ganhos: number };
   eventosTotais: number;
 };
 
@@ -26,61 +29,80 @@ function Kpi({ label, value, tone }: { label: string; value: string; tone?: stri
   );
 }
 
-// Passo do funil: barra proporcional ao topo + taxa de conversão vs. passo anterior.
-function FunnelRow({ label, value, max, prev, tone }: { label: string; value: number; max: number; prev?: number; tone: string }) {
+// Passo de funil: barra proporcional ao topo + conversão vs. passo anterior.
+// `drop` destaca em vermelho a maior queda do funil.
+function FunnelRow({ label, value, max, prev, tone, drop }: { label: string; value: number; max: number; prev?: number; tone: string; drop?: boolean }) {
   const w = max > 0 ? Math.max(2, Math.round((value / max) * 100)) : 0;
   return (
     <div className="flex items-center gap-3">
-      <div className="w-40 shrink-0 text-right font-label text-[11px] uppercase tracking-wider text-text-muted">{label}</div>
+      <div className="w-36 shrink-0 text-right font-label text-[11px] uppercase tracking-wider text-text-muted">{label}</div>
       <div className="relative h-8 flex-1 overflow-hidden rounded-md bg-black/[0.03]">
         <div className={`h-full rounded-md ${tone}`} style={{ width: `${w}%` }} />
-        <span className="absolute inset-y-0 left-2 flex items-center text-xs font-semibold text-text-primary">{value.toLocaleString('pt-BR')}</span>
+        <span className="absolute inset-y-0 left-2 flex items-center text-xs font-semibold text-text-primary">{nf(value)}</span>
       </div>
-      <div className="w-16 shrink-0 font-label text-[11px] text-text-muted">{prev != null ? pct(value, prev) : ''}</div>
+      <div className={`w-24 shrink-0 font-label text-[11px] ${drop ? 'font-semibold text-danger' : 'text-text-muted'}`}>
+        {prev != null ? <>{pct(value, prev)}{drop ? ' ↓ maior queda' : ''}</> : ''}
+      </div>
     </div>
   );
 }
 
+// Índice do passo com a maior queda relativa (para destacar no funil).
+function biggestDropIndex(steps: FunnelStep[]): number {
+  let worst = -1, worstRatio = 1;
+  for (let i = 1; i < steps.length; i++) {
+    const prev = steps[i - 1].count;
+    if (prev <= 0) continue;
+    const ratio = steps[i].count / prev;
+    if (ratio < worstRatio) { worstRatio = ratio; worst = i; }
+  }
+  return worst;
+}
+
 export function DashboardView({ data }: { data: DashboardData }) {
-  const f = data.funnel;
+  const semTracking = data.eventosTotais === 0;
   const maxServico = Math.max(1, ...data.porServico.map((s) => s.count));
   const maxDia = Math.max(1, ...data.visitasPorDia.map((d) => d.count));
+  const maxCta = Math.max(1, ...data.porCta.map((c) => c.count));
+  const formDrop = biggestDropIndex(data.formFunnel);
 
   return (
     <div className="w-full">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold">Visão geral</h1>
-        <p className="mt-1 text-sm text-text-muted">Funil do site e saúde do negócio · últimos 30 dias.</p>
+        <p className="mt-1 text-sm text-text-muted">Desempenho do site · últimos 30 dias.</p>
       </header>
 
+      {semTracking && (
+        <p className="mb-6 rounded-md border border-warning/20 bg-warning/[0.05] px-4 py-3 text-sm text-text-secondary">
+          O rastreamento acabou de entrar no ar — as métricas do site começam a preencher conforme o site recebe acessos. O instantâneo do negócio (embaixo) já reflete os dados reais.
+        </p>
+      )}
+
+      {/* KPIs do SITE */}
       <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="MRR ativo" value={brl(data.kpis.mrr)} tone="text-primary" />
-        <Kpi label="Atrasado" value={brl(data.kpis.atrasado)} tone={data.kpis.atrasado > 0 ? 'text-danger' : undefined} />
-        <Kpi label="Clientes ativos" value={String(data.kpis.clientesAtivos)} />
-        <Kpi label="Leads (total)" value={String(data.kpis.leadsTotal)} />
+        <Kpi label="Visitas · 30d" value={nf(data.kpis.visitas)} tone="text-primary" />
+        <Kpi label="Conversão (visita→envio)" value={pct(data.kpis.formsEnviados, data.kpis.visitas)} />
+        <Kpi label="Formulários enviados" value={nf(data.kpis.formsEnviados)} tone="text-success" />
+        <Kpi label="Cliques em CTA" value={nf(data.kpis.cliquesCta)} />
       </div>
 
+      {/* Funil do SITE — só tracking, mesma janela */}
       <section className="mb-8 rounded-lg border border-black/[0.06] bg-white p-5">
-        <h2 className="mb-4 text-lg font-semibold">Funil de conversão <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 30 dias</span></h2>
-        {data.eventosTotais === 0 ? (
-          <p className="rounded-md border border-warning/20 bg-warning/[0.05] px-4 py-3 text-sm text-text-secondary">
-            O rastreamento acabou de entrar no ar — o topo do funil (visitas e cliques) começa a preencher conforme o site recebe acessos. Leads, promoções e negócios já refletem os dados reais.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            <FunnelRow label="Visitas" value={f.visitas} max={f.visitas} tone="bg-primary/70" />
-            <FunnelRow label="Cliques no CTA" value={f.cliques} max={f.visitas} prev={f.visitas} tone="bg-primary/55" />
-            <FunnelRow label="Formulários" value={f.forms} max={f.visitas} prev={f.cliques} tone="bg-primary/45" />
-            <FunnelRow label="Leads promovidos" value={f.promovidos} max={f.visitas} prev={f.forms} tone="bg-success/60" />
-            <FunnelRow label="Negócios ganhos" value={f.ganhos} max={f.visitas} prev={f.promovidos} tone="bg-success/80" />
-          </div>
-        )}
+        <h2 className="mb-4 text-lg font-semibold">Funil do site <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 30 dias</span></h2>
+        <div className="flex flex-col gap-2.5">
+          <FunnelRow label="Visitas" value={data.siteFunnel[0]?.count ?? 0} max={data.siteFunnel[0]?.count ?? 1} tone="bg-primary/70" />
+          {data.siteFunnel.slice(1).map((s, i) => (
+            <FunnelRow key={s.label} label={s.label} value={s.count} max={data.siteFunnel[0]?.count ?? 1} prev={data.siteFunnel[i].count} tone={i === data.siteFunnel.length - 2 ? 'bg-success/70' : 'bg-primary/50'} />
+          ))}
+        </div>
         <p className="mt-3 font-label text-[10px] text-text-muted/70">A % à direita é a conversão sobre o passo anterior.</p>
       </section>
 
+      {/* Onde as pessoas param no formulário — o gráfico de desistência */}
       <section className="mb-8 rounded-lg border border-black/[0.06] bg-white p-5">
-        <h2 className="mb-1 text-lg font-semibold">Funil do formulário <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 30 dias</span></h2>
-        <p className="mb-4 text-xs text-text-muted">Onde as pessoas param de preencher — cada passo é uma sessão distinta.</p>
+        <h2 className="mb-1 text-lg font-semibold">Onde as pessoas param no formulário <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 30 dias</span></h2>
+        <p className="mb-4 text-xs text-text-muted">Cada passo é uma sessão distinta. A maior queda mostra onde ajustar o formulário.</p>
         {(data.formFunnel[0]?.count ?? 0) === 0 ? (
           <p className="rounded-md border border-black/[0.05] bg-black/[0.02] px-4 py-3 text-sm text-text-muted">Ninguém começou um formulário nos últimos 30 dias ainda.</p>
         ) : (
@@ -92,15 +114,16 @@ export function DashboardView({ data }: { data: DashboardData }) {
                 value={s.count}
                 max={data.formFunnel[0]?.count ?? 1}
                 prev={i > 0 ? data.formFunnel[i - 1].count : undefined}
-                tone={i === data.formFunnel.length - 1 ? 'bg-success/70' : 'bg-primary/55'}
+                tone={i === data.formFunnel.length - 1 ? 'bg-success/70' : 'bg-primary/50'}
+                drop={i === formDrop}
               />
             ))}
           </div>
         )}
-        <p className="mt-3 font-label text-[10px] text-text-muted/70">A % à direita é quantos seguiram do passo anterior. A maior queda mostra onde ajustar o formulário.</p>
       </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* Visitas por dia + Cliques por CTA */}
+      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-black/[0.06] bg-white p-5">
           <h2 className="mb-4 text-lg font-semibold">Visitas por dia <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 14 dias</span></h2>
           {data.visitasPorDia.every((d) => d.count === 0) ? (
@@ -118,24 +141,57 @@ export function DashboardView({ data }: { data: DashboardData }) {
         </section>
 
         <section className="rounded-lg border border-black/[0.06] bg-white p-5">
-          <h2 className="mb-4 text-lg font-semibold">Leads por serviço</h2>
-          {data.porServico.length === 0 ? (
-            <p className="py-8 text-center text-sm text-text-muted">Nenhum lead ainda.</p>
+          <h2 className="mb-4 text-lg font-semibold">Cliques por CTA</h2>
+          {data.porCta.length === 0 ? (
+            <p className="py-8 text-center text-sm text-text-muted">Nenhum clique registrado ainda.</p>
           ) : (
             <div className="flex flex-col gap-2.5">
-              {data.porServico.map((s) => (
-                <div key={s.tag} className="flex items-center gap-3">
-                  <div className="w-40 shrink-0 truncate text-xs text-text-secondary" title={s.label}>{s.label}</div>
+              {data.porCta.map((c) => (
+                <div key={c.label} className="flex items-center gap-3">
+                  <div className="w-40 shrink-0 truncate text-xs text-text-secondary" title={c.label}>{c.label}</div>
                   <div className="relative h-6 flex-1 overflow-hidden rounded bg-black/[0.03]">
-                    <div className="h-full rounded bg-primary/50" style={{ width: `${Math.round((s.count / maxServico) * 100)}%` }} />
+                    <div className="h-full rounded bg-primary/50" style={{ width: `${Math.round((c.count / maxCta) * 100)}%` }} />
                   </div>
-                  <div className="w-8 shrink-0 text-right text-xs font-medium text-text-primary">{s.count}</div>
+                  <div className="w-8 shrink-0 text-right text-xs font-medium text-text-primary">{c.count}</div>
                 </div>
               ))}
             </div>
           )}
         </section>
       </div>
+
+      {/* Leads por serviço */}
+      <section className="mb-8 rounded-lg border border-black/[0.06] bg-white p-5">
+        <h2 className="mb-4 text-lg font-semibold">Leads por serviço</h2>
+        {data.porServico.length === 0 ? (
+          <p className="py-8 text-center text-sm text-text-muted">Nenhum lead ainda.</p>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {data.porServico.map((s) => (
+              <div key={s.tag} className="flex items-center gap-3">
+                <div className="w-40 shrink-0 truncate text-xs text-text-secondary" title={s.label}>{s.label}</div>
+                <div className="relative h-6 flex-1 overflow-hidden rounded bg-black/[0.03]">
+                  <div className="h-full rounded bg-primary/50" style={{ width: `${Math.round((s.count / maxServico) * 100)}%` }} />
+                </div>
+                <div className="w-8 shrink-0 text-right text-xs font-medium text-text-primary">{s.count}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Instantâneo do NEGÓCIO (CRM) — separado do site */}
+      <section>
+        <h2 className="mb-1 text-lg font-semibold">Instantâneo do negócio</h2>
+        <p className="mb-4 text-xs text-text-muted">Dados do CRM — independentes do tráfego do site.</p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          <Kpi label="MRR ativo" value={brl(data.negocio.mrr)} tone="text-primary" />
+          <Kpi label="Atrasado" value={brl(data.negocio.atrasado)} tone={data.negocio.atrasado > 0 ? 'text-danger' : undefined} />
+          <Kpi label="Clientes ativos" value={nf(data.negocio.clientesAtivos)} />
+          <Kpi label="Leads (total)" value={nf(data.negocio.leadsTotal)} />
+          <Kpi label="Negócios ganhos" value={nf(data.negocio.ganhos)} tone="text-success" />
+        </div>
+      </section>
     </div>
   );
 }

@@ -5,8 +5,6 @@ import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-rea
 import { useTranslations } from 'next-intl';
 import { track, getUtm } from '@/components/analytics';
 
-const STEP_LABELS = ['necessidades', 'contato', 'timing'];
-
 export type QualificationOption = { id: string; label: string };
 
 export type QualificationSchema = {
@@ -76,7 +74,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
       formStarted.current = true;
       track({ type: 'form_start', service_tag: schema.serviceTag });
     }
-    track({ type: 'form_step', service_tag: schema.serviceTag, label: STEP_LABELS[step] ?? `step-${step}` });
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: String(step + 1) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 

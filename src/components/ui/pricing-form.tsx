@@ -197,11 +197,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       formStarted.current = true;
       track({ type: 'form_start', service_tag: schema.serviceTag });
     }
-    track({
-      type: 'form_step',
-      service_tag: schema.serviceTag,
-      label: isRevealStep ? 'contato' : `campo-${step}`,
-    });
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: String(step + 1) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
