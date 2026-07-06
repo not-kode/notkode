@@ -8,6 +8,9 @@ const intlMiddleware = createMiddleware(routing);
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // /onboarding é público (link com token) e fora do esquema de locale.
+  if (pathname.startsWith('/onboarding')) return NextResponse.next();
+
   // /admin é fora do esquema de locale do next-intl — gate de senha próprio.
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin/login') return NextResponse.next();

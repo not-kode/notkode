@@ -7,6 +7,7 @@ const NAV = [
   { href: '/admin/leads', label: 'Leads' },
   { href: '/admin/pipeline', label: 'Pipeline' },
   { href: '/admin/clientes', label: 'Clientes' },
+  { href: '/admin/onboarding', label: 'Onboarding' },
   { href: '/admin/financeiro', label: 'Financeiro' },
 ];
 
