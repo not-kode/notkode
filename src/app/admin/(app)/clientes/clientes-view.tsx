@@ -542,8 +542,8 @@ function BriefingCard({ briefing }: { briefing: ClientBriefing }) {
           Briefing de onboarding{briefing.product_name ? ` · ${briefing.product_name}` : ''}
         </p>
         <p className="mt-1 flex items-center gap-2 text-sm">
-          <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${enviado ? 'bg-primary/15 text-primary' : 'bg-warning/15 text-warning'}`}>
-            {enviado ? 'enviado' : 'rascunho'}
+          <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${enviado ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
+            {enviado ? 'respondido' : 'aguardando'}
           </span>
           {enviado && quando && <span className="font-label text-[10px] text-text-muted">em {quando}</span>}
         </p>

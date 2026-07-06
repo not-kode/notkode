@@ -70,7 +70,7 @@ export default async function OnboardingAdminPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-semibold">Onboarding</h1>
         <p className="mt-1 text-sm text-text-muted">
-          {rows.length} briefing{rows.length === 1 ? '' : 's'} · {enviados} enviado{enviados === 1 ? '' : 's'}
+          {rows.length} briefing{rows.length === 1 ? '' : 's'} · {enviados} respondido{enviados === 1 ? '' : 's'}
         </p>
       </header>
 
@@ -99,7 +99,7 @@ export default async function OnboardingAdminPage() {
                         enviado ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning',
                       ].join(' ')}
                     >
-                      {enviado ? 'enviado' : 'rascunho'}
+                      {enviado ? 'respondido' : 'aguardando'}
                     </span>
                   </div>
                   <p className="mt-1 font-mono text-xs text-text-muted">
