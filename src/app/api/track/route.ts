@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 // Tracking próprio, leve e à prova de falhas: grava um evento em `events`.
 // Nunca deve quebrar o site — qualquer erro é engolido e respondido com ok:false.
 
-const EVENT_TYPES = new Set(['page_view', 'cta_click', 'form_submit']);
+const EVENT_TYPES = new Set(['page_view', 'cta_click', 'form_start', 'form_step', 'form_submit']);
 const str = (v: unknown, max = 512): string | null => {
   if (typeof v !== 'string') return null;
   const s = v.trim();

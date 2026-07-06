@@ -129,6 +129,7 @@ function MobileNavItem({ href, label, onClick, featured = false }: { href: '/sis
       <Link
         href={href}
         onClick={onClick}
+        data-cta={`mobile-nav${href}`}
         className="flex items-center justify-between py-3.5 px-3 rounded-lg active:bg-black/[0.04] transition-colors"
       >
         <span
@@ -156,6 +157,7 @@ function MobileSubItem({
       <Link
         href={href}
         onClick={onClick}
+        data-cta={`mobile-servico${href}`}
         className="flex items-start gap-3 py-2.5 px-3 rounded-lg active:bg-black/[0.04] transition-colors"
       >
         <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(59,130,246,0.10)' }}>

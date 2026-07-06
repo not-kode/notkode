@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { track, getUtm } from '@/components/analytics';
+
+const STEP_LABELS = ['necessidades', 'contato', 'timing'];
 
 export type QualificationOption = { id: string; label: string };
 
@@ -65,6 +67,18 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
     description: '',
     timing: '',
   });
+
+  // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
+  const formStarted = useRef(false);
+  useEffect(() => {
+    if (status === 'success') return;
+    if (!formStarted.current) {
+      formStarted.current = true;
+      track({ type: 'form_start', service_tag: schema.serviceTag });
+    }
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: STEP_LABELS[step] ?? `step-${step}` });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const update = <K extends keyof FormData>(key: K, val: FormData[K]) =>
     setData((d) => ({ ...d, [key]: val }));
@@ -153,6 +167,8 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           href={`https://wa.me/5511951381254?text=${encodeURIComponent(message)}`}
           target="_blank"
           rel="noopener noreferrer"
+          data-cta="whatsapp-sucesso"
+          data-service={schema.serviceTag}
           className="font-bricolage inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#25D366] text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px transition-all duration-200"
         >
           <MessageCircle className="w-4 h-4" />

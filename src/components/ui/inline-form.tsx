@@ -54,6 +54,7 @@ export function InlineForm({
           href="https://wa.me/5511951381254?text=Acabei de preencher o formulário no site, quero acelerar."
           target="_blank"
           rel="noopener noreferrer"
+          data-cta="whatsapp-sucesso"
           className="font-bricolage inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#25D366] text-white font-bold text-[12px] uppercase tracking-wide hover:-translate-y-px transition-all duration-200"
         >
           <MessageCircle className="w-4 h-4" />

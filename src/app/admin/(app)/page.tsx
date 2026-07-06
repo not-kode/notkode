@@ -20,7 +20,7 @@ export default async function AdminHome() {
   const countHead = { count: 'exact' as const, head: true };
 
   const [
-    pv, cc, fs, pvRows, leadRows, wonDeals, engRows, recRows,
+    pv, cc, fs, pvRows, leadRows, wonDeals, engRows, recRows, formRows,
   ] = await Promise.all([
     supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', since30),
     supabase.from('events').select('*', countHead).eq('type', 'cta_click').gte('created_at', since30),
@@ -30,11 +30,23 @@ export default async function AdminHome() {
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
     supabase.from('engagements').select('organization_id, lifecycle, mrr'),
     supabase.from('receivables').select('amount, status, due_date'),
+    supabase.from('events').select('type, label, session_id').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', since30),
   ]);
 
   const leads = (leadRows.data ?? []) as { service_tag: string | null; promoted_at: string | null }[];
   const engs = (engRows.data ?? []) as { organization_id: string | null; lifecycle: string; mrr: number | null }[];
   const recs = (recRows.data ?? []) as { amount: number; status: string; due_date: string }[];
+  const formEvents = (formRows.data ?? []) as { type: string; label: string | null; session_id: string | null }[];
+
+  // Funil do formulário (sessões distintas): iniciou → chegou no contato → enviou.
+  // "contato" é a etapa comum aos dois formulários, então funciona cross-form.
+  const distinct = (pred: (e: { type: string; label: string | null }) => boolean) =>
+    new Set(formEvents.filter((e) => pred(e) && e.session_id).map((e) => e.session_id)).size;
+  const formFunnel = [
+    { label: 'Iniciaram', count: distinct((e) => e.type === 'form_start') },
+    { label: 'Chegaram no contato', count: distinct((e) => e.type === 'form_step' && e.label === 'contato') },
+    { label: 'Enviaram', count: distinct((e) => e.type === 'form_submit') },
+  ];
 
   // Funil
   const funnel = {
@@ -73,6 +85,7 @@ export default async function AdminHome() {
 
   const data: DashboardData = {
     funnel,
+    formFunnel,
     porServico,
     visitasPorDia,
     kpis: { mrr, atrasado, clientesAtivos, leadsTotal: leads.length },

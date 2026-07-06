@@ -189,6 +189,22 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   const currentField = !isRevealStep ? schema.fields[step] : null;
   const [min, max] = useMemo(() => schema.calc(selection), [selection, schema]);
 
+  // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
+  const formStarted = useRef(false);
+  useEffect(() => {
+    if (status === 'success') return;
+    if (!formStarted.current) {
+      formStarted.current = true;
+      track({ type: 'form_start', service_tag: schema.serviceTag });
+    }
+    track({
+      type: 'form_step',
+      service_tag: schema.serviceTag,
+      label: isRevealStep ? 'contato' : `campo-${step}`,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   const setSingle = (fieldId: string, value: string) =>
     setSelection((prev) => ({ ...prev, [fieldId]: value }));
 
@@ -350,6 +366,8 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
+            data-cta="whatsapp-sucesso"
+            data-service={schema.serviceTag}
             className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#25D366] text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px transition-all duration-200"
           >
             <MessageCircle className="w-4 h-4" />

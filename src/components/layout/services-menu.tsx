@@ -89,6 +89,7 @@ export function ServicesMenu() {
                   key={s.href}
                   href={s.href}
                   onClick={() => setOpen(false)}
+                  data-cta={`servico-card${s.href}`}
                   className="group relative rounded-2xl p-6 lg:p-7 transition-all duration-200 hover:-translate-y-1"
                   style={{
                     background: 'hsl(55 100% 97%)',
@@ -134,6 +135,7 @@ export function ServicesMenu() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        data-cta="nav-servicos"
         className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors text-sm"
       >
         {t('servicos')}

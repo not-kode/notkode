@@ -11,20 +11,20 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 glass-strong border-b border-black/10">
       <div className="container mx-auto flex h-16 items-center justify-between gap-6 px-5 lg:px-8">
-        <Link href="/" className="flex items-center">
+        <Link href="/" data-cta="nav-logo" className="flex items-center">
           <Logo variant="horizontal-dark" width={120} priority />
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-7 text-sm">
-          <Link href="/sistemas-ia" className="text-text-secondary hover:text-primary transition-colors font-medium">
+          <Link href="/sistemas-ia" data-cta="nav-sistemas-ia" className="text-text-secondary hover:text-primary transition-colors font-medium">
             {t('sistemasIA')}
           </Link>
           <ServicesMenu />
-          <Link href="/parcerias" className="text-text-secondary hover:text-primary transition-colors">
+          <Link href="/parcerias" data-cta="nav-parcerias" className="text-text-secondary hover:text-primary transition-colors">
             {t('parcerias')}
           </Link>
-          <Link href="/sobre" className="text-text-secondary hover:text-primary transition-colors">
+          <Link href="/sobre" data-cta="nav-sobre" className="text-text-secondary hover:text-primary transition-colors">
             {t('sobre')}
           </Link>
         </nav>

@@ -7,8 +7,10 @@ const pct = (num: number, den: number) => (den > 0 ? `${Math.round((num / den) *
 export type Funnel = { visitas: number; cliques: number; forms: number; promovidos: number; ganhos: number };
 export type ServiceCount = { tag: string; label: string; count: number };
 export type DayCount = { day: string; count: number };
+export type FunnelStep = { label: string; count: number };
 export type DashboardData = {
   funnel: Funnel;
+  formFunnel: FunnelStep[];
   porServico: ServiceCount[];
   visitasPorDia: DayCount[];
   kpis: { mrr: number; atrasado: number; clientesAtivos: number; leadsTotal: number };
@@ -74,6 +76,28 @@ export function DashboardView({ data }: { data: DashboardData }) {
           </div>
         )}
         <p className="mt-3 font-label text-[10px] text-text-muted/70">A % à direita é a conversão sobre o passo anterior.</p>
+      </section>
+
+      <section className="mb-8 rounded-lg border border-black/[0.06] bg-white p-5">
+        <h2 className="mb-1 text-lg font-semibold">Funil do formulário <span className="font-label text-[11px] font-normal uppercase tracking-wider text-text-muted">· 30 dias</span></h2>
+        <p className="mb-4 text-xs text-text-muted">Onde as pessoas param de preencher — cada passo é uma sessão distinta.</p>
+        {(data.formFunnel[0]?.count ?? 0) === 0 ? (
+          <p className="rounded-md border border-black/[0.05] bg-black/[0.02] px-4 py-3 text-sm text-text-muted">Ninguém começou um formulário nos últimos 30 dias ainda.</p>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {data.formFunnel.map((s, i) => (
+              <FunnelRow
+                key={s.label}
+                label={s.label}
+                value={s.count}
+                max={data.formFunnel[0]?.count ?? 1}
+                prev={i > 0 ? data.formFunnel[i - 1].count : undefined}
+                tone={i === data.formFunnel.length - 1 ? 'bg-success/70' : 'bg-primary/55'}
+              />
+            ))}
+          </div>
+        )}
+        <p className="mt-3 font-label text-[10px] text-text-muted/70">A % à direita é quantos seguiram do passo anterior. A maior queda mostra onde ajustar o formulário.</p>
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
