@@ -20,7 +20,7 @@ export type DashboardData = {
   eventosTotais: number;
 };
 
-const card = 'rounded-lg border border-black/[0.08] bg-white';
+const card = 'rounded-lg border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(25,25,24,0.05)]';
 
 function Kpi({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
@@ -81,7 +81,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
   const formTop = data.formFunnel[0]?.count ?? 1;
 
   return (
-    <div className="-mx-4 -my-6 min-h-full bg-[#F5F6F8] px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
+    <div className="-mx-4 -my-6 min-h-full bg-surface-elevated px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Visão geral</h1>
         <p className="mt-1 text-sm text-text-muted">Desempenho do site · últimos 30 dias.</p>
