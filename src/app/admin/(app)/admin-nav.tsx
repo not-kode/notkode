@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV = [
+  { href: '/admin', label: 'Visão geral', exact: true },
   { href: '/admin/leads', label: 'Leads' },
   { href: '/admin/pipeline', label: 'Pipeline' },
   { href: '/admin/clientes', label: 'Clientes' },
@@ -17,7 +18,7 @@ export function AdminNav() {
   return (
     <nav className="flex flex-col gap-0.5">
       {NAV.map((item) => {
-        const active = path === item.href || path.startsWith(item.href + '/');
+        const active = item.exact ? path === item.href : path === item.href || path.startsWith(item.href + '/');
         return (
           <Link
             key={item.href}

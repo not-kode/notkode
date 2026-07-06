@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { track, getUtm } from '@/components/analytics';
 
 export type QualificationOption = { id: string; label: string };
 
@@ -89,13 +90,13 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           serviceTag: schema.serviceTag,
           kind: 'qualification',
           data,
+          utm: getUtm(),
         }),
       });
     } catch {
       // MVP: fire-and-forget
     }
-    // eslint-disable-next-line no-console
-    console.log('[qualification-form]', schema.serviceTag, data);
+    track({ type: 'form_submit', service_tag: schema.serviceTag });
     setStatus('success');
   };
 

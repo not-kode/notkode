@@ -28,6 +28,11 @@ type QualificationPayload = {
   };
 };
 
+type Utm = {
+  utm_source?: string; utm_medium?: string; utm_campaign?: string;
+  utm_term?: string; utm_content?: string;
+};
+
 type NormalizedLead = {
   service_tag: string;
   page_origin: string | null;
@@ -38,7 +43,22 @@ type NormalizedLead = {
   selection: Record<string, string | string[]> | null;
   estimated_min: number | null;
   estimated_max: number | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
 };
+
+// Extrai só os 5 campos utm_* conhecidos do payload (o resto é ignorado).
+function pickUtm(raw: unknown): Record<'utm_source' | 'utm_medium' | 'utm_campaign' | 'utm_term' | 'utm_content', string | null> {
+  const u = (raw ?? {}) as Utm;
+  const s = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, 128) : null);
+  return {
+    utm_source: s(u.utm_source), utm_medium: s(u.utm_medium), utm_campaign: s(u.utm_campaign),
+    utm_term: s(u.utm_term), utm_content: s(u.utm_content),
+  };
+}
 
 // ── Normalize both forms into a single shape ───────────────────────────────
 
@@ -46,6 +66,7 @@ function normalize(
   body: PricingPayload | QualificationPayload,
   pageOrigin: string | null
 ): NormalizedLead | null {
+  const utm = pickUtm((body as { utm?: unknown }).utm);
   if ('kind' in body && body.kind === 'qualification') {
     const d = body.data;
     if (!d?.name || !d?.email || !d?.whatsapp) return null;
@@ -65,6 +86,7 @@ function normalize(
       selection,
       estimated_min: null,
       estimated_max: null,
+      ...utm,
     };
   }
 
@@ -81,6 +103,7 @@ function normalize(
     selection: p.selection ?? null,
     estimated_min: typeof min === 'number' ? min : null,
     estimated_max: typeof max === 'number' ? max : null,
+    ...utm,
   };
 }
 

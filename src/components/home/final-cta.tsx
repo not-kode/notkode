@@ -47,6 +47,7 @@ export async function FinalCTA({ locale, ctaHref }: FinalCTAProps) {
           <Reveal delay={300}>
             <a
               href={href}
+              data-cta="final-cta"
               className="font-bricolage group inline-flex items-center gap-2 px-8 py-4 rounded-full bg-primary text-white font-bold text-base uppercase tracking-wide hover:-translate-y-0.5 hover:shadow-glow hover:bg-primary/90 transition-all duration-300"
             >
               {t('finalCtaButton')}

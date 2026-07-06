@@ -6,6 +6,7 @@ import { routing } from '@/i18n/routing';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { LangSync } from '@/components/layout/lang-sync';
+import { Analytics } from '@/components/analytics';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -44,6 +45,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <LangSync locale={locale} />
+      <Analytics />
       <Header />
       <main className="overflow-x-clip">{children}</main>
       <Footer />

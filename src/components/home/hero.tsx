@@ -41,6 +41,7 @@ export async function Hero({ locale }: { locale: string }) {
           <Reveal delay={240} className="mt-12">
             <a
               href="#servicos"
+              data-cta="hero-primary"
               className="font-bricolage inline-flex items-center gap-2 px-7 py-4 rounded-xl bg-primary text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-primary/90 transition-all duration-200"
             >
               {t('heroPrimaryCta')}

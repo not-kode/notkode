@@ -65,6 +65,7 @@ export async function AiActivation({ locale }: { locale: string }) {
               href={`https://wa.me/5511951381254?text=${encodeURIComponent(t('activationCtaWhatsappMessage'))}`}
               target="_blank"
               rel="noopener noreferrer"
+              data-cta="whatsapp-ativacao"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#25D366] text-white font-bold text-[13px] uppercase tracking-wide hover:-translate-y-px hover:bg-[#20BD5A] transition-all duration-200"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">

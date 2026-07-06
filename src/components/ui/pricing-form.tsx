@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle, Sparkles } from 'lucide-react';
+import { track, getUtm } from '@/components/analytics';
 
 // ── Schema types ──────────────────────────────────────────────────────────
 
@@ -245,6 +246,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       selection,
       estimatedRange: [min, max],
       lead: { name, whatsapp, email, notes },
+      utm: getUtm(),
     };
     try {
       await fetch('/api/lead', {
@@ -255,8 +257,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
     } catch {
       // MVP: fire-and-forget
     }
-    // eslint-disable-next-line no-console
-    console.log('[pricing-form]', payload);
+    track({ type: 'form_submit', service_tag: schema.serviceTag });
     setStatus('success');
   };
 
