@@ -3,10 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
-const ENGAGEMENT_STATUS = [
-  'aguardando', 'onboarding', 'em_desenvolvimento', 'revisao',
-  'entregue', 'encerrado', 'ativo', 'pausado', 'churn',
-];
+// Dois eixos independentes do contrato:
+//   • status (etapa de entrega) e lifecycle (ciclo de vida comercial).
+const STAGE_STATUS = ['aguardando', 'onboarding', 'em_desenvolvimento', 'revisao', 'entregue'];
+const LIFECYCLE = ['ativo', 'pausado', 'churn', 'encerrado'];
 
 function num(v: FormDataEntryValue | null): number | null {
   if (v == null || v === '') return null;
@@ -19,8 +19,10 @@ export async function createEngagement(formData: FormData): Promise<void> {
   const title = String(formData.get('title') ?? '').trim();
   const type = String(formData.get('type') ?? 'pontual');
   const status = String(formData.get('status') ?? 'aguardando');
+  const lifecycleRaw = String(formData.get('lifecycle') ?? 'ativo');
+  const lifecycle = LIFECYCLE.includes(lifecycleRaw) ? lifecycleRaw : 'ativo';
   if (!title || (type !== 'pontual' && type !== 'recorrente')) return;
-  if (!ENGAGEMENT_STATUS.includes(status)) return;
+  if (!STAGE_STATUS.includes(status)) return;
 
   const organization_id = String(formData.get('organization_id') ?? '') || null;
   const start_date = String(formData.get('start_date') ?? '') || null;
@@ -31,6 +33,7 @@ export async function createEngagement(formData: FormData): Promise<void> {
     title,
     type,
     status,
+    lifecycle,
     organization_id,
     valor: num(formData.get('valor')),
     mrr: num(formData.get('mrr')),
@@ -57,7 +60,10 @@ export async function updateEngagementDetails(formData: FormData): Promise<void>
   if (type === 'pontual' || type === 'recorrente') patch.type = type;
 
   const status = formData.get('status');
-  if (status != null && ENGAGEMENT_STATUS.includes(String(status))) patch.status = String(status);
+  if (status != null && STAGE_STATUS.includes(String(status))) patch.status = String(status);
+
+  const lifecycle = formData.get('lifecycle');
+  if (lifecycle != null && LIFECYCLE.includes(String(lifecycle))) patch.lifecycle = String(lifecycle);
 
   if (formData.has('mrr')) patch.mrr = num(formData.get('mrr'));
   if (formData.has('valor')) patch.valor = num(formData.get('valor'));
@@ -99,7 +105,7 @@ export async function concludeEngagement(formData: FormData): Promise<void> {
   const supabase = getSupabaseAdmin();
   await supabase
     .from('engagements')
-    .update({ status: 'entregue', end_date, updated_at: new Date().toISOString() })
+    .update({ status: 'entregue', lifecycle: 'encerrado', end_date, updated_at: new Date().toISOString() })
     .eq('id', id);
 
   revalidatePath('/admin/financeiro');

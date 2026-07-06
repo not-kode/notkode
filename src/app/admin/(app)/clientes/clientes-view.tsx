@@ -5,11 +5,12 @@ import { useState, useTransition, type ReactNode } from 'react';
 import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement } from '../financeiro/actions';
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
+import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
 
 export type ClientContact = { id: string; name: string | null; role: string | null; email: string | null; whatsapp: string | null };
 export type Parcela = { id: string; description: string | null; amount: number; due_date: string; status: string; paid_amount: number | null; paid_at: string | null };
 export type Contrato = {
-  id: string; title: string | null; type: string; status: string;
+  id: string; title: string | null; type: string; status: string; lifecycle: string;
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
   scope: string | null; renewal_note: string | null; client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
@@ -28,21 +29,38 @@ export type ClientBriefing = {
   status: string; product_name: string | null; submitted_at: string | null; url: string;
 };
 
-const ENG_STATUS: Record<string, string> = {
+// Dois eixos do contrato, separados:
+//   • STAGE  = etapa de entrega (a jornada do projeto)
+//   • LIFE   = ciclo de vida comercial (situação do contrato)
+const STAGE_STATUS = ['aguardando', 'onboarding', 'em_desenvolvimento', 'revisao', 'entregue'] as const;
+const STAGE_LABELS: Record<string, string> = {
   aguardando: 'Aguardando', onboarding: 'Onboarding', em_desenvolvimento: 'Em desenvolvimento',
-  revisao: 'Revisão', entregue: 'Entregue', encerrado: 'Encerrado',
-  ativo: 'Ativo', pausado: 'Pausado', churn: 'Churn',
+  revisao: 'Revisão', entregue: 'Entregue',
 };
-// Status que contam como contrato "vivo" (aparecem no grupo Ativos, com destaque).
-const ACTIVE_STATUSES = new Set(['aguardando', 'onboarding', 'em_desenvolvimento', 'revisao', 'ativo']);
-const isActiveStatus = (s: string) => ACTIVE_STATUSES.has(s);
+const LIFECYCLE_STATUS = ['ativo', 'pausado', 'churn', 'encerrado'] as const;
+const LIFECYCLE_LABELS: Record<string, string> = {
+  ativo: 'Ativo', pausado: 'Pausado', churn: 'Churn', encerrado: 'Encerrado',
+};
+// Cor da pílula de ciclo de vida.
+const LIFE_TONE: Record<string, string> = {
+  ativo: 'bg-primary/10 text-primary', pausado: 'bg-warning/10 text-warning',
+  churn: 'bg-danger/10 text-danger', encerrado: 'bg-black/[0.06] text-text-secondary',
+};
+// Cor de fundo/borda do card por ciclo de vida.
+const CARD_TONE: Record<string, string> = {
+  ativo: 'border-primary/25 bg-primary/[0.04]', pausado: 'border-warning/25 bg-warning/[0.04]',
+  churn: 'border-danger/20 bg-danger/[0.03]', encerrado: 'border-black/[0.07] bg-black/[0.02]',
+};
+
+// Contrato "vivo" = ainda em jogo (ativo ou pausado). Churn/encerrado saem do grupo de ativos.
+const isLive = (e: Contrato) => e.lifecycle === 'ativo' || e.lifecycle === 'pausado';
 
 // Resume a etapa do cliente na jornada, pra bater o olho na lista.
 function clientStage(c: ClientView): { label: string; cls: string } {
-  const active = c.contratos.find((e) => isActiveStatus(e.status));
-  if (active) {
-    const cls = active.status === 'ativo' ? 'bg-success/12 text-success' : 'bg-primary/12 text-primary';
-    return { label: ENG_STATUS[active.status] ?? active.status, cls };
+  const live = c.contratos.find(isLive);
+  if (live) {
+    const cls = live.lifecycle === 'ativo' ? 'bg-primary/12 text-primary' : 'bg-warning/12 text-warning';
+    return { label: STAGE_LABELS[live.status] ?? live.status, cls };
   }
   if (c.contratos.length > 0) return { label: 'Encerrado', cls: 'bg-black/[0.05] text-text-muted' };
   return { label: 'Novo', cls: 'bg-black/[0.05] text-text-muted' };
@@ -72,7 +90,8 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = clients.find((c) => c.id === selectedId) ?? null;
 
-  const mrrOf = (c: ClientView) => c.contratos.filter((e) => e.status !== 'encerrado' && e.status !== 'churn' && e.status !== 'entregue').reduce((s, e) => s + (e.mrr ?? 0), 0);
+  // MRR conta só contratos ativos (pausado não fatura; churn/encerrado saíram).
+  const mrrOf = (c: ClientView) => c.contratos.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
 
   return (
     <div className="w-full">
@@ -98,7 +117,7 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
             <tbody>
               {clients.map((c) => {
                 const mrr = mrrOf(c);
-                const ativos = c.contratos.filter((e) => e.status !== 'entregue' && e.status !== 'encerrado' && e.status !== 'churn').length;
+                const ativos = c.contratos.filter(isLive).length;
                 const stage = clientStage(c);
                 const briefPending = c.briefing != null && c.briefing.status !== 'enviado';
                 return (
@@ -147,14 +166,20 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
     fd.set('status', status);
     start(() => updateEngagementDetails(fd));
   };
+  const changeLifecycle = (id: string, lifecycle: string) => {
+    const fd = new FormData();
+    fd.set('id', id);
+    fd.set('lifecycle', lifecycle);
+    start(() => updateEngagementDetails(fd));
+  };
   const remove = (id: string) => {
     const fd = new FormData();
     fd.set('id', id);
     start(() => deleteEngagement(fd));
   };
 
-  const ativos = client.contratos.filter((e) => isActiveStatus(e.status));
-  const encerrados = client.contratos.filter((e) => !isActiveStatus(e.status));
+  const ativos = client.contratos.filter(isLive);
+  const encerrados = client.contratos.filter((e) => !isLive(e));
 
   const tabs: [typeof tab, string][] = [
     ['contratos', `Contratos (${client.contratos.length})`],
@@ -184,28 +209,7 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
           <form action={(fd) => start(() => updateOrganization(fd))} className="flex flex-col gap-3">
             <input type="hidden" name="id" value={client.id} />
             <Field label="Nome (como aparece no sistema)" name="name" defaultValue={client.name} placeholder="Nome do cliente" />
-            <p className="mt-1 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Dados para o contrato</p>
-            <Field label="Razão social" name="legal_name" defaultValue={client.legal_name} placeholder="Empresa LTDA" />
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="CNPJ / CPF" name="tax_id" defaultValue={client.tax_id} placeholder="00.000.000/0001-00" />
-              <Field label="Inscr. estadual" name="state_registration" defaultValue={client.state_registration} placeholder="Isento" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Representante legal" name="legal_rep" defaultValue={client.legal_rep} placeholder="Quem assina" />
-              <Field label="CPF do signatário" name="legal_rep_cpf" defaultValue={client.legal_rep_cpf} placeholder="000.000.000-00" />
-            </div>
-            <div className="grid grid-cols-[1fr_5rem] gap-3">
-              <Field label="Logradouro" name="address_street" defaultValue={client.address_street} placeholder="Rua / Av." />
-              <Field label="Número" name="address_number" defaultValue={client.address_number} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Bairro" name="address_district" defaultValue={client.address_district} />
-              <Field label="CEP" name="address_zip" defaultValue={client.address_zip} />
-            </div>
-            <div className="grid grid-cols-[1fr_4rem] gap-3">
-              <Field label="Cidade" name="address_city" defaultValue={client.address_city} />
-              <Field label="UF" name="address_state" defaultValue={client.address_state} />
-            </div>
+            <OrgFiscalFields org={client} />
             <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60">{pending ? 'Salvando…' : 'Salvar cadastro'}</button>
           </form>
 
@@ -237,12 +241,15 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
             <form action={(fd) => start(async () => { await createEngagement(fd); setNewContract(false); })} className="mb-4 flex flex-col gap-3 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-4">
               <input type="hidden" name="organization_id" value={client.id} />
               <Field label="Título" name="title" placeholder="Ex: Sistema de gestão" />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div><label className={labelCls}>Tipo</label>
                   <select name="type" className={inputCls} defaultValue="recorrente"><option value="recorrente">Recorrente</option><option value="pontual">Pontual</option></select>
                 </div>
-                <div><label className={labelCls}>Status</label>
-                  <select name="status" className={inputCls} defaultValue="ativo">{Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+                <div><label className={labelCls}>Etapa de entrega</label>
+                  <select name="status" className={inputCls} defaultValue="aguardando">{STAGE_STATUS.map((v) => <option key={v} value={v}>{STAGE_LABELS[v]}</option>)}</select>
+                </div>
+                <div><label className={labelCls}>Ciclo de vida</label>
+                  <select name="lifecycle" className={inputCls} defaultValue="ativo">{LIFECYCLE_STATUS.map((v) => <option key={v} value={v}>{LIFECYCLE_LABELS[v]}</option>)}</select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -267,7 +274,7 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
                   <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-primary">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Ativos ({ativos.length})
                   </p>
-                  {ativos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onChangeStatus={changeStatus} onDelete={remove} pending={pending} />)}
+                  {ativos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onChangeStatus={changeStatus} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
                 </div>
               )}
               {encerrados.length > 0 && (
@@ -275,7 +282,7 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
                   <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">
                     <span className="h-1.5 w-1.5 rounded-full bg-text-muted/50" /> Encerrados / inativos ({encerrados.length})
                   </p>
-                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onChangeStatus={changeStatus} onDelete={remove} pending={pending} />)}
+                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onChangeStatus={changeStatus} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
                 </div>
               )}
             </div>
@@ -286,10 +293,9 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
   );
 }
 
-function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onChangeStatus, onDelete, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onChangeStatus: (id: string, status: string) => void; onDelete: (id: string) => void; pending: boolean }) {
-  const isConcluded = eng.status === 'entregue' || eng.status === 'encerrado';
-  const isActive = isActiveStatus(eng.status);
-  const isChurn = eng.status === 'churn';
+function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onChangeStatus, onChangeLifecycle, onDelete, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onChangeStatus: (id: string, status: string) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
+  const isConcluded = eng.lifecycle === 'encerrado' || eng.lifecycle === 'churn';
+  const isActive = eng.lifecycle === 'ativo';
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -305,35 +311,26 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
     (eng.valor ?? 0) > 0 ? `${brl(eng.valor!)} avulso` : null,
   ].filter(Boolean).join(' · ') || '—';
 
-  // Cor de fundo/borda por estado: ativo em azul, churn em vermelho, resto neutro esmaecido.
-  const cardTone = isActive
-    ? 'border-primary/25 bg-primary/[0.04]'
-    : isChurn
-      ? 'border-danger/20 bg-danger/[0.03]'
-      : 'border-black/[0.07] bg-black/[0.02]';
-  const statusTone = isActive
-    ? 'bg-primary/10 text-primary'
-    : isChurn
-      ? 'bg-danger/10 text-danger'
-      : isConcluded
-        ? 'bg-success/10 text-success'
-        : 'bg-black/[0.06] text-text-secondary';
+  // Cor de fundo/borda e da pílula pelo ciclo de vida (ativo azul · pausado âmbar · churn vermelho · encerrado neutro).
+  const cardTone = CARD_TONE[eng.lifecycle] ?? CARD_TONE.encerrado;
+  const lifeTone = LIFE_TONE[eng.lifecycle] ?? LIFE_TONE.encerrado;
 
   return (
     <div className={`rounded-lg border p-4 transition-colors ${cardTone}`}>
-      {/* Cabeçalho: título · status (clicável) · menu de ações */}
+      {/* Cabeçalho: título · ciclo de vida (pílula clicável) · menu de ações */}
       <div className="flex items-start justify-between gap-3">
         <p className={`min-w-0 text-[15px] font-semibold leading-tight ${isActive ? 'text-text-primary' : 'text-text-secondary'}`}>{eng.title ?? 'Contrato'}</p>
         <div className="flex shrink-0 items-center gap-1.5">
           <div className="relative flex items-center">
             <select
-              value={eng.status}
-              onChange={(ev) => onChangeStatus(eng.id, ev.target.value)}
+              value={eng.lifecycle}
+              onChange={(ev) => onChangeLifecycle(eng.id, ev.target.value)}
               disabled={pending}
-              aria-label="Status do contrato"
-              className={`cursor-pointer appearance-none rounded-full py-0.5 pl-2 pr-5 font-label text-[10px] uppercase tracking-wider outline-none transition-colors disabled:opacity-50 ${statusTone}`}
+              aria-label="Ciclo de vida do contrato"
+              title="Situação comercial: ativo, pausado, churn ou encerrado"
+              className={`cursor-pointer appearance-none rounded-full py-0.5 pl-2 pr-5 font-label text-[10px] uppercase tracking-wider outline-none transition-colors disabled:opacity-50 ${lifeTone}`}
             >
-              {Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              {LIFECYCLE_STATUS.map((v) => <option key={v} value={v}>{LIFECYCLE_LABELS[v]}</option>)}
             </select>
             <span className="pointer-events-none absolute right-1.5 text-[8px] opacity-70">▼</span>
           </div>
@@ -345,8 +342,8 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
               <>
                 <button type="button" aria-hidden onClick={() => setMenuOpen(false)} className="fixed inset-0 z-10 cursor-default" />
                 <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-lg border border-black/[0.08] bg-white py-1 shadow-lg">
-                  <button type="button" onClick={() => { setEditingDetails(true); setEditing(false); setMenuOpen(false); }} className={menuItem}>Editar dados</button>
-                  <button type="button" onClick={() => { setEditing(true); setEditingDetails(false); setMenuOpen(false); }} className={menuItem}>Objeto &amp; cláusulas</button>
+                  <button type="button" onClick={() => { setEditingDetails(true); setEditing(false); setMenuOpen(false); }} className={menuItem}>Valores &amp; vigência</button>
+                  <button type="button" onClick={() => { setEditing(true); setEditingDetails(false); setMenuOpen(false); }} className={menuItem}>Escopo &amp; cláusulas</button>
                   {!isConcluded && (
                     <form action={onConclude}>
                       <input type="hidden" name="id" value={eng.id} />
@@ -359,6 +356,23 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
               </>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Etapa de entrega — a jornada do projeto, separada da situação comercial acima */}
+      <div className="mt-3 flex items-center gap-2">
+        <span className={labelCls + ' mb-0 shrink-0'}>Etapa de entrega</span>
+        <div className="relative flex items-center">
+          <select
+            value={eng.status}
+            onChange={(ev) => onChangeStatus(eng.id, ev.target.value)}
+            disabled={pending}
+            aria-label="Etapa de entrega do contrato"
+            className="cursor-pointer appearance-none rounded-md border border-black/[0.1] bg-white py-1 pl-2.5 pr-6 text-xs text-text-primary outline-none transition-colors focus:border-primary/50 disabled:opacity-50"
+          >
+            {STAGE_STATUS.map((v) => <option key={v} value={v}>{STAGE_LABELS[v]}</option>)}
+          </select>
+          <span className="pointer-events-none absolute right-2 text-[8px] opacity-70">▼</span>
         </div>
       </div>
 
@@ -397,14 +411,10 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
         <form action={(fd) => { onSaveDetails(fd); setEditingDetails(false); }} className="mt-3 flex flex-col gap-3 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
           <input type="hidden" name="id" value={eng.id} />
           <Field label="Título" name="title" defaultValue={eng.title} placeholder="Ex: Sistema de gestão" />
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className={labelCls}>Tipo</label>
-              <select name="type" className={inputCls} defaultValue={eng.type}><option value="recorrente">Recorrente</option><option value="pontual">Pontual</option></select>
-            </div>
-            <div><label className={labelCls}>Status</label>
-              <select name="status" className={inputCls} defaultValue={eng.status}>{Object.entries(ENG_STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
-            </div>
+          <div><label className={labelCls}>Tipo</label>
+            <select name="type" className={inputCls} defaultValue={eng.type}><option value="recorrente">Recorrente</option><option value="pontual">Pontual</option></select>
           </div>
+          <p className="-mt-1 font-label text-[10px] text-text-muted">Etapa de entrega e ciclo de vida se editam direto no card, acima.</p>
           <div className="grid grid-cols-2 gap-3">
             <div><label className={labelCls}>Mensal / MRR (R$)</label><input name="mrr" inputMode="decimal" defaultValue={eng.mrr != null ? String(eng.mrr) : ''} className={inputCls} placeholder="2500" /></div>
             <div><label className={labelCls}>Valor avulso (R$)</label><input name="valor" inputMode="decimal" defaultValue={eng.valor != null ? String(eng.valor) : ''} className={inputCls} placeholder="650" /></div>

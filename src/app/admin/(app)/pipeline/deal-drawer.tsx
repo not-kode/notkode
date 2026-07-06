@@ -3,6 +3,7 @@
 import { useTransition } from 'react';
 import { updateDeal, winDeal } from './actions';
 import { STAGE_LABELS } from './stages';
+import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
 import type { BoardDeal } from './board';
 
 const brl = (n: number) =>
@@ -136,38 +137,8 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
             placeholder="0"
           />
 
-          <div className="border-t border-black/[0.06] pt-4">
-            <p className="mb-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">
-              Dados para o contrato
-            </p>
-            <div className="flex flex-col gap-3">
-              <Field label="Razão social" name="legal_name" defaultValue={org?.legal_name} placeholder="Empresa LTDA" />
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="CNPJ / CPF" name="tax_id" defaultValue={org?.tax_id} placeholder="00.000.000/0001-00" />
-                <Field label="Inscr. estadual" name="state_registration" defaultValue={org?.state_registration} placeholder="Isento" />
-              </div>
-              <Field label="Representante legal" name="legal_rep" defaultValue={org?.legal_rep} placeholder="Nome de quem assina" />
-            </div>
-          </div>
-
-          <div className="border-t border-black/[0.06] pt-4">
-            <p className="mb-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">
-              Endereço
-            </p>
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-[1fr_5rem] gap-3">
-                <Field label="Logradouro" name="address_street" defaultValue={org?.address_street} placeholder="Rua / Av." />
-                <Field label="Número" name="address_number" defaultValue={org?.address_number} placeholder="123" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Bairro" name="address_district" defaultValue={org?.address_district} />
-                <Field label="CEP" name="address_zip" defaultValue={org?.address_zip} placeholder="00000-000" />
-              </div>
-              <div className="grid grid-cols-[1fr_4rem] gap-3">
-                <Field label="Cidade" name="address_city" defaultValue={org?.address_city} />
-                <Field label="UF" name="address_state" defaultValue={org?.address_state} placeholder="SP" />
-              </div>
-            </div>
+          <div className="flex flex-col gap-4 border-t border-black/[0.06] pt-4">
+            <OrgFiscalFields org={org} includeRepCpf={false} />
           </div>
 
           <div className="border-t border-black/[0.06] pt-4">
