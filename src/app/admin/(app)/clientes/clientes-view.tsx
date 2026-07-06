@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useTransition, type ReactNode } from 'react';
 import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement } from '../financeiro/actions';
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
@@ -21,6 +22,10 @@ export type ClientView = {
   address_city: string | null; address_state: string | null; address_zip: string | null;
   legal_rep: string | null; legal_rep_cpf: string | null;
   contacts: ClientContact[]; contratos: Contrato[];
+  briefing: ClientBriefing | null;
+};
+export type ClientBriefing = {
+  status: string; product_name: string | null; submitted_at: string | null; url: string;
 };
 
 const ENG_STATUS: Record<string, string> = {
@@ -152,6 +157,8 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
           </button>
         ))}
       </div>
+
+      {client.briefing && <BriefingCard briefing={client.briefing} />}
 
       {tab === 'cadastro' && (
         <>
@@ -517,6 +524,50 @@ function Drawer({ title, eyebrow, onClose, children, wide }: { title: string; ey
         </div>
         <div className="flex flex-col gap-4 px-5 py-4">{children}</div>
       </aside>
+    </div>
+  );
+}
+
+function BriefingCard({ briefing }: { briefing: ClientBriefing }) {
+  const [copied, setCopied] = useState(false);
+  const enviado = briefing.status === 'enviado';
+  const quando = briefing.submitted_at
+    ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(briefing.submitted_at))
+    : null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-black/[0.06] bg-white px-3 py-2.5">
+      <div>
+        <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">
+          Briefing de onboarding{briefing.product_name ? ` · ${briefing.product_name}` : ''}
+        </p>
+        <p className="mt-1 flex items-center gap-2 text-sm">
+          <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${enviado ? 'bg-primary/15 text-primary' : 'bg-warning/15 text-warning'}`}>
+            {enviado ? 'enviado' : 'rascunho'}
+          </span>
+          {enviado && quando && <span className="font-label text-[10px] text-text-muted">em {quando}</span>}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={async () => {
+            try { await navigator.clipboard.writeText(briefing.url); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* ignore */ }
+          }}
+          className="rounded-md border border-black/[0.08] px-2.5 py-1.5 font-label text-[11px] text-text-secondary transition-colors hover:border-primary hover:text-primary"
+          title={briefing.url}
+        >
+          {copied ? '✓ copiado' : '⧉ copiar link'}
+        </button>
+        {enviado && (
+          <Link
+            href="/admin/onboarding"
+            className="rounded-md bg-primary px-2.5 py-1.5 font-label text-[11px] font-semibold text-white transition hover:bg-primary/90"
+          >
+            ver respostas ↗
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

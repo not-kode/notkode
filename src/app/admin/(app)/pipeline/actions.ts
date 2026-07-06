@@ -92,23 +92,40 @@ export async function winDeal(formData: FormData): Promise<void> {
     .limit(1);
 
   if (!existing || existing.length === 0) {
-    const isRecurring = Number(deal.mrr ?? 0) > 0;
-    const title = SERVICE_TITLES[deal.service_tag ?? ''] ?? 'Contrato';
-    const { data: eng } = await supabase
+    // Se a empresa já tem um contrato "de verdade" (com escopo ou proposta
+    // anexada), liga o negócio a ESSE — evita criar um contrato-fantasma vazio.
+    const { data: contratos } = await supabase
       .from('engagements')
-      .insert({
-        organization_id: deal.organization_id,
-        type: isRecurring ? 'recorrente' : 'pontual',
-        status: 'aguardando',
-        title,
-        valor: deal.valor_pontual ?? null,
-        mrr: isRecurring ? deal.mrr : null,
-        notes: deal.notes ?? null,
-      })
       .select('id')
-      .single();
-    if (eng) {
-      await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: eng.id });
+      .eq('organization_id', deal.organization_id)
+      .or('scope.not.is.null,proposal_path.not.is.null')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (contratos && contratos.length > 0) {
+      await supabase
+        .from('deal_engagements')
+        .insert({ deal_id: id, engagement_id: contratos[0].id });
+    } else {
+      // Nenhum contrato existente — cria o esboço herdando valor/MRR do deal.
+      const isRecurring = Number(deal.mrr ?? 0) > 0;
+      const title = SERVICE_TITLES[deal.service_tag ?? ''] ?? 'Contrato';
+      const { data: eng } = await supabase
+        .from('engagements')
+        .insert({
+          organization_id: deal.organization_id,
+          type: isRecurring ? 'recorrente' : 'pontual',
+          status: 'aguardando',
+          title,
+          valor: deal.valor_pontual ?? null,
+          mrr: isRecurring ? deal.mrr : null,
+          notes: deal.notes ?? null,
+        })
+        .select('id')
+        .single();
+      if (eng) {
+        await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: eng.id });
+      }
     }
   }
 
