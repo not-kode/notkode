@@ -24,9 +24,14 @@ export type ClientView = {
   legal_rep: string | null; legal_rep_cpf: string | null;
   contacts: ClientContact[]; contratos: Contrato[];
   briefing: ClientBriefing | null;
+  leadOrigin: LeadOrigin | null;
 };
 export type ClientBriefing = {
   status: string; product_name: string | null; submitted_at: string | null; url: string;
+};
+export type LeadOrigin = {
+  service_tag: string | null; page_origin: string | null;
+  estimated_min: number | null; estimated_max: number | null;
 };
 
 // Dois eixos do contrato, separados:
@@ -52,8 +57,26 @@ const CARD_TONE: Record<string, string> = {
   churn: 'border-danger/20 bg-danger/[0.03]', encerrado: 'border-black/[0.07] bg-black/[0.02]',
 };
 
+// service_tag do lead → rótulo legível (mesma taxonomia do pipeline).
+const SERVICE_LABELS: Record<string, string> = {
+  'sistemas-ia': 'Sistema com IA', 'sites': 'Site / Landing Page',
+  'agentes-automacao': 'Agentes & Automação', 'ecommerce': 'E-commerce',
+  'identidade': 'Identidade & Brandbook', 'manutencao': 'Plano de Manutenção',
+};
+
 // Contrato "vivo" = ainda em jogo (ativo ou pausado). Churn/encerrado saem do grupo de ativos.
 const isLive = (e: Contrato) => e.lifecycle === 'ativo' || e.lifecycle === 'pausado';
+
+// Saúde financeira do cliente a partir das parcelas de todos os contratos.
+function financeHealth(contratos: Contrato[], todayStr: string) {
+  const parcelas = contratos.flatMap((c) => c.parcelas);
+  const atrasadas = parcelas.filter((r) => r.status === 'pendente' && r.due_date < todayStr);
+  const atrasadoTotal = atrasadas.reduce((s, r) => s + r.amount, 0);
+  const proxima = parcelas
+    .filter((r) => r.status === 'pendente' && r.due_date >= todayStr)
+    .sort((a, b) => a.due_date.localeCompare(b.due_date))[0] ?? null;
+  return { count: atrasadas.length, atrasadoTotal, proxima };
+}
 
 // Resume a etapa do cliente na jornada, pra bater o olho na lista.
 function clientStage(c: ClientView): { label: string; cls: string } {
@@ -188,6 +211,9 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
 
   return (
     <Drawer title={client.name ?? 'Cliente'} eyebrow="Cliente" onClose={onClose} wide>
+      {/* Resumo do projeto — os macros do cliente num relance */}
+      <ProjectHeader client={client} />
+
       {/* Abas */}
       <div className="flex gap-1 border-b border-black/[0.06] pb-3">
         {tabs.map(([k, l]) => (
@@ -200,8 +226,6 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
           </button>
         ))}
       </div>
-
-      {client.briefing && <BriefingCard briefing={client.briefing} />}
 
       {tab === 'cadastro' && (
         <>
@@ -552,6 +576,75 @@ function Drawer({ title, eyebrow, onClose, children, wide }: { title: string; ey
         </div>
         <div className="flex flex-col gap-4 px-5 py-4">{children}</div>
       </aside>
+    </div>
+  );
+}
+
+// Cabeçalho de projeto: reúne os macros do cliente que antes ficavam espalhados
+// (etapa, prazo, valor, saúde financeira, contato, origem do lead e briefing).
+function ProjectHeader({ client }: { client: ClientView }) {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const live = client.contratos.find(isLive) ?? null;
+  const fin = financeHealth(client.contratos, todayStr);
+  const contact = client.contacts[0] ?? null;
+  const lo = client.leadOrigin;
+
+  const mrr = client.contratos.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
+  const valorAvulso = client.contratos.filter(isLive).reduce((s, e) => s + (e.valor ?? 0), 0);
+  const valorLabel = mrr > 0 ? `${brl(mrr)}/mês` : valorAvulso > 0 ? brl(valorAvulso) : '—';
+
+  const stageLabel = live ? (STAGE_LABELS[live.status] ?? live.status) : client.contratos.length ? 'Encerrado' : 'Sem contrato';
+  const lifeTone = live ? (LIFE_TONE[live.lifecycle] ?? LIFE_TONE.encerrado) : 'bg-black/[0.06] text-text-secondary';
+
+  const estMin = lo?.estimated_min, estMax = lo?.estimated_max;
+  const estimativa = lo && (estMin || estMax) ? `est. ${estMin ? brl(estMin) : '—'}–${estMax ? brl(estMax) : '—'}` : null;
+  const origem = lo
+    ? [SERVICE_LABELS[lo.service_tag ?? ''] ?? lo.service_tag, lo.page_origin, estimativa].filter(Boolean).join(' · ')
+    : null;
+
+  const cellLabel = 'font-label text-[10px] uppercase tracking-[0.12em] text-text-muted';
+
+  return (
+    <div className="rounded-lg border border-primary/15 bg-primary/[0.03] p-4">
+      <p className="mb-3 font-label text-[10px] uppercase tracking-[0.14em] text-primary/80">Resumo do projeto</p>
+
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+        <div>
+          <p className={cellLabel}>Etapa</p>
+          <span className={`mt-1 inline-block rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${lifeTone}`}>{stageLabel}</span>
+        </div>
+        <div>
+          <p className={cellLabel}>Prazo</p>
+          <p className="mt-1 text-[13px] text-text-primary">{fmtDate(live?.start_date ?? null)} <span className="text-text-muted/50">→</span> {fmtDate(live?.end_date ?? null)}</p>
+        </div>
+        <div>
+          <p className={cellLabel}>Valor</p>
+          <p className="mt-1 text-[13px] font-medium text-text-primary">{valorLabel}</p>
+        </div>
+        <div>
+          <p className={cellLabel}>Financeiro</p>
+          <p className="mt-1 text-[13px]">
+            {fin.count > 0
+              ? <span className="font-medium text-danger">{fin.count} atrasada{fin.count === 1 ? '' : 's'} · {brl(fin.atrasadoTotal)}</span>
+              : fin.proxima
+                ? <span className="text-text-primary">Em dia <span className="text-text-muted">· próx. {fmtDate(fin.proxima.due_date)}</span></span>
+                : <span className="text-text-muted">Em dia</span>}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-1.5 border-t border-primary/10 pt-3 text-xs">
+        <div className="flex gap-2">
+          <span className={cellLabel + ' shrink-0 pt-0.5'}>Contato</span>
+          <span className="text-text-secondary">{contact ? [contact.name ?? '—', contact.whatsapp, contact.email].filter(Boolean).join(' · ') : '—'}</span>
+        </div>
+        <div className="flex gap-2">
+          <span className={cellLabel + ' shrink-0 pt-0.5'}>Origem</span>
+          <span className="text-text-secondary">{origem || '—'}</span>
+        </div>
+      </div>
+
+      {client.briefing && <div className="mt-3"><BriefingCard briefing={client.briefing} /></div>}
     </div>
   );
 }

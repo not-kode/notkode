@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { createReceivable, markReceivablePaid, unmarkReceivable } from './actions';
 
 export type EngView = {
-  id: string; title: string | null; type: string; status: string;
+  id: string; title: string | null; type: string; status: string; lifecycle: string;
   valor: number | null; mrr: number | null; billing_cycle: string | null;
   start_date: string | null; end_date: string | null; notes: string | null;
   organization_id: string | null; org_name: string | null;
@@ -68,7 +68,7 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
 
   const kpis = useMemo(() => {
     const mrr = engagements
-      .filter((e) => e.status !== 'encerrado' && e.status !== 'churn' && e.status !== 'entregue' && (e.mrr ?? 0) > 0)
+      .filter((e) => e.lifecycle === 'ativo' && (e.mrr ?? 0) > 0)
       .reduce((s, e) => s + (e.mrr ?? 0), 0);
     const aReceber = receivables.filter((r) => r.status === 'pendente' && ym(r.due_date) === month).reduce((s, r) => s + r.amount, 0);
     const atrasado = receivables.filter(isLate).reduce((s, r) => s + r.amount, 0);

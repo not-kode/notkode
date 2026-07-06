@@ -29,6 +29,11 @@ type BriefRow = {
   organization_id: string | null; token: string; status: string;
   product_name: string | null; submitted_at: string | null;
 };
+type DealRow = { id: string; organization_id: string | null };
+type LeadRow = {
+  deal_id: string | null; service_tag: string | null; page_origin: string | null;
+  estimated_min: number | null; estimated_max: number | null; created_at: string;
+};
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
 
@@ -39,7 +44,7 @@ function pick(channels: Channel[] | null, kind: string): string | null {
 
 export default async function ClientesPage() {
   const supabase = getSupabaseAdmin();
-  const [{ data: orgData }, { data: engData }, { data: recData }, { data: coData }, { data: briefData }] = await Promise.all([
+  const [{ data: orgData }, { data: engData }, { data: recData }, { data: coData }, { data: briefData }, { data: dealData }, { data: leadData }] = await Promise.all([
     supabase
       .from('organizations')
       .select('id, name, market, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep, legal_rep_cpf')
@@ -59,6 +64,14 @@ export default async function ClientesPage() {
       .from('onboarding_briefings')
       .select('organization_id, token, status, product_name, submitted_at')
       .order('created_at', { ascending: false }),
+    supabase
+      .from('deals')
+      .select('id, organization_id'),
+    supabase
+      .from('lead_submissions')
+      .select('deal_id, service_tag, page_origin, estimated_min, estimated_max, created_at')
+      .not('deal_id', 'is', null)
+      .order('created_at', { ascending: false }),
   ]);
 
   const orgs = (orgData ?? []) as OrgRow[];
@@ -66,11 +79,22 @@ export default async function ClientesPage() {
   const recs = (recData ?? []) as RecRow[];
   const cos = (coData ?? []) as unknown as CoRow[];
   const briefs = (briefData ?? []) as BriefRow[];
+  const deals = (dealData ?? []) as DealRow[];
+  const leads = (leadData ?? []) as LeadRow[];
 
   const clients: ClientView[] = orgs.map((o) => {
     const brief = briefs.find((b) => b.organization_id === o.id);
+    // Origem: a submissão de lead mais recente ligada a um negócio desta empresa.
+    const dealIds = deals.filter((d) => d.organization_id === o.id).map((d) => d.id);
+    const lead = leads.find((l) => l.deal_id && dealIds.includes(l.deal_id)) ?? null;
     return {
     ...o,
+    leadOrigin: lead
+      ? {
+          service_tag: lead.service_tag, page_origin: lead.page_origin,
+          estimated_min: lead.estimated_min, estimated_max: lead.estimated_max,
+        }
+      : null,
     briefing: brief
       ? {
           status: brief.status,

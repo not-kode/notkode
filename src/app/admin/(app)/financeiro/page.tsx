@@ -4,7 +4,7 @@ import { FinanceView, type EngView, type RecView } from './finance-view';
 export const dynamic = 'force-dynamic';
 
 type EngRow = {
-  id: string; title: string | null; type: string; status: string;
+  id: string; title: string | null; type: string; status: string; lifecycle: string;
   valor: number | null; mrr: number | null; billing_cycle: string | null;
   start_date: string | null; end_date: string | null; notes: string | null;
   organization_id: string | null;
@@ -24,7 +24,7 @@ export default async function FinanceiroPage() {
     supabase
       .from('engagements')
       .select(
-        'id, title, type, status, valor, mrr, billing_cycle, start_date, end_date, notes, organization_id, organizations(name)',
+        'id, title, type, status, lifecycle, valor, mrr, billing_cycle, start_date, end_date, notes, organization_id, organizations(name)',
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -48,6 +48,7 @@ export default async function FinanceiroPage() {
     title: e.title,
     type: e.type,
     status: e.status,
+    lifecycle: e.lifecycle,
     valor: e.valor,
     mrr: e.mrr,
     billing_cycle: e.billing_cycle,
