@@ -37,6 +37,17 @@ const ENG_STATUS: Record<string, string> = {
 const ACTIVE_STATUSES = new Set(['aguardando', 'onboarding', 'em_desenvolvimento', 'revisao', 'ativo']);
 const isActiveStatus = (s: string) => ACTIVE_STATUSES.has(s);
 
+// Resume a etapa do cliente na jornada, pra bater o olho na lista.
+function clientStage(c: ClientView): { label: string; cls: string } {
+  const active = c.contratos.find((e) => isActiveStatus(e.status));
+  if (active) {
+    const cls = active.status === 'ativo' ? 'bg-success/12 text-success' : 'bg-primary/12 text-primary';
+    return { label: ENG_STATUS[active.status] ?? active.status, cls };
+  }
+  if (c.contratos.length > 0) return { label: 'Encerrado', cls: 'bg-black/[0.05] text-text-muted' };
+  return { label: 'Novo', cls: 'bg-black/[0.05] text-text-muted' };
+}
+
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
 const fmtDate = (d: string | null) => {
   if (!d) return '—';
@@ -78,6 +89,7 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
             <thead>
               <tr className="border-b border-black/[0.06] text-left font-label text-[11px] uppercase tracking-wider text-text-muted">
                 <th className="px-4 py-3 font-medium">Cliente</th>
+                <th className="px-4 py-3 font-medium">Etapa</th>
                 <th className="px-4 py-3 font-medium">Contato principal</th>
                 <th className="px-4 py-3 font-medium">Contratos</th>
                 <th className="px-4 py-3 text-right font-medium">MRR</th>
@@ -87,9 +99,15 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
               {clients.map((c) => {
                 const mrr = mrrOf(c);
                 const ativos = c.contratos.filter((e) => e.status !== 'entregue' && e.status !== 'encerrado' && e.status !== 'churn').length;
+                const stage = clientStage(c);
+                const briefPending = c.briefing != null && c.briefing.status !== 'enviado';
                 return (
                   <tr key={c.id} onClick={() => setSelectedId(c.id)} className="cursor-pointer border-b border-black/[0.04] transition-colors last:border-0 hover:bg-primary/[0.03]">
                     <td className="px-4 py-3 font-medium text-text-primary">{c.name ?? '—'}</td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${stage.cls}`}>{stage.label}</span>
+                      {briefPending && <span className="ml-1.5 font-label text-[10px] text-warning">· briefing pendente</span>}
+                    </td>
                     <td className="px-4 py-3 text-text-secondary">{c.contacts[0]?.name ?? '—'}</td>
                     <td className="px-4 py-3 text-text-secondary">{c.contratos.length}{ativos > 0 ? ` · ${ativos} ativo${ativos === 1 ? '' : 's'}` : ''}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">{mrr > 0 ? <span className="font-medium text-primary">{brl(mrr)}<span className="text-text-muted">/mês</span></span> : '—'}</td>
