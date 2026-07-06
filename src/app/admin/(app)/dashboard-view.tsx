@@ -1,8 +1,6 @@
 // Visão geral do /admin — desempenho do SITE (tracking) separado do NEGÓCIO (CRM).
 // Componente de apresentação (server): sem estado, recebe tudo pronto.
 
-import type { ReactNode } from 'react';
-
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const nf = (n: number) => n.toLocaleString('pt-BR');
 const pct = (num: number, den: number) => (den > 0 ? `${Math.round((num / den) * 100)}%` : '—');
@@ -22,44 +20,42 @@ export type DashboardData = {
   eventosTotais: number;
 };
 
-const ACCENT: Record<string, string> = {
-  primary: 'border-l-primary', success: 'border-l-success', danger: 'border-l-danger', neutral: 'border-l-black/15',
-};
+const card = 'rounded-lg border border-black/[0.08] bg-white';
 
-function Kpi({ label, value, tone, accent = 'neutral' }: { label: string; value: string; tone?: string; accent?: 'primary' | 'success' | 'danger' | 'neutral' }) {
+function Kpi({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className={`rounded-xl border border-black/[0.07] border-l-[3px] bg-white p-4 shadow-[0_1px_2px_rgba(20,20,18,0.05)] ${ACCENT[accent]}`}>
-      <p className="font-label text-[10.5px] uppercase tracking-[0.08em] text-text-muted">{label}</p>
-      <p className={`mt-1.5 text-[22px] font-bold leading-none tracking-tight ${tone ?? 'text-text-primary'}`}>{value}</p>
+    <div className={`${card} p-4`}>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-text-muted">{label}</p>
+      <p className={`mt-1.5 text-2xl font-semibold tracking-tight ${tone ?? 'text-text-primary'}`}>{value}</p>
     </div>
   );
 }
 
-// Título de seção com barra de acento (dá estrutura e contraste).
-function SectionTitle({ children, sub }: { children: ReactNode; sub?: string }) {
-  return (
-    <h2 className="flex items-center gap-2.5 text-[15px] font-semibold">
-      <span className="h-4 w-1 shrink-0 rounded-full bg-primary" />
-      <span>{children}{sub && <span className="ml-2 font-label text-[10.5px] font-normal uppercase tracking-wider text-text-muted">{sub}</span>}</span>
-    </h2>
-  );
-}
-
-// Passo de funil: barra proporcional ao topo + conversão vs. passo anterior.
-// `drop` destaca em vermelho a maior queda do funil.
-function FunnelRow({ label, value, max, prev, tone, drop }: { label: string; value: number; max: number; prev?: number; tone: string; drop?: boolean }) {
-  const w = max > 0 ? Math.max(2, Math.round((value / max) * 100)) : 0;
+// Uma linha de barra horizontal — usada nos funis e nos rankings.
+function Bar({ label, value, max, prev, drop, wLabel = 'w-36', highlight }: { label: string; value: number; max: number; prev?: number; drop?: boolean; wLabel?: string; highlight?: boolean }) {
+  const w = max > 0 ? Math.max(1.5, (value / max) * 100) : 0;
   return (
     <div className="flex items-center gap-3">
-      <div className="w-36 shrink-0 text-right font-label text-[11px] uppercase tracking-wider text-text-muted">{label}</div>
-      <div className="relative h-8 flex-1 overflow-hidden rounded-md bg-black/[0.055]">
-        <div className={`h-full rounded-md ${tone}`} style={{ width: `${w}%` }} />
+      <div className={`${wLabel} shrink-0 truncate text-right text-xs text-text-secondary`} title={label}>{label}</div>
+      <div className="relative h-7 flex-1 overflow-hidden rounded bg-black/[0.05]">
+        <div className={`h-full rounded ${highlight ? 'bg-success/75' : 'bg-primary/75'}`} style={{ width: `${w}%` }} />
         <span className="absolute inset-y-0 left-2 flex items-center text-xs font-semibold text-text-primary">{nf(value)}</span>
       </div>
-      <div className={`w-24 shrink-0 font-label text-[11px] ${drop ? 'font-semibold text-danger' : 'text-text-muted'}`}>
-        {prev != null ? <>{pct(value, prev)}{drop ? ' ↓ maior queda' : ''}</> : ''}
+      <div className={`w-16 shrink-0 text-right text-xs ${drop ? 'font-semibold text-danger' : 'text-text-muted'}`}>
+        {prev != null ? pct(value, prev) : ''}
       </div>
     </div>
+  );
+}
+
+function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+  return (
+    <section className={`${card} p-5`}>
+      <h2 className="text-[15px] font-semibold text-text-primary">
+        {title}{sub && <span className="ml-2 text-xs font-normal text-text-muted">{sub}</span>}
+      </h2>
+      <div className="mt-4">{children}</div>
+    </section>
   );
 }
 
@@ -81,136 +77,111 @@ export function DashboardView({ data }: { data: DashboardData }) {
   const maxDia = Math.max(1, ...data.visitasPorDia.map((d) => d.count));
   const maxCta = Math.max(1, ...data.porCta.map((c) => c.count));
   const formDrop = biggestDropIndex(data.formFunnel);
+  const siteTop = data.siteFunnel[0]?.count ?? 1;
+  const formTop = data.formFunnel[0]?.count ?? 1;
 
   return (
-    <div className="-mx-4 -my-6 min-h-full bg-[#F4F5F7] px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
+    <div className="-mx-4 -my-6 min-h-full bg-[#F5F6F8] px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Visão geral</h1>
         <p className="mt-1 text-sm text-text-muted">Desempenho do site · últimos 30 dias.</p>
       </header>
 
       {semTracking && (
-        <p className="mb-6 rounded-lg border border-warning/25 bg-warning/[0.07] px-4 py-3 text-sm text-text-secondary">
+        <p className="mb-6 rounded-lg border border-black/[0.08] bg-white px-4 py-3 text-sm text-text-secondary">
           O rastreamento acabou de entrar no ar — as métricas do site começam a preencher conforme o site recebe acessos. O instantâneo do negócio (embaixo) já reflete os dados reais.
         </p>
       )}
 
-      {/* KPIs do SITE */}
-      <div className="mb-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="Visitas · 30d" value={nf(data.kpis.visitas)} tone="text-primary" accent="primary" />
-        <Kpi label="Conversão (visita→envio)" value={pct(data.kpis.formsEnviados, data.kpis.visitas)} accent="neutral" />
-        <Kpi label="Formulários enviados" value={nf(data.kpis.formsEnviados)} tone="text-success" accent="success" />
-        <Kpi label="Cliques em CTA" value={nf(data.kpis.cliquesCta)} accent="neutral" />
+      {/* KPIs do site */}
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Kpi label="Visitas · 30d" value={nf(data.kpis.visitas)} />
+        <Kpi label="Conversão" value={pct(data.kpis.formsEnviados, data.kpis.visitas)} />
+        <Kpi label="Formulários enviados" value={nf(data.kpis.formsEnviados)} />
+        <Kpi label="Cliques em CTA" value={nf(data.kpis.cliquesCta)} />
       </div>
 
-      {/* Funil do SITE — só tracking, mesma janela */}
-      <section className="mb-6 rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
-        <SectionTitle sub="· 30 dias">Funil do site</SectionTitle>
-        <div className="mt-4 flex flex-col gap-2.5">
-          <FunnelRow label="Visitas" value={data.siteFunnel[0]?.count ?? 0} max={data.siteFunnel[0]?.count ?? 1} tone="bg-primary/70" />
-          {data.siteFunnel.slice(1).map((s, i) => (
-            <FunnelRow key={s.label} label={s.label} value={s.count} max={data.siteFunnel[0]?.count ?? 1} prev={data.siteFunnel[i].count} tone={i === data.siteFunnel.length - 2 ? 'bg-success/70' : 'bg-primary/50'} />
-          ))}
-        </div>
-        <p className="mt-3 font-label text-[10px] text-text-muted/70">A % à direita é a conversão sobre o passo anterior.</p>
-      </section>
-
-      {/* Onde as pessoas param no formulário — o gráfico de desistência */}
-      <section className="mb-6 rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
-        <SectionTitle sub="· 30 dias">Onde as pessoas param no formulário</SectionTitle>
-        <p className="mb-4 mt-1.5 text-xs text-text-muted">Cada passo é uma sessão distinta. A maior queda mostra onde ajustar o formulário.</p>
-        {(data.formFunnel[0]?.count ?? 0) === 0 ? (
-          <p className="rounded-md border border-black/[0.05] bg-black/[0.02] px-4 py-3 text-sm text-text-muted">Ninguém começou um formulário nos últimos 30 dias ainda.</p>
-        ) : (
+      {/* Funil do site */}
+      <div className="mb-6">
+        <Section title="Funil do site" sub="· 30 dias">
           <div className="flex flex-col gap-2.5">
-            {data.formFunnel.map((s, i) => (
-              <FunnelRow
-                key={s.label}
-                label={s.label}
-                value={s.count}
-                max={data.formFunnel[0]?.count ?? 1}
-                prev={i > 0 ? data.formFunnel[i - 1].count : undefined}
-                tone={i === data.formFunnel.length - 1 ? 'bg-success/70' : 'bg-primary/50'}
-                drop={i === formDrop}
-              />
+            {data.siteFunnel.map((s, i) => (
+              <Bar key={s.label} label={s.label} value={s.count} max={siteTop} prev={i > 0 ? data.siteFunnel[i - 1].count : undefined} highlight={i === data.siteFunnel.length - 1} />
             ))}
           </div>
-        )}
-      </section>
+          <p className="mt-3 text-[11px] text-text-muted">A % à direita é a conversão sobre o passo anterior.</p>
+        </Section>
+      </div>
+
+      {/* Onde as pessoas param no formulário */}
+      <div className="mb-6">
+        <Section title="Onde as pessoas param no formulário" sub="· 30 dias">
+          {formTop === 0 ? (
+            <p className="text-sm text-text-muted">Ninguém começou um formulário nos últimos 30 dias ainda.</p>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2.5">
+                {data.formFunnel.map((s, i) => (
+                  <Bar key={s.label} label={s.label} value={s.count} max={formTop} prev={i > 0 ? data.formFunnel[i - 1].count : undefined} drop={i === formDrop} highlight={i === data.formFunnel.length - 1} />
+                ))}
+              </div>
+              <p className="mt-3 text-[11px] text-text-muted">A maior queda (em vermelho) mostra onde ajustar o formulário.</p>
+            </>
+          )}
+        </Section>
+      </div>
 
       {/* Visitas por dia + Cliques por CTA */}
       <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <section className="rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
-          <SectionTitle sub="· 14 dias">Visitas por dia</SectionTitle>
-          <div className="mt-4" />
+        <Section title="Visitas por dia" sub="· 14 dias">
           {data.visitasPorDia.every((d) => d.count === 0) ? (
-            <p className="py-8 text-center text-sm text-text-muted">Sem visitas registradas ainda.</p>
+            <p className="py-6 text-center text-sm text-text-muted">Sem visitas registradas ainda.</p>
           ) : (
-            <div className="flex h-32 items-end gap-1">
+            <div className="flex h-32 items-end gap-1.5">
               {data.visitasPorDia.map((d) => (
-                <div key={d.day} className="flex flex-1 flex-col items-center gap-1" title={`${d.day}: ${d.count}`}>
-                  <div className="w-full rounded-t bg-primary/60" style={{ height: `${Math.round((d.count / maxDia) * 100)}%`, minHeight: d.count > 0 ? '3px' : '0' }} />
-                  <span className="font-label text-[8px] text-text-muted/70">{d.day.slice(8)}</span>
+                <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5" title={`${d.day}: ${d.count}`}>
+                  <div className="w-full rounded-t-sm bg-primary/70" style={{ height: `${Math.round((d.count / maxDia) * 100)}%`, minHeight: d.count > 0 ? '3px' : '0' }} />
+                  <span className="text-[9px] text-text-muted">{d.day.slice(8)}</span>
                 </div>
               ))}
             </div>
           )}
-        </section>
+        </Section>
 
-        <section className="rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
-          <SectionTitle>Cliques por CTA</SectionTitle>
-          <div className="mt-4" />
+        <Section title="Cliques por CTA">
           {data.porCta.length === 0 ? (
-            <p className="py-8 text-center text-sm text-text-muted">Nenhum clique registrado ainda.</p>
+            <p className="py-6 text-center text-sm text-text-muted">Nenhum clique registrado ainda.</p>
           ) : (
             <div className="flex flex-col gap-2.5">
-              {data.porCta.map((c) => (
-                <div key={c.label} className="flex items-center gap-3">
-                  <div className="w-40 shrink-0 truncate text-xs text-text-secondary" title={c.label}>{c.label}</div>
-                  <div className="relative h-6 flex-1 overflow-hidden rounded bg-black/[0.05]">
-                    <div className="h-full rounded bg-primary/50" style={{ width: `${Math.round((c.count / maxCta) * 100)}%` }} />
-                  </div>
-                  <div className="w-8 shrink-0 text-right text-xs font-medium text-text-primary">{c.count}</div>
-                </div>
-              ))}
+              {data.porCta.map((c) => <Bar key={c.label} label={c.label} value={c.count} max={maxCta} wLabel="w-40" />)}
             </div>
           )}
-        </section>
+        </Section>
       </div>
 
       {/* Leads por serviço */}
-      <section className="mb-6 rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
-        <SectionTitle>Leads por serviço</SectionTitle>
-        <div className="mt-4" />
-        {data.porServico.length === 0 ? (
-          <p className="py-8 text-center text-sm text-text-muted">Nenhum lead ainda.</p>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {data.porServico.map((s) => (
-              <div key={s.tag} className="flex items-center gap-3">
-                <div className="w-40 shrink-0 truncate text-xs text-text-secondary" title={s.label}>{s.label}</div>
-                <div className="relative h-6 flex-1 overflow-hidden rounded bg-black/[0.05]">
-                  <div className="h-full rounded bg-primary/50" style={{ width: `${Math.round((s.count / maxServico) * 100)}%` }} />
-                </div>
-                <div className="w-8 shrink-0 text-right text-xs font-medium text-text-primary">{s.count}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      <div className="mb-6">
+        <Section title="Leads por serviço">
+          {data.porServico.length === 0 ? (
+            <p className="py-6 text-center text-sm text-text-muted">Nenhum lead ainda.</p>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {data.porServico.map((s) => <Bar key={s.tag} label={s.label} value={s.count} max={maxServico} wLabel="w-40" />)}
+            </div>
+          )}
+        </Section>
+      </div>
 
-      {/* Instantâneo do NEGÓCIO (CRM) — separado do site */}
-      <section className="rounded-xl border border-black/[0.07] bg-white p-5 shadow-[0_1px_3px_rgba(20,20,18,0.05)]">
-        <SectionTitle>Instantâneo do negócio</SectionTitle>
-        <p className="mb-4 mt-1.5 text-xs text-text-muted">Dados do CRM — independentes do tráfego do site.</p>
+      {/* Instantâneo do negócio (CRM) — separado do site */}
+      <Section title="Instantâneo do negócio" sub="· CRM">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          <Kpi label="MRR ativo" value={brl(data.negocio.mrr)} tone="text-primary" accent="primary" />
-          <Kpi label="Atrasado" value={brl(data.negocio.atrasado)} tone={data.negocio.atrasado > 0 ? 'text-danger' : undefined} accent={data.negocio.atrasado > 0 ? 'danger' : 'neutral'} />
-          <Kpi label="Clientes ativos" value={nf(data.negocio.clientesAtivos)} accent="neutral" />
-          <Kpi label="Leads (total)" value={nf(data.negocio.leadsTotal)} accent="neutral" />
-          <Kpi label="Negócios ganhos" value={nf(data.negocio.ganhos)} tone="text-success" accent="success" />
+          <Kpi label="MRR ativo" value={brl(data.negocio.mrr)} />
+          <Kpi label="Atrasado" value={brl(data.negocio.atrasado)} tone={data.negocio.atrasado > 0 ? 'text-danger' : undefined} />
+          <Kpi label="Clientes ativos" value={nf(data.negocio.clientesAtivos)} />
+          <Kpi label="Leads (total)" value={nf(data.negocio.leadsTotal)} />
+          <Kpi label="Negócios ganhos" value={nf(data.negocio.ganhos)} />
         </div>
-      </section>
+      </Section>
     </div>
   );
 }
