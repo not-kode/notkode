@@ -55,6 +55,15 @@ export async function submitBriefing(token: string, respostas: Respostas): Promi
   return { ok: true };
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 async function notify(cliente: string, produto: string) {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.LEAD_FROM_EMAIL;
@@ -65,14 +74,40 @@ async function notify(cliente: string, produto: string) {
   }
   const resend = new Resend(key);
   const adminUrl = `${SITE_URL}/admin/onboarding`;
+  const c = escapeHtml(cliente);
+  const p = produto ? escapeHtml(produto) : '';
+  const mono = "'JetBrains Mono',Menlo,Consolas,monospace";
+  const sans = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+
+  const html = `
+  <div style="background:#f3f2e7;padding:32px 16px;font-family:${sans}">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;border-collapse:collapse">
+      <tr><td style="background:#fffef2;border:1px solid rgba(25,25,24,0.10);border-radius:16px;overflow:hidden">
+        <div style="padding:16px 28px;border-bottom:1px solid rgba(25,25,24,0.08);background:rgba(25,25,24,0.02)">
+          <span style="font-family:${mono};font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#83807a">Notkode · Onboarding</span>
+        </div>
+        <div style="padding:32px 28px 20px">
+          <div style="font-family:${mono};font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#3b82f6;margin-bottom:14px">❯ briefing concluído</div>
+          <h1 style="margin:0 0 8px;font-size:24px;font-weight:600;color:#191918;letter-spacing:-0.02em">${c}</h1>
+          <p style="margin:0;font-size:15px;line-height:1.5;color:#56544c">concluiu o briefing de onboarding${p ? ` do <strong style="color:#191918">${p}</strong>` : ''}. As respostas já estão no sistema.</p>
+        </div>
+        <div style="padding:0 28px 32px">
+          <a href="${adminUrl}" style="display:inline-block;background:#131520;color:#fffef2;text-decoration:none;font-size:14px;font-weight:600;padding:13px 24px;border-radius:10px">Ver as respostas no admin &rarr;</a>
+        </div>
+        <div style="padding:14px 28px;border-top:1px solid rgba(25,25,24,0.08);background:rgba(25,25,24,0.02)">
+          <span style="font-family:${mono};font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#a4a29c">notkode.com.br</span>
+        </div>
+      </td></tr>
+    </table>
+  </div>`;
+
+  const text = `${cliente} concluiu o briefing de onboarding${produto ? ` do ${produto}` : ''}. As respostas já estão no sistema.\n\nVer no admin: ${adminUrl}`;
+
   await resend.emails.send({
     from,
     to,
-    subject: `📋 Briefing concluído — ${cliente}${produto ? ` (${produto})` : ''}`,
-    text: `${cliente} concluiu o briefing de onboarding${produto ? ` do ${produto}` : ''}.\n\nVeja as respostas no admin: ${adminUrl}`,
-    html:
-      `<p><strong>${cliente}</strong> concluiu o briefing de onboarding` +
-      `${produto ? ` do <strong>${produto}</strong>` : ''}.</p>` +
-      `<p><a href="${adminUrl}">Ver as respostas no admin →</a></p>`,
+    subject: `Briefing concluído — ${cliente}${produto ? ` (${produto})` : ''}`,
+    text,
+    html,
   });
 }
