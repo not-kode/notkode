@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { ONBOARDING_SECTIONS } from '@/lib/onboarding-schema';
 import { CopyLink } from './copy-link';
+import { buildRequirements, buildClientMessage, deadlineLabel, REQUEST_DEADLINE_DAYS } from './onboarding-requirements';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Visão admin do onboarding: tabela de briefings (escala com vários clientes)
@@ -94,7 +95,15 @@ function StatusBadge({ enviado }: { enviado: boolean }) {
   );
 }
 
-function CopyAll({ text }: { text: string }) {
+function CopyButton({
+  text,
+  label,
+  className = 'border-border-subtle text-text-secondary hover:border-primary hover:text-primary',
+}: {
+  text: string;
+  label: string;
+  className?: string;
+}) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -108,9 +117,12 @@ function CopyAll({ text }: { text: string }) {
           /* ignore */
         }
       }}
-      className="inline-flex items-center gap-1.5 rounded-md border border-border-subtle px-2.5 py-1.5 font-mono text-xs text-text-secondary transition-colors hover:border-primary hover:text-primary"
+      className={[
+        'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-xs transition-colors',
+        className,
+      ].join(' ')}
     >
-      {copied ? '✓ copiado' : '⧉ copiar tudo'}
+      {copied ? '✓ copiado' : `⧉ ${label}`}
     </button>
   );
 }
@@ -194,6 +206,8 @@ function BriefingDrawer({
   const enviado = row.status === 'enviado';
   const sections = answeredSections(row.respostas);
   const copyText = useMemo(() => buildCopyBlock(row), [row]);
+  const reqGroups = useMemo(() => buildRequirements(row), [row]);
+  const clientMessage = useMemo(() => buildClientMessage(row, reqGroups), [row, reqGroups]);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -229,7 +243,7 @@ function BriefingDrawer({
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <CopyAll text={copyText} />
+            <CopyButton text={copyText} label="copiar tudo" />
             <CopyLink url={link} />
           </div>
 
@@ -241,6 +255,41 @@ function BriefingDrawer({
 
         {/* Corpo */}
         <div className="px-6 py-5">
+          {/* Retorno pro cliente — o que ainda falta ele providenciar */}
+          <div className="mb-6 rounded-lg border border-primary/25 bg-primary/[0.04] p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="font-label text-[11px] uppercase tracking-[0.18em] text-primary">
+                  📤 Retorno pro cliente
+                </p>
+                <p className="mt-0.5 font-mono text-[11px] text-text-muted">
+                  prazo {REQUEST_DEADLINE_DAYS} dias · até {deadlineLabel()}
+                </p>
+              </div>
+              <CopyButton
+                text={clientMessage}
+                label="copiar mensagem"
+                className="border-primary/40 bg-primary text-white hover:bg-primary/90"
+              />
+            </div>
+            <div className="flex flex-col gap-3">
+              {reqGroups.map((g) => (
+                <div key={g.title}>
+                  <p className="text-xs font-semibold text-text-primary">{g.title}</p>
+                  {g.intro && <p className="mt-0.5 text-[11px] text-text-muted">{g.intro}</p>}
+                  <ul className="mt-1 flex flex-col gap-0.5">
+                    {g.items.map((it, i) => (
+                      <li key={i} className="text-xs text-text-secondary">
+                        • {it.label}
+                        {it.note && <span className="text-text-muted"> — {it.note}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Anexos */}
           {row.files.length > 0 && (
             <div className="mb-6 border-b border-border-subtle pb-6">
