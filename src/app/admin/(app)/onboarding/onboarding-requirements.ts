@@ -2,14 +2,12 @@ import { ACCESS_EMAIL } from '@/lib/onboarding-schema';
 import type { BriefingRow } from './onboarding-view';
 
 // ─────────────────────────────────────────────────────────────────────────
-// "Retorno pro cliente": a partir das respostas do briefing, monta o que
-// ainda precisamos que o cliente providencie (acessos, identidade, fotos...)
-// para começar. Pede só o que falta — não repete o que ele já indicou ter.
-// A saída vira um checklist no drawer + uma mensagem pronta pro WhatsApp.
+// "Retorno pro cliente": a partir das respostas do briefing, monta uma
+// mensagem de WhatsApp na voz da Notkode — chamando o cliente pra criar as
+// contas/liberar acessos e mandar materiais (logo editável, fotos e vídeos)
+// dentro do prazo. Adapta o texto ao que ele já indicou ter: não pede o que
+// já foi feito.
 // ─────────────────────────────────────────────────────────────────────────
-
-export type ReqItem = { label: string; note?: string };
-export type ReqGroup = { title: string; intro?: string; items: ReqItem[] };
 
 /** Prazo padrão de retorno do cliente, em dias. */
 export const REQUEST_DEADLINE_DAYS = 7;
@@ -20,97 +18,11 @@ function read(r: BriefingRow, id: string): string {
   return (v ?? '').trim();
 }
 
-export function buildRequirements(r: BriefingRow): ReqGroup[] {
-  const groups: ReqGroup[] = [];
-
-  // ── Acessos ──────────────────────────────────────────────────────────
-  const acessos: ReqItem[] = [];
-
-  if (read(r, 'acesso_meta') !== 'Convite enviado') {
-    acessos.push({ label: 'Meta Business (Instagram/Facebook da marca)' });
-  }
-
-  const google = read(r, 'acesso_google');
-  if (google !== 'Convite enviado') {
-    acessos.push({ label: 'Google Ads', note: 'e o ID da conta (000-000-0000)' });
-  } else if (!read(r, 'acesso_google_id')) {
-    acessos.push({ label: 'ID da conta do Google Ads (000-000-0000)' });
-  }
-
-  if (read(r, 'acesso_analytics') === 'Não tenho ainda') {
-    acessos.push({
-      label: 'GA4 / GTM / Pixel da Meta',
-      note: 'ainda não existem — só confirmar que podemos criar no seu nome',
-    });
-  }
-
-  const dominio = read(r, 'acesso_dominio');
-  acessos.push({
-    label: 'Acesso ao DNS do domínio',
-    note: dominio ? `registrado em ${dominio}` : 'onde o domínio está registrado',
-  });
-
-  if (read(r, 'site_atual') === 'Sim') {
-    const url = read(r, 'site_url');
-    acessos.push({ label: 'Acesso ao site atual', note: url || undefined });
-  }
-
-  if (acessos.length > 0) {
-    groups.push({
-      title: 'Acessos',
-      intro: `Convide ${ACCESS_EMAIL} como administrador em cada um (nunca compartilhe senha):`,
-      items: acessos,
-    });
-  }
-
-  // ── Identidade visual ────────────────────────────────────────────────
-  const identidade: ReqItem[] = [];
-  const temId = read(r, 'tem_identidade');
-
-  if (temId === 'Não tenho' || temId === '') {
-    identidade.push({
-      label: 'Referências visuais',
-      note: 'como você não tem identidade fechada, mande marcas/estilos que curte — a gente cria',
-    });
-  } else {
-    identidade.push({
-      label: 'Logo em PNG e em vetor (SVG, AI ou PDF editável)',
-      note: 'precisamos de um arquivo que dê pra manipular, não só imagem',
-    });
-    identidade.push({ label: 'Cores e fontes da marca' });
-    if (!read(r, 'link_materiais')) {
-      identidade.push({ label: 'Link da pasta com os materiais da marca' });
-    }
-  }
-
-  groups.push({ title: 'Identidade visual', items: identidade });
-
-  // ── Fotos e vídeos ───────────────────────────────────────────────────
-  const fotos: ReqItem[] = [];
-  const temFotos = read(r, 'tem_fotos');
-  if (temFotos === 'Sim, prontos') {
-    fotos.push({ label: 'Fotos e vídeos reais do produto', note: 'os arquivos em alta' });
-  } else if (temFotos === 'Alguns') {
-    fotos.push({ label: 'As fotos e vídeos do produto que você já tem' });
-  } else {
-    fotos.push({
-      label: 'Fotos e vídeos do produto',
-      note: 'você marcou que ainda não tem — vamos alinhar a produção',
-    });
-  }
-  groups.push({ title: 'Fotos e vídeos', items: fotos });
-
-  // ── Estudo de público (se disse ter e não anexou) ────────────────────
-  const temEstudo = read(r, 'tem_estudo');
-  const anexou = read(r, 'estudo_link') || r.files.length > 0;
-  if (temEstudo === 'Sim, tenho' && !anexou) {
-    groups.push({
-      title: 'Estudo de público',
-      items: [{ label: 'O estudo do seu público que você mencionou', note: 'PDF, planilha ou link' }],
-    });
-  }
-
-  return groups;
+/** Junta uma lista em texto natural: "A, B e C". */
+function humanList(items: string[]): string {
+  if (items.length === 0) return '';
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(', ')} e ${items[items.length - 1]}`;
 }
 
 /** Data-limite formatada (hoje + prazo). */
@@ -120,27 +32,61 @@ export function deadlineLabel(days = REQUEST_DEADLINE_DAYS): string {
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(d);
 }
 
-/** Mensagem de WhatsApp pronta pra colar, montada a partir dos grupos. */
-export function buildClientMessage(r: BriefingRow, groups: ReqGroup[]): string {
+/** Mensagem de WhatsApp pronta pra colar, na voz da Notkode. */
+export function buildClientMessage(r: BriefingRow): string {
   const deadline = deadlineLabel();
-  const lines: string[] = [];
+  const p: string[] = [];
 
-  lines.push(`Oi, ${r.orgName}! 🙌 Recebemos seu briefing — obrigado por preencher.`);
-  lines.push('');
-  lines.push(
-    `Pra gente já começar a montar tudo, preciso que você me envie os itens abaixo até *${deadline}* (${REQUEST_DEADLINE_DAYS} dias):`,
+  p.push(`Oi, ${r.orgName}! Tudo bem? 🙌`);
+  p.push(
+    'Recebi seu briefing por aqui, ficou ótimo — muito obrigado! Pra eu já colocar a mão na massa e começar a montar sua estrutura, preciso de umas coisas suas ' +
+      `nos próximos ${REQUEST_DEADLINE_DAYS} dias (até ${deadline}):`,
   );
 
-  for (const g of groups) {
-    lines.push('');
-    lines.push(`*${g.title}*${g.intro ? ` — ${g.intro}` : ''}`);
-    for (const it of g.items) {
-      lines.push(`• ${it.label}${it.note ? ` (${it.note})` : ''}`);
-    }
+  // 1) Contas & acessos ────────────────────────────────────────────────
+  const convites: string[] = [];
+  if (read(r, 'acesso_meta') !== 'Convite enviado') convites.push('Meta Business (Instagram/Facebook)');
+  const googleEnviado = read(r, 'acesso_google') === 'Convite enviado';
+  if (!googleEnviado) convites.push('Google Ads');
+
+  const acessoFrases: string[] = [];
+  if (convites.length > 0) {
+    acessoFrases.push(
+      `me convide como administrador (${ACCESS_EMAIL}) no ${humanList(convites)}` +
+        ' — se alguma conta ainda não existir, é só criar e me convidar',
+    );
   }
+  if (googleEnviado && !read(r, 'acesso_google_id')) {
+    acessoFrases.push('me passe o ID da conta do Google Ads');
+  }
+  const dominio = read(r, 'acesso_dominio');
+  acessoFrases.push(`e me dê acesso ao DNS do domínio${dominio ? ` (${dominio})` : ''}`);
+  if (read(r, 'site_atual') === 'Sim') {
+    const url = read(r, 'site_url');
+    acessoFrases.push(`+ acesso ao site atual${url ? ` (${url})` : ''}`);
+  }
+  p.push(`1️⃣ *Criar/liberar os acessos* — ${acessoFrases.join('; ')}.`);
 
-  lines.push('');
-  lines.push('Qualquer dúvida em algum item, é só me chamar aqui. Assim que chegar, a gente começa! 🚀');
+  // 2) Materiais da marca ──────────────────────────────────────────────
+  const temId = read(r, 'tem_identidade');
+  const temIdentidade = temId !== '' && temId !== 'Não tenho';
+  const materiais: string[] = [];
+  if (temIdentidade) {
+    materiais.push('a logo em vetor (arquivo editável, não só imagem) e as cores e fontes da marca');
+  } else {
+    materiais.push('referências de marcas e estilos que você curte, pra eu criar sua identidade');
+  }
+  const temFotos = read(r, 'tem_fotos');
+  if (temFotos === 'Ainda não' || temFotos === '') {
+    materiais.push('e a gente já alinha a produção das fotos e vídeos do produto');
+  } else {
+    materiais.push('e as fotos e vídeos reais do produto');
+  }
+  p.push(`2️⃣ *Me mandar os materiais* — ${materiais.join(', ')}.`);
 
-  return lines.join('\n');
+  p.push(
+    'Assim que isso chegar, eu já começo a produzir tudo. Qualquer dúvida em algum item, me chama por aqui! 🚀',
+  );
+
+  return p.join('\n\n');
 }
