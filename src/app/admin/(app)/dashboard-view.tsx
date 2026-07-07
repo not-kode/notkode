@@ -1,5 +1,6 @@
 // Visão geral do /admin — desempenho do SITE (tracking) separado do NEGÓCIO (CRM).
 // Componente de apresentação (server): sem estado, recebe tudo pronto.
+// Identidade Notkode: creme quente + tinta (#191918/navy), azul só como acento pontual.
 
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const nf = (n: number) => n.toLocaleString('pt-BR');
@@ -20,29 +21,33 @@ export type DashboardData = {
   eventosTotais: number;
 };
 
-const card = 'rounded-lg border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(25,25,24,0.05)]';
+// Card creme quente (#fffef2) sobre o canvas creme (#f3f2e7), filete de tinta discreto.
+const card = 'rounded-md border border-[#191918]/[0.08] bg-surface-base';
 
-function Kpi({ label, value, tone }: { label: string; value: string; tone?: string }) {
+function Kpi({ label, value, tone }: { label: string; value: string; tone?: 'accent' | 'danger' }) {
+  const valueTone = tone === 'accent' ? 'text-primary' : tone === 'danger' ? 'text-danger' : 'text-text-primary';
   return (
     <div className={`${card} p-4`}>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-text-muted">{label}</p>
-      <p className={`mt-1.5 text-2xl font-semibold tracking-tight ${tone ?? 'text-text-primary'}`}>{value}</p>
+      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">{label}</p>
+      <p className={`mt-2 font-mono text-[26px] font-medium leading-none tracking-tight ${valueTone}`}>{value}</p>
     </div>
   );
 }
 
-// Uma linha de barra horizontal — usada nos funis e nos rankings.
+// Uma linha de barra horizontal — barra em tinta, número/percentual em mono à direita.
 function Bar({ label, value, max, prev, drop, wLabel = 'w-36', highlight }: { label: string; value: number; max: number; prev?: number; drop?: boolean; wLabel?: string; highlight?: boolean }) {
   const w = max > 0 ? Math.max(1.5, (value / max) * 100) : 0;
   return (
     <div className="flex items-center gap-3">
       <div className={`${wLabel} shrink-0 truncate text-right text-xs text-text-secondary`} title={label}>{label}</div>
-      <div className="relative h-7 flex-1 overflow-hidden rounded bg-black/[0.05]">
-        <div className={`h-full rounded ${highlight ? 'bg-success/75' : 'bg-primary/75'}`} style={{ width: `${w}%` }} />
-        <span className="absolute inset-y-0 left-2 flex items-center text-xs font-semibold text-text-primary">{nf(value)}</span>
+      <div className="relative h-6 flex-1 overflow-hidden rounded-sm bg-[#191918]/[0.06]">
+        <div className={`h-full rounded-sm ${highlight ? 'bg-primary' : 'bg-navy/85'}`} style={{ width: `${w}%` }} />
       </div>
-      <div className={`w-16 shrink-0 text-right text-xs ${drop ? 'font-semibold text-danger' : 'text-text-muted'}`}>
-        {prev != null ? pct(value, prev) : ''}
+      <div className="flex w-24 shrink-0 items-baseline justify-end gap-1.5">
+        <span className="font-mono text-xs font-medium text-text-primary">{nf(value)}</span>
+        {prev != null && (
+          <span className={`font-mono text-[11px] ${drop ? 'font-semibold text-danger' : 'text-text-muted'}`}>{pct(value, prev)}</span>
+        )}
       </div>
     </div>
   );
@@ -51,8 +56,8 @@ function Bar({ label, value, max, prev, drop, wLabel = 'w-36', highlight }: { la
 function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
     <section className={`${card} p-5`}>
-      <h2 className="text-[15px] font-semibold text-text-primary">
-        {title}{sub && <span className="ml-2 text-xs font-normal text-text-muted">{sub}</span>}
+      <h2 className="font-mono text-[11px] uppercase tracking-[0.12em] text-text-secondary">
+        {title}{sub && <span className="ml-2 normal-case tracking-normal text-text-muted">{sub}</span>}
       </h2>
       <div className="mt-4">{children}</div>
     </section>
@@ -83,12 +88,12 @@ export function DashboardView({ data }: { data: DashboardData }) {
   return (
     <div className="-mx-4 -my-6 min-h-full bg-surface-elevated px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Visão geral</h1>
+        <h1 className="font-mono text-xl font-medium tracking-tight text-text-primary">Visão geral</h1>
         <p className="mt-1 text-sm text-text-muted">Desempenho do site · últimos 30 dias.</p>
       </header>
 
       {semTracking && (
-        <p className="mb-6 rounded-lg border border-black/[0.08] bg-white px-4 py-3 text-sm text-text-secondary">
+        <p className="mb-6 rounded-md border border-[#191918]/[0.08] bg-surface-base px-4 py-3 text-sm text-text-secondary">
           O rastreamento acabou de entrar no ar — as métricas do site começam a preencher conforme o site recebe acessos. O instantâneo do negócio (embaixo) já reflete os dados reais.
         </p>
       )}
@@ -96,7 +101,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
       {/* KPIs do site */}
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="Visitas · 30d" value={nf(data.kpis.visitas)} />
-        <Kpi label="Conversão" value={pct(data.kpis.formsEnviados, data.kpis.visitas)} />
+        <Kpi label="Conversão" value={pct(data.kpis.formsEnviados, data.kpis.visitas)} tone="accent" />
         <Kpi label="Formulários enviados" value={nf(data.kpis.formsEnviados)} />
         <Kpi label="Cliques em CTA" value={nf(data.kpis.cliquesCta)} />
       </div>
@@ -140,8 +145,8 @@ export function DashboardView({ data }: { data: DashboardData }) {
             <div className="flex h-32 items-end gap-1.5">
               {data.visitasPorDia.map((d) => (
                 <div key={d.day} className="flex flex-1 flex-col items-center gap-1.5" title={`${d.day}: ${d.count}`}>
-                  <div className="w-full rounded-t-sm bg-primary/70" style={{ height: `${Math.round((d.count / maxDia) * 100)}%`, minHeight: d.count > 0 ? '3px' : '0' }} />
-                  <span className="text-[9px] text-text-muted">{d.day.slice(8)}</span>
+                  <div className="w-full rounded-t-sm bg-navy/80" style={{ height: `${Math.round((d.count / maxDia) * 100)}%`, minHeight: d.count > 0 ? '3px' : '0' }} />
+                  <span className="font-mono text-[9px] text-text-muted">{d.day.slice(8)}</span>
                 </div>
               ))}
             </div>
@@ -176,7 +181,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
       <Section title="Instantâneo do negócio" sub="· CRM">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           <Kpi label="MRR ativo" value={brl(data.negocio.mrr)} />
-          <Kpi label="Atrasado" value={brl(data.negocio.atrasado)} tone={data.negocio.atrasado > 0 ? 'text-danger' : undefined} />
+          <Kpi label="Atrasado" value={brl(data.negocio.atrasado)} tone={data.negocio.atrasado > 0 ? 'danger' : undefined} />
           <Kpi label="Clientes ativos" value={nf(data.negocio.clientesAtivos)} />
           <Kpi label="Leads (total)" value={nf(data.negocio.leadsTotal)} />
           <Kpi label="Negócios ganhos" value={nf(data.negocio.ganhos)} />
