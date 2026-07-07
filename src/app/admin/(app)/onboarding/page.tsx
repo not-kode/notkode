@@ -14,6 +14,7 @@ type Row = {
   submitted_at: string | null;
   created_at: string;
   respostas: Record<string, string | string[]> | null;
+  retorno_ia: BriefingRow['retornoIA'];
   organizations: { name?: string } | { name?: string }[] | null;
 };
 
@@ -28,7 +29,7 @@ export default async function OnboardingAdminPage() {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase
     .from('onboarding_briefings')
-    .select('id, token, product_name, scope, status, submitted_at, created_at, respostas, organizations(name)')
+    .select('id, token, product_name, scope, status, submitted_at, created_at, respostas, retorno_ia, organizations(name)')
     .order('created_at', { ascending: false });
 
   const rows = (data ?? []) as Row[];
@@ -62,6 +63,7 @@ export default async function OnboardingAdminPage() {
     created_at: r.created_at,
     respostas: r.respostas ?? {},
     files: files[r.id] ?? [],
+    retornoIA: r.retorno_ia ?? null,
   }));
 
   return (
