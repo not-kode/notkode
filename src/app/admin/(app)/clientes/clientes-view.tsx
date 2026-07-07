@@ -463,8 +463,15 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
           <dt className={labelCls}>Tipo</dt>
           <dd className="text-[13px] text-text-primary">{eng.type === 'recorrente' ? 'Recorrente' : 'Pontual'}</dd>
         </div>
-        <div>
-          <dt className={labelCls}>Vigência</dt>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => { setEditingDetails(true); setEditing(false); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditingDetails(true); setEditing(false); } }}
+          className="group -m-1 cursor-pointer rounded-md p-1 transition-colors hover:bg-black/[0.04]"
+          title="Editar vigência"
+        >
+          <dt className={labelCls}>Vigência <span className="text-primary/50 transition-colors group-hover:text-primary">✎</span></dt>
           <dd className="text-[13px] text-text-primary">{fmtDate(eng.start_date)} <span className="text-text-muted/50">→</span> {fmtDate(eng.end_date)}</dd>
           {renewal && (
             <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${renewal.cls}`}>{renewal.label}</span>
