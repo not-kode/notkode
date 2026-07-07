@@ -95,6 +95,45 @@ const fmtDate = (d: string | null) => {
   const [y, m, day] = d.split('-');
   return `${day}/${m}/${y}`;
 };
+const fmtDateShort = (d: string | null) => {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}/${m}/${y.slice(2)}`;
+};
+
+// ── Vigência / renovação ────────────────────────────────────────────────
+// Dias entre hoje e a data de término (ambos YYYY-MM-DD, comparados em UTC).
+function daysUntil(endDate: string, todayStr: string): number {
+  return Math.round((Date.parse(endDate) - Date.parse(todayStr)) / 86_400_000);
+}
+
+type Renewal = { label: string; cls: string };
+
+// Badge de renovação de UM contrato a partir do end_date.
+function renewalBadge(endDate: string | null, todayStr: string): Renewal {
+  if (!endDate) return { label: 'sem vigência', cls: 'bg-warning/12 text-warning' };
+  const d = daysUntil(endDate, todayStr);
+  if (d < 0) return { label: `vencido há ${-d}d`, cls: 'bg-danger/12 text-danger' };
+  if (d === 0) return { label: 'vence hoje', cls: 'bg-danger/12 text-danger' };
+  if (d <= 30) return { label: `vence em ${d}d`, cls: 'bg-warning/12 text-warning' };
+  return { label: `até ${fmtDateShort(endDate)}`, cls: 'bg-black/[0.05] text-text-secondary' };
+}
+
+// Badge de renovação do CLIENTE na lista: o contrato "vivo" mais urgente.
+function clientRenewal(c: ClientView, todayStr: string): Renewal | null {
+  const live = c.contratos.filter(isLive);
+  if (live.length === 0) return null;
+  const comData = live.filter((e) => e.end_date).sort((a, b) => a.end_date!.localeCompare(b.end_date!));
+  const semData = live.some((e) => !e.end_date);
+  const soonest = comData[0];
+  if (soonest) {
+    const d = daysUntil(soonest.end_date!, todayStr);
+    if (d <= 30) return renewalBadge(soonest.end_date!, todayStr); // vencido ou vence em ≤30d
+    if (semData) return { label: 'definir vigência', cls: 'bg-warning/12 text-warning' };
+    return renewalBadge(soonest.end_date!, todayStr);
+  }
+  return { label: 'definir vigência', cls: 'bg-warning/12 text-warning' };
+}
 
 const inputCls =
   'w-full rounded-md border border-black/[0.08] bg-white px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/10';
@@ -115,6 +154,7 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
 
   // MRR conta só contratos ativos (pausado não fatura; churn/encerrado saíram).
   const mrrOf = (c: ClientView) => c.contratos.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="w-full">
@@ -134,6 +174,7 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
                 <th className="px-4 py-3 font-medium">Etapa</th>
                 <th className="px-4 py-3 font-medium">Contato principal</th>
                 <th className="px-4 py-3 font-medium">Contratos</th>
+                <th className="px-4 py-3 font-medium">Vigência</th>
                 <th className="px-4 py-3 text-right font-medium">MRR</th>
               </tr>
             </thead>
@@ -142,6 +183,7 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
                 const mrr = mrrOf(c);
                 const ativos = c.contratos.filter(isLive).length;
                 const stage = clientStage(c);
+                const renewal = clientRenewal(c, todayStr);
                 const briefPending = c.briefing != null && c.briefing.status !== 'enviado';
                 return (
                   <tr key={c.id} onClick={() => setSelectedId(c.id)} className="cursor-pointer border-b border-black/[0.04] transition-colors last:border-0 hover:bg-primary/[0.03]">
@@ -152,6 +194,9 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
                     </td>
                     <td className="px-4 py-3 text-text-secondary">{c.contacts[0]?.name ?? '—'}</td>
                     <td className="px-4 py-3 text-text-secondary">{c.contratos.length}{ativos > 0 ? ` · ${ativos} ativo${ativos === 1 ? '' : 's'}` : ''}</td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      {renewal ? <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${renewal.cls}`}>{renewal.label}</span> : <span className="text-text-muted">—</span>}
+                    </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">{mrr > 0 ? <span className="font-medium text-primary">{brl(mrr)}<span className="text-text-muted">/mês</span></span> : '—'}</td>
                   </tr>
                 );
@@ -320,6 +365,8 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
 function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onChangeStatus, onChangeLifecycle, onDelete, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onChangeStatus: (id: string, status: string) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
   const isConcluded = eng.lifecycle === 'encerrado' || eng.lifecycle === 'churn';
   const isActive = eng.lifecycle === 'ativo';
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const renewal = isLive(eng) ? renewalBadge(eng.end_date, todayStr) : null;
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -419,6 +466,9 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
         <div>
           <dt className={labelCls}>Vigência</dt>
           <dd className="text-[13px] text-text-primary">{fmtDate(eng.start_date)} <span className="text-text-muted/50">→</span> {fmtDate(eng.end_date)}</dd>
+          {renewal && (
+            <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${renewal.cls}`}>{renewal.label}</span>
+          )}
         </div>
         <div>
           <dt className={labelCls}>Valor</dt>
