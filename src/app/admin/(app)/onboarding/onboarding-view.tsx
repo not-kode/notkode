@@ -1,10 +1,9 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState } from 'react';
 import { ONBOARDING_SECTIONS } from '@/lib/onboarding-schema';
 import { CopyLink } from './copy-link';
 import { buildClientMessage, deadlineLabel } from './onboarding-requirements';
-import { gerarRetornoIA, type RetornoIA } from './retorno-actions';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Visão admin do onboarding: tabela de briefings (escala com vários clientes)
@@ -22,7 +21,6 @@ export type BriefingRow = {
   created_at: string;
   respostas: Record<string, string | string[]>;
   files: { name: string; url: string | null }[];
-  retornoIA: RetornoIA | null;
 };
 
 function fmtDate(iso: string | null): string {
@@ -196,85 +194,6 @@ export function OnboardingView({
   );
 }
 
-function RetornoIABlock({
-  briefingId,
-  cached,
-  fallbackMessage,
-}: {
-  briefingId: string;
-  cached: RetornoIA | null;
-  fallbackMessage: string;
-}) {
-  const [retorno, setRetorno] = useState<RetornoIA | null>(cached);
-  const [erro, setErro] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  const gerar = (force: boolean) =>
-    startTransition(async () => {
-      setErro(null);
-      const res = await gerarRetornoIA(briefingId, force);
-      if (res.ok) setRetorno(res.retorno);
-      else setErro(res.error);
-    });
-
-  const naIA = retorno?.modelo && retorno.modelo !== 'fallback';
-
-  return (
-    <div className="mb-6 rounded-lg border border-primary/25 bg-primary/[0.04] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="font-label text-[11px] uppercase tracking-[0.18em] text-primary">
-            📤 Retorno pro cliente
-          </p>
-          <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-            {retorno
-              ? `${naIA ? 'gerado por IA' : 'versão rápida'} · prazo até ${deadlineLabel()}`
-              : `acessos, gateway, logística, identidade, fotos · até ${deadlineLabel()}`}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {retorno && <CopyButton text={retorno.mensagem} label="copiar mensagem" className="border-primary/40 bg-primary text-white hover:bg-primary/90" />}
-          <button
-            type="button"
-            onClick={() => gerar(!!retorno)}
-            disabled={pending}
-            className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 px-2.5 py-1.5 font-mono text-xs text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
-          >
-            {pending ? '✨ gerando…' : retorno ? '↻ regenerar' : '✨ gerar com IA'}
-          </button>
-        </div>
-      </div>
-
-      {erro && <p className="mt-2 text-xs text-danger">Falhou: {erro}</p>}
-
-      {retorno ? (
-        <div className="mt-3 flex flex-col gap-3">
-          <div className="whitespace-pre-wrap rounded-md border border-border-subtle bg-white/70 p-3 text-sm text-text-primary">
-            {retorno.mensagem}
-          </div>
-          {retorno.duvidas.length > 0 && (
-            <div>
-              <p className="mb-1 font-label text-[11px] uppercase tracking-[0.18em] text-text-muted">
-                Dúvidas do produto
-              </p>
-              <ul className="flex flex-col gap-1">
-                {retorno.duvidas.map((d, i) => (
-                  <li key={i} className="text-xs text-text-secondary">• {d}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="mt-3 flex items-center gap-2">
-          <CopyButton text={fallbackMessage} label="copiar versão rápida" />
-          <span className="text-[11px] text-text-muted">ou gere a versão sob medida com IA</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function BriefingDrawer({
   row,
   link,
@@ -335,8 +254,22 @@ function BriefingDrawer({
 
         {/* Corpo */}
         <div className="px-6 py-5">
-          {/* Retorno pro cliente — gerado por IA (mensagem + dúvidas do produto) */}
-          <RetornoIABlock briefingId={row.id} cached={row.retornoIA} fallbackMessage={clientMessage} />
+          {/* Retorno pro cliente — mensagem pronta pra colar (não exibe o texto) */}
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/25 bg-primary/[0.04] px-4 py-3">
+            <div>
+              <p className="font-label text-[11px] uppercase tracking-[0.18em] text-primary">
+                📤 Retorno pro cliente
+              </p>
+              <p className="mt-0.5 font-mono text-[11px] text-text-muted">
+                acessos, gateway, logística, identidade, fotos + dúvidas do produto · até {deadlineLabel()}
+              </p>
+            </div>
+            <CopyButton
+              text={clientMessage}
+              label="copiar mensagem"
+              className="border-primary/40 bg-primary text-white hover:bg-primary/90"
+            />
+          </div>
 
           {/* Anexos */}
           {row.files.length > 0 && (
