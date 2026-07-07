@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { ONBOARDING_SECTIONS } from '@/lib/onboarding-schema';
 import { CopyLink } from './copy-link';
-import { buildClientMessage, deadlineLabel, REQUEST_DEADLINE_DAYS } from './onboarding-requirements';
+import { buildClientMessage, deadlineLabel } from './onboarding-requirements';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Visão admin do onboarding: tabela de briefings (escala com vários clientes)
@@ -261,7 +261,7 @@ function BriefingDrawer({
                 📤 Retorno pro cliente
               </p>
               <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-                pede acessos, materiais e fotos · prazo {REQUEST_DEADLINE_DAYS} dias (até {deadlineLabel()})
+                acessos, gateway, logística, identidade, fotos + dúvidas do produto · até {deadlineLabel()}
               </p>
             </div>
             <CopyButton

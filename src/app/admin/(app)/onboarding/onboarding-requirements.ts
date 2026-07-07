@@ -3,10 +3,14 @@ import type { BriefingRow } from './onboarding-view';
 
 // ─────────────────────────────────────────────────────────────────────────
 // "Retorno pro cliente": a partir das respostas do briefing, monta uma
-// mensagem de WhatsApp na voz da Notkode — chamando o cliente pra criar as
-// contas/liberar acessos e mandar materiais (logo editável, fotos e vídeos)
-// dentro do prazo. Adapta o texto ao que ele já indicou ter: não pede o que
-// já foi feito.
+// mensagem de WhatsApp na voz da Notkode. Ela:
+//   • pede o que falta de acessos (Meta, Google, gateway de pagamento,
+//     Bling/Tiny p/ logística, DNS) — o que não existir, o cliente cria e
+//     nos convida;
+//   • cobra a identidade visual completa (logo vetor, cores, fontes, manual);
+//   • pede fotos e vídeos reais do produto;
+//   • revisa a parte do produto e devolve as dúvidas/lacunas.
+// Adapta ao que o cliente já indicou ter — não repete o que já foi feito.
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Prazo padrão de retorno do cliente, em dias. */
@@ -39,7 +43,7 @@ export function buildClientMessage(r: BriefingRow): string {
 
   p.push(`Oi, ${r.orgName}! Tudo bem? 🙌`);
   p.push(
-    'Recebi seu briefing por aqui, ficou ótimo — muito obrigado! Pra eu já colocar a mão na massa e começar a montar sua estrutura, preciso de umas coisas suas ' +
+    'Recebi seu briefing por aqui, ficou ótimo — muito obrigado! Pra eu já colocar a mão na massa e começar a montar sua estrutura, preciso de algumas coisas suas ' +
       `nos próximos ${REQUEST_DEADLINE_DAYS} dias (até ${deadline}):`,
   );
 
@@ -48,41 +52,61 @@ export function buildClientMessage(r: BriefingRow): string {
   if (read(r, 'acesso_meta') !== 'Convite enviado') convites.push('Meta Business (Instagram/Facebook)');
   const googleEnviado = read(r, 'acesso_google') === 'Convite enviado';
   if (!googleEnviado) convites.push('Google Ads');
+  convites.push('seu gateway de pagamento');
+  convites.push('o Bling ou o Tiny (logística/estoque)');
 
-  const acessoFrases: string[] = [];
-  if (convites.length > 0) {
-    acessoFrases.push(
-      `me convide como administrador (${ACCESS_EMAIL}) no ${humanList(convites)}` +
-        ' — se alguma conta ainda não existir, é só criar e me convidar',
-    );
-  }
+  const linhasAcesso: string[] = [];
+  linhasAcesso.push(
+    `1️⃣ *Acessos* — me convide como administrador (${ACCESS_EMAIL}) no ${humanList(convites)}. ` +
+      'O que ainda não existir, é só criar a conta e me convidar.',
+  );
+  linhasAcesso.push(
+    '→ Me conta também qual gateway de pagamento você usa (ou pretende usar) e se já trabalha com Bling ou Tiny — se ainda não, a gente decide junto qual criar.',
+  );
   if (googleEnviado && !read(r, 'acesso_google_id')) {
-    acessoFrases.push('me passe o ID da conta do Google Ads');
+    linhasAcesso.push('→ Me passa o ID da conta do Google Ads (000-000-0000).');
   }
   const dominio = read(r, 'acesso_dominio');
-  acessoFrases.push(`e me dê acesso ao DNS do domínio${dominio ? ` (${dominio})` : ''}`);
+  linhasAcesso.push(`→ E me dá acesso ao DNS do domínio${dominio ? ` (${dominio})` : ''}.`);
   if (read(r, 'site_atual') === 'Sim') {
     const url = read(r, 'site_url');
-    acessoFrases.push(`+ acesso ao site atual${url ? ` (${url})` : ''}`);
+    linhasAcesso.push(`→ Acesso ao site atual${url ? ` (${url})` : ''}.`);
   }
-  p.push(`1️⃣ *Criar/liberar os acessos* — ${acessoFrases.join('; ')}.`);
+  p.push(linhasAcesso.join('\n'));
 
-  // 2) Materiais da marca ──────────────────────────────────────────────
+  // 2) Identidade visual completa ──────────────────────────────────────
   const temId = read(r, 'tem_identidade');
-  const temIdentidade = temId !== '' && temId !== 'Não tenho';
-  const materiais: string[] = [];
-  if (temIdentidade) {
-    materiais.push('a logo em vetor (arquivo editável, não só imagem) e as cores e fontes da marca');
+  if (temId === 'Não tenho' || temId === '') {
+    p.push(
+      '2️⃣ *Identidade visual* — como você ainda não tem, me manda referências de marcas e estilos que curte que eu crio a sua (logo, cores e fontes).',
+    );
   } else {
-    materiais.push('referências de marcas e estilos que você curte, pra eu criar sua identidade');
+    p.push(
+      '2️⃣ *Identidade visual completa* — logo em vetor (arquivo editável, não só imagem), cores, fontes e o manual da marca, se tiver.',
+    );
   }
+
+  // 3) Fotos e vídeos ──────────────────────────────────────────────────
   const temFotos = read(r, 'tem_fotos');
   if (temFotos === 'Ainda não' || temFotos === '') {
-    materiais.push('e a gente já alinha a produção das fotos e vídeos do produto');
+    p.push('3️⃣ *Fotos e vídeos* — você marcou que ainda não tem, então a gente já alinha a produção das fotos e vídeos do produto.');
   } else {
-    materiais.push('e as fotos e vídeos reais do produto');
+    p.push('3️⃣ *Fotos e vídeos reais do produto* — me manda os arquivos em alta.');
   }
-  p.push(`2️⃣ *Me mandar os materiais* — ${materiais.join(', ')}.`);
+
+  // 4) Revisão do produto ──────────────────────────────────────────────
+  const duvidas: string[] = [];
+  if (!read(r, 'modelo_venda')) duvidas.push('como o produto é vendido (unidade, kit, assinatura)');
+  if (!read(r, 'preco_venda')) duvidas.push('o preço de venda de cada versão, kit ou plano');
+  if (!read(r, 'custo_unidade')) duvidas.push('seu custo por unidade');
+  if (!read(r, 'entrega')) duvidas.push('como funciona a entrega e o prazo médio');
+  if (duvidas.length > 0) {
+    p.push(
+      `Sobre o produto, dei uma revisada e ficou faltando me confirmar: ${humanList(duvidas)}. Pode me passar?`,
+    );
+  } else {
+    p.push('Sobre o produto, revisei tudo e ficou claro — se mudar algo (preço, custo ou prazo), é só me avisar.');
+  }
 
   p.push(
     'Assim que isso chegar, eu já começo a produzir tudo. Qualquer dúvida em algum item, me chama por aqui! 🚀',
