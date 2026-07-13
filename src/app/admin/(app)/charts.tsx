@@ -143,16 +143,16 @@ export function RankBars({ data, labelWidth = 132 }: { data: RankItem[]; labelWi
   return (
     <div style={{ height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 28, bottom: 0, left: 0 }} barCategoryGap={10}>
-          <XAxis type="number" hide />
+        <BarChart data={data} layout="vertical" margin={{ top: 0, right: 32, bottom: 0, left: 0 }} barCategoryGap={10}>
+          <XAxis type="number" domain={[0, 'dataMax']} hide />
           <YAxis
             type="category" dataKey="label" width={labelWidth}
             tick={{ fontSize: 12, fill: INK, fillOpacity: 0.75 }}
             axisLine={false} tickLine={false}
           />
           <Tooltip content={<RankTooltip />} cursor={{ fill: INK, fillOpacity: 0.04 }} />
-          <Bar dataKey="count" fill={INK} fillOpacity={0.85} radius={[0, 4, 4, 0]} barSize={16}>
-            <LabelList dataKey="count" position="right" className="fill-text-primary" style={{ fontSize: 11, fontFamily: 'var(--font-mono, monospace)', fontWeight: 500 }} />
+          <Bar dataKey="count" fill={INK} fillOpacity={0.85} radius={[0, 4, 4, 0]} barSize={16} isAnimationActive={false}>
+            <LabelList dataKey="count" position="right" offset={8} style={{ fill: INK, fontSize: 11, fontFamily: 'var(--font-mono, monospace)', fontWeight: 500 }} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
