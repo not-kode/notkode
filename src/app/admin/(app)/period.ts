@@ -12,7 +12,7 @@ export const PRESETS: { key: RangeKey; label: string }[] = [
   { key: 'year', label: 'Este ano' },
 ];
 
-const DEFAULT_KEY: RangeKey = '30d';
+const DEFAULT_KEY: RangeKey = 'month';
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const dmy = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 
