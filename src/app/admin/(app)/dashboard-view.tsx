@@ -2,7 +2,7 @@
 // Componente de apresentação (server): sem estado, recebe tudo pronto.
 // Identidade Notkode: creme quente + tinta (#191918/navy), azul só como acento pontual.
 
-import { VisitsChart } from './visits-chart';
+import { VisitsChart, SourceDonut, RankBars } from './charts';
 
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const nf = (n: number) => n.toLocaleString('pt-BR');
@@ -68,6 +68,20 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
   );
 }
 
+// Rótulo divisor de grupo (SITE vs NEGÓCIO) para separar tracking de CRM.
+function GroupLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-3 mt-2 flex items-center gap-3">
+      <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted">{children}</span>
+      <span className="h-px flex-1 bg-[#191918]/[0.08]" />
+    </div>
+  );
+}
+
+const Empty = ({ children }: { children: React.ReactNode }) => (
+  <p className="py-8 text-center text-sm text-text-muted">{children}</p>
+);
+
 // Índice do passo com a maior queda relativa (para destacar no funil).
 function biggestDropIndex(steps: FunnelStep[]): number {
   let worst = -1, worstRatio = 1;
@@ -82,11 +96,8 @@ function biggestDropIndex(steps: FunnelStep[]): number {
 
 export function DashboardView({ data }: { data: DashboardData }) {
   const semTracking = data.eventosTotais === 0;
-  const maxServico = Math.max(1, ...data.porServico.map((s) => s.count));
-  const maxOrigem = Math.max(1, ...data.porOrigem.map((o) => o.count));
-  const maxCta = Math.max(1, ...data.porCta.map((c) => c.count));
-  const totalOrigem = data.porOrigem.reduce((s, o) => s + o.count, 0);
   const siteTop = data.siteFunnel[0]?.count ?? 1;
+  const semVisitas = data.visitasPorDia.every((d) => d.count === 0);
 
   return (
     <div className="-mx-4 -my-6 min-h-full bg-surface-elevated px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
@@ -101,6 +112,8 @@ export function DashboardView({ data }: { data: DashboardData }) {
         </p>
       )}
 
+      <GroupLabel>Site · tracking</GroupLabel>
+
       {/* KPIs do site */}
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="Visitas · 30d" value={nf(data.kpis.visitas)} />
@@ -109,23 +122,45 @@ export function DashboardView({ data }: { data: DashboardData }) {
         <Kpi label="Cliques em CTA" value={nf(data.kpis.cliquesCta)} />
       </div>
 
-      {/* Funil do site */}
+      {/* Visitas por dia — série temporal em destaque */}
       <div className="mb-6">
+        <Section title="Visitas por dia" sub="· 14 dias">
+          {semVisitas ? <Empty>Sem visitas registradas ainda.</Empty> : <VisitsChart data={data.visitasPorDia} />}
+        </Section>
+      </div>
+
+      {/* Origem das visitas (donut) + Cliques por CTA (barras) */}
+      <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Section title="Origem das visitas" sub="· 30 dias">
+          {data.porOrigem.length === 0 ? (
+            <Empty>Sem visitas registradas ainda.</Empty>
+          ) : (
+            <>
+              <SourceDonut data={data.porOrigem} />
+              <p className="mt-4 text-[11px] text-text-muted">De onde a pessoa chegou. &quot;Direto&quot; = digitou o link, salvos ou apps sem referrer.</p>
+            </>
+          )}
+        </Section>
+
+        <Section title="Cliques por CTA" sub="· 30 dias">
+          {data.porCta.length === 0 ? <Empty>Nenhum clique registrado ainda.</Empty> : <RankBars data={data.porCta} labelWidth={150} />}
+        </Section>
+      </div>
+
+      {/* Funil do site + Onde param no formulário */}
+      <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
         <Section title="Funil do site" sub="· 30 dias">
           <div className="flex flex-col gap-2.5">
             {data.siteFunnel.map((s, i) => (
-              <Bar key={s.label} label={s.label} value={s.count} max={siteTop} prev={i > 0 ? data.siteFunnel[i - 1].count : undefined} highlight={i === data.siteFunnel.length - 1} />
+              <Bar key={s.label} label={s.label} value={s.count} max={siteTop} prev={i > 0 ? data.siteFunnel[i - 1].count : undefined} highlight={i === data.siteFunnel.length - 1} wLabel="w-28" />
             ))}
           </div>
           <p className="mt-3 text-[11px] text-text-muted">A % à direita é a conversão sobre o passo anterior.</p>
         </Section>
-      </div>
 
-      {/* Onde as pessoas param no formulário — um funil por formulário */}
-      <div className="mb-6">
         <Section title="Onde as pessoas param no formulário" sub="· 30 dias">
           {data.formFunnels.length === 0 ? (
-            <p className="text-sm text-text-muted">Ninguém começou um formulário nos últimos 30 dias ainda.</p>
+            <p className="py-2 text-sm text-text-muted">Ninguém começou um formulário nos últimos 30 dias ainda.</p>
           ) : (
             <div className="flex flex-col gap-6">
               {data.formFunnels.map((f) => {
@@ -136,72 +171,29 @@ export function DashboardView({ data }: { data: DashboardData }) {
                     <p className="mb-2.5 font-mono text-[11px] font-medium tracking-tight text-text-primary">{f.form}</p>
                     <div className="flex flex-col gap-2.5">
                       {f.steps.map((s, i) => (
-                        <Bar key={s.label} label={s.label} value={s.count} max={top} prev={i > 0 ? f.steps[i - 1].count : undefined} drop={i === drop} highlight={i === f.steps.length - 1} wLabel="w-32" />
+                        <Bar key={s.label} label={s.label} value={s.count} max={top} prev={i > 0 ? f.steps[i - 1].count : undefined} drop={i === drop} highlight={i === f.steps.length - 1} wLabel="w-28" />
                       ))}
                     </div>
                   </div>
                 );
               })}
-              <p className="text-[11px] text-text-muted">Cada bloco é um formulário. A maior queda (em vermelho) mostra em qual etapa a pessoa desiste.</p>
+              <p className="text-[11px] text-text-muted">A maior queda (em vermelho) mostra onde a pessoa desiste.</p>
             </div>
-          )}
-        </Section>
-      </div>
-
-      {/* Origem das visitas + Cliques por CTA */}
-      <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <Section title="Origem das visitas" sub="· 30 dias">
-          {data.porOrigem.length === 0 ? (
-            <p className="py-6 text-center text-sm text-text-muted">Sem visitas registradas ainda.</p>
-          ) : (
-            <>
-              <div className="flex flex-col gap-2.5">
-                {data.porOrigem.map((o) => (
-                  <Bar key={o.label} label={o.label} value={o.count} max={maxOrigem} prev={totalOrigem} wLabel="w-32" />
-                ))}
-              </div>
-              <p className="mt-3 text-[11px] text-text-muted">De onde a pessoa chegou. A % é a fatia do total. &quot;Direto&quot; = digitou o link, salvos ou apps sem referrer.</p>
-            </>
-          )}
-        </Section>
-
-        <Section title="Cliques por CTA">
-          {data.porCta.length === 0 ? (
-            <p className="py-6 text-center text-sm text-text-muted">Nenhum clique registrado ainda.</p>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {data.porCta.map((c) => <Bar key={c.label} label={c.label} value={c.count} max={maxCta} wLabel="w-40" />)}
-            </div>
-          )}
-        </Section>
-      </div>
-
-      {/* Visitas por dia */}
-      <div className="mb-6">
-        <Section title="Visitas por dia" sub="· 14 dias">
-          {data.visitasPorDia.every((d) => d.count === 0) ? (
-            <p className="py-6 text-center text-sm text-text-muted">Sem visitas registradas ainda.</p>
-          ) : (
-            <VisitsChart data={data.visitasPorDia} />
           )}
         </Section>
       </div>
 
       {/* Leads por serviço */}
-      <div className="mb-6">
-        <Section title="Leads por serviço">
-          {data.porServico.length === 0 ? (
-            <p className="py-6 text-center text-sm text-text-muted">Nenhum lead ainda.</p>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {data.porServico.map((s) => <Bar key={s.tag} label={s.label} value={s.count} max={maxServico} wLabel="w-40" />)}
-            </div>
-          )}
+      <div className="mb-8">
+        <Section title="Leads por serviço" sub="· CRM">
+          {data.porServico.length === 0 ? <Empty>Nenhum lead ainda.</Empty> : <RankBars data={data.porServico} labelWidth={160} />}
         </Section>
       </div>
 
+      <GroupLabel>Negócio · CRM</GroupLabel>
+
       {/* Instantâneo do negócio (CRM) — separado do site */}
-      <Section title="Instantâneo do negócio" sub="· CRM">
+      <Section title="Instantâneo do negócio" sub="· fechado, não é do site">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
           <Kpi label="MRR ativo" value={brl(data.negocio.mrr)} />
           <Kpi label="Atrasado" value={brl(data.negocio.atrasado)} tone={data.negocio.atrasado > 0 ? 'danger' : undefined} />
