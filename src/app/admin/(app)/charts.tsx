@@ -75,6 +75,36 @@ export function VisitsChart({ data }: { data: DayCount[] }) {
   );
 }
 
+// ──────────────────────────────────────── Receita por mês (barras) ──
+const brl0 = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+type MonthRevenue = { mes: string; valor: number };
+
+function RevenueTooltip({ active, payload }: { active?: boolean; payload?: { payload: MonthRevenue }[] }) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0].payload;
+  return (
+    <div className="rounded-md border border-[#191918]/[0.12] bg-surface-base px-2.5 py-1.5 shadow-sm">
+      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">{p.mes}</p>
+      <p className="font-mono text-sm font-medium text-text-primary">{brl0(p.valor)}</p>
+    </div>
+  );
+}
+
+export function RevenueBars({ data }: { data: MonthRevenue[] }) {
+  return (
+    <div className="h-52 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
+          <XAxis dataKey="mes" tick={{ fontSize: 9, fontFamily: 'var(--font-mono, monospace)', fill: INK, fillOpacity: 0.5 }} axisLine={false} tickLine={false} interval={0} />
+          <YAxis width={44} tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))} tick={{ fontSize: 9, fontFamily: 'var(--font-mono, monospace)', fill: INK, fillOpacity: 0.4 }} axisLine={false} tickLine={false} />
+          <Tooltip content={<RevenueTooltip />} cursor={{ fill: INK, fillOpacity: 0.04 }} />
+          <Bar dataKey="valor" fill={ACCENT} radius={[4, 4, 0, 0]} maxBarSize={34} isAnimationActive={false} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────── Origem das visitas (donut) ──
 type Slice = { label: string; count: number };
 
