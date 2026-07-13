@@ -22,6 +22,8 @@ export type PricingField =
       options: PricingFieldOption[];
       /** optional pre-selection */
       default?: string;
+      /** 'dropdown' renders a <select> instead of the button grid. Default 'buttons'. */
+      render?: 'buttons' | 'dropdown';
     }
   | {
       id: string;
@@ -75,6 +77,8 @@ export type PricingSchema = {
   timeline?: (selection: PricingSelection) => TimelinePhase[];
   /** optional: title shown on the reveal screen header (e.g. "Sua loja sob medida") */
   reportTitle?: (selection: PricingSelection) => string;
+  /** 'from' shows "a partir de <min>" (piso, sem teto) em vez da faixa. Default 'range'. */
+  priceMode?: 'range' | 'from';
   copy?: {
     /** small label above the heading on each step (e.g. "Orçamento") */
     eyebrow?: string;
@@ -154,17 +158,21 @@ function buildWhatsAppMessage(
   max: number,
   name: string,
   wa: WaCopy,
+  isFrom: boolean,
 ): string {
   const greeting = name
     ? wa.greetingWithName(name, schema.serviceTag)
     : wa.greetingNoName(schema.serviceTag);
+  const priceLine = isFrom
+    ? `${wa.rangeLabel} a partir de ${fmt(min)}`
+    : `${wa.rangeLabel} ${fmt(min)} – ${fmt(max)}`;
   const lines = [
     greeting,
     '',
     wa.scopeLabel,
     ...summary.map((s) => `• ${s.label}: ${s.valueLabels.join(', ')}`),
     '',
-    `${wa.rangeLabel} ${fmt(min)} – ${fmt(max)}`,
+    priceLine,
     '',
     wa.closeQuestion,
   ];
@@ -180,6 +188,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   const [direction, setDirection] = useState<1 | -1>(1);
   const [selection, setSelection] = useState<PricingSelection>(() => buildInitialSelection(schema));
   const [name, setName]         = useState('');
+  const [company, setCompany]   = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail]       = useState('');
   const [notes, setNotes]       = useState('');
@@ -188,6 +197,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   const isRevealStep = step === schema.fields.length;
   const currentField = !isRevealStep ? schema.fields[step] : null;
   const [min, max] = useMemo(() => schema.calc(selection), [selection, schema]);
+  const isFrom = schema.priceMode === 'from';
 
   // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
   // Rótulo da etapa = "Orçamento::<posição>::<nome legível>" para o dashboard mostrar
@@ -217,7 +227,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
 
   const canAdvance = currentField
     ? isFieldComplete(currentField, selection[currentField.id])
-    : Boolean(name && whatsapp.replace(/\D/g, '').length >= 10 && isValidEmail(email) && status !== 'submitting');
+    : Boolean(name && company.trim() && whatsapp.replace(/\D/g, '').length >= 10 && isValidEmail(email) && status !== 'submitting');
 
   const goNext = useCallback(() => {
     if (!canAdvance) return;
@@ -261,7 +271,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       serviceTag: schema.serviceTag,
       selection,
       estimatedRange: [min, max],
-      lead: { name, whatsapp, email, notes },
+      lead: { name, whatsapp, email, notes, company },
       utm: getUtm(),
     };
     try {
@@ -287,7 +297,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       scopeLabel: t('waScopeLabel'),
       rangeLabel: t('waRangeLabel'),
       closeQuestion: t('waCloseQuestion'),
-    });
+    }, isFrom);
     const waUrl = `https://wa.me/5511951381254?text=${encodeURIComponent(waMessage)}`;
 
     return (
@@ -315,33 +325,13 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))' }}
           >
             <p className="font-mono text-[10px] uppercase tracking-widest text-primary mb-2">
-              {t('investmentLabel')}
+              {isFrom ? 'A partir de' : t('investmentLabel')}
             </p>
             <p className="font-bricolage text-[1.75rem] md:text-[2.25rem] font-bold text-text-primary leading-tight tracking-tight">
-              {fmt(min)} <span className="text-text-muted font-normal">–</span> {fmt(max)}
+              {isFrom ? fmt(min) : <>{fmt(min)} <span className="text-text-muted font-normal">–</span> {fmt(max)}</>}
             </p>
           </div>
         </div>
-
-        {/* Resumo das escolhas */}
-        {summary.length > 0 && (
-          <div className="px-6 lg:px-10 pb-6">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-text-dim text-center mb-4">
-              {t('scopeLabel')}
-            </p>
-            <ul className="space-y-2.5 max-w-md mx-auto">
-              {summary.map((s, i) => (
-                <li key={i} className="flex items-start gap-3 text-[14px]">
-                  <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-text-dim">{s.label}: </span>
-                    <span className="text-text-primary font-medium">{s.valueLabels.join(', ')}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         {/* Próximos passos */}
         <div className="px-6 lg:px-10 pb-6">
@@ -394,7 +384,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
             {t('stepLabel', { step: step + 1, total: totalSteps })}
           </span>
-          <LiveEstimatePill min={min} max={max} visible={step > 0 && !isRevealStep} />
+          <LiveEstimatePill min={min} max={max} from={isFrom} visible={step > 0 && !isRevealStep} />
         </div>
         <div className="flex gap-1.5">
           {Array.from({ length: totalSteps }).map((_, i) => (
@@ -431,11 +421,14 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
               selection={selection}
               min={min}
               max={max}
+              isFrom={isFrom}
               name={name}
+              company={company}
               whatsapp={whatsapp}
               email={email}
               notes={notes}
               onName={setName}
+              onCompany={setCompany}
               onWhats={setWhatsapp}
               onEmail={setEmail}
               onNotes={setNotes}
@@ -528,7 +521,18 @@ function FieldStep({
         <p className="text-[14px] text-text-secondary leading-relaxed mb-7">{field.hint}</p>
       )}
 
-      {field.type === 'single' ? (
+      {field.type === 'single' && field.render === 'dropdown' ? (
+        <select
+          value={typeof value === 'string' ? value : ''}
+          onChange={(e) => onSingle(e.target.value)}
+          className="w-full max-w-sm px-4 py-3 rounded-xl text-[14px] bg-white/70 focus:outline-none focus:border-primary/50 transition-colors appearance-none cursor-pointer"
+          style={{ border: '1.5px solid rgba(25,25,24,0.12)' }}
+        >
+          {field.options.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      ) : field.type === 'single' ? (
         <div className="grid sm:grid-cols-2 gap-2.5">
           {field.options.map((opt) => {
             const active = value === opt.value;
@@ -600,7 +604,7 @@ function FieldStep({
   );
 }
 
-function LiveEstimatePill({ min, max, visible }: { min: number; max: number; visible: boolean }) {
+function LiveEstimatePill({ min, max, from, visible }: { min: number; max: number; from?: boolean; visible: boolean }) {
   const prevRef = useRef<string>('');
   const current = `${min}-${max}`;
   const [pulse, setPulse] = useState(false);
@@ -628,10 +632,10 @@ function LiveEstimatePill({ min, max, visible }: { min: number; max: number; vis
     >
       <Sparkles className="w-3 h-3 text-primary" strokeWidth={2.2} />
       <span className="font-mono text-[10px] text-primary uppercase tracking-widest">
-        estimativa
+        {from ? 'a partir de' : 'estimativa'}
       </span>
       <span className="font-mono text-[11px] text-text-primary font-semibold">
-        {fmt(min)} – {fmt(max)}
+        {from ? fmt(min) : <>{fmt(min)} – {fmt(max)}</>}
       </span>
     </span>
   );
@@ -639,15 +643,15 @@ function LiveEstimatePill({ min, max, visible }: { min: number; max: number; vis
 
 function RevealStep({
   schema, selection,
-  min, max, name, whatsapp, email, notes,
-  onName, onWhats, onEmail, onNotes,
+  min, max, isFrom, name, company, whatsapp, email, notes,
+  onName, onCompany, onWhats, onEmail, onNotes,
   title, subtitle,
 }: {
   schema: PricingSchema;
   selection: PricingSelection;
-  min: number; max: number;
-  name: string; whatsapp: string; email: string; notes: string;
-  onName: (v: string) => void; onWhats: (v: string) => void;
+  min: number; max: number; isFrom: boolean;
+  name: string; company: string; whatsapp: string; email: string; notes: string;
+  onName: (v: string) => void; onCompany: (v: string) => void; onWhats: (v: string) => void;
   onEmail: (v: string) => void; onNotes: (v: string) => void;
   title: string; subtitle: string;
 }) {
@@ -655,35 +659,14 @@ function RevealStep({
   const [emailTouched, setEmailTouched] = useState(false);
   const avg = Math.round(((min + max) / 2) / 100) * 100;
   const inclusions = schema.inclusions?.(selection) ?? [];
-  const timeline = schema.timeline?.(selection) ?? [];
   const reportTitle = schema.reportTitle?.(selection) ?? t('reportTitleDefault');
-  const protocol = `#NTK-${(Math.abs(hashString(JSON.stringify(selection))) % 9000 + 1000).toString()}`;
-  const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 
   return (
     <div style={{ animation: 'priceReveal 600ms cubic-bezier(0.16, 1, 0.3, 1)' }}>
 
-      {/* ── Report header strip ── */}
+      {/* ── Hero do valor (sem cabeçalho de protocolo — não é proposta) ── */}
       <div
-        className="rounded-t-2xl border border-black/[0.08] border-b-0 px-5 py-3 flex items-center justify-between"
-        style={{ background: 'rgba(25,25,24,0.025)' }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-          <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
-            {t('reportPrefix')}{schema.serviceTag}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[10px] text-text-dim">{protocol}</span>
-          <span className="font-mono text-[10px] text-text-dim hidden sm:inline">·</span>
-          <span className="font-mono text-[10px] text-text-dim hidden sm:inline">{today}</span>
-        </div>
-      </div>
-
-      {/* ── Hero do valor ── */}
-      <div
-        className="border border-black/[0.08] border-b-0 px-6 lg:px-10 py-9 lg:py-11 text-center"
+        className="rounded-t-2xl border border-black/[0.08] border-b-0 px-6 lg:px-10 py-9 lg:py-11 text-center"
         style={{ background: 'linear-gradient(180deg, rgba(59,130,246,0.05) 0%, transparent 100%)' }}
       >
         <h3 className="font-bricolage text-[1.5rem] lg:text-[2rem] text-text-primary leading-tight tracking-tight mb-7">
@@ -693,12 +676,19 @@ function RevealStep({
           <Sparkles className="w-3 h-3" />
           {title}
         </p>
+        {isFrom && (
+          <p className="font-mono text-[11px] text-text-muted uppercase tracking-widest mb-1">
+            a partir de
+          </p>
+        )}
         <div className="font-bricolage text-[2.5rem] md:text-[3rem] lg:text-[3.5rem] font-bold text-text-primary leading-none tracking-tight">
-          {fmt(avg)}
+          {isFrom ? fmt(min) : fmt(avg)}
         </div>
-        <p className="font-mono text-[11px] text-text-muted mt-3">
-          {t('rangeLabel')} {fmt(min)} – {fmt(max)}
-        </p>
+        {!isFrom && (
+          <p className="font-mono text-[11px] text-text-muted mt-3">
+            {t('rangeLabel')} {fmt(min)} – {fmt(max)}
+          </p>
+        )}
         <p className="text-[12px] text-text-muted mt-4 max-w-md mx-auto leading-relaxed">
           {subtitle}
         </p>
@@ -733,48 +723,6 @@ function RevealStep({
         </div>
       )}
 
-      {/* ── Cronograma ── */}
-      {timeline.length > 0 && (
-        <div className="border border-black/[0.08] border-b-0 px-6 lg:px-10 py-7" style={{ background: 'rgba(25,25,24,0.02)' }}>
-          <div className="flex items-center gap-2 mb-6">
-            <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
-              {t('timelineHeader')}
-            </span>
-            <div className="flex-1 h-px bg-black/[0.06]" />
-          </div>
-
-          {/* Timeline track (desktop horizontal, mobile vertical) */}
-          <div className="hidden sm:grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-3 relative" style={{ gridTemplateColumns: `repeat(${timeline.length}, minmax(0,1fr))` }}>
-            <div className="absolute left-2 right-2 top-[7px] h-px bg-primary/25" />
-            {timeline.map((p, i) => (
-              <div key={i} className="relative">
-                <div className="w-3.5 h-3.5 rounded-full bg-primary border-2 border-[hsl(55_100%_97%)] mb-3 relative z-10" />
-                <p className="font-mono text-[10px] text-primary uppercase tracking-widest mb-1">{p.range}</p>
-                <p className="font-bricolage text-[14px] font-semibold text-text-primary mb-1 leading-tight">{p.title}</p>
-                <p className="text-[12px] text-text-secondary leading-snug">{p.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Mobile — stacked */}
-          <ol className="sm:hidden space-y-4 relative">
-            {timeline.map((p, i) => (
-              <li key={i} className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="w-3 h-3 rounded-full bg-primary mt-1.5" />
-                  {i < timeline.length - 1 && <div className="flex-1 w-px bg-primary/20 mt-1" />}
-                </div>
-                <div className="pb-1">
-                  <p className="font-mono text-[10px] text-primary uppercase tracking-widest mb-0.5">{p.range}</p>
-                  <p className="font-bricolage text-[14px] font-semibold text-text-primary mb-0.5 leading-tight">{p.title}</p>
-                  <p className="text-[12px] text-text-secondary leading-snug">{p.desc}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-
       {/* ── Próximo passo: identificação ── */}
       <div className="rounded-b-2xl border border-black/[0.08] px-6 lg:px-10 py-7" style={{ background: 'hsl(55 100% 97%)' }}>
         <div className="flex items-center gap-2 mb-5">
@@ -798,6 +746,18 @@ function RevealStep({
                 style={{ border: '1px solid rgba(25,25,24,0.10)' }}
               />
             </Field>
+            <Field label={t('fieldCompany')}>
+              <input
+                type="text"
+                value={company}
+                onChange={(e) => onCompany(e.target.value)}
+                placeholder={t('fieldCompanyPlaceholder')}
+                className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
+                style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+              />
+            </Field>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
             <Field label={t('fieldWhatsapp')}>
               <input
                 type="tel"
@@ -808,8 +768,7 @@ function RevealStep({
                 style={{ border: '1px solid rgba(25,25,24,0.10)' }}
               />
             </Field>
-          </div>
-          <Field label={t('fieldEmail')}>
+            <Field label={t('fieldEmail')}>
             <input
               type="email"
               value={email}
@@ -826,7 +785,8 @@ function RevealStep({
             {emailTouched && email && !isValidEmail(email) && (
               <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldEmailInvalid')}</span>
             )}
-          </Field>
+            </Field>
+          </div>
           <Field label={t('fieldNotes')}>
             <textarea
               value={notes}
@@ -841,12 +801,6 @@ function RevealStep({
       </div>
     </div>
   );
-}
-
-function hashString(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-  return h;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

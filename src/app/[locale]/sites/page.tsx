@@ -15,7 +15,6 @@ import { ProdutosHeroBackground } from '@/components/produtos-digitais/produtos-
 import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showcase';
 import { SitesPricingForm } from '@/components/sites/sites-pricing-form';
 import { ProductFAQ } from '@/components/ui/product-faq';
-import { BrandbookCombo } from '@/components/ui/brandbook-combo';
 
 export async function generateMetadata({
   params,
@@ -264,8 +263,6 @@ export default async function SitesPage({
         faqs={SITES_FAQS}
         surface="base"
       />
-
-      <BrandbookCombo companion="site" surface="base" />
 
       <section id="orcamento" className="bg-surface-elevated">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">

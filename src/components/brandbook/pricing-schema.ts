@@ -1,4 +1,4 @@
-import type { InclusionGroup, PricingSchema, TimelinePhase } from '@/components/ui/pricing-form';
+import type { InclusionGroup, PricingSchema } from '@/components/ui/pricing-form';
 
 const SCOPE_BASE: Record<string, [number, number]> = {
   logo:      [1200, 2500],   // só logo + variações
@@ -80,29 +80,6 @@ function inclusions(sel: Record<string, string | string[]>): InclusionGroup[] {
   return groups;
 }
 
-function timeline(sel: Record<string, string | string[]>): TimelinePhase[] {
-  const urgency = (sel.urgency as string) ?? 'normal';
-  if (urgency === 'urgente') {
-    return [
-      { range: 'Semana 1',   title: 'Imersão',     desc: 'Briefing, referências e moodboard.' },
-      { range: 'Semana 1–2', title: 'Concepção',   desc: '2 a 3 caminhos de logo + paleta.' },
-      { range: 'Semana 2',   title: 'Entrega',     desc: 'Brandbook finalizado e arquivos editáveis.' },
-    ];
-  }
-  if (urgency === 'rapido') {
-    return [
-      { range: 'Semana 1',   title: 'Imersão',     desc: 'Briefing, referências, moodboard e direções.' },
-      { range: 'Semana 2',   title: 'Concepção',   desc: 'Apresentação de caminhos e escolha do final.' },
-      { range: 'Semana 3',   title: 'Entrega',     desc: 'Brandbook + aplicações + arquivos editáveis.' },
-    ];
-  }
-  return [
-    { range: 'Semana 1',   title: 'Imersão',     desc: 'Briefing, moodboard, valores de marca e direções criativas.' },
-    { range: 'Semana 2',   title: 'Concepção',   desc: 'Apresentação de 2 a 3 caminhos, escolha e refino.' },
-    { range: 'Semana 3–4', title: 'Entrega',     desc: 'Brandbook completo, aplicações e arquivos editáveis.' },
-  ];
-}
-
 function reportTitle(sel: Record<string, string | string[]>): string {
   const scope = (sel.scope as string) ?? 'essencial';
   const stage = (sel.stage as string) ?? 'nova';
@@ -118,7 +95,7 @@ export const brandbookPricingSchema: PricingSchema = {
     eyebrow: 'Orçamento de Identidade',
     revealTitle: 'Investimento estimado',
     revealSubtitle:
-      'Faixa preliminar baseada nas suas escolhas. Para receber a proposta detalhada e o cronograma, deixe seu contato.',
+      'Faixa preliminar baseada nas suas escolhas. O valor final a gente fecha numa conversa rápida. Deixe seu contato pra receber a proposta.',
     submitLabel: 'Receber proposta',
   },
   fields: [
@@ -164,17 +141,18 @@ export const brandbookPricingSchema: PricingSchema = {
     {
       id: 'urgency',
       type: 'single',
-      label: 'Qual o prazo?',
+      render: 'dropdown',
+      label: 'É urgente?',
+      hint: 'Só pra sabermos a prioridade — o prazo real a gente combina junto.',
       default: 'normal',
       options: [
-        { value: 'normal',  label: 'Normal',  hint: '3–4 semanas' },
-        { value: 'rapido',  label: 'Rápido',  hint: '2–3 semanas' },
-        { value: 'urgente', label: 'Urgente', hint: 'até 2 semanas' },
+        { value: 'urgente', label: 'Sim, tenho urgência' },
+        { value: 'prazo',   label: 'Tenho um prazo em mente' },
+        { value: 'normal',  label: 'Não, sem pressa' },
       ],
     },
   ],
   calc,
   inclusions,
-  timeline,
   reportTitle,
 };

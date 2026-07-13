@@ -10,7 +10,7 @@ type PricingPayload = {
   serviceTag: string;
   selection: Record<string, string | string[]>;
   estimatedRange: [number, number];
-  lead: { name: string; whatsapp: string; email: string; notes?: string };
+  lead: { name: string; whatsapp: string; email: string; notes?: string; company?: string };
 };
 
 type QualificationPayload = {
@@ -93,6 +93,10 @@ function normalize(
   const p = body as PricingPayload;
   if (!p.lead?.name || !p.lead?.email || !p.lead?.whatsapp) return null;
   const [min, max] = p.estimatedRange ?? [null, null];
+  const selection: Record<string, string | string[]> = {
+    ...(p.selection ?? {}),
+    ...(p.lead.company ? { company: p.lead.company } : {}),
+  };
   return {
     service_tag: p.serviceTag,
     page_origin: pageOrigin,
@@ -100,7 +104,7 @@ function normalize(
     email: p.lead.email,
     whatsapp: p.lead.whatsapp,
     notes: p.lead.notes ?? null,
-    selection: p.selection ?? null,
+    selection,
     estimated_min: typeof min === 'number' ? min : null,
     estimated_max: typeof max === 'number' ? max : null,
     ...utm,

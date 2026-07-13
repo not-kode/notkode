@@ -1,8 +1,9 @@
 'use client';
 
-import { PricingForm } from '@/components/ui/pricing-form';
-import { agentesPricingSchema } from './pricing-schema';
+import { QualificationForm } from '@/components/ui/qualification-form';
+import { agentesQualificationSchema } from './qualification-schema';
 
+// Agentes & Automação não tem preço fixo — usa qualificação, igual "Sistemas com IA".
 export function AgentesPricingForm() {
-  return <PricingForm schema={agentesPricingSchema} />;
+  return <QualificationForm schema={agentesQualificationSchema} />;
 }

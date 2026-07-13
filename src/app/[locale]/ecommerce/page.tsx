@@ -12,7 +12,6 @@ import { StackedShowcase, type StackSlide } from '@/components/ui/stacked-showca
 import { EcommercePricingForm } from '@/components/ecommerce/ecommerce-pricing-form';
 import { PainNamingBlock } from '@/components/ui/pain-naming-block';
 import { ProductFAQ } from '@/components/ui/product-faq';
-import { BrandbookCombo } from '@/components/ui/brandbook-combo';
 
 export async function generateMetadata({
   params,
@@ -244,8 +243,6 @@ export default async function EcommercePage({
         faqs={ECOMMERCE_FAQS}
         surface="elevated"
       />
-
-      <BrandbookCombo companion="loja" surface="elevated" />
 
       <section id="orcamento" className="bg-surface-base">
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">

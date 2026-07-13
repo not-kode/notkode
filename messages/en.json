@@ -313,10 +313,10 @@
     "qualNeedNaoSei": "I'm still figuring it out",
     "qualContextTitle": "Project context.",
     "qualContextSubtitle": "The more detail, the better we can prep the conversation.",
-    "qualTimingImediato": "I want to start now",
-    "qualTiming30dias": "Within 30 days",
+    "qualTimingImediato": "Yes, it's urgent",
+    "qualTiming30dias": "I have a deadline in mind",
     "qualTiming60dias": "60+ days out",
-    "qualTimingPesquisa": "Just researching",
+    "qualTimingPesquisa": "No rush",
     "qualWhatsappMessage": "I just filled out the AI Systems form on the site, I'd like to move forward.",
     "qualSuccessTitle": "We got your request."
   },
@@ -352,6 +352,8 @@
     "nextStepBody": "This is the sketch of your project. To close the exact investment, we'll have a quick chat to validate what you filled in and understand your operation's context.",
     "fieldName": "Your name",
     "fieldNamePlaceholder": "What should we call you?",
+    "fieldCompany": "Company",
+    "fieldCompanyPlaceholder": "Company name",
     "fieldWhatsapp": "WhatsApp",
     "fieldWhatsappPlaceholder": "+1 555 555 5555",
     "fieldEmail": "Email",
@@ -385,7 +387,7 @@
     "fieldWhatsappPlaceholder": "+1 555 555 5555",
     "contextTitleDefault": "Project context.",
     "contextSubtitleDefault": "The more detail, the better we can prep the conversation.",
-    "contextTimingLabel": "When would you like to start?",
+    "contextTimingLabel": "Is it urgent?",
     "contextDescriptionLabel": "Tell us a bit about your challenge (optional)",
     "contextDescriptionPlaceholder": "Ex: today we use spreadsheets + WhatsApp + Trello, but we can't keep up with 200 orders a month...",
     "consentBefore": "By submitting, you agree that we may reach out and process your data according to our ",
@@ -558,8 +560,8 @@
     "faq6Q": "What if I want to switch vendor later?",
     "faq6A": "Switch. The code is yours, the hosting is yours, the database is yours. No long-term commitment, no hostages. Any dev can pick up the work.",
     "pricingTitleLine1": "Build your project,",
-    "pricingTitleAccent": "see the investment sketch.",
-    "pricingDesc": "Six questions to map your scenario. At the end you see the organized scope and a preliminary range; we close the exact number together in conversation."
+    "pricingTitleAccent": "see the starting price.",
+    "pricingDesc": "Four questions to map your scenario. At the end you see the starting price; we close the exact number together in conversation."
   },
   "Agentes": {
     "metaTitle": "AI agents and automations · Notkode",
@@ -619,9 +621,9 @@
     "faq4A": "Simple automation is ready in 1 to 2 weeks. An AI agent with multiple integrations can take 4 to 6 weeks. We estimate your case in the first conversation based on what you need.",
     "faq5Q": "What if the customer asks something the agent doesn't know?",
     "faq5A": "The agent never makes things up. When it's unsure, it hands off to someone on your team with the conversation already noted. Your team gets a half-solved lead, not from scratch.",
-    "pricingTitleLine1": "Build the scope,",
-    "pricingTitleAccent": "see the preliminary range.",
-    "pricingDesc": "Four short questions to map what you need to automate. At the end you see the organized scope and a preliminary range; the detailed proposal lands on your WhatsApp within hours."
+    "pricingTitleLine1": "Tell us what you need,",
+    "pricingTitleAccent": "we handle it.",
+    "pricingDesc": "A few questions to understand what you need to automate. We design the right solution for your case and the detailed proposal lands on your WhatsApp within hours."
   },
   "Sites": {
     "metaTitle": "Institutional websites and landings · Notkode",
@@ -630,7 +632,7 @@
     "heroTitleLine2": "just a few",
     "heroTitleAccent": "weeks.",
     "heroDesc": "An LP for the campaign launching Monday, or a brand-new institutional site. We design around your goal, not around the template that's easiest for us.",
-    "heroCta": "Calculate my site",
+    "heroCta": "Build my site",
     "stat1Value": "2–4 wks", "stat1Label": "from briefing to live",
     "stat2Value": "60+",     "stat2Label": "sites delivered",
     "stat3Value": "95+",     "stat3Label": "average PageSpeed score",
@@ -701,8 +703,8 @@
     "faq6Q": "How does maintenance work after launch?",
     "faq6A": "Optional monthly plan covering content updates (swap copy, images, create new sections), A/B tests on hero and copy, and technical maintenance (security, performance, uptime). No long-term commitment, and you can pause whenever.",
     "pricingTitleLine1": "Build your site,",
-    "pricingTitleAccent": "see the range live.",
-    "pricingDesc": "Four short questions. At the end you see the estimated investment and can request a detailed proposal."
+    "pricingTitleAccent": "see the starting price.",
+    "pricingDesc": "Four short questions. At the end you see the starting price and can request a detailed proposal."
   },
   "Parcerias": {
     "metaTitle": "Partnerships and white-label · Notkode",

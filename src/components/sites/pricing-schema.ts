@@ -1,194 +1,105 @@
-import type { InclusionGroup, PricingSchema, TimelinePhase } from '@/components/ui/pricing-form';
+import type { InclusionGroup, PricingSchema } from '@/components/ui/pricing-form';
 
-const TYPE_BASE: Record<string, [number, number]> = {
-  landing:       [1800, 3500],
-  institucional: [3500, 7000],
-  blog:          [6000, 11000],
-  multilingue:   [8500, 15000],
-};
-
-const PAGES_MULT: Record<string, number> = {
-  pequeno: 1.0,    // até 3 páginas
-  medio:   1.25,   // 4–7 páginas
-  grande:  1.6,    // 8–15 páginas
-};
-
-const PER_EXTRA = 700;
-
-const URGENCY_MULT: Record<string, number> = {
-  normal:   1.0,
-  rapido:   1.2,
-  urgente:  1.45,
+// Modo "a partir de": mostramos só o PISO por tipo (min = max = piso).
+// Landing e Site são coisas separadas. Perguntas de tamanho/prazo/necessidade
+// servem só pra qualificar o lead — não mexem mais no valor.
+const TYPE_FLOOR: Record<string, number> = {
+  landing: 1800,
+  site:    4000,
 };
 
 function calc(sel: Record<string, string | string[]>): [number, number] {
-  const type = (sel.type as string) ?? 'institucional';
-  const size = (sel.size as string) ?? 'pequeno';
-  const extras = (sel.extras as string[]) ?? [];
-  const urgency = (sel.urgency as string) ?? 'normal';
-
-  const [baseMin, baseMax] = TYPE_BASE[type] ?? TYPE_BASE.institucional;
-  const sizeMult = PAGES_MULT[size] ?? 1;
-  const extrasCost = extras.length * PER_EXTRA;
-  const mult = URGENCY_MULT[urgency] ?? 1;
-
-  const min = Math.round((baseMin * sizeMult + extrasCost) * mult);
-  const max = Math.round((baseMax * sizeMult + extrasCost * 1.4) * mult);
-  return [min, max];
+  const type = (sel.type as string) ?? 'site';
+  const floor = TYPE_FLOOR[type] ?? TYPE_FLOOR.site;
+  return [floor, floor];
 }
 
-const TYPE_LABEL: Record<string, string> = {
-  landing:       'Landing Page',
-  institucional: 'Site Institucional',
-  blog:          'Site + Blog',
-  multilingue:   'Site Multilíngue',
-};
-
-const SIZE_LABEL: Record<string, string> = {
-  pequeno: 'até 3 páginas',
-  medio:   '4 a 7 páginas',
-  grande:  '8 a 15 páginas',
-};
-
-const EXTRA_LABEL: Record<string, string> = {
-  copy:      'Copywriting profissional',
-  seo:       'SEO técnico avançado',
-  analytics: 'GA4 + Pixel + Hotjar',
-  whatsapp:  'Integração WhatsApp',
-  crm:       'Integração com CRM',
-  animacoes: 'Animações premium',
-};
-
-function inclusions(sel: Record<string, string | string[]>): InclusionGroup[] {
-  const type = (sel.type as string) ?? 'institucional';
-  const size = (sel.size as string) ?? 'medio';
-  const extras = (sel.extras as string[]) ?? [];
-
-  const principal: string[] = [
-    TYPE_LABEL[type] ?? type,
-    `Estrutura ${SIZE_LABEL[size] ?? size}`,
-    'Design responsivo (mobile, tablet, desktop)',
-    'Painel pra editar conteúdo sem chamar dev',
-  ];
-
-  const tecnico: string[] = [
-    'Hospedagem configurada (Vercel ou similar)',
+function inclusions(): InclusionGroup[] {
+  // "O que já vem incluso" — só o que é SEMPRE verdadeiro num site da Notkode.
+  // (Camila vai confirmar/ajustar essa lista.)
+  const incluso: string[] = [
+    'Design responsivo (celular, tablet, computador)',
+    'Hospedagem configurada',
     'Domínio próprio apontado',
-    'SSL/HTTPS ativo',
-    'Performance otimizada (Lighthouse 90+)',
+    'SSL/HTTPS (cadeado de segurança)',
+    'Performance otimizada',
   ];
 
   const groups: InclusionGroup[] = [
-    { title: 'Escopo principal', items: principal },
-    { title: 'Stack técnico', items: tecnico },
+    { title: 'Já vem incluso', items: incluso },
   ];
-
-  if (extras.length > 0) {
-    groups.push({
-      title: `Extras (${extras.length})`,
-      items: extras.map((e) => EXTRA_LABEL[e] ?? e),
-    });
-  }
 
   return groups;
 }
 
-function timeline(sel: Record<string, string | string[]>): TimelinePhase[] {
-  const urgency = (sel.urgency as string) ?? 'normal';
-  if (urgency === 'urgente') {
-    return [
-      { range: 'Semana 1',   title: 'Briefing + design', desc: 'Direção visual e wireframes aprovados.' },
-      { range: 'Semana 1–2', title: 'Construção',         desc: 'Páginas, conteúdo e integrações.' },
-      { range: 'Semana 2',   title: 'Go-live',            desc: 'Revisão final e ar.' },
-    ];
-  }
-  if (urgency === 'rapido') {
-    return [
-      { range: 'Semana 1',   title: 'Briefing + design', desc: 'Moodboard, wireframes e protótipo.' },
-      { range: 'Semana 2',   title: 'Construção',         desc: 'Todas as páginas e integrações.' },
-      { range: 'Semana 3',   title: 'Go-live',            desc: 'Revisão final, lançamento e ajustes.' },
-    ];
-  }
-  return [
-    { range: 'Semana 1',   title: 'Briefing + design', desc: 'Direção visual, wireframes e protótipo aprovados.' },
-    { range: 'Semana 2–4', title: 'Construção',         desc: 'Páginas, conteúdo, integrações e testes.' },
-    { range: 'Semana 5',   title: 'Go-live',            desc: 'Revisão final, lançamento e ajustes pós-go-live.' },
-  ];
-}
-
 function reportTitle(sel: Record<string, string | string[]>): string {
-  const type = (sel.type as string) ?? 'institucional';
-  if (type === 'landing')     return 'Sua landing de conversão';
-  if (type === 'blog')        return 'Seu site com blog';
-  if (type === 'multilingue') return 'Seu site multilíngue';
-  return 'Seu site institucional';
+  const type = (sel.type as string) ?? 'site';
+  return type === 'landing' ? 'Sua landing de conversão' : 'Seu site';
 }
 
 export const sitesPricingSchema: PricingSchema = {
   serviceTag: 'sites',
+  priceMode: 'from',
   copy: {
     eyebrow: 'Orçamento de Site',
-    revealTitle: 'Investimento estimado',
+    revealTitle: 'Investimento',
     revealSubtitle:
-      'Faixa preliminar com base nas suas escolhas. Deixe seu contato para receber a proposta detalhada e o cronograma.',
+      'Piso pra esse tipo de projeto. O valor final a gente fecha numa conversa rápida, conforme o escopo. Deixe seu contato pra receber a proposta.',
     submitLabel: 'Receber proposta',
   },
   fields: [
     {
       id: 'type',
       type: 'single',
-      label: 'Que tipo de site você precisa?',
-      hint: 'Selecione a opção que mais se aproxima do seu objetivo.',
-      default: 'institucional',
+      label: 'Landing Page ou Site?',
+      hint: 'São coisas diferentes: landing é uma página focada em conversão; site é a presença completa da empresa.',
+      default: 'site',
       options: [
-        { value: 'landing',       label: 'Landing Page',                hint: '1 página focada em conversão' },
-        { value: 'institucional', label: 'Site Institucional',          hint: 'Apresentação completa da empresa' },
-        { value: 'blog',          label: 'Site + Blog',                 hint: 'Institucional com seção de conteúdo' },
-        { value: 'multilingue',   label: 'Site Multilíngue',            hint: 'Conteúdo em 2+ idiomas' },
+        { value: 'landing', label: 'Landing Page', hint: '1 página focada em converter' },
+        { value: 'site',    label: 'Site',         hint: 'Presença completa da empresa' },
       ],
     },
     {
       id: 'size',
       type: 'single',
       label: 'Qual o tamanho?',
-      hint: 'Número estimado de páginas internas.',
+      hint: 'Número estimado de páginas (vale mais pra site; landing é 1 página).',
       default: 'medio',
       options: [
-        { value: 'pequeno', label: 'Compacto',  hint: 'até 3 páginas' },
-        { value: 'medio',   label: 'Médio',     hint: '4–7 páginas' },
-        { value: 'grande',  label: 'Grande',    hint: '8–15 páginas' },
+        { value: 'pequeno', label: 'Compacto', hint: 'até 3 páginas' },
+        { value: 'medio',   label: 'Médio',    hint: '4–7 páginas' },
+        { value: 'grande',  label: 'Grande',   hint: '8–15 páginas' },
       ],
     },
     {
-      id: 'extras',
+      id: 'needs',
       type: 'multi',
-      label: 'Quais extras você quer incluir?',
-      hint: 'Tudo opcional. Marque o que faz sentido para o projeto.',
+      label: 'O que o site precisa ter?',
+      hint: 'Marque o que faz sentido pro seu objetivo.',
       default: [],
       min: 0,
       options: [
-        { value: 'copy',       label: 'Copywriting profissional' },
-        { value: 'seo',        label: 'SEO técnico avançado' },
-        { value: 'analytics',  label: 'GA4 + Pixel + Hotjar' },
-        { value: 'whatsapp',   label: 'Integração WhatsApp' },
-        { value: 'crm',        label: 'Integração com CRM (RD, HubSpot…)' },
-        { value: 'animacoes',  label: 'Animações premium' },
+        { value: 'contato', label: 'Gerar contato com a lead' },
+        { value: 'blog',    label: 'Blog / conteúdo' },
+        { value: 'crm',     label: 'Integração com CRM' },
+        { value: 'trafego', label: 'Tráfego pra trazer visitantes' },
       ],
     },
     {
       id: 'urgency',
       type: 'single',
-      label: 'Qual o prazo?',
+      render: 'dropdown',
+      label: 'É urgente?',
+      hint: 'Só pra sabermos a prioridade — o prazo real a gente combina junto.',
       default: 'normal',
       options: [
-        { value: 'normal',  label: 'Normal',  hint: '3–5 semanas' },
-        { value: 'rapido',  label: 'Rápido',  hint: '2–3 semanas' },
-        { value: 'urgente', label: 'Urgente', hint: 'até 2 semanas' },
+        { value: 'urgente', label: 'Sim, tenho urgência' },
+        { value: 'prazo',   label: 'Tenho um prazo em mente' },
+        { value: 'normal',  label: 'Não, sem pressa' },
       ],
     },
   ],
   calc,
   inclusions,
-  timeline,
   reportTitle,
 };

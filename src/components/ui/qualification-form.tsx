@@ -347,26 +347,17 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
 
             <div className="space-y-4">
               <Field label={t('contextTimingLabel')}>
-                <div className="grid sm:grid-cols-2 gap-2">
-                  {schema.context.timings.map((tt) => {
-                    const active = data.timing === tt.id;
-                    return (
-                      <button
-                        key={tt.id}
-                        type="button"
-                        onClick={() => update('timing', tt.id)}
-                        className="text-left px-4 py-2.5 rounded-lg text-[13px] transition-all"
-                        style={{
-                          background: active ? 'rgba(59,130,246,0.08)' : 'rgba(255,255,255,0.6)',
-                          border: active ? '1.5px solid rgba(59,130,246,0.5)' : '1.5px solid rgba(25,25,24,0.10)',
-                          color: active ? '#191918' : 'rgba(25,25,24,0.65)',
-                        }}
-                      >
-                        {tt.label}
-                      </button>
-                    );
-                  })}
-                </div>
+                <select
+                  value={data.timing}
+                  onChange={(e) => update('timing', e.target.value)}
+                  className="w-full max-w-sm px-4 py-3 rounded-xl text-[14px] bg-white/70 focus:outline-none focus:border-primary/50 transition-colors appearance-none cursor-pointer"
+                  style={{ border: '1.5px solid rgba(25,25,24,0.12)' }}
+                >
+                  <option value="" disabled>{t('fieldSizeSelect')}</option>
+                  {schema.context.timings.map((tt) => (
+                    <option key={tt.id} value={tt.id}>{tt.label}</option>
+                  ))}
+                </select>
               </Field>
 
               <Field label={t('contextDescriptionLabel')}>

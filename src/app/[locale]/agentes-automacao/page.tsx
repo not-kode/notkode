@@ -199,7 +199,9 @@ export default async function AgentesAutomacaoPage({
           </Reveal>
 
           <Reveal delay={120}>
-            <AgentesPricingForm />
+            <div className="max-w-2xl mx-auto">
+              <AgentesPricingForm />
+            </div>
           </Reveal>
         </div>
       </section>

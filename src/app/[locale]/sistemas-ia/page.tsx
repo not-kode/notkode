@@ -12,7 +12,6 @@ import { FeaturedCase } from '@/components/home/featured-case';
 import { Process } from '@/components/home/process';
 import { FAQLazy as FAQ } from '@/components/sistemas-ia/faq-lazy';
 import { SistemasQualificationForm } from '@/components/sistemas-ia/sistemas-qualification-form';
-import { BrandbookCombo } from '@/components/ui/brandbook-combo';
 
 export async function generateMetadata({
   params,
@@ -69,13 +68,6 @@ export default async function SistemasIAPage({
                   {t('heroCtaPrimary')}
                   <ArrowDown className="w-4 h-4" />
                 </a>
-                <a
-                  href="#diagnostico"
-                  className="font-bricolage inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border-hairline-strong text-text-primary font-bold text-[13px] uppercase tracking-wide hover:bg-black/[0.04] transition-all duration-200"
-                >
-                  {t('heroCtaSecondary')}
-                  <ArrowDown className="w-4 h-4" />
-                </a>
               </div>
             </Reveal>
 
@@ -127,8 +119,6 @@ export default async function SistemasIAPage({
 
       {/* ── Beat 6: objeções ── */}
       <FAQ />
-
-      <BrandbookCombo companion="sistema" surface="base" />
 
       {/* ── Form de interesse ── */}
       <section id="diagnostico" className="bg-surface-elevated">

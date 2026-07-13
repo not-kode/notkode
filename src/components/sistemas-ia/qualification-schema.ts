@@ -24,10 +24,9 @@ export function getSistemasQualificationSchema(t: TFn): QualificationSchema {
       title: t('qualContextTitle'),
       subtitle: t('qualContextSubtitle'),
       timings: [
-        { id: 'imediato', label: t('qualTimingImediato') },
-        { id: '30dias',   label: t('qualTiming30dias') },
-        { id: '60dias',   label: t('qualTiming60dias') },
-        { id: 'pesquisa', label: t('qualTimingPesquisa') },
+        { id: 'urgente', label: t('qualTimingImediato') },
+        { id: 'prazo',   label: t('qualTiming30dias') },
+        { id: 'normal',  label: t('qualTimingPesquisa') },
       ],
     },
   };
