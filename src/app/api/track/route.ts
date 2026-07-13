@@ -31,7 +31,10 @@ export async function POST(req: Request) {
     service_tag: str(body.service_tag, 64),
     session_id: str(body.session_id, 64),
     locale: str(body.locale, 8),
-    referrer: str(body.referrer) ?? req.headers.get('referer'),
+    // Origem de entrada da sessão, enviada pelo cliente (analytics.tsx). NÃO usar
+    // o header Referer do beacon como fallback: ele aponta para a própria página
+    // que disparou o evento, o que mascarava toda origem externa como interna.
+    referrer: str(body.referrer),
     utm_source: str(body.utm_source, 128),
     utm_medium: str(body.utm_medium, 128),
     utm_campaign: str(body.utm_campaign, 128),

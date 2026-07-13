@@ -67,14 +67,18 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   });
 
   // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
+  // Rótulo da etapa = "Qualificação::<posição>::<nome legível>" para o dashboard mostrar
+  // qual formulário e em que etapa a pessoa parou (não só um número).
+  const FORM_NAME = 'Qualificação';
+  const STEP_NAMES = ['Necessidades', 'Contato', 'Prazo'];
   const formStarted = useRef(false);
   useEffect(() => {
     if (status === 'success') return;
     if (!formStarted.current) {
       formStarted.current = true;
-      track({ type: 'form_start', service_tag: schema.serviceTag });
+      track({ type: 'form_start', service_tag: schema.serviceTag, label: FORM_NAME });
     }
-    track({ type: 'form_step', service_tag: schema.serviceTag, label: String(step + 1) });
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: `${FORM_NAME}::${step + 1}::${STEP_NAMES[step] ?? String(step + 1)}` });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
@@ -108,7 +112,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
     } catch {
       // MVP: fire-and-forget
     }
-    track({ type: 'form_submit', service_tag: schema.serviceTag });
+    track({ type: 'form_submit', service_tag: schema.serviceTag, label: FORM_NAME });
     setStatus('success');
   };
 

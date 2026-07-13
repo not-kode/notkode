@@ -190,14 +190,18 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   const [min, max] = useMemo(() => schema.calc(selection), [selection, schema]);
 
   // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
+  // Rótulo da etapa = "Orçamento::<posição>::<nome legível>" para o dashboard mostrar
+  // qual formulário e em que etapa a pessoa parou (não só um número).
+  const FORM_NAME = 'Orçamento';
+  const stepName = (i: number) => (i < schema.fields.length ? schema.fields[i].label : 'Identificação');
   const formStarted = useRef(false);
   useEffect(() => {
     if (status === 'success') return;
     if (!formStarted.current) {
       formStarted.current = true;
-      track({ type: 'form_start', service_tag: schema.serviceTag });
+      track({ type: 'form_start', service_tag: schema.serviceTag, label: FORM_NAME });
     }
-    track({ type: 'form_step', service_tag: schema.serviceTag, label: String(step + 1) });
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: `${FORM_NAME}::${step + 1}::${stepName(step)}` });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
@@ -269,7 +273,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
     } catch {
       // MVP: fire-and-forget
     }
-    track({ type: 'form_submit', service_tag: schema.serviceTag });
+    track({ type: 'form_submit', service_tag: schema.serviceTag, label: FORM_NAME });
     setStatus('success');
   };
 

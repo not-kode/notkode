@@ -10,6 +10,7 @@ import { useEffect, useRef } from 'react';
 
 const SID_KEY = 'nk_sid';
 const UTM_KEY = 'nk_utm';
+const REF_KEY = 'nk_ref';
 const UTM_FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
 
 function sessionId(): string {
@@ -49,10 +50,34 @@ export function getUtm(): Record<string, string> {
   return capturedUtm();
 }
 
+// Referrer de ENTRADA da sessão: captura uma única vez o document.referrer da
+// chegada, ignorando navegação interna (mesmo host). Persistido em sessionStorage
+// para que os page_views seguintes mantenham a origem externa real (Google, Instagram, …)
+// em vez do header Referer do beacon, que aponta sempre para a página atual do site.
+function entryReferrer(): string {
+  try {
+    const stored = sessionStorage.getItem(REF_KEY);
+    if (stored !== null) return stored;
+    let entry = '';
+    const ref = document.referrer || '';
+    if (ref) {
+      try {
+        if (new URL(ref).host !== window.location.host) entry = ref;
+      } catch {
+        /* referrer malformado → trata como direto */
+      }
+    }
+    sessionStorage.setItem(REF_KEY, entry);
+    return entry;
+  } catch {
+    return '';
+  }
+}
+
 /** Dispara um evento de tracking. Exportado para os formulários marcarem form_submit. */
 export function track(payload: { type: 'page_view' | 'cta_click' | 'form_start' | 'form_step' | 'form_submit'; page?: string; label?: string | null; service_tag?: string | null; locale?: string | null }) {
   try {
-    const body = JSON.stringify({ ...payload, session_id: sessionId(), ...capturedUtm() });
+    const body = JSON.stringify({ ...payload, session_id: sessionId(), referrer: entryReferrer(), ...capturedUtm() });
     const blob = new Blob([body], { type: 'application/json' });
     if (navigator.sendBeacon?.('/api/track', blob)) return;
     void fetch('/api/track', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {});
