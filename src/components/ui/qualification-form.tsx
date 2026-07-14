@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { track, getUtm } from '@/components/analytics';
+import { track, getUtm, saveLeadDraft } from '@/components/analytics';
 
 export type QualificationOption = { id: string; label: string };
 
@@ -82,6 +82,29 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  // Captura progressiva: salva o rascunho conforme a pessoa preenche (só com algum contato).
+  useEffect(() => {
+    if (status === 'success') return;
+    const hasContact = data.name.trim() || data.email.trim() || data.whatsapp.replace(/\D/g, '').length > 0;
+    if (!hasContact) return;
+    const id = setTimeout(() => {
+      saveLeadDraft({
+        service_tag: schema.serviceTag,
+        kind: 'qualification',
+        name: data.name,
+        company: data.company,
+        email: data.email,
+        whatsapp: data.whatsapp,
+        needs: data.needs,
+        timing: data.timing,
+        description: data.description,
+        last_step: STEP_NAMES[step] ?? String(step + 1),
+      });
+    }, 900);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, step, status]);
+
   const update = <K extends keyof FormData>(key: K, val: FormData[K]) =>
     setData((d) => ({ ...d, [key]: val }));
 
@@ -113,6 +136,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
       // MVP: fire-and-forget
     }
     track({ type: 'form_submit', service_tag: schema.serviceTag, label: FORM_NAME });
+    saveLeadDraft({ submitted: true });
     setStatus('success');
   };
 

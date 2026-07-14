@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle, Sparkles } from 'lucide-react';
-import { track, getUtm } from '@/components/analytics';
+import { track, getUtm, saveLeadDraft } from '@/components/analytics';
 
 // ── Schema types ──────────────────────────────────────────────────────────
 
@@ -215,6 +215,27 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  // Captura progressiva: salva o rascunho conforme a pessoa preenche (só com algum contato).
+  useEffect(() => {
+    if (status === 'success') return;
+    const hasContact = name.trim() || email.trim() || whatsapp.replace(/\D/g, '').length > 0;
+    if (!hasContact) return;
+    const id = setTimeout(() => {
+      saveLeadDraft({
+        service_tag: schema.serviceTag,
+        kind: 'pricing',
+        name,
+        company,
+        email,
+        whatsapp,
+        description: notes,
+        last_step: stepName(step),
+      });
+    }, 900);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, company, email, whatsapp, notes, step, status]);
+
   const setSingle = (fieldId: string, value: string) =>
     setSelection((prev) => ({ ...prev, [fieldId]: value }));
 
@@ -284,6 +305,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       // MVP: fire-and-forget
     }
     track({ type: 'form_submit', service_tag: schema.serviceTag, label: FORM_NAME });
+    saveLeadDraft({ submitted: true });
     setStatus('success');
   };
 

@@ -50,6 +50,39 @@ export function getUtm(): Record<string, string> {
   return capturedUtm();
 }
 
+/** Id efêmero da sessão (não-PII). Para casar rascunho ↔ envio do formulário. */
+export function getSessionId(): string {
+  return sessionId();
+}
+
+/**
+ * Salva/atualiza o RASCUNHO do formulário (captura progressiva): quem começou a
+ * preencher mas ainda não enviou. First-party, via sendBeacon. À prova de falhas.
+ * `submitted: true` marca que o envio de verdade aconteceu (sai da lista de abandonados).
+ */
+export function saveLeadDraft(payload: {
+  service_tag?: string | null;
+  kind?: string | null;
+  name?: string;
+  company?: string;
+  email?: string;
+  whatsapp?: string;
+  needs?: string[];
+  timing?: string;
+  description?: string;
+  last_step?: string | null;
+  submitted?: boolean;
+}) {
+  try {
+    const body = JSON.stringify({ ...payload, session_id: sessionId(), ...capturedUtm() });
+    const blob = new Blob([body], { type: 'application/json' });
+    if (navigator.sendBeacon?.('/api/lead/draft', blob)) return;
+    void fetch('/api/lead/draft', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {});
+  } catch {
+    /* noop */
+  }
+}
+
 // Referrer de ENTRADA da sessão: captura uma única vez o document.referrer da
 // chegada, ignorando navegação interna (mesmo host). Persistido em sessionStorage
 // para que os page_views seguintes mantenham a origem externa real (Google, Instagram, …)

@@ -40,15 +40,33 @@ function needs(selection: Record<string, unknown> | null): string {
   return Array.isArray(n) && n.length ? n.join(', ') : '—';
 }
 
+type DraftRow = {
+  session_id: string;
+  service_tag: string | null;
+  name: string | null;
+  company: string | null;
+  email: string | null;
+  whatsapp: string | null;
+  last_step: string | null;
+  updated_at: string;
+};
+
+const waLink = (whatsapp: string) => `https://wa.me/55${whatsapp.replace(/\D/g, '')}`;
+
 export default async function LeadsPage() {
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from('lead_submissions')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const [{ data, error }, { data: draftData }] = await Promise.all([
+    supabase.from('lead_submissions').select('*').order('created_at', { ascending: false }),
+    supabase
+      .from('lead_drafts')
+      .select('session_id, service_tag, name, company, email, whatsapp, last_step, updated_at')
+      .is('submitted_at', null)
+      .order('updated_at', { ascending: false }),
+  ]);
 
   const leads = (data ?? []) as LeadRow[];
   const pending = leads.filter((l) => !l.promoted_at).length;
+  const drafts = (draftData ?? []) as DraftRow[];
 
   return (
     <div>
@@ -65,6 +83,60 @@ export default async function LeadsPage() {
         <p className="rounded-md border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
           Erro ao carregar leads: {error.message}
         </p>
+      )}
+
+      {/* Começaram a preencher (já deixaram contato) mas não enviaram. Dá pra correr atrás. */}
+      {drafts.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-text-primary">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-warning" />
+            Começaram e não enviaram ({drafts.length})
+          </h2>
+          <p className="mb-3 text-xs text-text-muted">
+            Preencheram parte do formulário e deixaram um contato, mas não finalizaram. Dá pra chamar no WhatsApp.
+          </p>
+          <div className="overflow-x-auto rounded-md border border-warning/25 bg-warning/[0.03]">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                  <th className="px-4 py-3 font-medium">Última atividade</th>
+                  <th className="px-4 py-3 font-medium">Contato</th>
+                  <th className="px-4 py-3 font-medium">Serviço</th>
+                  <th className="px-4 py-3 font-medium">Parou em</th>
+                  <th className="px-4 py-3 font-medium">Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {drafts.map((d) => (
+                  <tr key={d.session_id} className="border-b border-border-subtle/10 align-top last:border-0">
+                    <td className="whitespace-nowrap px-4 py-3 text-text-muted">{fmtDate(d.updated_at)}</td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-text-primary">{d.name ?? '—'}{d.company ? ` · ${d.company}` : ''}</div>
+                      {d.email && <div className="text-xs text-text-muted">{d.email}</div>}
+                      {d.whatsapp && <div className="text-xs text-text-muted">{d.whatsapp}</div>}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{d.service_tag ?? '—'}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{d.last_step ?? '—'}</td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      {d.whatsapp ? (
+                        <a
+                          href={waLink(d.whatsapp)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-md bg-[#25D366] px-3 py-1.5 text-xs font-medium text-white transition hover:brightness-95"
+                        >
+                          WhatsApp
+                        </a>
+                      ) : (
+                        <span className="text-xs text-text-muted">sem whats</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       {!error && leads.length === 0 && (
