@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { track, getUtm, saveLeadDraft } from '@/components/analytics';
+import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analytics';
 
 export type QualificationOption = { id: string; label: string };
 
@@ -130,6 +130,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           kind: 'qualification',
           data,
           utm: getUtm(),
+          session_id: getSessionId(),
         }),
       });
     } catch {

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { promoteLead } from './actions';
 
@@ -16,6 +17,7 @@ type LeadRow = {
   estimated_min: number | null;
   estimated_max: number | null;
   promoted_at: string | null;
+  session_id: string | null;
 };
 
 function fmtDate(iso: string): string {
@@ -67,6 +69,17 @@ export default async function LeadsPage() {
   const leads = (data ?? []) as LeadRow[];
   const pending = leads.filter((l) => !l.promoted_at).length;
   const drafts = (draftData ?? []) as DraftRow[];
+
+  // Quais leads têm gravação de sessão disponível (pra mostrar o "ver gravação").
+  const sessionIds = leads.map((l) => l.session_id).filter((s): s is string => !!s);
+  const recorded = new Set<string>();
+  if (sessionIds.length > 0) {
+    const { data: recData } = await supabase
+      .from('session_recordings')
+      .select('session_id')
+      .in('session_id', sessionIds);
+    for (const r of (recData ?? []) as { session_id: string }[]) recorded.add(r.session_id);
+  }
 
   return (
     <div>
@@ -166,6 +179,14 @@ export default async function LeadsPage() {
                     <div className="font-medium text-text-primary">{lead.name ?? '—'}</div>
                     {lead.email && <div className="text-xs text-text-muted">{lead.email}</div>}
                     {lead.whatsapp && <div className="text-xs text-text-muted">{lead.whatsapp}</div>}
+                    {lead.session_id && recorded.has(lead.session_id) && (
+                      <Link
+                        href={`/admin/sessoes/${lead.session_id}`}
+                        className="mt-1 inline-flex items-center gap-1 font-label text-[10px] text-primary transition-colors hover:underline"
+                      >
+                        ▶ ver gravação
+                      </Link>
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{lead.service_tag ?? '—'}</td>
                   <td className="max-w-[200px] px-4 py-3 text-text-secondary">{needs(lead.selection)}</td>

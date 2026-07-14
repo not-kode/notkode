@@ -43,6 +43,7 @@ type NormalizedLead = {
   selection: Record<string, string | string[]> | null;
   estimated_min: number | null;
   estimated_max: number | null;
+  session_id: string | null;
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
@@ -67,6 +68,8 @@ function normalize(
   pageOrigin: string | null
 ): NormalizedLead | null {
   const utm = pickUtm((body as { utm?: unknown }).utm);
+  const sidRaw = (body as { session_id?: unknown }).session_id;
+  const session_id = typeof sidRaw === 'string' && sidRaw.trim() ? sidRaw.trim().slice(0, 64) : null;
   if ('kind' in body && body.kind === 'qualification') {
     const d = body.data;
     if (!d?.name || !d?.email || !d?.whatsapp) return null;
@@ -86,6 +89,7 @@ function normalize(
       selection,
       estimated_min: null,
       estimated_max: null,
+      session_id,
       ...utm,
     };
   }
@@ -107,6 +111,7 @@ function normalize(
     selection,
     estimated_min: typeof min === 'number' ? min : null,
     estimated_max: typeof max === 'number' ? max : null,
+    session_id,
     ...utm,
   };
 }

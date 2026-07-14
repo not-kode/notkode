@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle, Sparkles } from 'lucide-react';
-import { track, getUtm, saveLeadDraft } from '@/components/analytics';
+import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analytics';
 
 // ── Schema types ──────────────────────────────────────────────────────────
 
@@ -294,6 +294,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       estimatedRange: [min, max],
       lead: { name, whatsapp, email, notes, company },
       utm: getUtm(),
+      session_id: getSessionId(),
     };
     try {
       await fetch('/api/lead', {
