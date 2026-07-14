@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation';
 
 const NAV = [
   { href: '/admin', label: 'Visão geral', exact: true },
-  { href: '/admin/leads', label: 'Leads' },
-  { href: '/admin/sessoes', label: 'Sessões' },
   { href: '/admin/pipeline', label: 'Pipeline' },
+  { href: '/admin/leads', label: 'Leads' },
+  { href: '/admin/financeiro', label: 'Financeiro' },
   { href: '/admin/clientes', label: 'Clientes' },
   { href: '/admin/onboarding', label: 'Onboarding' },
-  { href: '/admin/financeiro', label: 'Financeiro' },
+  { href: '/admin/sessoes', label: 'Sessões' },
 ];
 
 export function AdminNav() {
