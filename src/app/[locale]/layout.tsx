@@ -7,6 +7,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { LangSync } from '@/components/layout/lang-sync';
 import { Analytics } from '@/components/analytics';
+import { SessionRecorder } from '@/components/session-recorder';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -46,6 +47,7 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <LangSync locale={locale} />
       <Analytics />
+      <SessionRecorder />
       <Header />
       <main className="overflow-x-clip">{children}</main>
       <Footer />
