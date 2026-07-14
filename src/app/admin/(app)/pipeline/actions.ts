@@ -227,7 +227,7 @@ export async function winDeal(formData: FormData): Promise<void> {
   const supabase = getSupabaseAdmin();
   const { data: deal } = await supabase
     .from('deals')
-    .select('id, organization_id, service_tag, valor_pontual, mrr, notes')
+    .select('id, organization_id, service_tag, valor_pontual, mrr, notes, proposal_path, proposal_name')
     .eq('id', id)
     .single();
   if (!deal) return;
@@ -237,14 +237,17 @@ export async function winDeal(formData: FormData): Promise<void> {
     .update({ stage: 'ganho', updated_at: new Date().toISOString() })
     .eq('id', id);
 
-  // Cria o contrato só se ainda não houver um vinculado a este negócio.
+  // Descobre (ou cria) o contrato vinculado a este negócio.
+  let engagementId: string | null = null;
   const { data: existing } = await supabase
     .from('deal_engagements')
     .select('engagement_id')
     .eq('deal_id', id)
     .limit(1);
 
-  if (!existing || existing.length === 0) {
+  if (existing && existing.length > 0) {
+    engagementId = existing[0].engagement_id;
+  } else {
     // Se a empresa já tem um contrato "de verdade" (com escopo ou proposta
     // anexada), liga o negócio a ESSE — evita criar um contrato-fantasma vazio.
     const { data: contratos } = await supabase
@@ -256,9 +259,8 @@ export async function winDeal(formData: FormData): Promise<void> {
       .limit(1);
 
     if (contratos && contratos.length > 0) {
-      await supabase
-        .from('deal_engagements')
-        .insert({ deal_id: id, engagement_id: contratos[0].id });
+      engagementId = contratos[0].id;
+      await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: engagementId });
     } else {
       // Nenhum contrato existente — cria o esboço herdando valor/MRR do deal.
       const isRecurring = Number(deal.mrr ?? 0) > 0;
@@ -277,11 +279,117 @@ export async function winDeal(formData: FormData): Promise<void> {
         .select('id')
         .single();
       if (eng) {
+        engagementId = eng.id;
         await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: eng.id });
+      }
+    }
+  }
+
+  // Leva a proposta e as parcelas do negócio para o contrato recém-vinculado.
+  if (engagementId) {
+    // Proposta: só copia se o contrato ainda não tiver uma anexada.
+    if (deal.proposal_path) {
+      const { data: eng } = await supabase
+        .from('engagements')
+        .select('proposal_path')
+        .eq('id', engagementId)
+        .single();
+      if (!eng?.proposal_path) {
+        await supabase
+          .from('engagements')
+          .update({ proposal_path: deal.proposal_path, proposal_name: deal.proposal_name, updated_at: new Date().toISOString() })
+          .eq('id', engagementId);
+      }
+    }
+
+    // Parcelas: só copia se o contrato ainda não tiver nenhuma (evita duplicar).
+    const { count } = await supabase
+      .from('receivables')
+      .select('id', { count: 'exact', head: true })
+      .eq('engagement_id', engagementId);
+    if (!count) {
+      const { data: parcelas } = await supabase
+        .from('deal_installments')
+        .select('description, amount, due_date')
+        .eq('deal_id', id)
+        .order('due_date', { ascending: true });
+      if (parcelas && parcelas.length > 0) {
+        await supabase.from('receivables').insert(
+          parcelas.map((p) => ({
+            description: p.description,
+            amount: p.amount,
+            due_date: p.due_date,
+            engagement_id: engagementId,
+            organization_id: deal.organization_id,
+            status: 'pendente',
+          })),
+        );
       }
     }
   }
 
   revalidatePath('/admin/pipeline');
   revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
+}
+
+/** Sobe o arquivo da proposta enviada e vincula ao NEGÓCIO (bucket privado 'propostas'). */
+export async function uploadDealProposal(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  const file = formData.get('file');
+  if (!id || !(file instanceof File) || file.size === 0) return;
+
+  const supabase = getSupabaseAdmin();
+  const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+  const path = `deal/${id}/${Date.now()}.${ext}`;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  const { error } = await supabase.storage.from('propostas').upload(path, bytes, {
+    contentType: file.type || 'application/octet-stream',
+    upsert: true,
+  });
+  if (error) throw new Error(`Falha no upload: ${error.message}`);
+
+  await supabase
+    .from('deals')
+    .update({ proposal_path: path, proposal_name: file.name, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  revalidatePath('/admin/pipeline');
+}
+
+/** Remove a proposta anexada ao negócio. */
+export async function removeDealProposal(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase.from('deals').select('proposal_path').eq('id', id).single();
+  if (data?.proposal_path) await supabase.storage.from('propostas').remove([data.proposal_path]);
+  await supabase
+    .from('deals')
+    .update({ proposal_path: null, proposal_name: null, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  revalidatePath('/admin/pipeline');
+}
+
+/** Lança uma parcela planejada do negócio (vira receivable do contrato ao ganhar). */
+export async function addDealInstallment(formData: FormData): Promise<void> {
+  const deal_id = String(formData.get('deal_id') ?? '');
+  const due_date = String(formData.get('due_date') ?? '');
+  const amount = parseValor(formData.get('amount'));
+  if (!deal_id || !due_date || amount <= 0) return;
+
+  const description = String(formData.get('description') ?? '').trim() || null;
+
+  const supabase = getSupabaseAdmin();
+  await supabase.from('deal_installments').insert({ deal_id, description, amount, due_date });
+  revalidatePath('/admin/pipeline');
+}
+
+/** Remove uma parcela planejada do negócio. */
+export async function deleteDealInstallment(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  const supabase = getSupabaseAdmin();
+  await supabase.from('deal_installments').delete().eq('id', id);
+  revalidatePath('/admin/pipeline');
 }

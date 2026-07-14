@@ -20,6 +20,13 @@ export type OrgInfo = {
   legal_rep: string | null;
 };
 
+export type DealInstallment = {
+  id: string;
+  description: string | null;
+  amount: number;
+  due_date: string;
+};
+
 export type BoardDeal = {
   id: string;
   stage: DealStage;
@@ -35,6 +42,9 @@ export type BoardDeal = {
   email: string | null;
   whatsapp: string | null;
   org: OrgInfo | null;
+  proposal_path: string | null;
+  proposal_name: string | null;
+  installments: DealInstallment[];
 };
 
 // Filete de acento no topo de cada coluna — segue a paleta da marca.
@@ -169,6 +179,17 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
                     <div className="mt-2 space-y-0.5 border-t border-black/[0.06] pt-2">
                       {deal.email && <p className="truncate font-label text-[10px] text-text-muted">{deal.email}</p>}
                       {deal.whatsapp && <p className="font-label text-[10px] text-text-muted">{deal.whatsapp}</p>}
+                    </div>
+                  )}
+
+                  {(deal.proposal_path || deal.installments.length > 0) && (
+                    <div className="mt-2 flex items-center gap-2 font-label text-[10px] text-text-muted">
+                      {deal.proposal_path && <span title="Proposta anexada">📎 proposta</span>}
+                      {deal.installments.length > 0 && (
+                        <span title="Parcelas lançadas">
+                          {deal.installments.length}x parcela{deal.installments.length === 1 ? '' : 's'}
+                        </span>
+                      )}
                     </div>
                   )}
                 </article>

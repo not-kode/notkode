@@ -1,12 +1,25 @@
 'use client';
 
 import { useTransition } from 'react';
-import { createDeal, updateDeal, winDeal } from './actions';
+import {
+  createDeal,
+  updateDeal,
+  winDeal,
+  uploadDealProposal,
+  removeDealProposal,
+  addDealInstallment,
+  deleteDealInstallment,
+} from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS } from './stages';
 import type { BoardDeal } from './board';
 
 const brl = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+
+const fmtDate = (d: string) => {
+  const [y, m, day] = d.split('-');
+  return `${day}/${m}/${y}`;
+};
 
 const inputCls =
   'w-full rounded-md border border-black/[0.08] bg-white px-2.5 py-1.5 text-sm text-text-primary ' +
@@ -239,7 +252,116 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal | null; onClose:
             {savePending ? (isNew ? 'Criando…' : 'Salvando…') : isNew ? 'Criar negócio' : 'Salvar'}
           </button>
         </form>
+
+        {/* Proposta e parcelas exigem o negócio já salvo (precisam do id). */}
+        {isNew ? (
+          <p className="border-t border-black/[0.06] px-5 py-4 font-label text-[11px] text-text-muted">
+            Salve o negócio para anexar a proposta e lançar as parcelas.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-5 border-t border-black/[0.06] px-5 py-4">
+            <ProposalSection deal={deal!} />
+            <InstallmentsSection deal={deal!} />
+          </div>
+        )}
       </aside>
     </div>
+  );
+}
+
+/** Proposta enviada, anexada ao negócio (bucket privado, aberta por URL assinada). */
+function ProposalSection({ deal }: { deal: BoardDeal }) {
+  return (
+    <section>
+      <p className="mb-2 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Proposta enviada</p>
+      {deal.proposal_path ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href={`/admin/proposta/deal/${deal.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-md bg-black/[0.04] px-2.5 py-1.5 font-label text-[11px] uppercase tracking-wider text-text-secondary transition hover:text-primary"
+          >
+            📎 Ver proposta
+          </a>
+          {deal.proposal_name && (
+            <span className="max-w-[10rem] truncate font-label text-[10px] text-text-muted">{deal.proposal_name}</span>
+          )}
+          <form action={removeDealProposal}>
+            <input type="hidden" name="id" value={deal.id} />
+            <button type="submit" className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger">
+              remover
+            </button>
+          </form>
+        </div>
+      ) : (
+        <form action={uploadDealProposal} className="flex items-center gap-2">
+          <input type="hidden" name="id" value={deal.id} />
+          <input
+            type="file"
+            name="file"
+            accept=".pdf,.html,.htm,application/pdf,text/html"
+            required
+            className="min-w-0 flex-1 text-[11px] file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-[10px] file:font-medium file:text-primary"
+          />
+          <button
+            type="submit"
+            className="shrink-0 rounded-md border border-black/[0.1] px-2.5 py-1.5 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary"
+          >
+            anexar
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}
+
+/** Parcelas planejadas do negócio. Ao ganhar, viram as cobranças do contrato (financeiro). */
+function InstallmentsSection({ deal }: { deal: BoardDeal }) {
+  const total = deal.installments.reduce((s, p) => s + p.amount, 0);
+
+  return (
+    <section>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">
+          Parcelas do negócio ({deal.installments.length})
+        </p>
+        {total > 0 && <span className="font-label text-[10px] text-text-muted">{brl(total)}</span>}
+      </div>
+
+      {deal.installments.length > 0 && (
+        <ul className="mb-2 flex flex-col gap-1">
+          {deal.installments.map((p) => (
+            <li key={p.id} className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-text-secondary">
+                {p.description ?? 'Parcela'} <span className="text-text-muted">· {fmtDate(p.due_date)} · {brl(p.amount)}</span>
+              </span>
+              <form action={deleteDealInstallment}>
+                <input type="hidden" name="id" value={p.id} />
+                <button type="submit" className="shrink-0 font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger">
+                  remover
+                </button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <form action={addDealInstallment} className="flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2.5">
+        <input type="hidden" name="deal_id" value={deal.id} />
+        <input name="description" className={inputCls} placeholder="Descrição — ex: Entrada, 1ª parcela" />
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <input name="amount" inputMode="decimal" required className={inputCls} placeholder="Valor (R$)" />
+          <input name="due_date" type="date" required className={inputCls} />
+          <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90">
+            + Add
+          </button>
+        </div>
+      </form>
+
+      <p className="mt-1.5 font-label text-[10px] text-text-muted">
+        À vista? Lance uma parcela só. Ao ganhar o negócio, elas viram as cobranças do contrato no financeiro.
+      </p>
+    </section>
   );
 }

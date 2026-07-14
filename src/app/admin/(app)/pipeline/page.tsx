@@ -30,8 +30,11 @@ type DealRow = {
   mrr: number | null;
   notes: string | null;
   organization_id: string | null;
+  proposal_path: string | null;
+  proposal_name: string | null;
   contacts: { id: string; name: string | null; contact_channels: Channel[] | null } | null;
   organizations: OrgRow | null;
+  deal_installments: { id: string; description: string | null; amount: number; due_date: string }[] | null;
 };
 
 const brl = (n: number) =>
@@ -47,9 +50,10 @@ export default async function PipelinePage() {
   const { data, error } = await supabase
     .from('deals')
     .select(
-      'id, stage, service_tag, service_tags, source, valor_pontual, mrr, notes, organization_id, ' +
+      'id, stage, service_tag, service_tags, source, valor_pontual, mrr, notes, organization_id, proposal_path, proposal_name, ' +
         'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
-        'organizations(id, name, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep)',
+        'organizations(id, name, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep), ' +
+        'deal_installments(id, description, amount, due_date)',
     )
     .order('created_at', { ascending: false });
 
@@ -69,6 +73,9 @@ export default async function PipelinePage() {
     email: pick(r.contacts?.contact_channels ?? null, 'email'),
     whatsapp: pick(r.contacts?.contact_channels ?? null, 'whatsapp'),
     org: r.organizations ?? null,
+    proposal_path: r.proposal_path,
+    proposal_name: r.proposal_name,
+    installments: [...(r.deal_installments ?? [])].sort((a, b) => a.due_date.localeCompare(b.due_date)),
   }));
 
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');
