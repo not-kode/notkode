@@ -112,7 +112,8 @@ export function StackedShowcase({ slides }: { slides: StackSlide[] }) {
               }`}
               style={style}
             >
-              <BrowserCard slide={s} />
+              {/* priority só no slide da frente: evita pré-carregar todos os webps de uma vez */}
+              <BrowserCard slide={s} priority={isActive} />
             </button>
           );
         })}
@@ -151,7 +152,7 @@ export function StackedShowcase({ slides }: { slides: StackSlide[] }) {
   );
 }
 
-function BrowserCard({ slide }: { slide: StackSlide }) {
+function BrowserCard({ slide, priority = false }: { slide: StackSlide; priority?: boolean }) {
   return (
     <div
       className="relative rounded-2xl overflow-hidden h-full"
@@ -197,7 +198,8 @@ function BrowserCard({ slide }: { slide: StackSlide }) {
           fill
           sizes="(max-width: 640px) 100vw, 800px"
           className="object-cover object-top"
-          priority
+          priority={priority}
+          loading={priority ? undefined : 'lazy'}
         />
       </div>
     </div>
