@@ -22,10 +22,18 @@ function parseValor(raw: FormDataEntryValue | null): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** Normaliza o service_tag vindo do form: só aceita as chaves conhecidas. */
-function normalizeService(raw: FormDataEntryValue | null): string | null {
-  const s = String(raw ?? '').trim();
-  return (SERVICE_TAGS as readonly string[]).includes(s) ? s : null;
+/** Normaliza a lista de produtos/serviços do form: só chaves conhecidas, sem repetição. */
+function normalizeServices(raw: FormDataEntryValue[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const r of raw) {
+    const s = String(r).trim();
+    if ((SERVICE_TAGS as readonly string[]).includes(s) && !seen.has(s)) {
+      seen.add(s);
+      out.push(s);
+    }
+  }
+  return out;
 }
 
 /**
@@ -69,7 +77,7 @@ export async function createDeal(formData: FormData): Promise<void> {
   const email = String(formData.get('email') ?? '').trim();
   const whatsapp = String(formData.get('whatsapp') ?? '').trim();
   const notes = String(formData.get('notes') ?? '').trim() || null;
-  const service_tag = normalizeService(formData.get('service_tag'));
+  const services = normalizeServices(formData.getAll('service_tag'));
 
   const stageRaw = String(formData.get('stage') ?? 'novo').trim();
   const stage = DEAL_STAGES.includes(stageRaw as DealStage) ? stageRaw : 'novo';
@@ -113,7 +121,8 @@ export async function createDeal(formData: FormData): Promise<void> {
     contact_id: contactId,
     stage,
     source: 'manual',
-    service_tag,
+    service_tag: services[0] ?? null,
+    service_tags: services,
     valor_pontual: valor,
     notes,
   });
@@ -190,7 +199,12 @@ export async function updateDeal(formData: FormData): Promise<void> {
 
   const valorRaw = formData.get('valor_pontual');
   if (valorRaw != null) patch.valor_pontual = parseValor(valorRaw);
-  if (formData.has('service_tag')) patch.service_tag = normalizeService(formData.get('service_tag'));
+  // O form sempre manda o marcador; assim conseguimos zerar os serviços se nada estiver marcado.
+  if (formData.has('service_tags_present')) {
+    const services = normalizeServices(formData.getAll('service_tag'));
+    patch.service_tags = services;
+    patch.service_tag = services[0] ?? null;
+  }
 
   const stageRaw = String(formData.get('stage') ?? '').trim();
   if (DEAL_STAGES.includes(stageRaw as DealStage)) patch.stage = stageRaw;

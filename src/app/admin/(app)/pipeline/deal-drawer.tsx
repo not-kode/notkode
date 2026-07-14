@@ -180,15 +180,25 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal | null; onClose:
           </div>
 
           <div>
-            <label className={labelCls}>Produto / serviço</label>
-            <select name="service_tag" defaultValue={deal?.service_tag ?? ''} className={inputCls}>
-              <option value="">—</option>
+            <label className={labelCls}>Produto / serviço (pode marcar mais de um)</label>
+            <input type="hidden" name="service_tags_present" value="1" />
+            <div className="grid grid-cols-2 gap-1.5">
               {SERVICE_TAGS.map((s) => (
-                <option key={s} value={s}>
+                <label
+                  key={s}
+                  className="flex cursor-pointer items-center gap-2 rounded-md border border-black/[0.08] px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:border-primary/40 has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.05] has-[:checked]:text-text-primary"
+                >
+                  <input
+                    type="checkbox"
+                    name="service_tag"
+                    value={s}
+                    defaultChecked={deal?.service_tags?.includes(s) ?? false}
+                    className="h-3.5 w-3.5 accent-primary"
+                  />
                   {SERVICE_LABELS[s]}
-                </option>
+                </label>
               ))}
-            </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

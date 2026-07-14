@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { moveDealStage } from './actions';
-import { PIPELINE_STAGES, STAGE_LABELS, type DealStage } from './stages';
+import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_LABELS, type DealStage } from './stages';
 import { DealDrawer } from './deal-drawer';
 
 export type OrgInfo = {
@@ -24,6 +24,7 @@ export type BoardDeal = {
   id: string;
   stage: DealStage;
   service_tag: string | null;
+  service_tags: string[];
   source: string | null;
   valor_pontual: number | null;
   mrr: number | null;
@@ -151,10 +152,17 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
                     <p className="mt-0.5 font-label text-[11px] text-text-muted">{deal.name}</p>
                   )}
 
-                  {deal.service_tag && (
-                    <span className="mt-1.5 inline-block rounded-full border border-black/[0.08] bg-black/[0.02] px-2 py-0.5 font-label text-[10px] uppercase tracking-wider text-text-secondary">
-                      {deal.service_tag}
-                    </span>
+                  {deal.service_tags.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {deal.service_tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-block rounded-full border border-black/[0.08] bg-black/[0.02] px-2 py-0.5 font-label text-[10px] uppercase tracking-wider text-text-secondary"
+                        >
+                          {SERVICE_LABELS[tag as keyof typeof SERVICE_LABELS] ?? tag}
+                        </span>
+                      ))}
+                    </div>
                   )}
 
                   {(deal.email || deal.whatsapp) && (

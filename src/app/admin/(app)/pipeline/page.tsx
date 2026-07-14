@@ -24,6 +24,7 @@ type DealRow = {
   id: string;
   stage: DealStage;
   service_tag: string | null;
+  service_tags: string[] | null;
   source: string | null;
   valor_pontual: number | null;
   mrr: number | null;
@@ -46,7 +47,7 @@ export default async function PipelinePage() {
   const { data, error } = await supabase
     .from('deals')
     .select(
-      'id, stage, service_tag, source, valor_pontual, mrr, notes, organization_id, ' +
+      'id, stage, service_tag, service_tags, source, valor_pontual, mrr, notes, organization_id, ' +
         'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
         'organizations(id, name, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep)',
     )
@@ -57,6 +58,7 @@ export default async function PipelinePage() {
     id: r.id,
     stage: r.stage,
     service_tag: r.service_tag,
+    service_tags: r.service_tags ?? [],
     source: r.source,
     valor_pontual: r.valor_pontual,
     mrr: r.mrr,
