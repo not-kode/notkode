@@ -29,7 +29,7 @@ type DealRow = {
   mrr: number | null;
   notes: string | null;
   organization_id: string | null;
-  contacts: { name: string | null; contact_channels: Channel[] | null } | null;
+  contacts: { id: string; name: string | null; contact_channels: Channel[] | null } | null;
   organizations: OrgRow | null;
 };
 
@@ -47,7 +47,7 @@ export default async function PipelinePage() {
     .from('deals')
     .select(
       'id, stage, service_tag, source, valor_pontual, mrr, notes, organization_id, ' +
-        'contacts(name, contact_channels(kind, value, is_primary)), ' +
+        'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
         'organizations(id, name, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep)',
     )
     .order('created_at', { ascending: false });
@@ -62,6 +62,7 @@ export default async function PipelinePage() {
     mrr: r.mrr,
     notes: r.notes,
     organization_id: r.organization_id,
+    contact_id: r.contacts?.id ?? null,
     name: r.contacts?.name ?? null,
     email: pick(r.contacts?.contact_channels ?? null, 'email'),
     whatsapp: pick(r.contacts?.contact_channels ?? null, 'whatsapp'),

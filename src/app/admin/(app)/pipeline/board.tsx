@@ -29,6 +29,7 @@ export type BoardDeal = {
   mrr: number | null;
   notes: string | null;
   organization_id: string | null;
+  contact_id: string | null;
   name: string | null;
   email: string | null;
   whatsapp: string | null;
@@ -136,13 +137,19 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
                   ].join(' ')}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-medium leading-tight text-text-primary">{deal.name ?? 'Sem contato'}</span>
+                    <span className="font-medium leading-tight text-text-primary">
+                      {deal.org?.name ?? deal.name ?? 'Sem nome'}
+                    </span>
                     {deal.valor_pontual ? (
                       <span className="shrink-0 font-label text-xs font-semibold text-primary">
                         {brl(deal.valor_pontual)}
                       </span>
                     ) : null}
                   </div>
+
+                  {deal.org?.name && deal.name && (
+                    <p className="mt-0.5 font-label text-[11px] text-text-muted">{deal.name}</p>
+                  )}
 
                   {deal.service_tag && (
                     <span className="mt-1.5 inline-block rounded-full border border-black/[0.08] bg-black/[0.02] px-2 py-0.5 font-label text-[10px] uppercase tracking-wider text-text-secondary">

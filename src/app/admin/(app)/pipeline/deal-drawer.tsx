@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { updateDeal, winDeal } from './actions';
+import { createDeal, updateDeal, winDeal } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS } from './stages';
 import type { BoardDeal } from './board';
 
@@ -18,32 +18,54 @@ function Field({
   name,
   defaultValue,
   placeholder,
+  required = false,
+  type = 'text',
   className = '',
 }: {
   label: string;
   name: string;
   defaultValue?: string | null;
   placeholder?: string;
+  required?: boolean;
+  type?: string;
   className?: string;
 }) {
   return (
     <div className={className}>
-      <label className={labelCls}>{label}</label>
-      <input name={name} defaultValue={defaultValue ?? ''} placeholder={placeholder} className={inputCls} />
+      <label className={labelCls}>
+        {label}
+        {required && <span className="text-danger"> *</span>}
+      </label>
+      <input
+        name={name}
+        type={type}
+        defaultValue={defaultValue ?? ''}
+        placeholder={placeholder}
+        required={required}
+        className={inputCls}
+      />
     </div>
   );
 }
 
-export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => void }) {
+/**
+ * Gaveta lateral única do pipeline: cria (deal = null) ou edita um negócio.
+ * A EMPRESA é o campo principal/obrigatório; o contato é opcional.
+ */
+export function DealDrawer({ deal, onClose }: { deal: BoardDeal | null; onClose: () => void }) {
+  const isNew = deal === null;
   const [savePending, startSave] = useTransition();
   const [winPending, startWin] = useTransition();
-  const org = deal.org;
-  const isWon = deal.stage === 'ganho';
-  // No board o negócio ganho/perdido sai das colunas, então mostramos o estágio atual
-  // no select mesmo que não seja uma das colunas de trabalho.
-  const stageOptions = PIPELINE_STAGES.includes(deal.stage as (typeof PIPELINE_STAGES)[number])
-    ? PIPELINE_STAGES
-    : [deal.stage, ...PIPELINE_STAGES];
+
+  const isWon = deal?.stage === 'ganho';
+  const currentStage = deal?.stage ?? 'novo';
+  // Ganho/perdido saem das colunas; ainda assim mostramos o estágio atual no select.
+  const stageOptions = PIPELINE_STAGES.includes(currentStage as (typeof PIPELINE_STAGES)[number])
+    ? [...PIPELINE_STAGES]
+    : [currentStage, ...PIPELINE_STAGES];
+
+  const title = isNew ? 'Novo negócio' : deal!.org?.name ?? deal!.name ?? 'Negócio';
+  const eyebrow = isNew ? 'Entrada manual' : STAGE_LABELS[deal!.stage];
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -61,41 +83,33 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
           <div>
             <p className="eyebrow mb-1">
               <span className="status-dot" />
-              {STAGE_LABELS[deal.stage]}
+              {eyebrow}
             </p>
-            <h2 className="text-lg font-semibold leading-tight tracking-tight text-text-primary">
-              {org?.name ?? deal.name ?? 'Negócio'}
-            </h2>
-            {deal.name && org?.name && (
-              <p className="font-label text-xs text-text-muted">{deal.name}</p>
-            )}
-            {(deal.email || deal.whatsapp) && (
-              <p className="mt-0.5 font-label text-[11px] text-text-muted">
-                {[deal.whatsapp, deal.email].filter(Boolean).join(' · ')}
-              </p>
-            )}
+            <h2 className="text-lg font-semibold leading-tight tracking-tight text-text-primary">{title}</h2>
 
-            {/* Toggle Ganhar negócio — cria o contrato no financeiro ao ligar */}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isWon}
-              disabled={isWon || winPending}
-              onClick={() => {
-                const fd = new FormData();
-                fd.set('id', deal.id);
-                startWin(() => winDeal(fd));
-              }}
-              title={isWon ? 'Negócio ganho' : `Marcar como ganho — cria o contrato${deal.valor_pontual ? ` de ${brl(deal.valor_pontual)}` : ''} no financeiro`}
-              className="mt-2.5 inline-flex items-center gap-2 disabled:cursor-default"
-            >
-              <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${isWon ? 'bg-success' : 'bg-black/[0.15]'}`}>
-                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${isWon ? 'left-[1.15rem]' : 'left-0.5'}`} />
-              </span>
-              <span className={`font-label text-[11px] uppercase tracking-wider ${isWon ? 'text-success' : 'text-text-secondary'}`}>
-                {winPending ? 'Fechando…' : isWon ? 'Ganho' : 'Ganhar negócio'}
-              </span>
-            </button>
+            {/* Toggle Ganhar negócio — só na edição; cria o contrato no financeiro ao ligar */}
+            {!isNew && (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isWon}
+                disabled={isWon || winPending}
+                onClick={() => {
+                  const fd = new FormData();
+                  fd.set('id', deal!.id);
+                  startWin(() => winDeal(fd));
+                }}
+                title={isWon ? 'Negócio ganho' : `Marcar como ganho — cria o contrato${deal!.valor_pontual ? ` de ${brl(deal!.valor_pontual)}` : ''} no financeiro`}
+                className="mt-2.5 inline-flex items-center gap-2 disabled:cursor-default"
+              >
+                <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${isWon ? 'bg-success' : 'bg-black/[0.15]'}`}>
+                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${isWon ? 'left-[1.15rem]' : 'left-0.5'}`} />
+                </span>
+                <span className={`font-label text-[11px] uppercase tracking-wider ${isWon ? 'text-success' : 'text-text-secondary'}`}>
+                  {winPending ? 'Fechando…' : isWon ? 'Ganho' : 'Ganhar negócio'}
+                </span>
+              </button>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -123,16 +137,51 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
           </div>
         )}
 
-        {/* Form de edição — só dados do NEGÓCIO */}
+        {/* Form — mesmos campos para criar e editar */}
         <form
-          action={(fd) => startSave(() => updateDeal(fd))}
+          action={(fd) =>
+            startSave(async () => {
+              if (isNew) {
+                await createDeal(fd);
+                onClose();
+              } else {
+                await updateDeal(fd);
+              }
+            })
+          }
           className="flex flex-col gap-4 px-5 py-4"
         >
-          <input type="hidden" name="id" value={deal.id} />
+          {!isNew && (
+            <>
+              <input type="hidden" name="id" value={deal!.id} />
+              <input type="hidden" name="organization_id" value={deal!.organization_id ?? ''} />
+              <input type="hidden" name="contact_id" value={deal!.contact_id ?? ''} />
+            </>
+          )}
+
+          <Field
+            label="Empresa"
+            name="company"
+            defaultValue={deal?.org?.name}
+            placeholder="Nome da empresa"
+            required
+          />
+
+          <Field
+            label="Contato (opcional)"
+            name="name"
+            defaultValue={deal?.name}
+            placeholder="Quem você fala (pode ser um terceiro)"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="WhatsApp" name="whatsapp" defaultValue={deal?.whatsapp} placeholder="(00) 00000-0000" />
+            <Field label="E-mail" name="email" type="email" defaultValue={deal?.email} placeholder="opcional" />
+          </div>
 
           <div>
             <label className={labelCls}>Produto / serviço</label>
-            <select name="service_tag" defaultValue={deal.service_tag ?? ''} className={inputCls}>
+            <select name="service_tag" defaultValue={deal?.service_tag ?? ''} className={inputCls}>
               <option value="">—</option>
               {SERVICE_TAGS.map((s) => (
                 <option key={s} value={s}>
@@ -144,14 +193,14 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
 
           <div className="grid grid-cols-2 gap-3">
             <Field
-              label="Valor do negócio (R$)"
+              label="Valor (R$)"
               name="valor_pontual"
-              defaultValue={deal.valor_pontual != null ? String(deal.valor_pontual) : ''}
+              defaultValue={deal?.valor_pontual != null ? String(deal.valor_pontual) : ''}
               placeholder="0"
             />
             <div>
               <label className={labelCls}>Estágio</label>
-              <select name="stage" defaultValue={deal.stage} className={inputCls}>
+              <select name="stage" defaultValue={currentStage} className={inputCls}>
                 {stageOptions.map((s) => (
                   <option key={s} value={s}>
                     {STAGE_LABELS[s]}
@@ -165,10 +214,10 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
             <label className={labelCls}>Notas</label>
             <textarea
               name="notes"
-              defaultValue={deal.notes ?? ''}
+              defaultValue={deal?.notes ?? ''}
               rows={5}
               className={inputCls + ' resize-y'}
-              placeholder="Contexto do negócio, condições, próximos passos…"
+              placeholder="Contexto do negócio, origem da indicação, condições, próximos passos…"
             />
           </div>
 
@@ -177,7 +226,7 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
             disabled={savePending}
             className="mt-1 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
-            {savePending ? 'Salvando…' : 'Salvar'}
+            {savePending ? (isNew ? 'Criando…' : 'Salvando…') : isNew ? 'Criar negócio' : 'Salvar'}
           </button>
         </form>
       </aside>
