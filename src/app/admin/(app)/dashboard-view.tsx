@@ -8,6 +8,13 @@ import { VisitsChart, SourceDonut, RankBars, RevenueBars } from './charts';
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const nf = (n: number) => n.toLocaleString('pt-BR');
 const pct = (num: number, den: number) => (den > 0 ? `${Math.round((num / den) * 100)}%` : '—');
+const fmtDur = (secs: number) => {
+  if (secs <= 0) return '—';
+  if (secs < 60) return `${secs}s`;
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return s ? `${m}min ${s}s` : `${m}min`;
+};
 
 export type FunnelStep = { label: string; count: number };
 export type FormFunnel = { form: string; steps: FunnelStep[] };
@@ -28,6 +35,8 @@ export type DashboardData = {
   };
   site: {
     visitas: number;
+    sessoes: number;
+    tempoMedioSegundos: number;
     conversao: number;
     leads: number;
     visitasPorDia: DayCount[];
@@ -52,18 +61,21 @@ function Kpi({ label, value, tone, hint }: { label: string; value: string; tone?
   );
 }
 
-// Barra de funil (conversão): barra em tinta, número e % sobre o passo anterior.
-function Bar({ label, value, max, prev, drop, wLabel = 'w-28', highlight }: { label: string; value: number; max: number; prev?: number; drop?: boolean; wLabel?: string; highlight?: boolean }) {
-  const w = max > 0 ? Math.max(1.5, (value / max) * 100) : 0;
+// Barra de funil: largura e % SEMPRE em relação ao início (quantos dos que
+// começaram chegaram até aqui). Barra em tinta; vermelho no maior abandono;
+// azul na etapa "Enviou".
+function Bar({ label, value, top, drop, wLabel = 'w-28', highlight }: { label: string; value: number; top: number; drop?: boolean; wLabel?: string; highlight?: boolean }) {
+  const w = top > 0 ? Math.max(1.5, (value / top) * 100) : 0;
+  const barTone = highlight ? 'bg-primary' : drop ? 'bg-danger/70' : 'bg-navy/85';
   return (
     <div className="flex items-center gap-3">
-      <div className={`${wLabel} shrink-0 truncate text-right text-xs text-text-secondary`} title={label}>{label}</div>
+      <div className={`${wLabel} shrink-0 truncate text-right text-xs ${drop ? 'font-medium text-danger' : 'text-text-secondary'}`} title={label}>{label}</div>
       <div className="relative h-6 flex-1 overflow-hidden rounded-sm bg-[#191918]/[0.06]">
-        <div className={`h-full rounded-sm ${highlight ? 'bg-primary' : 'bg-navy/85'}`} style={{ width: `${w}%` }} />
+        <div className={`h-full rounded-sm ${barTone}`} style={{ width: `${w}%` }} />
       </div>
       <div className="flex w-20 shrink-0 items-baseline justify-end gap-1.5">
         <span className="font-mono text-xs font-medium text-text-primary">{nf(value)}</span>
-        {prev != null && <span className={`font-mono text-[11px] ${drop ? 'font-semibold text-danger' : 'text-text-muted'}`}>{pct(value, prev)}</span>}
+        <span className="font-mono text-[11px] text-text-muted">{pct(value, top)}</span>
       </div>
     </div>
   );
@@ -140,9 +152,11 @@ export function DashboardView({ data }: { data: DashboardData }) {
       {/* ════════════════ SITE — tracking ════════════════ */}
       <GroupLabel>Site · {rangeLabel}</GroupLabel>
 
-      <div className="mb-6 grid grid-cols-3 gap-3">
-        <Kpi label="Visitas" value={nf(s.visitas)} />
-        <Kpi label="Conversão" value={pct(s.leads, s.visitas)} tone="accent" hint="visita → lead" />
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <Kpi label="Visitas" value={nf(s.visitas)} hint="páginas vistas" />
+        <Kpi label="Sessões" value={nf(s.sessoes)} hint="visitantes únicos" />
+        <Kpi label="Tempo médio" value={fmtDur(s.tempoMedioSegundos)} hint="por sessão" />
+        <Kpi label="Conversão" value={pct(s.leads, s.sessoes)} tone="accent" hint="sessão → lead" />
         <Kpi label="Leads" value={nf(s.leads)} hint="no período" />
       </div>
 
@@ -175,22 +189,39 @@ export function DashboardView({ data }: { data: DashboardData }) {
           {s.formFunnels.length === 0 ? (
             <p className="py-2 text-sm text-text-muted">Ninguém começou um formulário no período.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {s.formFunnels.map((f) => {
-                const top = f.steps[0]?.count ?? 1;
-                const drop = biggestDropIndex(f.steps);
-                return (
-                  <div key={f.form} className="rounded-md border border-[#191918]/[0.06] p-4">
-                    <p className="mb-3 font-mono text-[11px] font-medium tracking-tight text-text-primary">{f.form}</p>
-                    <div className="flex flex-col gap-2.5">
-                      {f.steps.map((step, i) => (
-                        <Bar key={step.label} label={step.label} value={step.count} max={top} prev={i > 0 ? f.steps[i - 1].count : undefined} drop={i === drop} highlight={i === f.steps.length - 1} />
-                      ))}
+            <>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {s.formFunnels.map((f) => {
+                  const top = f.steps[0]?.count ?? 1;
+                  const started = f.steps[0]?.count ?? 0;
+                  const sent = f.steps[f.steps.length - 1]?.count ?? 0;
+                  const drop = biggestDropIndex(f.steps);
+                  const smallSample = started < 10;
+                  return (
+                    <div key={f.form} className="rounded-md border border-[#191918]/[0.06] p-4">
+                      <div className="mb-1 flex items-baseline justify-between gap-2">
+                        <p className="font-mono text-[11px] font-medium tracking-tight text-text-primary">{f.form}</p>
+                        <p className="font-mono text-[11px] text-text-muted">
+                          <span className="font-medium text-primary">{pct(sent, started)}</span> conversão
+                        </p>
+                      </div>
+                      <p className="mb-3 text-[11px] text-text-muted">
+                        {nf(started)} começaram · {nf(sent)} enviaram
+                        {smallSample && <span className="ml-1.5 text-warning">· amostra pequena</span>}
+                      </p>
+                      <div className="flex flex-col gap-2.5">
+                        {f.steps.map((step, i) => (
+                          <Bar key={step.label} label={step.label} value={step.count} top={top} drop={i === drop} highlight={i === f.steps.length - 1} />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              <p className="mt-4 text-[11px] text-text-muted">
+                A % é sobre quem começou o formulário (quanto chegou até cada etapa). Vermelho = maior ponto de abandono.
+              </p>
+            </>
           )}
         </Section>
       </div>

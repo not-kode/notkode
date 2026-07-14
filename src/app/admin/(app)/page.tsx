@@ -72,7 +72,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const [pv, ctaRows, pvRows, srcRows, formRows, leadRows, wonDeals, engRows, recRows] = await Promise.all([
     supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', toISO),
-    supabase.from('events').select('created_at').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
+    supabase.from('events').select('created_at, session_id').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('type, label, session_id').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', toISO),
@@ -168,12 +168,28 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     receitaPorMes.push({ mes: `${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`, valor });
   }
 
+  // Sessões únicas + tempo médio de sessão (da 1ª à última visualização de página).
+  const sessMap = new Map<string, { min: number; max: number }>();
+  for (const r of (pvRows.data ?? []) as { created_at: string; session_id: string | null }[]) {
+    if (!r.session_id) continue;
+    const t = new Date(r.created_at).getTime();
+    const cur = sessMap.get(r.session_id);
+    if (!cur) sessMap.set(r.session_id, { min: t, max: t });
+    else { if (t < cur.min) cur.min = t; if (t > cur.max) cur.max = t; }
+  }
+  const sessoes = sessMap.size;
+  const tempoMedioSegundos = sessoes > 0
+    ? Math.round([...sessMap.values()].reduce((acc, v) => acc + (v.max - v.min), 0) / sessoes / 1000)
+    : 0;
+
   const data: DashboardData = {
     rangeLabel: range.label,
     negocio: { faturamento, aReceber, emAtraso, mrr, clientesAtivos, ganhos: wonDeals.count ?? 0, receitaPorMes },
     site: {
       visitas,
-      conversao: visitas > 0 ? leads.length / visitas : 0,
+      sessoes,
+      tempoMedioSegundos,
+      conversao: sessoes > 0 ? leads.length / sessoes : 0,
       leads: leads.length,
       visitasPorDia,
       porOrigem,
