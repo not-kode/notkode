@@ -13,8 +13,8 @@ const config: Config = {
         sans:      ['var(--font-dm)', 'DM Sans', 'system-ui', 'sans-serif'],
         dm:        ['var(--font-dm)', 'DM Sans', 'system-ui', 'sans-serif'],
         bricolage: ['var(--font-bricolage)', 'system-ui', 'sans-serif'],
-        label:     ['JetBrains Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
-        mono:      ['JetBrains Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
+        label:     ['var(--font-mono)', 'JetBrains Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
+        mono:      ['var(--font-mono)', 'JetBrains Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
       },
       colors: {
         // Brand

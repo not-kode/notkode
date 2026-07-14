@@ -149,9 +149,11 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
   // ── Negócio: faturamento no período + fluxo de caixa (fidedigno) ──
   const faturamento = recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + r.amount, 0);
-  // A receber = pendente que ainda vai vencer DENTRO do período selecionado
-  // (>= hoje para ser "vai entrar"; <= fim do período para não somar meses futuros).
-  const aReceber = recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date <= toStr).reduce((s, r) => s + r.amount, 0);
+  // A receber = pendente que ainda vai vencer, de hoje até o FIM DO MÊS do período.
+  // (o período "este mês" vai só até hoje para o faturamento; aqui olhamos o mês
+  //  inteiro para não zerar uma parcela que vence mais pra frente no mesmo mês.)
+  const mesFim = ymd(new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0));
+  const aReceber = recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date <= mesFim).reduce((s, r) => s + r.amount, 0);
   // Em atraso = status 'atrasado' OU pendente já vencido (regra unificada).
   const emAtraso = recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr)).reduce((s, r) => s + r.amount, 0);
   const mrr = engs.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);

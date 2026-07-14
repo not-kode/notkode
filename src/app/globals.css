@@ -1,29 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ===================================================================
-   FONTS
-   =================================================================== */
-@font-face {
-  font-family: 'Parabole';
-  src: url('/fonts/Parabole.woff2') format('woff2'),
-       url('/fonts/Parabole.woff') format('woff');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
+/* Fontes: auto-hospedadas via next/font (ver src/app/layout.tsx). As CSS
+   variables --font-dm, --font-mono e --font-bricolage vêm de lá. */
 
 /* ===================================================================
    DESIGN TOKENS
    =================================================================== */
 @layer base {
   :root {
-    --font-dm: 'DM Sans';
-    --font-bricolage: 'Parabole';
-
     /* Surfaces — relace.ai warm cream */
     --surface-base: 55 100% 97%;      /* #fffef2 */
     --surface-elevated: 55 33% 93%;   /* #f3f2e7 */

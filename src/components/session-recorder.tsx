@@ -30,7 +30,7 @@ export function SessionRecorder() {
       }
     };
 
-    (async () => {
+    const startRecording = async () => {
       try {
         const rrweb = await import('rrweb');
         if (cancelled) return;
@@ -47,7 +47,17 @@ export function SessionRecorder() {
       } catch {
         /* rrweb indisponível → sem gravação, site segue normal */
       }
-    })();
+    };
+
+    // Não competir com o carregamento/hidratação: só começa a gravar quando a
+    // página terminou de carregar E a thread principal estiver ociosa.
+    const scheduleStart = () => {
+      const w = window as typeof window & { requestIdleCallback?: (cb: () => void) => void };
+      if (w.requestIdleCallback) w.requestIdleCallback(() => startRecording());
+      else setTimeout(startRecording, 1500);
+    };
+    if (document.readyState === 'complete') scheduleStart();
+    else window.addEventListener('load', scheduleStart, { once: true });
 
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') flush(true);
