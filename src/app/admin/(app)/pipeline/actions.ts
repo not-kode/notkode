@@ -15,6 +15,87 @@ export async function moveDealStage(formData: FormData): Promise<void> {
   revalidatePath('/admin/pipeline');
 }
 
+// Serviços válidos para um negócio manual (mesmas chaves de SERVICE_TITLES abaixo).
+const SERVICE_TAGS = [
+  'sistemas-ia', 'sites', 'agentes-automacao', 'ecommerce', 'identidade', 'manutencao',
+] as const;
+
+/** Converte "12.500" / "12500,50" (pt-BR) em número; vazio/invalido → 0. */
+function parseValor(raw: FormDataEntryValue | null): number {
+  if (raw == null) return 0;
+  const n = Number(String(raw).replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Cria um negócio manualmente (indicação, WhatsApp, reunião) direto no pipeline,
+ * sem passar pelo formulário do site. Espelha promoteLead: contato (+ canais) →
+ * organização opcional (+ vínculo) → deal com source 'manual' e sem lead_id.
+ */
+export async function createDeal(formData: FormData): Promise<void> {
+  const name = String(formData.get('name') ?? '').trim();
+  if (!name) return; // contato é o mínimo obrigatório
+
+  const company = String(formData.get('company') ?? '').trim();
+  const email = String(formData.get('email') ?? '').trim();
+  const whatsapp = String(formData.get('whatsapp') ?? '').trim();
+  const notes = String(formData.get('notes') ?? '').trim() || null;
+
+  const serviceRaw = String(formData.get('service_tag') ?? '').trim();
+  const service_tag = (SERVICE_TAGS as readonly string[]).includes(serviceRaw) ? serviceRaw : null;
+
+  const stageRaw = String(formData.get('stage') ?? 'novo').trim();
+  const stage = DEAL_STAGES.includes(stageRaw as DealStage) ? stageRaw : 'novo';
+
+  const valor = parseValor(formData.get('valor_pontual'));
+
+  const supabase = getSupabaseAdmin();
+
+  // 1. Contato
+  const { data: contact, error: contactErr } = await supabase
+    .from('contacts')
+    .insert({ name, source: 'manual', locale: 'pt', notes })
+    .select('id')
+    .single();
+  if (contactErr || !contact) throw new Error(`Falha ao criar contato: ${contactErr?.message}`);
+
+  // 2. Canais (email + whatsapp), o que existir
+  const channels: { contact_id: string; kind: string; value: string; is_primary: boolean }[] = [];
+  if (email) channels.push({ contact_id: contact.id, kind: 'email', value: email, is_primary: true });
+  if (whatsapp) channels.push({ contact_id: contact.id, kind: 'whatsapp', value: whatsapp, is_primary: false });
+  if (channels.length) await supabase.from('contact_channels').insert(channels);
+
+  // 3. Organização (opcional) + vínculo
+  let organizationId: string | null = null;
+  if (company) {
+    const { data: org } = await supabase
+      .from('organizations')
+      .insert({ name: company })
+      .select('id')
+      .single();
+    if (org) {
+      organizationId = org.id;
+      await supabase
+        .from('contact_organizations')
+        .insert({ contact_id: contact.id, organization_id: org.id, is_primary: true });
+    }
+  }
+
+  // 4. Negócio (deal)
+  const { error: dealErr } = await supabase.from('deals').insert({
+    organization_id: organizationId,
+    contact_id: contact.id,
+    stage,
+    source: 'manual',
+    service_tag,
+    valor_pontual: valor,
+    notes,
+  });
+  if (dealErr) throw new Error(`Falha ao criar negócio: ${dealErr.message}`);
+
+  revalidatePath('/admin/pipeline');
+}
+
 // Campos cadastrais da empresa editáveis pelo drawer (usados para gerar contratos).
 const ORG_FIELDS = [
   'legal_name', 'tax_id', 'state_registration',

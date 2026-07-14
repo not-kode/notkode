@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
 import { PipelineBoard, type BoardDeal } from './board';
+import { NewDealDialog } from './new-deal-dialog';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,20 +82,23 @@ export default async function PipelinePage() {
         </p>
         <div className="flex items-end justify-between gap-4">
           <h1 className="text-2xl font-semibold tracking-tight">Negócios</h1>
-          <div className="flex items-center gap-2 font-label text-xs text-text-muted">
-            <span>
-              {openDeals.length} em aberto · <span className="text-text-secondary">{brl(openValue)}</span>
-            </span>
-            {won > 0 && (
-              <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">
-                {won} ganho{won === 1 ? '' : 's'}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 font-label text-xs text-text-muted">
+              <span>
+                {openDeals.length} em aberto · <span className="text-text-secondary">{brl(openValue)}</span>
               </span>
-            )}
-            {lost > 0 && (
-              <span className="rounded-full bg-danger/10 px-2 py-0.5 text-danger">
-                {lost} perdido{lost === 1 ? '' : 's'}
-              </span>
-            )}
+              {won > 0 && (
+                <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">
+                  {won} ganho{won === 1 ? '' : 's'}
+                </span>
+              )}
+              {lost > 0 && (
+                <span className="rounded-full bg-danger/10 px-2 py-0.5 text-danger">
+                  {lost} perdido{lost === 1 ? '' : 's'}
+                </span>
+              )}
+            </div>
+            <NewDealDialog />
           </div>
         </div>
       </header>
