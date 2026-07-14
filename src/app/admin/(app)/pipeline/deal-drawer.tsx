@@ -9,6 +9,7 @@ import {
   removeDealProposal,
   addDealInstallment,
   deleteDealInstallment,
+  generateInstallments,
 } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS } from './stages';
 import type { BoardDeal } from './board';
@@ -150,8 +151,10 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal | null; onClose:
           </div>
         )}
 
-        {/* Form — mesmos campos para criar e editar */}
+        {/* Form — mesmos campos para criar e editar. O botão de salvar fica na
+            barra fixa do rodapé (form="dealForm"), depois da proposta/parcelas. */}
         <form
+          id="dealForm"
           action={(fd) =>
             startSave(async () => {
               if (isNew) {
@@ -162,7 +165,7 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal | null; onClose:
               }
             })
           }
-          className="flex flex-col gap-4 px-5 py-4"
+          className="flex flex-col gap-4 px-5 pt-4"
         >
           {!isNew && (
             <>
@@ -243,27 +246,31 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal | null; onClose:
               placeholder="Contexto do negócio, origem da indicação, condições, próximos passos…"
             />
           </div>
-
-          <button
-            type="submit"
-            disabled={savePending}
-            className="mt-1 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
-          >
-            {savePending ? (isNew ? 'Criando…' : 'Salvando…') : isNew ? 'Criar negócio' : 'Salvar'}
-          </button>
         </form>
 
         {/* Proposta e parcelas exigem o negócio já salvo (precisam do id). */}
         {isNew ? (
-          <p className="border-t border-black/[0.06] px-5 py-4 font-label text-[11px] text-text-muted">
-            Salve o negócio para anexar a proposta e lançar as parcelas.
+          <p className="mt-5 border-t border-black/[0.06] px-5 py-4 font-label text-[11px] text-text-muted">
+            Preencha os dados e crie o negócio. Depois de criado, você anexa a proposta e lança as parcelas aqui mesmo.
           </p>
         ) : (
-          <div className="flex flex-col gap-5 border-t border-black/[0.06] px-5 py-4">
+          <div className="mt-5 flex flex-col gap-5 border-t border-black/[0.06] px-5 py-4">
             <ProposalSection deal={deal!} />
             <InstallmentsSection deal={deal!} />
           </div>
         )}
+
+        {/* Barra fixa de ação: salva os dados do negócio (form acima). */}
+        <div className="sticky bottom-0 mt-auto border-t border-black/[0.06] bg-white px-5 py-3">
+          <button
+            type="submit"
+            form="dealForm"
+            disabled={savePending}
+            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
+          >
+            {savePending ? (isNew ? 'Criando…' : 'Salvando…') : isNew ? 'Criar negócio' : 'Salvar negócio'}
+          </button>
+        </div>
       </aside>
     </div>
   );
@@ -295,21 +302,17 @@ function ProposalSection({ deal }: { deal: BoardDeal }) {
           </form>
         </div>
       ) : (
-        <form action={uploadDealProposal} className="flex items-center gap-2">
+        <form action={uploadDealProposal}>
           <input type="hidden" name="id" value={deal.id} />
+          {/* Ao escolher o arquivo já anexa (sem botão extra). */}
           <input
             type="file"
             name="file"
             accept=".pdf,.html,.htm,application/pdf,text/html"
-            required
-            className="min-w-0 flex-1 text-[11px] file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-primary/10 file:px-2 file:py-1 file:text-[10px] file:font-medium file:text-primary"
+            onChange={(e) => e.currentTarget.form?.requestSubmit()}
+            className="w-full text-[11px] file:mr-2 file:cursor-pointer file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-[10px] file:font-medium file:text-primary"
           />
-          <button
-            type="submit"
-            className="shrink-0 rounded-md border border-black/[0.1] px-2.5 py-1.5 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary"
-          >
-            anexar
-          </button>
+          <p className="mt-1 font-label text-[10px] text-text-muted">Escolha o PDF/HTML: anexa automaticamente.</p>
         </form>
       )}
     </section>
@@ -319,6 +322,7 @@ function ProposalSection({ deal }: { deal: BoardDeal }) {
 /** Parcelas planejadas do negócio. Ao ganhar, viram as cobranças do contrato (financeiro). */
 function InstallmentsSection({ deal }: { deal: BoardDeal }) {
   const total = deal.installments.reduce((s, p) => s + p.amount, 0);
+  const valor = deal.valor_pontual ?? 0;
 
   return (
     <section>
@@ -328,6 +332,39 @@ function InstallmentsSection({ deal }: { deal: BoardDeal }) {
         </p>
         {total > 0 && <span className="font-label text-[10px] text-text-muted">{brl(total)}</span>}
       </div>
+
+      {/* Gerador automático: divide o valor do negócio em N vezes. */}
+      {valor > 0 ? (
+        <form action={generateInstallments} className="mb-2 flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/[0.03] p-2.5">
+          <input type="hidden" name="deal_id" value={deal.id} />
+          <p className="font-label text-[10px] uppercase tracking-wider text-text-secondary">
+            Parcelar {brl(valor)} automaticamente
+          </p>
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <input
+                name="count"
+                type="number"
+                min={1}
+                max={60}
+                defaultValue={1}
+                required
+                className={inputCls + ' w-14 text-center'}
+              />
+              <span className="font-label text-[11px] text-text-secondary">x a partir de</span>
+            </div>
+            <input name="first_due_date" type="date" required className={inputCls} />
+            <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90">
+              Gerar
+            </button>
+          </div>
+          <p className="font-label text-[10px] text-text-muted">Gerar substitui as parcelas atuais. À vista? Deixe em 1x.</p>
+        </form>
+      ) : (
+        <p className="mb-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] px-2.5 py-2 font-label text-[10px] text-text-muted">
+          Preencha o valor do negócio e salve para parcelar automaticamente.
+        </p>
+      )}
 
       {deal.installments.length > 0 && (
         <ul className="mb-2 flex flex-col gap-1">
@@ -347,20 +384,26 @@ function InstallmentsSection({ deal }: { deal: BoardDeal }) {
         </ul>
       )}
 
-      <form action={addDealInstallment} className="flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2.5">
-        <input type="hidden" name="deal_id" value={deal.id} />
-        <input name="description" className={inputCls} placeholder="Descrição — ex: Entrada, 1ª parcela" />
-        <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-          <input name="amount" inputMode="decimal" required className={inputCls} placeholder="Valor (R$)" />
-          <input name="due_date" type="date" required className={inputCls} />
-          <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90">
-            + Add
-          </button>
-        </div>
-      </form>
+      {/* Ajuste manual (opcional), para casos fora do padrão. */}
+      <details className="group">
+        <summary className="cursor-pointer list-none font-label text-[10px] uppercase tracking-wider text-text-muted transition-colors hover:text-text-secondary">
+          + adicionar parcela manual
+        </summary>
+        <form action={addDealInstallment} className="mt-2 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2.5">
+          <input type="hidden" name="deal_id" value={deal.id} />
+          <input name="description" className={inputCls} placeholder="Descrição — ex: Entrada" />
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+            <input name="amount" inputMode="decimal" required className={inputCls} placeholder="Valor (R$)" />
+            <input name="due_date" type="date" required className={inputCls} />
+            <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90">
+              Add
+            </button>
+          </div>
+        </form>
+      </details>
 
       <p className="mt-1.5 font-label text-[10px] text-text-muted">
-        À vista? Lance uma parcela só. Ao ganhar o negócio, elas viram as cobranças do contrato no financeiro.
+        Ao ganhar o negócio, as parcelas viram as cobranças do contrato no financeiro.
       </p>
     </section>
   );

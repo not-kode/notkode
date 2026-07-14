@@ -393,3 +393,40 @@ export async function deleteDealInstallment(formData: FormData): Promise<void> {
   await supabase.from('deal_installments').delete().eq('id', id);
   revalidatePath('/admin/pipeline');
 }
+
+/**
+ * Gera N parcelas automaticamente dividindo o valor total do negócio,
+ * com vencimentos mensais a partir da data escolhida. SUBSTITUI as parcelas
+ * atuais do negócio. A sobra de centavos vai na última parcela.
+ */
+export async function generateInstallments(formData: FormData): Promise<void> {
+  const deal_id = String(formData.get('deal_id') ?? '');
+  const count = parseInt(String(formData.get('count') ?? ''), 10);
+  const first = String(formData.get('first_due_date') ?? '');
+  if (!deal_id || !first || !Number.isFinite(count) || count < 1 || count > 60) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data: deal } = await supabase.from('deals').select('valor_pontual').eq('id', deal_id).single();
+  const total = Number(deal?.valor_pontual ?? 0);
+  if (!(total > 0)) return;
+
+  const totalCents = Math.round(total * 100);
+  const base = Math.floor(totalCents / count);
+  const remainder = totalCents - base * count; // sobra vai na última
+
+  const [y, m, d] = first.split('-').map(Number);
+  const rows = Array.from({ length: count }, (_, i) => {
+    const cents = base + (i === count - 1 ? remainder : 0);
+    const date = new Date(Date.UTC(y, m - 1 + i, d)); // meses somam corretamente
+    return {
+      deal_id,
+      description: `Parcela ${i + 1}/${count}`,
+      amount: cents / 100,
+      due_date: date.toISOString().slice(0, 10),
+    };
+  });
+
+  await supabase.from('deal_installments').delete().eq('deal_id', deal_id);
+  await supabase.from('deal_installments').insert(rows);
+  revalidatePath('/admin/pipeline');
+}
