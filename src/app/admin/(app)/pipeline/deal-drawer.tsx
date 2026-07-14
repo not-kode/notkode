@@ -2,8 +2,7 @@
 
 import { useTransition } from 'react';
 import { updateDeal, winDeal } from './actions';
-import { STAGE_LABELS } from './stages';
-import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
+import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS } from './stages';
 import type { BoardDeal } from './board';
 
 const brl = (n: number) =>
@@ -40,6 +39,11 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
   const [winPending, startWin] = useTransition();
   const org = deal.org;
   const isWon = deal.stage === 'ganho';
+  // No board o negócio ganho/perdido sai das colunas, então mostramos o estágio atual
+  // no select mesmo que não seja uma das colunas de trabalho.
+  const stageOptions = PIPELINE_STAGES.includes(deal.stage as (typeof PIPELINE_STAGES)[number])
+    ? PIPELINE_STAGES
+    : [deal.stage, ...PIPELINE_STAGES];
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -64,6 +68,11 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
             </h2>
             {deal.name && org?.name && (
               <p className="font-label text-xs text-text-muted">{deal.name}</p>
+            )}
+            {(deal.email || deal.whatsapp) && (
+              <p className="mt-0.5 font-label text-[11px] text-text-muted">
+                {[deal.whatsapp, deal.email].filter(Boolean).join(' · ')}
+              </p>
             )}
 
             {/* Toggle Ganhar negócio — cria o contrato no financeiro ao ligar */}
@@ -109,44 +118,55 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal; onClose: () => 
               Negócio ganho
             </p>
             <p className="mt-1 font-label text-[11px] text-text-secondary">
-              Próximo passo: preparar o contrato com os dados abaixo.
+              Próximo passo: preencher os dados cadastrais e o contrato na aba <strong className="font-semibold">Clientes</strong>.
             </p>
-            <button
-              type="button"
-              disabled
-              title="Disponível na próxima etapa"
-              className="mt-2.5 inline-flex cursor-not-allowed items-center gap-1.5 rounded-md border border-black/[0.08] bg-black/[0.02] px-3 py-1.5 font-label text-[11px] uppercase tracking-wider text-text-muted"
-            >
-              Gerar contrato · em breve
-            </button>
           </div>
         )}
 
-        {/* Form de edição */}
+        {/* Form de edição — só dados do NEGÓCIO */}
         <form
           action={(fd) => startSave(() => updateDeal(fd))}
           className="flex flex-col gap-4 px-5 py-4"
         >
           <input type="hidden" name="id" value={deal.id} />
-          <input type="hidden" name="organization_id" value={deal.organization_id ?? ''} />
 
-          <Field
-            label="Valor do negócio (R$)"
-            name="valor_pontual"
-            defaultValue={deal.valor_pontual != null ? String(deal.valor_pontual) : ''}
-            placeholder="0"
-          />
-
-          <div className="flex flex-col gap-4 border-t border-black/[0.06] pt-4">
-            <OrgFiscalFields org={org} includeRepCpf={false} />
+          <div>
+            <label className={labelCls}>Produto / serviço</label>
+            <select name="service_tag" defaultValue={deal.service_tag ?? ''} className={inputCls}>
+              <option value="">—</option>
+              {SERVICE_TAGS.map((s) => (
+                <option key={s} value={s}>
+                  {SERVICE_LABELS[s]}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="border-t border-black/[0.06] pt-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Valor do negócio (R$)"
+              name="valor_pontual"
+              defaultValue={deal.valor_pontual != null ? String(deal.valor_pontual) : ''}
+              placeholder="0"
+            />
+            <div>
+              <label className={labelCls}>Estágio</label>
+              <select name="stage" defaultValue={deal.stage} className={inputCls}>
+                {stageOptions.map((s) => (
+                  <option key={s} value={s}>
+                    {STAGE_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
             <label className={labelCls}>Notas</label>
             <textarea
               name="notes"
               defaultValue={deal.notes ?? ''}
-              rows={4}
+              rows={5}
               className={inputCls + ' resize-y'}
               placeholder="Contexto do negócio, condições, próximos passos…"
             />

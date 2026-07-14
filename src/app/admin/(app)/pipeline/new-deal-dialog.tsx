@@ -2,23 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import { createDeal } from './actions';
-import { PIPELINE_STAGES, STAGE_LABELS } from './stages';
+import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS } from './stages';
 
 const inputCls =
   'w-full rounded-md border border-black/[0.08] bg-white px-2.5 py-1.5 text-sm text-text-primary ' +
   'outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/10';
 const labelCls = 'mb-1 block font-label text-[10px] uppercase tracking-[0.12em] text-text-muted';
-
-// value = service_tag gravado no deal; label = texto legível.
-const SERVICES: { value: string; label: string }[] = [
-  { value: '', label: '—' },
-  { value: 'sistemas-ia', label: 'Sistema com IA' },
-  { value: 'sites', label: 'Site / Landing Page' },
-  { value: 'agentes-automacao', label: 'Agentes & Automação' },
-  { value: 'ecommerce', label: 'E-commerce' },
-  { value: 'identidade', label: 'Identidade & Brandbook' },
-  { value: 'manutencao', label: 'Plano de Manutenção' },
-];
 
 function Field({
   label,
@@ -114,11 +103,12 @@ export function NewDealDialog() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>Serviço</label>
+                  <label className={labelCls}>Produto / serviço</label>
                   <select name="service_tag" defaultValue="" className={inputCls}>
-                    {SERVICES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
+                    <option value="">—</option>
+                    {SERVICE_TAGS.map((s) => (
+                      <option key={s} value={s}>
+                        {SERVICE_LABELS[s]}
                       </option>
                     ))}
                   </select>

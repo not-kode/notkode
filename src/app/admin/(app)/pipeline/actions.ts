@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { DEAL_STAGES, type DealStage } from './stages';
+import { DEAL_STAGES, SERVICE_TAGS, type DealStage } from './stages';
 
 export async function moveDealStage(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
@@ -14,11 +14,6 @@ export async function moveDealStage(formData: FormData): Promise<void> {
 
   revalidatePath('/admin/pipeline');
 }
-
-// Serviços válidos para um negócio manual (mesmas chaves de SERVICE_TITLES abaixo).
-const SERVICE_TAGS = [
-  'sistemas-ia', 'sites', 'agentes-automacao', 'ecommerce', 'identidade', 'manutencao',
-] as const;
 
 /** Converte "12.500" / "12500,50" (pt-BR) em número; vazio/invalido → 0. */
 function parseValor(raw: FormDataEntryValue | null): number {
@@ -96,13 +91,6 @@ export async function createDeal(formData: FormData): Promise<void> {
   revalidatePath('/admin/pipeline');
 }
 
-// Campos cadastrais da empresa editáveis pelo drawer (usados para gerar contratos).
-const ORG_FIELDS = [
-  'legal_name', 'tax_id', 'state_registration',
-  'address_street', 'address_number', 'address_district',
-  'address_city', 'address_state', 'address_zip', 'legal_rep',
-] as const;
-
 // service_tag do negócio → título legível do contrato criado ao ganhar.
 const SERVICE_TITLES: Record<string, string> = {
   'sistemas-ia': 'Sistema com IA',
@@ -113,7 +101,8 @@ const SERVICE_TITLES: Record<string, string> = {
   'manutencao': 'Plano de Manutenção',
 };
 
-/** Edita valor, notas e os dados cadastrais da empresa (a partir do drawer de detalhe). */
+/** Edita os dados do NEGÓCIO a partir do drawer: produto, valor, estágio e notas.
+ *  Dados cadastrais/fiscais da empresa ficam na aba Clientes, não aqui. */
 export async function updateDeal(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   if (!id) return;
@@ -121,24 +110,21 @@ export async function updateDeal(formData: FormData): Promise<void> {
   const supabase = getSupabaseAdmin();
 
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  const valorRaw = formData.get('valor_pontual');
-  if (valorRaw != null) {
-    const n = Number(String(valorRaw).replace(/\./g, '').replace(',', '.'));
-    patch.valor_pontual = Number.isFinite(n) ? n : 0;
-  }
-  if (formData.get('notes') != null) patch.notes = String(formData.get('notes')) || null;
-  await supabase.from('deals').update(patch).eq('id', id);
 
-  // Dados cadastrais vivem na organização (CONTRATANTE), não no deal.
-  const organization_id = String(formData.get('organization_id') ?? '');
-  if (organization_id) {
-    const orgPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    for (const f of ORG_FIELDS) {
-      const v = formData.get(f);
-      if (v != null) orgPatch[f] = String(v).trim() || null;
-    }
-    await supabase.from('organizations').update(orgPatch).eq('id', organization_id);
+  const valorRaw = formData.get('valor_pontual');
+  if (valorRaw != null) patch.valor_pontual = parseValor(valorRaw);
+
+  const serviceRaw = String(formData.get('service_tag') ?? '').trim();
+  if (formData.has('service_tag')) {
+    patch.service_tag = (SERVICE_TAGS as readonly string[]).includes(serviceRaw) ? serviceRaw : null;
   }
+
+  const stageRaw = String(formData.get('stage') ?? '').trim();
+  if (DEAL_STAGES.includes(stageRaw as DealStage)) patch.stage = stageRaw;
+
+  if (formData.get('notes') != null) patch.notes = String(formData.get('notes')) || null;
+
+  await supabase.from('deals').update(patch).eq('id', id);
 
   revalidatePath('/admin/pipeline');
 }

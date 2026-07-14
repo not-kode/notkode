@@ -31,3 +31,20 @@ export const STAGE_LABELS: Record<DealStage, string> = {
   ganho: 'Ganho',
   perdido: 'Perdido',
 };
+
+// Produto/serviço do negócio (service_tag). Fonte única usada no modal de criação
+// e no drawer de edição. value = o que grava no deal; label = texto legível.
+export const SERVICE_TAGS = [
+  'sistemas-ia', 'sites', 'agentes-automacao', 'ecommerce', 'identidade', 'manutencao',
+] as const;
+
+export type ServiceTag = (typeof SERVICE_TAGS)[number];
+
+export const SERVICE_LABELS: Record<ServiceTag, string> = {
+  'sistemas-ia': 'Sistema com IA',
+  'sites': 'Site / Landing Page',
+  'agentes-automacao': 'Agentes & Automação',
+  'ecommerce': 'E-commerce',
+  'identidade': 'Identidade & Brandbook',
+  'manutencao': 'Plano de Manutenção',
+};
