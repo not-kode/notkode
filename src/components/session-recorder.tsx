@@ -23,8 +23,12 @@ export function SessionRecorder() {
       buffer = [];
       const body = JSON.stringify({ session_id: sid, page: location.pathname, events: chunk });
       try {
+        // No unload usamos sendBeacon (fetch não completa após a página fechar).
+        // sendBeacon/keepalive têm limite de corpo de ~64 KB — por isso NÃO usamos
+        // keepalive no flush periódico: o primeiro chunk carrega o FullSnapshot do
+        // DOM inteiro (>64 KB) e seria rejeitado em silêncio, quebrando o player.
         if (useBeacon && navigator.sendBeacon?.('/api/rec', new Blob([body], { type: 'application/json' }))) return;
-        void fetch('/api/rec', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {});
+        void fetch('/api/rec', { method: 'POST', body, headers: { 'Content-Type': 'application/json' } }).catch(() => {});
       } catch {
         /* noop */
       }
@@ -34,14 +38,22 @@ export function SessionRecorder() {
       try {
         const rrweb = await import('rrweb');
         if (cancelled) return;
+        let first = true;
         stop = rrweb.record({
           emit(event) {
             buffer.push(event);
+            // Persiste o FullSnapshot inicial o quanto antes: se a sessão for
+            // curta, garante que o player tenha o DOM base para reproduzir.
+            if (first) {
+              first = false;
+              setTimeout(() => flush(false), 800);
+            }
           },
           maskAllInputs: true, // não grava o que é digitado
           recordCanvas: false,
           collectFonts: false,
           sampling: { mousemove: 50, scroll: 150 },
+          checkoutEveryNms: 2 * 60 * 1000, // reemite FullSnapshot a cada 2 min (retomada/SPA)
         });
         timer = setInterval(() => flush(false), 5000);
       } catch {

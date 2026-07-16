@@ -20,6 +20,12 @@ export default async function SessaoPage({ params }: { params: Promise<{ id: str
   const events = chunks.flatMap((c) => (Array.isArray(c.events) ? c.events : []));
   const entryPage = chunks.find((c) => c.page)?.page ?? null;
 
+  // rrweb só reproduz se houver um FullSnapshot (type 2) do DOM base. Sem ele,
+  // o player fica em branco — melhor avisar do que mostrar tela quebrada.
+  const hasFullSnapshot = events.some(
+    (e) => typeof e === 'object' && e !== null && (e as { type?: number }).type === 2,
+  );
+
   return (
     <div>
       <header className="mb-6">
@@ -35,6 +41,11 @@ export default async function SessaoPage({ params }: { params: Promise<{ id: str
       {events.length < 2 ? (
         <p className="rounded-md border border-black/[0.06] bg-white px-4 py-10 text-center text-sm text-text-muted">
           Gravação muito curta para reproduzir.
+        </p>
+      ) : !hasFullSnapshot ? (
+        <p className="rounded-md border border-black/[0.06] bg-white px-4 py-10 text-center text-sm text-text-muted">
+          Esta gravação não capturou o estado inicial da tela, então não é possível reproduzi-la.
+          Sessões novas já são gravadas por completo.
         </p>
       ) : (
         <SessionPlayer events={events} />
