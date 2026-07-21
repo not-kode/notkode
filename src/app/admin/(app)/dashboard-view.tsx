@@ -198,10 +198,20 @@ export function DashboardView({ data }: { data: DashboardData }) {
                   const sent = f.steps[f.steps.length - 1]?.count ?? 0;
                   const drop = biggestDropIndex(f.steps);
                   const smallSample = started < 10;
+                  // Onde cada formulário mora no site (pra ninguém confundir os funis).
+                  const FORM_WHERE: Record<string, string> = {
+                    'Orçamento': 'calculadora das páginas de site/landing',
+                    'Qualificação': 'form de Sistemas com IA, Parcerias e Agentes',
+                  };
                   return (
                     <div key={f.form} className="rounded-md border border-[#191918]/[0.06] p-4">
                       <div className="mb-1 flex items-baseline justify-between gap-2">
-                        <p className="font-mono text-[11px] font-medium tracking-tight text-text-primary">{f.form}</p>
+                        <p className="font-mono text-[11px] font-medium tracking-tight text-text-primary">
+                          {f.form}
+                          {FORM_WHERE[f.form] && (
+                            <span className="ml-1.5 font-normal normal-case text-text-muted">· {FORM_WHERE[f.form]}</span>
+                          )}
+                        </p>
                         <p className="font-mono text-[11px] text-text-muted">
                           <span className="font-medium text-primary">{pct(sent, started)}</span> conversão
                         </p>
