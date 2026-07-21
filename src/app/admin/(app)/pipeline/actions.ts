@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { DEAL_STAGES, SERVICE_TAGS, type DealStage } from './stages';
+import { normalizeOrgName } from './orgs';
 
 export async function moveDealStage(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
@@ -86,13 +87,28 @@ export async function createDeal(formData: FormData): Promise<void> {
 
   const supabase = getSupabaseAdmin();
 
-  // 1. Organização (obrigatória)
-  const { data: org, error: orgErr } = await supabase
-    .from('organizations')
-    .insert({ name: company })
-    .select('id')
-    .single();
-  if (orgErr || !org) throw new Error(`Falha ao criar empresa: ${orgErr?.message}`);
+  // 1. Organização (obrigatória): reaproveita cliente existente antes de criar,
+  //    pelo vínculo escolhido no autocomplete ou por nome igual já cadastrado.
+  const linkedOrgId = String(formData.get('organization_id') ?? '').trim() || null;
+  let orgId: string | null = null;
+
+  if (linkedOrgId) {
+    const { data: linked } = await supabase.from('organizations').select('id').eq('id', linkedOrgId).maybeSingle();
+    orgId = linked?.id ?? null;
+  }
+  if (!orgId) {
+    const { data: existing } = await supabase.from('organizations').select('id, name');
+    orgId = existing?.find((o) => normalizeOrgName(o.name ?? '') === normalizeOrgName(company))?.id ?? null;
+  }
+  if (!orgId) {
+    const { data: org, error: orgErr } = await supabase
+      .from('organizations')
+      .insert({ name: company })
+      .select('id')
+      .single();
+    if (orgErr || !org) throw new Error(`Falha ao criar empresa: ${orgErr?.message}`);
+    orgId = org.id;
+  }
 
   // 2. Contato (opcional) + canais + vínculo com a empresa
   let contactId: string | null = null;
@@ -112,12 +128,12 @@ export async function createDeal(formData: FormData): Promise<void> {
 
     await supabase
       .from('contact_organizations')
-      .insert({ contact_id: contact.id, organization_id: org.id, is_primary: true });
+      .insert({ contact_id: contact.id, organization_id: orgId, is_primary: true });
   }
 
   // 3. Negócio (deal)
   const { error: dealErr } = await supabase.from('deals').insert({
-    organization_id: org.id,
+    organization_id: orgId,
     contact_id: contactId,
     stage,
     source: 'manual',
@@ -159,12 +175,17 @@ export async function updateDeal(formData: FormData): Promise<void> {
   const whatsapp = String(formData.get('whatsapp') ?? '').trim();
   const notes = formData.get('notes') != null ? String(formData.get('notes')) || null : undefined;
 
-  // 1. Empresa — atualiza o nome, ou cria a organização se o negócio ainda não tiver.
+  // 1. Empresa — atualiza o nome, ou vincula/cria a organização se o negócio ainda
+  //    não tiver (reaproveita empresa de nome igual para não duplicar cliente).
   if (organizationId) {
     if (company) await supabase.from('organizations').update({ name: company, updated_at: new Date().toISOString() }).eq('id', organizationId);
   } else if (company) {
-    const { data: org } = await supabase.from('organizations').insert({ name: company }).select('id').single();
-    if (org) organizationId = org.id;
+    const { data: existing } = await supabase.from('organizations').select('id, name');
+    organizationId = existing?.find((o) => normalizeOrgName(o.name ?? '') === normalizeOrgName(company))?.id ?? null;
+    if (!organizationId) {
+      const { data: org } = await supabase.from('organizations').insert({ name: company }).select('id').single();
+      if (org) organizationId = org.id;
+    }
   }
 
   // 2. Contato (opcional) — atualiza nome, ou cria se informado agora.

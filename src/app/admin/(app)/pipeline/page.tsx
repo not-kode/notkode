@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
 import { PipelineBoard, type BoardDeal } from './board';
 import { NewDealDialog } from './new-deal-dialog';
+import { type OrgOption } from './orgs';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +58,10 @@ export default async function PipelinePage() {
     )
     .order('created_at', { ascending: false });
 
+  // Empresas já cadastradas, para o autocomplete do novo negócio (evita cliente duplicado).
+  const { data: orgRows } = await supabase.from('organizations').select('id, name').order('name');
+  const orgOptions: OrgOption[] = (orgRows ?? []).flatMap((o) => (o.name ? [{ id: o.id, name: o.name }] : []));
+
   const rows = (data ?? []) as unknown as DealRow[];
   const deals: BoardDeal[] = rows.map((r) => ({
     id: r.id,
@@ -108,7 +113,7 @@ export default async function PipelinePage() {
                 </span>
               )}
             </div>
-            <NewDealDialog />
+            <NewDealDialog orgOptions={orgOptions} />
           </div>
         </div>
       </header>

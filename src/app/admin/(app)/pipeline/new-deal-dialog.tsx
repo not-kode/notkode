@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { DealDrawer } from './deal-drawer';
+import { type OrgOption } from './orgs';
 
 /** Botão "+ Novo negócio": abre a MESMA gaveta lateral do card, em modo criação. */
-export function NewDealDialog() {
+export function NewDealDialog({ orgOptions }: { orgOptions: OrgOption[] }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,7 +21,7 @@ export function NewDealDialog() {
         Novo negócio
       </button>
 
-      {open && <DealDrawer deal={null} onClose={() => setOpen(false)} />}
+      {open && <DealDrawer deal={null} orgOptions={orgOptions} onClose={() => setOpen(false)} />}
     </>
   );
 }

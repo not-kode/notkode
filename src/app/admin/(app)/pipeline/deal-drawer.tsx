@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import {
   createDeal,
   updateDeal,
@@ -12,6 +12,7 @@ import {
   generateInstallments,
 } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS } from './stages';
+import { normalizeOrgName, type OrgOption } from './orgs';
 import type { BoardDeal } from './board';
 
 const brl = (n: number) =>
@@ -63,10 +64,89 @@ function Field({
 }
 
 /**
+ * Campo Empresa com busca nas empresas já cadastradas: escolher uma sugestão
+ * vincula o negócio ao cliente existente (organization_id) em vez de duplicar.
+ */
+function CompanyField({ orgOptions }: { orgOptions: OrgOption[] }) {
+  const [company, setCompany] = useState('');
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const matches = useMemo(() => {
+    const q = normalizeOrgName(company);
+    if (!q) return [];
+    return orgOptions.filter((o) => normalizeOrgName(o.name).includes(q)).slice(0, 6);
+  }, [company, orgOptions]);
+
+  const linked = orgId ? orgOptions.find((o) => o.id === orgId) : null;
+
+  return (
+    <div className="relative">
+      <label className={labelCls}>
+        Empresa<span className="text-danger"> *</span>
+      </label>
+      <input
+        name="company"
+        value={company}
+        required
+        autoComplete="off"
+        placeholder="Nome da empresa"
+        className={inputCls}
+        onChange={(e) => {
+          setCompany(e.target.value);
+          setOrgId(null); // digitou por cima: desfaz o vínculo
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+      />
+      <input type="hidden" name="organization_id" value={orgId ?? ''} />
+
+      {open && !linked && matches.length > 0 && (
+        <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border border-black/[0.08] bg-white shadow-lg">
+          {matches.map((o) => (
+            <li key={o.id}>
+              <button
+                type="button"
+                // mousedown dispara antes do blur do input
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setCompany(o.name);
+                  setOrgId(o.id);
+                  setOpen(false);
+                }}
+                className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-sm text-text-primary transition-colors hover:bg-primary/[0.06]"
+              >
+                <span className="truncate">{o.name}</span>
+                <span className="shrink-0 font-label text-[10px] uppercase tracking-wider text-text-muted">já cadastrada</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className={`mt-1 font-label text-[10px] ${linked ? 'text-success' : 'text-text-muted'}`}>
+        {linked
+          ? `Vinculado ao cliente existente: ${linked.name}`
+          : 'Se a empresa já existir, escolha na lista para não duplicar o cliente.'}
+      </p>
+    </div>
+  );
+}
+
+/**
  * Gaveta lateral única do pipeline: cria (deal = null) ou edita um negócio.
  * A EMPRESA é o campo principal/obrigatório; o contato é opcional.
  */
-export function DealDrawer({ deal, onClose }: { deal: BoardDeal | null; onClose: () => void }) {
+export function DealDrawer({
+  deal,
+  onClose,
+  orgOptions = [],
+}: {
+  deal: BoardDeal | null;
+  onClose: () => void;
+  orgOptions?: OrgOption[];
+}) {
   const isNew = deal === null;
   const [savePending, startSave] = useTransition();
   const [winPending, startWin] = useTransition();
@@ -175,13 +255,17 @@ export function DealDrawer({ deal, onClose }: { deal: BoardDeal | null; onClose:
             </>
           )}
 
-          <Field
-            label="Empresa"
-            name="company"
-            defaultValue={deal?.org?.name}
-            placeholder="Nome da empresa"
-            required
-          />
+          {isNew ? (
+            <CompanyField orgOptions={orgOptions} />
+          ) : (
+            <Field
+              label="Empresa"
+              name="company"
+              defaultValue={deal?.org?.name}
+              placeholder="Nome da empresa"
+              required
+            />
+          )}
 
           <Field
             label="Contato (opcional)"
