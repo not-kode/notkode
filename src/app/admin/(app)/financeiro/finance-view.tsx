@@ -70,7 +70,9 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
     const mrr = engagements
       .filter((e) => e.lifecycle === 'ativo' && (e.mrr ?? 0) > 0)
       .reduce((s, e) => s + (e.mrr ?? 0), 0);
-    const aReceber = receivables.filter((r) => r.status === 'pendente' && ym(r.due_date) === month).reduce((s, r) => s + r.amount, 0);
+    // Mesma régua da Visão geral: "a receber" = pendente AINDA NO PRAZO; o que
+    // venceu conta só no cartão Atrasado (antes a mesma parcela dobrava nos dois).
+    const aReceber = receivables.filter((r) => r.status === 'pendente' && ym(r.due_date) === month && !isLate(r)).reduce((s, r) => s + r.amount, 0);
     const atrasado = receivables.filter(isLate).reduce((s, r) => s + r.amount, 0);
     const recebido = receivables.filter((r) => r.status === 'recebido' && ym(r.paid_at ?? r.due_date) === month).reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
     return { mrr, aReceber, atrasado, recebido };

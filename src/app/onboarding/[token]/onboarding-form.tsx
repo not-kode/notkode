@@ -4,29 +4,34 @@ import { useMemo, useState } from 'react';
 import { Logo } from '@/components/brand/logo';
 import { saveDraft, submitBriefing } from './actions';
 import {
-  ONBOARDING_SECTIONS,
+  getOnboardingTemplate,
   ONBOARDING_VERSION,
   ACCESS_EMAIL,
   isQuestionVisible,
   type OnboardingQuestion,
+  type OnboardingSection,
 } from '@/lib/onboarding-schema';
 
 type Context = { cliente: string; produto: string; escopo: string };
 type Answers = Record<string, string | string[]>;
 
-const TOTAL = ONBOARDING_SECTIONS.length;
-
 export function OnboardingForm({
   token,
   context,
+  template,
   initialAnswers = {},
   initialStatus = 'rascunho',
 }: {
   token: string;
   context: Context;
+  /** Key do template (produto, site, sistema-ia, agentes, identidade). */
+  template?: string;
   initialAnswers?: Answers;
   initialStatus?: 'rascunho' | 'enviado';
 }) {
+  const tpl = getOnboardingTemplate(template);
+  const sections = tpl.sections;
+  const TOTAL = sections.length;
   // step 0 = boas-vindas · 1..TOTAL = seções · TOTAL+1 = concluído
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>(initialAnswers);
@@ -130,12 +135,14 @@ export function OnboardingForm({
       </div>
 
       <main className="mx-auto max-w-[680px] px-6 pb-32 pt-10">
-        {step === 0 && <Welcome context={context} onStart={() => go(1)} />}
+        {step === 0 && <Welcome context={context} welcome={tpl.welcome} sections={sections} onStart={() => go(1)} />}
 
         {step >= 1 && step <= TOTAL && (
           <Section
             key={step}
             index={step}
+            sections={sections}
+            total={TOTAL}
             answers={answers}
             setText={setText}
             toggleChip={toggleChip}
@@ -161,7 +168,17 @@ export function OnboardingForm({
 
 // ── Boas-vindas ────────────────────────────────────────────────────────────
 
-function Welcome({ context, onStart }: { context: Context; onStart: () => void }) {
+function Welcome({
+  context,
+  welcome,
+  sections,
+  onStart,
+}: {
+  context: Context;
+  welcome: string;
+  sections: OnboardingSection[];
+  onStart: () => void;
+}) {
   return (
     <section className="animate-fade-up">
       <span className="font-label text-[11px] uppercase tracking-[0.18em] text-text-muted">
@@ -171,8 +188,7 @@ function Welcome({ context, onStart }: { context: Context; onStart: () => void }
         Vamos preparar o lançamento do <span className="text-cyan-700">{context.produto}</span>.
       </h1>
       <p className="mt-3.5 max-w-[54ch] text-[16.5px] text-text-secondary">
-        Este briefing nos dá tudo que precisamos para construir o CRM, rodar o tráfego pago e montar
-        a landing page do seu novo produto. Leva ~15 minutos e você pode parar e voltar quando quiser
+        {welcome} Leva ~15 minutos e você pode parar e voltar quando quiser
         — salvamos cada resposta automaticamente.
       </p>
 
@@ -186,7 +202,7 @@ function Welcome({ context, onStart }: { context: Context; onStart: () => void }
         O que vamos percorrer
       </span>
       <ul className="mt-3 border-y border-border-subtle/40">
-        {ONBOARDING_SECTIONS.map((s, i) => (
+        {sections.map((s, i) => (
           <li
             key={s.id}
             className="flex items-center gap-3.5 border-t border-border-subtle/40 py-3 first:border-t-0"
@@ -245,6 +261,8 @@ function AccessBox() {
 
 function Section({
   index,
+  sections,
+  total,
   answers,
   setText,
   toggleChip,
@@ -257,6 +275,8 @@ function Section({
   sending,
 }: {
   index: number;
+  sections: OnboardingSection[];
+  total: number;
   answers: Answers;
   setText: (id: string, v: string) => void;
   toggleChip: (q: OnboardingQuestion, opt: string) => void;
@@ -268,14 +288,14 @@ function Section({
   onSubmit: () => void;
   sending: boolean;
 }) {
-  const s = ONBOARDING_SECTIONS[index - 1];
-  const isLast = index === TOTAL;
+  const s = sections[index - 1];
+  const isLast = index === total;
 
   return (
     <section className="animate-fade-up">
       <div className="mb-3.5 flex items-center gap-2.5">
         <span className="font-mono text-xs font-semibold text-cyan-700">
-          {String(index).padStart(2, '0')} / {String(TOTAL).padStart(2, '0')}
+          {String(index).padStart(2, '0')} / {String(total).padStart(2, '0')}
         </span>
         <span className="h-px flex-1 bg-border-subtle/40" />
         <span className="font-label text-[11px] uppercase tracking-[0.18em] text-text-muted">

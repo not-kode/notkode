@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ONBOARDING_SECTIONS } from '@/lib/onboarding-schema';
+import { getOnboardingTemplate } from '@/lib/onboarding-schema';
 import { CopyLink } from './copy-link';
 import { buildClientMessage, deadlineLabel } from './onboarding-requirements';
 
@@ -16,6 +16,7 @@ export type BriefingRow = {
   token: string;
   orgName: string;
   product_name: string | null;
+  template: string;
   status: string;
   submitted_at: string | null;
   created_at: string;
@@ -42,9 +43,9 @@ function answerText(v: string | string[] | undefined): string {
   return (v ?? '').trim();
 }
 
-/** Seções com pelo menos uma resposta preenchida, já formatadas. */
-function answeredSections(respostas: Record<string, string | string[]>) {
-  return ONBOARDING_SECTIONS.map((section) => ({
+/** Seções (do template do briefing) com pelo menos uma resposta, já formatadas. */
+function answeredSections(respostas: Record<string, string | string[]>, template: string) {
+  return getOnboardingTemplate(template).sections.map((section) => ({
     section,
     answered: section.questions
       .map((q) => ({ q, val: answerText(respostas[q.id]) }))
@@ -65,7 +66,7 @@ function buildCopyBlock(r: BriefingRow): string {
   if (r.submitted_at) lines.push(`Enviado em: ${fmtDate(r.submitted_at)}`);
   lines.push('');
 
-  for (const { section, answered } of answeredSections(r.respostas)) {
+  for (const { section, answered } of answeredSections(r.respostas, r.template)) {
     lines.push(`## ${section.title}`);
     for (const { q, val } of answered) {
       lines.push(`${q.label}`);
@@ -204,7 +205,7 @@ function BriefingDrawer({
   onClose: () => void;
 }) {
   const enviado = row.status === 'enviado';
-  const sections = answeredSections(row.respostas);
+  const sections = answeredSections(row.respostas, row.template);
   const copyText = useMemo(() => buildCopyBlock(row), [row]);
   const clientMessage = useMemo(() => buildClientMessage(row), [row]);
 

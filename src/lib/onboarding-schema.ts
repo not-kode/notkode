@@ -225,6 +225,210 @@ export const ONBOARDING_SECTIONS: OnboardingSection[] = [
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────
+// Templates de briefing por tipo de serviço. O ONBOARDING_SECTIONS acima é
+// o briefing completo de PRODUTO/E-COMMERCE (v1); os demais reaproveitam
+// seções comuns (marca, acessos) e têm perguntas próprias.
+// ─────────────────────────────────────────────────────────────────────────
+
+const MARCA_SECTION = ONBOARDING_SECTIONS.find((s) => s.id === 'marca')!;
+
+/** Acessos enxutos para serviços que não envolvem mídia paga/e-commerce. */
+const ACESSOS_BASICOS: OnboardingSection = {
+  id: 'acessos-basicos',
+  title: 'Acessos & Materiais',
+  lede: 'Siga a instrução acima: convide o e-mail da Notkode como administrador. Se a conta ainda não existir, crie-a e depois nos convide.',
+  access: true,
+  questions: [
+    { id: 'acesso_dominio', type: 'text', ph: 'Ex: Registro.br, GoDaddy...',
+      label: 'Onde o domínio está registrado (e você consegue dar acesso ao DNS)?' },
+    { id: 'site_atual', type: 'chips', options: ['Sim', 'Não'],
+      label: 'Já tem algum site ou página no ar?' },
+    { id: 'site_url', type: 'text', ph: 'https://',
+      showIf: { q: 'site_atual', in: ['Sim'] },
+      label: 'Qual a URL?' },
+    { id: 'link_materiais', type: 'text', ph: 'Link do Drive / Dropbox / pasta',
+      label: 'Link da pasta com materiais da marca (se existir).' },
+  ],
+};
+
+const SITE_SECTIONS: OnboardingSection[] = [
+  {
+    id: 'objetivo-site',
+    title: 'Objetivo & Conteúdo',
+    lede: 'O que o site precisa alcançar e o que vai dentro dele.',
+    questions: [
+      { id: 'site_objetivo', type: 'chips', multi: true,
+        options: ['Vender', 'Captar leads', 'Apresentar a empresa', 'Agendar contato', 'Portfólio'],
+        label: 'Qual é o objetivo principal do site?' },
+      { id: 'site_acao', type: 'text', ph: 'Ex: chamar no WhatsApp, pedir orçamento...',
+        label: 'Qual AÇÃO o visitante deve fazer ao entrar?' },
+      { id: 'site_paginas', type: 'chips', multi: true,
+        options: ['Página única (landing)', 'Home', 'Sobre', 'Serviços/Produtos', 'Portfólio/Cases', 'Blog', 'Contato'],
+        label: 'Quais páginas o site precisa ter?' },
+      { id: 'site_publico', type: 'area',
+        label: 'Quem é o público que vai visitar o site?' },
+      { id: 'site_diferenciais', type: 'area',
+        label: 'Quais são os seus diferenciais em relação aos concorrentes?' },
+      { id: 'site_referencias', type: 'area', ph: 'Links de 2 ou 3 sites + o que você gosta em cada um',
+        label: 'Quais sites você admira e por quê?' },
+      { id: 'site_textos', type: 'chips',
+        options: ['Tenho prontos', 'Tenho parte', 'Preciso que criem'],
+        label: 'Os textos do site já existem?' },
+      { id: 'site_depoimentos', type: 'chips', options: ['Sim, tenho', 'Não tenho'],
+        label: 'Tem depoimentos ou avaliações de clientes pra usar?' },
+    ],
+  },
+  MARCA_SECTION,
+  ACESSOS_BASICOS,
+];
+
+const SISTEMA_SECTIONS: OnboardingSection[] = [
+  {
+    id: 'operacao',
+    title: 'Operação hoje',
+    lede: 'Como o processo funciona hoje, antes do sistema existir.',
+    questions: [
+      { id: 'sis_processo', type: 'area',
+        ph: 'Ex: pedido chega no WhatsApp → anoto na planilha → gero cobrança...',
+        label: 'Descreva passo a passo o processo que o sistema vai cobrir.' },
+      { id: 'sis_ferramentas', type: 'area', ph: 'Planilhas, CRM, ERP, WhatsApp, papel...',
+        label: 'Quais ferramentas você usa nesse processo hoje?' },
+      { id: 'sis_dor', type: 'area',
+        label: 'Qual é a maior dor desse processo hoje?' },
+      { id: 'sis_usuarios', type: 'text', ph: 'Ex: eu + 2 vendedores + 1 financeiro',
+        label: 'Quem vai usar o sistema (quantas pessoas e funções)?' },
+      { id: 'sis_volume', type: 'text', ph: 'Ex: 200 pedidos/mês, 80 clientes ativos',
+        label: 'Qual o volume mensal da operação?' },
+    ],
+  },
+  {
+    id: 'funcionalidades',
+    title: 'Funcionalidades',
+    lede: 'O que o sistema precisa fazer no dia 1 (dá pra crescer depois).',
+    questions: [
+      { id: 'sis_modulos', type: 'chips', multi: true,
+        options: ['Clientes (CRM)', 'Vendas/Pedidos', 'Financeiro', 'Agenda', 'Estoque', 'Relatórios', 'WhatsApp', 'Outro'],
+        label: 'Quais módulos são essenciais?' },
+      { id: 'sis_fluxo_critico', type: 'area',
+        label: 'Qual é o fluxo mais importante? Descreva do início ao fim.' },
+      { id: 'sis_integracoes', type: 'area', ph: 'Ex: gateway de pagamento, Bling, Google Agenda...',
+        label: 'Com quais sistemas ele precisa se integrar?' },
+      { id: 'sis_ia', type: 'area', ph: 'Ex: responder clientes, resumir conversas, prever estoque...',
+        label: 'Onde você imagina a IA ajudando?' },
+      { id: 'sis_dados', type: 'chips', multi: true,
+        options: ['Planilha', 'Sistema antigo', 'Papel', 'Começando do zero'],
+        label: 'Onde estão os dados de hoje?' },
+      { id: 'sis_dados_anexo', type: 'file',
+        showIf: { q: 'sis_dados', in: ['Planilha', 'Sistema antigo'] },
+        label: 'Anexe uma amostra dos dados (planilha ou export).' },
+    ],
+  },
+  ACESSOS_BASICOS,
+];
+
+const AGENTES_SECTIONS: OnboardingSection[] = [
+  {
+    id: 'atendimento',
+    title: 'Atendimento & Rotinas',
+    lede: 'Como o atendimento e as tarefas repetitivas funcionam hoje.',
+    questions: [
+      { id: 'ag_canais', type: 'chips', multi: true,
+        options: ['WhatsApp', 'Instagram', 'E-mail', 'Telefone', 'Site'],
+        label: 'Por onde os clientes falam com você?' },
+      { id: 'ag_volume', type: 'text', ph: 'Ex: 50 conversas/dia',
+        label: 'Qual o volume de mensagens ou atendimentos?' },
+      { id: 'ag_equipe', type: 'text', ph: 'Ex: 2 atendentes, seg–sáb 8h–18h',
+        label: 'Quem atende hoje e em qual horário?' },
+      { id: 'ag_faq', type: 'area',
+        label: 'Quais são as perguntas mais frequentes dos clientes?' },
+      { id: 'ag_repetitivo', type: 'area', ph: 'Ex: cobrar boleto, confirmar agendamento, lançar pedido...',
+        label: 'Quais tarefas repetitivas o time faz manualmente?' },
+      { id: 'ag_tom', type: 'chips', options: ['Descontraído', 'Neutro', 'Formal'],
+        label: 'Qual o tom de voz do atendimento?' },
+      { id: 'ag_humano', type: 'area', ph: 'Ex: negociação de valores, reclamação...',
+        label: 'Em quais situações o agente deve passar pra um humano?' },
+      { id: 'ag_ferramentas', type: 'area', ph: 'CRM, agenda, gateway, planilha...',
+        label: 'Quais ferramentas o agente precisa consultar ou mexer?' },
+    ],
+  },
+  ACESSOS_BASICOS,
+];
+
+const IDENTIDADE_SECTIONS: OnboardingSection[] = [
+  {
+    id: 'marca-hoje',
+    title: 'A marca',
+    lede: 'De onde a marca vem e pra onde ela vai.',
+    questions: [
+      { id: 'id_logo', type: 'chips',
+        options: ['Tenho e quero manter', 'Tenho mas quero refazer', 'Não tenho'],
+        label: 'Como está o logo hoje?' },
+      { id: 'id_historia', type: 'area',
+        label: 'Conte a história e o propósito da marca.' },
+      { id: 'id_personalidade', type: 'chips', multi: true,
+        options: ['Séria', 'Jovem', 'Sofisticada', 'Acessível', 'Tech', 'Artesanal', 'Divertida'],
+        label: 'Qual a personalidade da marca?' },
+      { id: 'id_cores_gosta', type: 'text',
+        label: 'Cores que você gosta (ou que já usa)?' },
+      { id: 'id_cores_evita', type: 'text',
+        label: 'Cores que NÃO quer de jeito nenhum?' },
+      { id: 'id_referencias', type: 'area', ph: '@marcas ou links + o que admira em cada uma',
+        label: 'Quais marcas você admira visualmente e por quê?' },
+      { id: 'id_aplicacoes', type: 'chips', multi: true,
+        options: ['Instagram', 'Site', 'Embalagem', 'Uniforme', 'Papelaria', 'Fachada/placa'],
+        label: 'Onde a identidade vai ser aplicada?' },
+      { id: 'id_materiais', type: 'file',
+        label: 'Anexe o que já existe (logo atual, fotos, artes).' },
+    ],
+  },
+];
+
+export type OnboardingTemplateKey = 'produto' | 'site' | 'sistema-ia' | 'agentes' | 'identidade';
+
+export type OnboardingTemplate = {
+  label: string;
+  /** Parágrafo de boas-vindas do formulário público. */
+  welcome: string;
+  sections: OnboardingSection[];
+};
+
+export const ONBOARDING_TEMPLATES: Record<OnboardingTemplateKey, OnboardingTemplate> = {
+  produto: {
+    label: 'Produto / E-commerce',
+    welcome:
+      'Este briefing nos dá tudo que precisamos para construir o CRM, rodar o tráfego pago e montar a landing page do seu novo produto.',
+    sections: ONBOARDING_SECTIONS,
+  },
+  site: {
+    label: 'Site / Landing Page',
+    welcome: 'Este briefing nos dá tudo que precisamos para desenhar e construir o seu site do jeito certo.',
+    sections: SITE_SECTIONS,
+  },
+  'sistema-ia': {
+    label: 'Sistema com IA',
+    welcome:
+      'Este briefing nos dá tudo que precisamos para desenhar o seu sistema sob medida, do jeito que a sua operação funciona.',
+    sections: SISTEMA_SECTIONS,
+  },
+  agentes: {
+    label: 'Agentes & Automação',
+    welcome:
+      'Este briefing nos dá tudo que precisamos para montar seus agentes e automações sem quebrar o que já funciona.',
+    sections: AGENTES_SECTIONS,
+  },
+  identidade: {
+    label: 'Identidade & Brandbook',
+    welcome: 'Este briefing nos dá tudo que precisamos para criar uma identidade com a cara da sua marca.',
+    sections: IDENTIDADE_SECTIONS,
+  },
+};
+
+/** Template pelo key gravado no briefing; desconhecido/nulo cai no de produto (v1). */
+export function getOnboardingTemplate(key: string | null | undefined): OnboardingTemplate {
+  return ONBOARDING_TEMPLATES[(key ?? 'produto') as OnboardingTemplateKey] ?? ONBOARDING_TEMPLATES.produto;
+}
+
 /**
  * Uma pergunta é visível quando não tem showIf, ou quando a resposta da
  * pergunta-dependência está entre os valores esperados. Suporta resposta

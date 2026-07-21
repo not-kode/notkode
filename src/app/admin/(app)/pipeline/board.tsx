@@ -160,7 +160,7 @@ export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: B
                       {deal.org?.name ?? deal.name ?? 'Sem nome'}
                     </span>
                     {deal.valor_pontual ? (
-                      <span className="shrink-0 font-label text-xs font-semibold text-primary">
+                      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 font-label text-sm font-bold tabular-nums text-primary">
                         {brl(deal.valor_pontual)}
                       </span>
                     ) : null}

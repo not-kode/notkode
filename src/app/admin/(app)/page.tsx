@@ -182,8 +182,13 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     else { if (t < cur.min) cur.min = t; if (t > cur.max) cur.max = t; }
   }
   const sessoes = sessMap.size;
+  // Duração por sessão CORTADA em 30min: aba esquecida aberta (ou sessão interna
+  // longa) estourava a média para horas irreais e minava a confiança no painel.
+  const CAP_SESSAO_MS = 30 * 60 * 1000;
   const tempoMedioSegundos = sessoes > 0
-    ? Math.round([...sessMap.values()].reduce((acc, v) => acc + (v.max - v.min), 0) / sessoes / 1000)
+    ? Math.round(
+        [...sessMap.values()].reduce((acc, v) => acc + Math.min(v.max - v.min, CAP_SESSAO_MS), 0) / sessoes / 1000,
+      )
     : 0;
 
   const data: DashboardData = {

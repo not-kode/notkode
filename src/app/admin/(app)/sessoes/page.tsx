@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { deleteRecording } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -119,7 +120,7 @@ export default async function SessoesPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-semibold">Sessões</h1>
         <p className="mt-1 text-sm text-text-muted">
-          {sessions.length} gravação{sessions.length === 1 ? '' : 'ões'} · assista o que cada visitante fez no site. Texto digitado fica mascarado.
+          {sessions.length} gravaç{sessions.length === 1 ? 'ão' : 'ões'} · assista o que cada visitante fez no site. Texto digitado fica mascarado.
         </p>
       </header>
 
@@ -159,12 +160,23 @@ export default async function SessoesPage() {
                     {fmtDuration(new Date(s.last).getTime() - new Date(s.first).getTime())}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
-                    <Link
-                      href={`/admin/sessoes/${s.session_id}`}
-                      className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-primary/90"
-                    >
-                      ▶ Assistir
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/admin/sessoes/${s.session_id}`}
+                        className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-primary/90"
+                      >
+                        ▶ Assistir
+                      </Link>
+                      <form action={deleteRecording}>
+                        <input type="hidden" name="session_id" value={s.session_id} />
+                        <button
+                          type="submit"
+                          className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger"
+                        >
+                          apagar
+                        </button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}

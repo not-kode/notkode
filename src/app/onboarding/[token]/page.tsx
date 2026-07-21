@@ -33,6 +33,7 @@ export default async function OnboardingPage({
     <OnboardingForm
       token={token}
       context={{ cliente: briefing.cliente, produto: briefing.produto, escopo: briefing.escopo }}
+      template={briefing.template}
       initialAnswers={briefing.respostas}
       initialStatus={briefing.status}
     />

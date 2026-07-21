@@ -136,11 +136,11 @@ export function DashboardView({ data }: { data: DashboardData }) {
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint="recebido no período" />
-        <Kpi label="A receber" value={brl(n.aReceber)} hint="ainda vai entrar" />
+        <Kpi label="A receber" value={brl(n.aReceber)} hint="no prazo, até o fim do mês" />
         <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido" />
         <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês" />
         <Kpi label="Clientes ativos" value={nf(n.clientesAtivos)} hint="hoje" />
-        <Kpi label="Negócios ganhos" value={nf(n.ganhos)} hint="total" />
+        <Kpi label="Negócios ganhos" value={nf(n.ganhos)} hint="desde o início" />
       </div>
 
       <div className="mb-8">

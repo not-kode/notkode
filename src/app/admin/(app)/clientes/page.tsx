@@ -133,5 +133,9 @@ export default async function ClientesPage() {
   const { data: prodRows } = await supabase.from('products').select('key, name');
   const productLabels: Record<string, string> = Object.fromEntries((prodRows ?? []).map((p) => [p.key, p.name]));
 
-  return <ClientesView clients={clients} productLabels={productLabels} />;
+  // Cliente de verdade = tem pelo menos um contrato. Empresa que ainda está
+  // negociando (organização criada pelo pipeline) vive só no funil.
+  const soClientes = clients.filter((c) => c.contratos.length > 0);
+
+  return <ClientesView clients={soClientes} productLabels={productLabels} />;
 }

@@ -38,6 +38,10 @@ export function deadlineLabel(days = REQUEST_DEADLINE_DAYS): string {
 
 /** Mensagem de WhatsApp pronta pra colar, na voz da Notkode. */
 export function buildClientMessage(r: BriefingRow): string {
+  // As cobranças de gateway/Bling/Ads são do briefing de PRODUTO; os demais
+  // templates (site, sistema, agentes, identidade) usam a mensagem genérica.
+  if (r.template !== 'produto') return buildGenericMessage(r);
+
   const deadline = deadlineLabel();
   const p: string[] = [];
 
@@ -107,6 +111,53 @@ export function buildClientMessage(r: BriefingRow): string {
   } else {
     p.push('Sobre o produto, revisei tudo e ficou claro — se mudar algo (preço, custo ou prazo), é só me avisar.');
   }
+
+  p.push(
+    'Assim que isso chegar, eu já começo a produzir tudo. Qualquer dúvida em algum item, me chama por aqui! 🚀',
+  );
+
+  return p.join('\n\n');
+}
+
+/** Mensagem de retorno dos templates não-produto: acessos básicos + identidade + materiais. */
+function buildGenericMessage(r: BriefingRow): string {
+  const deadline = deadlineLabel();
+  const p: string[] = [];
+
+  p.push(`Oi, ${r.orgName}! Tudo bem? 🙌`);
+  p.push(
+    'Recebi seu briefing por aqui, ficou ótimo — muito obrigado! Pra eu já colocar a mão na massa, preciso de algumas coisas suas ' +
+      `nos próximos ${REQUEST_DEADLINE_DAYS} dias (até ${deadline}):`,
+  );
+
+  const linhasAcesso: string[] = [];
+  const dominio = read(r, 'acesso_dominio');
+  linhasAcesso.push(
+    `1️⃣ *Acessos* — me dá acesso ao DNS do domínio${dominio ? ` (${dominio})` : ''} convidando ${ACCESS_EMAIL} como administrador. O que ainda não existir, é só criar a conta e me convidar.`,
+  );
+  if (read(r, 'site_atual') === 'Sim') {
+    const url = read(r, 'site_url');
+    linhasAcesso.push(`→ Acesso ao site atual${url ? ` (${url})` : ''}.`);
+  }
+  p.push(linhasAcesso.join('\n'));
+
+  const temId = read(r, 'tem_identidade') || read(r, 'id_logo');
+  if (temId === 'Não tenho' || temId === '') {
+    p.push(
+      '2️⃣ *Identidade visual* — como você ainda não tem, me manda referências de marcas e estilos que curte que eu já levo isso em conta.',
+    );
+  } else {
+    p.push(
+      '2️⃣ *Identidade visual completa* — logo em vetor (arquivo editável, não só imagem), cores, fontes e o manual da marca, se tiver.',
+    );
+  }
+
+  const materiais = read(r, 'link_materiais');
+  p.push(
+    materiais
+      ? '3️⃣ *Materiais* — vi que você já me passou a pasta, vou revisar e te aviso se faltar algo. Se tiver fotos e vídeos em alta, joga lá também.'
+      : '3️⃣ *Materiais* — me manda uma pasta (Drive/Dropbox) com fotos, vídeos e qualquer material da marca em alta.',
+  );
 
   p.push(
     'Assim que isso chegar, eu já começo a produzir tudo. Qualquer dúvida em algum item, me chama por aqui! 🚀',

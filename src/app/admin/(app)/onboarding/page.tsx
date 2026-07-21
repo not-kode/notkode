@@ -1,5 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { ONBOARDING_TEMPLATES } from '@/lib/onboarding-schema';
 import { OnboardingView, type BriefingRow } from './onboarding-view';
+import { NewBriefing } from './new-briefing';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +16,7 @@ type Row = {
   submitted_at: string | null;
   created_at: string;
   respostas: Record<string, string | string[]> | null;
+  template_key: string | null;
   organizations: { name?: string } | { name?: string }[] | null;
 };
 
@@ -26,10 +29,18 @@ function orgName(o: Row['organizations']): string {
 
 export default async function OnboardingAdminPage() {
   const supabase = getSupabaseAdmin();
-  const { data } = await supabase
-    .from('onboarding_briefings')
-    .select('id, token, product_name, scope, status, submitted_at, created_at, respostas, organizations(name)')
-    .order('created_at', { ascending: false });
+  const [{ data }, { data: orgData }] = await Promise.all([
+    supabase
+      .from('onboarding_briefings')
+      .select('id, token, product_name, scope, status, submitted_at, created_at, respostas, template_key, organizations(name)')
+      .order('created_at', { ascending: false }),
+    supabase.from('organizations').select('id, name').order('name'),
+  ]);
+
+  const orgs = ((orgData ?? []) as { id: string; name: string | null }[]).flatMap((o) =>
+    o.name ? [{ id: o.id, name: o.name }] : [],
+  );
+  const templates = Object.entries(ONBOARDING_TEMPLATES).map(([key, t]) => ({ key, label: t.label }));
 
   const rows = (data ?? []) as Row[];
 
@@ -57,6 +68,7 @@ export default async function OnboardingAdminPage() {
     token: r.token,
     orgName: orgName(r.organizations),
     product_name: r.product_name,
+    template: r.template_key ?? 'produto',
     status: r.status,
     submitted_at: r.submitted_at,
     created_at: r.created_at,
@@ -66,11 +78,14 @@ export default async function OnboardingAdminPage() {
 
   return (
     <div>
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Onboarding</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {rows.length} briefing{rows.length === 1 ? '' : 's'} · {enviados} respondido{enviados === 1 ? '' : 's'}
-        </p>
+      <header className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Onboarding</h1>
+          <p className="mt-1 text-sm text-text-muted">
+            {rows.length} briefing{rows.length === 1 ? '' : 's'} · {enviados} respondido{enviados === 1 ? '' : 's'}
+          </p>
+        </div>
+        <NewBriefing orgs={orgs} templates={templates} />
       </header>
 
       <OnboardingView rows={briefings} siteUrl={SITE_URL} />

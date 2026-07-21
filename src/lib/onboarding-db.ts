@@ -6,6 +6,7 @@ export type BriefingRow = {
   cliente: string;
   produto: string;
   escopo: string;
+  template: string;
   status: 'rascunho' | 'enviado';
   respostas: Record<string, string | string[]>;
 };
@@ -15,7 +16,7 @@ export async function getBriefingByToken(token: string): Promise<BriefingRow | n
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('onboarding_briefings')
-    .select('id, product_name, scope, status, respostas, organizations(name)')
+    .select('id, product_name, scope, status, respostas, template_key, organizations(name)')
     .eq('token', token)
     .maybeSingle();
 
@@ -29,6 +30,7 @@ export async function getBriefingByToken(token: string): Promise<BriefingRow | n
     cliente: cliente ?? 'Cliente',
     produto: (data.product_name as string) ?? '',
     escopo: (data.scope as string) ?? '',
+    template: (data.template_key as string) ?? 'produto',
     status: (data.status as 'rascunho' | 'enviado') ?? 'rascunho',
     respostas: (data.respostas as Record<string, string | string[]>) ?? {},
   };
