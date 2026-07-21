@@ -212,7 +212,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
                       </p>
                       <div className="flex flex-col gap-2.5">
                         {f.steps.map((step, i) => (
-                          <Bar key={step.label} label={step.label} value={step.count} top={top} drop={i === drop} highlight={i === f.steps.length - 1} />
+                          <Bar key={step.label} label={step.label} value={step.count} top={top} drop={i === drop} highlight={i === f.steps.length - 1} wLabel="w-44" />
                         ))}
                       </div>
                     </div>

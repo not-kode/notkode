@@ -49,7 +49,7 @@ export function SessionRecorder() {
             // curta, garante que o player tenha o DOM base para reproduzir.
             if (first) {
               first = false;
-              setTimeout(() => flush(false), 800);
+              setTimeout(() => flush(false), 400);
             }
           },
           maskAllInputs: true, // não grava o que é digitado
@@ -64,12 +64,15 @@ export function SessionRecorder() {
       }
     };
 
-    // Não competir com o carregamento/hidratação: só começa a gravar quando a
-    // página terminou de carregar E a thread principal estiver ociosa.
+    // Não competir com o carregamento/hidratação: começa quando a página carregou
+    // e a thread ficou ociosa, MAS com teto de 1,5s — visitante que entra e sai
+    // rápido também precisa aparecer na gravação.
     const scheduleStart = () => {
-      const w = window as typeof window & { requestIdleCallback?: (cb: () => void) => void };
-      if (w.requestIdleCallback) w.requestIdleCallback(() => startRecording());
-      else setTimeout(startRecording, 1500);
+      const w = window as typeof window & {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => void;
+      };
+      if (w.requestIdleCallback) w.requestIdleCallback(() => startRecording(), { timeout: 1500 });
+      else setTimeout(startRecording, 1000);
     };
     if (document.readyState === 'complete') scheduleStart();
     else window.addEventListener('load', scheduleStart, { once: true });
