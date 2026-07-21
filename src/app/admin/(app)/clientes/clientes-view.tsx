@@ -148,7 +148,7 @@ function Field({ label, name, defaultValue, placeholder, className = '' }: { lab
   );
 }
 
-export function ClientesView({ clients }: { clients: ClientView[] }) {
+export function ClientesView({ clients, productLabels = {} }: { clients: ClientView[]; productLabels?: Record<string, string> }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = clients.find((c) => c.id === selectedId) ?? null;
 
@@ -207,12 +207,12 @@ export function ClientesView({ clients }: { clients: ClientView[] }) {
       )}
       <p className="mt-2 font-label text-[10px] text-text-muted/70">Clique num cliente para ver dados cadastrais, contratos e parcelas.</p>
 
-      {selected && <ClientDrawer client={selected} onClose={() => setSelectedId(null)} />}
+      {selected && <ClientDrawer client={selected} productLabels={productLabels} onClose={() => setSelectedId(null)} />}
     </div>
   );
 }
 
-function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => void }) {
+function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientView; productLabels?: Record<string, string>; onClose: () => void }) {
   const [pending, start] = useTransition();
   const [newContract, setNewContract] = useState(false);
   const [tab, setTab] = useState<'contratos' | 'cadastro'>(client.contratos.length > 0 ? 'contratos' : 'cadastro');
@@ -257,7 +257,7 @@ function ClientDrawer({ client, onClose }: { client: ClientView; onClose: () => 
   return (
     <Drawer title={client.name ?? 'Cliente'} eyebrow="Cliente" onClose={onClose} wide>
       {/* Resumo do projeto — os macros do cliente num relance */}
-      <ProjectHeader client={client} />
+      <ProjectHeader client={client} productLabels={productLabels} />
 
       {/* Abas */}
       <div className="flex gap-1 border-b border-black/[0.06] pb-3">
@@ -639,7 +639,7 @@ function Drawer({ title, eyebrow, onClose, children, wide }: { title: string; ey
 
 // Cabeçalho de projeto: reúne os macros do cliente que antes ficavam espalhados
 // (etapa, prazo, valor, saúde financeira, contato, origem do lead e briefing).
-function ProjectHeader({ client }: { client: ClientView }) {
+function ProjectHeader({ client, productLabels = {} }: { client: ClientView; productLabels?: Record<string, string> }) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const live = client.contratos.find(isLive) ?? null;
   const fin = financeHealth(client.contratos, todayStr);
@@ -656,7 +656,7 @@ function ProjectHeader({ client }: { client: ClientView }) {
   const estMin = lo?.estimated_min, estMax = lo?.estimated_max;
   const estimativa = lo && (estMin || estMax) ? `est. ${estMin ? brl(estMin) : '—'}–${estMax ? brl(estMax) : '—'}` : null;
   const origem = lo
-    ? [SERVICE_LABELS[lo.service_tag ?? ''] ?? lo.service_tag, lo.page_origin, estimativa].filter(Boolean).join(' · ')
+    ? [productLabels[lo.service_tag ?? ''] ?? SERVICE_LABELS[lo.service_tag ?? ''] ?? lo.service_tag, lo.page_origin, estimativa].filter(Boolean).join(' · ')
     : null;
 
   const cellLabel = 'font-label text-[10px] uppercase tracking-[0.12em] text-text-muted';

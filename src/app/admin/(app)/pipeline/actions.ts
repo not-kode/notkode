@@ -23,13 +23,19 @@ function parseValor(raw: FormDataEntryValue | null): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** Normaliza a lista de produtos/serviços do form: só chaves conhecidas, sem repetição. */
-function normalizeServices(raw: FormDataEntryValue[]): string[] {
+/** Normaliza a lista de produtos/serviços do form: só chaves da tabela products
+ *  (com a lista antiga do código como retaguarda), sem repetição. */
+async function normalizeServices(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  raw: FormDataEntryValue[],
+): Promise<string[]> {
+  const { data } = await supabase.from('products').select('key');
+  const valid = new Set<string>([...(data ?? []).map((p) => p.key), ...SERVICE_TAGS]);
   const seen = new Set<string>();
   const out: string[] = [];
   for (const r of raw) {
     const s = String(r).trim();
-    if ((SERVICE_TAGS as readonly string[]).includes(s) && !seen.has(s)) {
+    if (valid.has(s) && !seen.has(s)) {
       seen.add(s);
       out.push(s);
     }
@@ -78,14 +84,17 @@ export async function createDeal(formData: FormData): Promise<void> {
   const email = String(formData.get('email') ?? '').trim();
   const whatsapp = String(formData.get('whatsapp') ?? '').trim();
   const notes = String(formData.get('notes') ?? '').trim() || null;
-  const services = normalizeServices(formData.getAll('service_tag'));
 
   const stageRaw = String(formData.get('stage') ?? 'novo').trim();
   const stage = DEAL_STAGES.includes(stageRaw as DealStage) ? stageRaw : 'novo';
 
   const valor = parseValor(formData.get('valor_pontual'));
+  const repasseValor = parseValor(formData.get('repasse_valor'));
+  const repassePara = String(formData.get('repasse_para') ?? '').trim() || null;
+  const precisaNota = formData.get('precisa_nota') === 'on';
 
   const supabase = getSupabaseAdmin();
+  const services = await normalizeServices(supabase, formData.getAll('service_tag'));
 
   // 1. Organização (obrigatória): reaproveita cliente existente antes de criar,
   //    pelo vínculo escolhido no autocomplete ou por nome igual já cadastrado.
@@ -110,9 +119,21 @@ export async function createDeal(formData: FormData): Promise<void> {
     orgId = org.id;
   }
 
-  // 2. Contato (opcional) + canais + vínculo com a empresa
+  // 2. Contato: reaproveita o contato do cliente vinculado (preenchido pelo
+  //    autocomplete) atualizando nome/canais; senão cria + vincula à empresa.
+  const linkedContactId = String(formData.get('contact_id') ?? '').trim() || null;
   let contactId: string | null = null;
-  if (name || email || whatsapp) {
+
+  if (linkedContactId) {
+    const { data: linked } = await supabase.from('contacts').select('id').eq('id', linkedContactId).maybeSingle();
+    if (linked) {
+      contactId = linked.id;
+      if (name) await supabase.from('contacts').update({ name, updated_at: new Date().toISOString() }).eq('id', linked.id);
+      await upsertChannel(supabase, linked.id, 'email', email, true);
+      await upsertChannel(supabase, linked.id, 'whatsapp', whatsapp, false);
+    }
+  }
+  if (!contactId && (name || email || whatsapp)) {
     const { data: contact, error: contactErr } = await supabase
       .from('contacts')
       .insert({ name: name || null, source: 'manual', locale: 'pt', notes })
@@ -140,6 +161,9 @@ export async function createDeal(formData: FormData): Promise<void> {
     service_tag: services[0] ?? null,
     service_tags: services,
     valor_pontual: valor,
+    repasse_valor: repasseValor || null,
+    repasse_para: repassePara,
+    precisa_nota: precisaNota,
     notes,
   });
   if (dealErr) throw new Error(`Falha ao criar negócio: ${dealErr.message}`);
@@ -219,10 +243,16 @@ export async function updateDeal(formData: FormData): Promise<void> {
   if (contactId) patch.contact_id = contactId;
 
   const valorRaw = formData.get('valor_pontual');
-  if (valorRaw != null) patch.valor_pontual = parseValor(valorRaw);
+  if (valorRaw != null) {
+    patch.valor_pontual = parseValor(valorRaw);
+    // O bloco financeiro vem sempre junto do valor no form.
+    patch.repasse_valor = parseValor(formData.get('repasse_valor')) || null;
+    patch.repasse_para = String(formData.get('repasse_para') ?? '').trim() || null;
+    patch.precisa_nota = formData.get('precisa_nota') === 'on';
+  }
   // O form sempre manda o marcador; assim conseguimos zerar os serviços se nada estiver marcado.
   if (formData.has('service_tags_present')) {
-    const services = normalizeServices(formData.getAll('service_tag'));
+    const services = await normalizeServices(supabase, formData.getAll('service_tag'));
     patch.service_tags = services;
     patch.service_tag = services[0] ?? null;
   }
@@ -285,7 +315,11 @@ export async function winDeal(formData: FormData): Promise<void> {
     } else {
       // Nenhum contrato existente — cria o esboço herdando valor/MRR do deal.
       const isRecurring = Number(deal.mrr ?? 0) > 0;
-      const title = SERVICE_TITLES[deal.service_tag ?? ''] ?? 'Contrato';
+      let title = 'Contrato';
+      if (deal.service_tag) {
+        const { data: prod } = await supabase.from('products').select('name').eq('key', deal.service_tag).maybeSingle();
+        title = prod?.name ?? SERVICE_TITLES[deal.service_tag] ?? 'Contrato';
+      }
       const { data: eng } = await supabase
         .from('engagements')
         .insert({
@@ -449,5 +483,56 @@ export async function generateInstallments(formData: FormData): Promise<void> {
 
   await supabase.from('deal_installments').delete().eq('deal_id', deal_id);
   await supabase.from('deal_installments').insert(rows);
+  revalidatePath('/admin/pipeline');
+}
+
+/** Gera slug único de produto a partir do nome (vira o service_tag dos negócios). */
+function slugifyProduct(name: string): string {
+  return (
+    name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'produto'
+  );
+}
+
+/** Adiciona um produto/serviço à lista (tabela products, gerida pelo sistema). */
+export async function addProduct(formData: FormData): Promise<void> {
+  const name = String(formData.get('name') ?? '').trim();
+  if (!name) return;
+  const billing_type = String(formData.get('billing_type') ?? '') === 'recorrente' ? 'recorrente' : 'pontual';
+
+  const supabase = getSupabaseAdmin();
+  const { data: existing } = await supabase.from('products').select('key, sort');
+  const keys = new Set((existing ?? []).map((p) => p.key));
+  const base = slugifyProduct(name);
+  let key = base;
+  for (let i = 2; keys.has(key); i++) key = `${base}-${i}`;
+  const sort = Math.max(0, ...(existing ?? []).map((p) => p.sort ?? 0)) + 1;
+
+  await supabase.from('products').insert({ key, name, billing_type, sort });
+  revalidatePath('/admin/pipeline');
+}
+
+/** Renomeia um produto (o key/slug gravado nos negócios não muda). */
+export async function renameProduct(formData: FormData): Promise<void> {
+  const key = String(formData.get('key') ?? '');
+  const name = String(formData.get('name') ?? '').trim();
+  if (!key || !name) return;
+  const supabase = getSupabaseAdmin();
+  await supabase.from('products').update({ name }).eq('key', key);
+  revalidatePath('/admin/pipeline');
+}
+
+/** Ativa/desativa um produto: some das opções novas sem apagar o histórico. */
+export async function toggleProduct(formData: FormData): Promise<void> {
+  const key = String(formData.get('key') ?? '');
+  if (!key) return;
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase.from('products').select('active').eq('key', key).maybeSingle();
+  if (!data) return;
+  await supabase.from('products').update({ active: !data.active }).eq('key', key);
   revalidatePath('/admin/pipeline');
 }

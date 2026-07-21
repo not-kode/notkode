@@ -129,5 +129,9 @@ export default async function ClientesPage() {
     };
   });
 
-  return <ClientesView clients={clients} />;
+  // Rótulos de produto da tabela products (lista editável pelo sistema).
+  const { data: prodRows } = await supabase.from('products').select('key, name');
+  const productLabels: Record<string, string> = Object.fromEntries((prodRows ?? []).map((p) => [p.key, p.name]));
+
+  return <ClientesView clients={clients} productLabels={productLabels} />;
 }

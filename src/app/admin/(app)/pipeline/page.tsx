@@ -2,7 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
 import { PipelineBoard, type BoardDeal } from './board';
 import { NewDealDialog } from './new-deal-dialog';
-import { type OrgOption } from './orgs';
+import { type OrgOption, type Product } from './orgs';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +29,9 @@ type DealRow = {
   source: string | null;
   valor_pontual: number | null;
   mrr: number | null;
+  repasse_valor: number | null;
+  repasse_para: string | null;
+  precisa_nota: boolean;
   notes: string | null;
   organization_id: string | null;
   proposal_path: string | null;
@@ -51,16 +54,50 @@ export default async function PipelinePage() {
   const { data, error } = await supabase
     .from('deals')
     .select(
-      'id, stage, service_tag, service_tags, source, valor_pontual, mrr, notes, organization_id, proposal_path, proposal_name, ' +
+      'id, stage, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, ' +
         'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
         'organizations(id, name, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep), ' +
         'deal_installments(id, description, amount, due_date)',
     )
     .order('created_at', { ascending: false });
 
-  // Empresas já cadastradas, para o autocomplete do novo negócio (evita cliente duplicado).
-  const { data: orgRows } = await supabase.from('organizations').select('id, name').order('name');
-  const orgOptions: OrgOption[] = (orgRows ?? []).flatMap((o) => (o.name ? [{ id: o.id, name: o.name }] : []));
+  // Empresas já cadastradas (com contato principal), para o autocomplete do novo
+  // negócio: vincula o cliente existente e preenche whats/e-mail automaticamente.
+  type OrgContactRow = {
+    id: string;
+    name: string | null;
+    contact_organizations:
+      | { is_primary: boolean; contacts: { id: string; name: string | null; contact_channels: Channel[] | null } | null }[]
+      | null;
+  };
+  const { data: orgRows } = await supabase
+    .from('organizations')
+    .select('id, name, contact_organizations(is_primary, contacts(id, name, contact_channels(kind, value, is_primary)))')
+    .order('name');
+  const orgOptions: OrgOption[] = ((orgRows ?? []) as unknown as OrgContactRow[]).flatMap((o) => {
+    if (!o.name) return [];
+    const links = o.contact_organizations ?? [];
+    const link = links.find((l) => l.is_primary && l.contacts) ?? links.find((l) => l.contacts);
+    const c = link?.contacts ?? null;
+    return [
+      {
+        id: o.id,
+        name: o.name,
+        contact: c
+          ? {
+              id: c.id,
+              name: c.name,
+              email: pick(c.contact_channels ?? null, 'email'),
+              whatsapp: pick(c.contact_channels ?? null, 'whatsapp'),
+            }
+          : null,
+      },
+    ];
+  });
+
+  // Produtos/serviços da tabela products (lista editável pelo próprio sistema).
+  const { data: prodRows } = await supabase.from('products').select('key, name, active').order('sort');
+  const products: Product[] = (prodRows ?? []).map((p) => ({ key: p.key, name: p.name, active: p.active }));
 
   const rows = (data ?? []) as unknown as DealRow[];
   const deals: BoardDeal[] = rows.map((r) => ({
@@ -71,6 +108,9 @@ export default async function PipelinePage() {
     source: r.source,
     valor_pontual: r.valor_pontual,
     mrr: r.mrr,
+    repasse_valor: r.repasse_valor,
+    repasse_para: r.repasse_para,
+    precisa_nota: r.precisa_nota,
     notes: r.notes,
     organization_id: r.organization_id,
     contact_id: r.contacts?.id ?? null,
@@ -113,7 +153,7 @@ export default async function PipelinePage() {
                 </span>
               )}
             </div>
-            <NewDealDialog orgOptions={orgOptions} />
+            <NewDealDialog orgOptions={orgOptions} products={products} />
           </div>
         </div>
       </header>
@@ -124,7 +164,7 @@ export default async function PipelinePage() {
         </p>
       )}
 
-      <PipelineBoard initialDeals={deals} />
+      <PipelineBoard initialDeals={deals} products={products} />
       <p className="mt-3 font-label text-[10px] text-text-muted/70">Arraste os cards entre as colunas para mudar o estágio.</p>
     </div>
   );

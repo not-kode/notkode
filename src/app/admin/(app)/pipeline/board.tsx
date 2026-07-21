@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { moveDealStage } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_LABELS, type DealStage } from './stages';
 import { DealDrawer } from './deal-drawer';
+import { type Product } from './orgs';
 
 export type OrgInfo = {
   id: string;
@@ -35,6 +36,9 @@ export type BoardDeal = {
   source: string | null;
   valor_pontual: number | null;
   mrr: number | null;
+  repasse_valor: number | null;
+  repasse_para: string | null;
+  precisa_nota: boolean;
   notes: string | null;
   organization_id: string | null;
   contact_id: string | null;
@@ -61,7 +65,7 @@ const STAGE_ACCENT: Record<DealStage, string> = {
 const brl = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
-export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
+export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: BoardDeal[]; products?: Product[] }) {
   const [deals, setDeals] = useState(initialDeals);
   const [overStage, setOverStage] = useState<DealStage | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -72,6 +76,10 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
   useEffect(() => setDeals(initialDeals), [initialDeals]);
 
   const selected = deals.find((d) => d.id === selectedId) ?? null;
+
+  // Rótulo do produto: tabela products (editável) com fallback pro código antigo.
+  const productLabel = (tag: string) =>
+    products.find((p) => p.key === tag)?.name ?? SERVICE_LABELS[tag as keyof typeof SERVICE_LABELS] ?? tag;
 
   function move(id: string, toStage: DealStage) {
     const current = deals.find((d) => d.id === id);
@@ -169,7 +177,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
                           key={tag}
                           className="inline-block rounded-full border border-black/[0.08] bg-black/[0.02] px-2 py-0.5 font-label text-[10px] uppercase tracking-wider text-text-secondary"
                         >
-                          {SERVICE_LABELS[tag as keyof typeof SERVICE_LABELS] ?? tag}
+                          {productLabel(tag)}
                         </span>
                       ))}
                     </div>
@@ -204,7 +212,7 @@ export function PipelineBoard({ initialDeals }: { initialDeals: BoardDeal[] }) {
         );
       })}
     </div>
-    {selected && <DealDrawer deal={selected} onClose={() => setSelectedId(null)} />}
+    {selected && <DealDrawer deal={selected} products={products} onClose={() => setSelectedId(null)} />}
     </>
   );
 }

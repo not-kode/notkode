@@ -11,8 +11,9 @@ import {
   deleteDealInstallment,
   generateInstallments,
 } from './actions';
-import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS } from './stages';
-import { normalizeOrgName, type OrgOption } from './orgs';
+import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS, type DealStage } from './stages';
+import { normalizeOrgName, type OrgOption, type Product } from './orgs';
+import { ProductsManager } from './products-manager';
 import type { BoardDeal } from './board';
 
 const brl = (n: number) =>
@@ -64,12 +65,18 @@ function Field({
 }
 
 /**
- * Campo Empresa com busca nas empresas já cadastradas: escolher uma sugestão
- * vincula o negócio ao cliente existente (organization_id) em vez de duplicar.
+ * Empresa + contato do modo criação. O campo Empresa busca nas empresas já
+ * cadastradas: escolher uma sugestão vincula o negócio ao cliente existente
+ * (organization_id) e já preenche o contato principal (nome/whats/e-mail),
+ * reaproveitando o cadastro (contact_id) em vez de duplicar.
  */
-function CompanyField({ orgOptions }: { orgOptions: OrgOption[] }) {
+function CreateIdentityFields({ orgOptions }: { orgOptions: OrgOption[] }) {
   const [company, setCompany] = useState('');
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [contactId, setContactId] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [email, setEmail] = useState('');
   const [open, setOpen] = useState(false);
 
   const matches = useMemo(() => {
@@ -80,57 +87,209 @@ function CompanyField({ orgOptions }: { orgOptions: OrgOption[] }) {
 
   const linked = orgId ? orgOptions.find((o) => o.id === orgId) : null;
 
+  function pickOrg(o: OrgOption) {
+    setCompany(o.name);
+    setOrgId(o.id);
+    setOpen(false);
+    setContactId(o.contact?.id ?? null);
+    setName(o.contact?.name ?? '');
+    setWhatsapp(o.contact?.whatsapp ?? '');
+    setEmail(o.contact?.email ?? '');
+  }
+
   return (
-    <div className="relative">
-      <label className={labelCls}>
-        Empresa<span className="text-danger"> *</span>
-      </label>
-      <input
-        name="company"
-        value={company}
-        required
-        autoComplete="off"
-        placeholder="Nome da empresa"
-        className={inputCls}
-        onChange={(e) => {
-          setCompany(e.target.value);
-          setOrgId(null); // digitou por cima: desfaz o vínculo
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-      />
-      <input type="hidden" name="organization_id" value={orgId ?? ''} />
+    <>
+      <div className="relative">
+        <label className={labelCls}>
+          Empresa<span className="text-danger"> *</span>
+        </label>
+        <input
+          name="company"
+          value={company}
+          required
+          autoComplete="off"
+          placeholder="Nome da empresa"
+          className={inputCls}
+          onChange={(e) => {
+            setCompany(e.target.value);
+            setOrgId(null); // digitou por cima: desfaz o vínculo
+            setContactId(null);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+        />
+        <input type="hidden" name="organization_id" value={orgId ?? ''} />
+        <input type="hidden" name="contact_id" value={contactId ?? ''} />
 
-      {open && !linked && matches.length > 0 && (
-        <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border border-black/[0.08] bg-white shadow-lg">
-          {matches.map((o) => (
-            <li key={o.id}>
-              <button
-                type="button"
-                // mousedown dispara antes do blur do input
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  setCompany(o.name);
-                  setOrgId(o.id);
-                  setOpen(false);
-                }}
-                className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-sm text-text-primary transition-colors hover:bg-primary/[0.06]"
-              >
-                <span className="truncate">{o.name}</span>
-                <span className="shrink-0 font-label text-[10px] uppercase tracking-wider text-text-muted">já cadastrada</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+        {open && !linked && matches.length > 0 && (
+          <ul className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border border-black/[0.08] bg-white shadow-lg">
+            {matches.map((o) => (
+              <li key={o.id}>
+                <button
+                  type="button"
+                  // mousedown dispara antes do blur do input
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    pickOrg(o);
+                  }}
+                  className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-sm text-text-primary transition-colors hover:bg-primary/[0.06]"
+                >
+                  <span className="truncate">{o.name}</span>
+                  <span className="shrink-0 font-label text-[10px] uppercase tracking-wider text-text-muted">já cadastrada</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
 
-      <p className={`mt-1 font-label text-[10px] ${linked ? 'text-success' : 'text-text-muted'}`}>
-        {linked
-          ? `Vinculado ao cliente existente: ${linked.name}`
-          : 'Se a empresa já existir, escolha na lista para não duplicar o cliente.'}
-      </p>
-    </div>
+        <p className={`mt-1 font-label text-[10px] ${linked ? 'text-success' : 'text-text-muted'}`}>
+          {linked
+            ? `Vinculado ao cliente existente: ${linked.name}${contactId ? ' (contato preenchido)' : ''}`
+            : 'Se a empresa já existir, escolha na lista para não duplicar o cliente.'}
+        </p>
+      </div>
+
+      <div>
+        <label className={labelCls}>Contato (opcional)</label>
+        <input
+          name="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Quem você fala (pode ser um terceiro)"
+          className={inputCls}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>WhatsApp</label>
+          <input
+            name="whatsapp"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            placeholder="(00) 00000-0000"
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>E-mail</label>
+          <input
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="opcional"
+            className={inputCls}
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+const brl2 = (n: number) =>
+  n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
+
+/** Converte texto pt-BR ("12.500" / "12500,50") em número; mesma regra do servidor. */
+const parseNum = (raw: string): number => {
+  const n = Number(raw.replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
+};
+
+/**
+ * Bloco financeiro do negócio: valor, estágio, repasse pro gestor e nota fiscal.
+ * Com "precisa de nota" marcado, mostra na hora os 6% pagos e o valor líquido
+ * (já descontando também o repasse, se houver).
+ */
+function FinanceFields({
+  deal,
+  stageOptions,
+  currentStage,
+}: {
+  deal: BoardDeal | null;
+  stageOptions: readonly string[];
+  currentStage: string;
+}) {
+  const [valor, setValor] = useState(deal?.valor_pontual != null ? String(deal.valor_pontual) : '');
+  const [repasseValor, setRepasseValor] = useState(deal?.repasse_valor != null ? String(deal.repasse_valor) : '');
+  const [precisaNota, setPrecisaNota] = useState(deal?.precisa_nota ?? false);
+
+  const v = parseNum(valor);
+  const nf = precisaNota ? v * 0.06 : 0;
+  const rep = parseNum(repasseValor);
+  const liquido = v - nf - rep;
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>Valor (R$)</label>
+          <input
+            name="valor_pontual"
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            placeholder="0"
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>Estágio</label>
+          <select name="stage" defaultValue={currentStage} className={inputCls}>
+            {stageOptions.map((s) => (
+              <option key={s} value={s}>
+                {STAGE_LABELS[s as DealStage] ?? s}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>Repasse (R$)</label>
+          <input
+            name="repasse_valor"
+            value={repasseValor}
+            onChange={(e) => setRepasseValor(e.target.value)}
+            placeholder="0"
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <label className={labelCls}>Repasse para</label>
+          <input name="repasse_para" defaultValue={deal?.repasse_para ?? ''} placeholder="ex.: gestor" className={inputCls} />
+        </div>
+      </div>
+
+      <div>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
+          <input
+            type="checkbox"
+            name="precisa_nota"
+            checked={precisaNota}
+            onChange={(e) => setPrecisaNota(e.target.checked)}
+            className="h-3.5 w-3.5 accent-primary"
+          />
+          Precisa de nota fiscal?
+        </label>
+        {v > 0 && (precisaNota || rep > 0) && (
+          <p className="mt-1.5 rounded-md border border-black/[0.06] bg-[#F4F5F7] px-2.5 py-2 font-label text-[11px] text-text-secondary">
+            {precisaNota && (
+              <>
+                NF (6%): <strong>{brl2(nf)}</strong> ·{' '}
+              </>
+            )}
+            {rep > 0 && (
+              <>
+                Repasse: <strong>{brl2(rep)}</strong> ·{' '}
+              </>
+            )}
+            Líquido: <strong className="text-text-primary">{brl2(liquido)}</strong>
+          </p>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -142,14 +301,34 @@ export function DealDrawer({
   deal,
   onClose,
   orgOptions = [],
+  products = [],
 }: {
   deal: BoardDeal | null;
   onClose: () => void;
   orgOptions?: OrgOption[];
+  products?: Product[];
 }) {
   const isNew = deal === null;
   const [savePending, startSave] = useTransition();
   const [winPending, startWin] = useTransition();
+  const [manageOpen, setManageOpen] = useState(false);
+
+  // Opções de produto: tabela products (ativos), com fallback pra lista antiga do
+  // código; tags já gravadas no negócio continuam aparecendo mesmo se desativadas.
+  const productOptions = useMemo(() => {
+    const opts = products.length
+      ? products.filter((p) => p.active).map((p) => ({ key: p.key, label: p.name }))
+      : SERVICE_TAGS.map((s) => ({ key: s as string, label: SERVICE_LABELS[s] }));
+    for (const tag of deal?.service_tags ?? []) {
+      if (!opts.some((o) => o.key === tag)) {
+        opts.push({
+          key: tag,
+          label: products.find((p) => p.key === tag)?.name ?? SERVICE_LABELS[tag as keyof typeof SERVICE_LABELS] ?? tag,
+        });
+      }
+    }
+    return opts;
+  }, [products, deal]);
 
   const isWon = deal?.stage === 'ganho';
   const currentStage = deal?.stage ?? 'novo';
@@ -256,69 +435,65 @@ export function DealDrawer({
           )}
 
           {isNew ? (
-            <CompanyField orgOptions={orgOptions} />
+            <CreateIdentityFields orgOptions={orgOptions} />
           ) : (
-            <Field
-              label="Empresa"
-              name="company"
-              defaultValue={deal?.org?.name}
-              placeholder="Nome da empresa"
-              required
-            />
+            <>
+              <Field
+                label="Empresa"
+                name="company"
+                defaultValue={deal?.org?.name}
+                placeholder="Nome da empresa"
+                required
+              />
+
+              <Field
+                label="Contato (opcional)"
+                name="name"
+                defaultValue={deal?.name}
+                placeholder="Quem você fala (pode ser um terceiro)"
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="WhatsApp" name="whatsapp" defaultValue={deal?.whatsapp} placeholder="(00) 00000-0000" />
+                <Field label="E-mail" name="email" type="email" defaultValue={deal?.email} placeholder="opcional" />
+              </div>
+            </>
           )}
 
-          <Field
-            label="Contato (opcional)"
-            name="name"
-            defaultValue={deal?.name}
-            placeholder="Quem você fala (pode ser um terceiro)"
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="WhatsApp" name="whatsapp" defaultValue={deal?.whatsapp} placeholder="(00) 00000-0000" />
-            <Field label="E-mail" name="email" type="email" defaultValue={deal?.email} placeholder="opcional" />
-          </div>
-
           <div>
-            <label className={labelCls}>Produto / serviço (pode marcar mais de um)</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="font-label text-[10px] uppercase tracking-[0.12em] text-text-muted">
+                Produto / serviço (pode marcar mais de um)
+              </label>
+              <button
+                type="button"
+                onClick={() => setManageOpen(true)}
+                className="font-label text-[10px] uppercase tracking-wider text-text-muted underline decoration-dotted transition-colors hover:text-primary"
+              >
+                gerenciar
+              </button>
+            </div>
             <input type="hidden" name="service_tags_present" value="1" />
             <div className="grid grid-cols-2 gap-1.5">
-              {SERVICE_TAGS.map((s) => (
+              {productOptions.map((s) => (
                 <label
-                  key={s}
+                  key={s.key}
                   className="flex cursor-pointer items-center gap-2 rounded-md border border-black/[0.08] px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:border-primary/40 has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.05] has-[:checked]:text-text-primary"
                 >
                   <input
                     type="checkbox"
                     name="service_tag"
-                    value={s}
-                    defaultChecked={deal?.service_tags?.includes(s) ?? false}
+                    value={s.key}
+                    defaultChecked={deal?.service_tags?.includes(s.key) ?? false}
                     className="h-3.5 w-3.5 accent-primary"
                   />
-                  {SERVICE_LABELS[s]}
+                  {s.label}
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field
-              label="Valor (R$)"
-              name="valor_pontual"
-              defaultValue={deal?.valor_pontual != null ? String(deal.valor_pontual) : ''}
-              placeholder="0"
-            />
-            <div>
-              <label className={labelCls}>Estágio</label>
-              <select name="stage" defaultValue={currentStage} className={inputCls}>
-                {stageOptions.map((s) => (
-                  <option key={s} value={s}>
-                    {STAGE_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <FinanceFields deal={deal} stageOptions={stageOptions} currentStage={currentStage} />
 
           <div>
             <label className={labelCls}>Notas</label>
@@ -356,6 +531,8 @@ export function DealDrawer({
           </button>
         </div>
       </aside>
+
+      {manageOpen && <ProductsManager products={products} onClose={() => setManageOpen(false)} />}
     </div>
   );
 }

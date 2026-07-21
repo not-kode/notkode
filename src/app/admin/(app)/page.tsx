@@ -143,9 +143,13 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   for (const c of ctas) ctaMap.set(c.label ?? 'sem-rótulo', (ctaMap.get(c.label ?? 'sem-rótulo') ?? 0) + 1);
   const porCta = [...ctaMap.entries()].map(([label, count]) => ({ label: prettyCta(label), count })).sort((a, b) => b.count - a.count).slice(0, 8);
 
+  // Rótulos de produto: tabela products (editável pelo sistema) com fallback pro código.
+  const { data: prodRows } = await supabase.from('products').select('key, name');
+  const productLabels: Record<string, string> = Object.fromEntries((prodRows ?? []).map((p) => [p.key, p.name]));
+
   const servicoMap = new Map<string, number>();
   for (const l of leads) servicoMap.set(l.service_tag ?? 'outros', (servicoMap.get(l.service_tag ?? 'outros') ?? 0) + 1);
-  const porServico = [...servicoMap.entries()].map(([tag, count]) => ({ tag, label: SERVICE_LABELS[tag] ?? tag, count })).sort((a, b) => b.count - a.count);
+  const porServico = [...servicoMap.entries()].map(([tag, count]) => ({ tag, label: productLabels[tag] ?? SERVICE_LABELS[tag] ?? tag, count })).sort((a, b) => b.count - a.count);
 
   // ── Negócio: faturamento no período + fluxo de caixa (fidedigno) ──
   const faturamento = recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + r.amount, 0);
