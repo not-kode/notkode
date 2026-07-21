@@ -11,6 +11,9 @@ type RRWebEvent = unknown;
 
 export function SessionRecorder() {
   useEffect(() => {
+    // Browser automatizado (crawler executando JS) não gera gravação.
+    if (navigator.webdriver) return;
+
     let cancelled = false;
     let stop: (() => void) | undefined;
     let timer: ReturnType<typeof setInterval> | undefined;

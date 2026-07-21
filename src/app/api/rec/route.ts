@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { isBotUA } from '@/lib/bot';
 
 // Ingestão das gravações de sessão (rrweb). Recebe um "chunk" de eventos e grava
 // em session_recordings. À prova de falhas — nunca deve afetar o site.
 
 export async function POST(req: Request) {
+  // Robô (crawler, preview de link) não vira gravação de sessão.
+  const ua = req.headers.get('user-agent');
+  if (isBotUA(ua)) return NextResponse.json({ ok: true });
+
   let body: { session_id?: unknown; page?: unknown; events?: unknown };
   try {
     body = await req.json();
@@ -22,7 +27,7 @@ export async function POST(req: Request) {
 
   try {
     const supabase = getSupabaseAdmin();
-    await supabase.from('session_recordings').insert({ session_id, page, events });
+    await supabase.from('session_recordings').insert({ session_id, page, events, ua: ua!.slice(0, 256) });
   } catch (e) {
     console.error('[rec] insert failed:', e instanceof Error ? e.message : 'unknown');
     return NextResponse.json({ ok: false });

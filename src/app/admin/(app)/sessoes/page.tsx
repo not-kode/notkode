@@ -43,7 +43,7 @@ function fmtDuration(ms: number): string {
   return `${m}min${rest ? ` ${rest}s` : ''}`;
 }
 
-type Chunk = { session_id: string; page: string | null; created_at: string };
+type Chunk = { session_id: string; page: string | null; created_at: string; ua: string | null };
 type EventRow = { session_id: string; referrer: string | null; utm_source: string | null };
 
 type SessionSummary = {
@@ -53,7 +53,14 @@ type SessionSummary = {
   chunks: number;
   entryPage: string | null;
   origem: string;
+  device: string;
 };
+
+// Rótulo de dispositivo a partir do user agent (gravações antigas não têm UA salvo).
+function deviceLabel(ua: string | null): string {
+  if (!ua) return '—';
+  return /mobi|android|iphone|ipad|ipod/i.test(ua) ? 'Mobile' : 'Desktop';
+}
 
 export default async function SessoesPage() {
   const supabase = getSupabaseAdmin();
@@ -61,7 +68,7 @@ export default async function SessoesPage() {
   // Só metadados dos chunks (não os eventos, que são pesados).
   const { data: recData, error } = await supabase
     .from('session_recordings')
-    .select('session_id, page, created_at')
+    .select('session_id, page, created_at, ua')
     .order('created_at', { ascending: true });
 
   const chunks = (recData ?? []) as Chunk[];
@@ -78,11 +85,13 @@ export default async function SessoesPage() {
         chunks: 1,
         entryPage: c.page,
         origem: 'Direto',
+        device: deviceLabel(c.ua),
       });
     } else {
       cur.last = c.created_at;
       cur.chunks += 1;
       if (!cur.entryPage) cur.entryPage = c.page;
+      if (cur.device === '—') cur.device = deviceLabel(c.ua);
     }
   }
 
@@ -133,6 +142,7 @@ export default async function SessoesPage() {
               <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
                 <th className="px-4 py-3 font-medium">Quando</th>
                 <th className="px-4 py-3 font-medium">Origem</th>
+                <th className="px-4 py-3 font-medium">Dispositivo</th>
                 <th className="px-4 py-3 font-medium">Entrou por</th>
                 <th className="px-4 py-3 font-medium">Duração</th>
                 <th className="px-4 py-3 font-medium">Ação</th>
@@ -143,6 +153,7 @@ export default async function SessoesPage() {
                 <tr key={s.session_id} className="border-b border-border-subtle/10 last:border-0">
                   <td className="whitespace-nowrap px-4 py-3 text-text-muted">{fmtDateTime(s.last)}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{s.origem}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{s.device}</td>
                   <td className="px-4 py-3 text-text-secondary">{s.entryPage ?? '—'}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-text-secondary">
                     {fmtDuration(new Date(s.last).getTime() - new Date(s.first).getTime())}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { isBotUA } from '@/lib/bot';
 
 // Tracking próprio, leve e à prova de falhas: grava um evento em `events`.
 // Nunca deve quebrar o site — qualquer erro é engolido e respondido com ok:false.
@@ -12,6 +13,10 @@ const str = (v: unknown, max = 512): string | null => {
 };
 
 export async function POST(req: Request) {
+  // Robô (crawler, preview de link) não vira métrica de visita.
+  const ua = req.headers.get('user-agent');
+  if (isBotUA(ua)) return NextResponse.json({ ok: true });
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -25,6 +30,7 @@ export async function POST(req: Request) {
   }
 
   const row = {
+    ua: ua!.slice(0, 256),
     type,
     page: str(body.page),
     label: str(body.label),
