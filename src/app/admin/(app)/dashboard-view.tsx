@@ -65,7 +65,8 @@ function Kpi({ label, value, tone, hint }: { label: string; value: string; tone?
 // começaram chegaram até aqui). Barra em tinta; vermelho no maior abandono;
 // azul na etapa "Enviou".
 function Bar({ label, value, top, drop, wLabel = 'w-28', highlight }: { label: string; value: number; top: number; drop?: boolean; wLabel?: string; highlight?: boolean }) {
-  const w = top > 0 ? Math.max(1.5, (value / top) * 100) : 0;
+  // Zero é zero: sem largura mínima, senão a barra vazia vira um "pontinho" enganoso.
+  const w = top > 0 && value > 0 ? Math.max(1.5, (value / top) * 100) : 0;
   const barTone = highlight ? 'bg-primary' : drop ? 'bg-danger/70' : 'bg-navy/85';
   return (
     <div className="flex items-center gap-3">

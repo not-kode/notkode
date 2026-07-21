@@ -70,8 +70,10 @@ export default async function LeadsPage() {
   const pending = leads.filter((l) => !l.promoted_at).length;
   const drafts = (draftData ?? []) as DraftRow[];
 
-  // Quais leads têm gravação de sessão disponível (pra mostrar o "ver gravação").
-  const sessionIds = leads.map((l) => l.session_id).filter((s): s is string => !!s);
+  // Quais leads/rascunhos têm gravação de sessão disponível (pra mostrar o "ver gravação").
+  const sessionIds = [...leads.map((l) => l.session_id), ...drafts.map((d) => d.session_id)].filter(
+    (s): s is string => !!s,
+  );
   const recorded = new Set<string>();
   if (sessionIds.length > 0) {
     const { data: recData } = await supabase
@@ -127,6 +129,14 @@ export default async function LeadsPage() {
                       <div className="font-medium text-text-primary">{d.name ?? '—'}{d.company ? ` · ${d.company}` : ''}</div>
                       {d.email && <div className="text-xs text-text-muted">{d.email}</div>}
                       {d.whatsapp && <div className="text-xs text-text-muted">{d.whatsapp}</div>}
+                      {recorded.has(d.session_id) && (
+                        <Link
+                          href={`/admin/sessoes/${d.session_id}`}
+                          className="mt-1 inline-flex items-center gap-1 font-label text-[10px] text-primary transition-colors hover:underline"
+                        >
+                          ▶ ver gravação
+                        </Link>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{d.service_tag ?? '—'}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{d.last_step ?? '—'}</td>
