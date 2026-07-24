@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { DashboardView, type DashboardData, type DayCount, type FunnelStep, type FormFunnel } from './dashboard-view';
+import { DashboardView, type DashboardData, type DayCount, type FunnelStep, type FormFunnel, type FormDemand } from './dashboard-view';
 import { resolveRange } from './period';
 
 export const dynamic = 'force-dynamic';
@@ -69,7 +69,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const toStr = ymd(toDate);
   const countHead = { count: 'exact' as const, head: true };
 
-  const [pv, ctaRows, pvRows, srcRows, formRows, leadRows, wonDeals, engRows, recRows] = await Promise.all([
+  const [pv, ctaRows, pvRows, srcRows, formRows, leadRows, wonDeals, engRows, recRows, draftRows] = await Promise.all([
     supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('created_at, session_id').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
@@ -79,6 +79,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
     supabase.from('engagements').select('organization_id, lifecycle, mrr, valor, type, start_date'),
     supabase.from('receivables').select('amount, status, due_date, paid_at'),
+    supabase.from('lead_drafts').select('service_tag, needs, submitted_at').gte('created_at', fromISO).lte('created_at', toISO),
   ]);
 
   const ctas = (ctaRows.data ?? []) as { label: string | null }[];
@@ -151,6 +152,40 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   for (const l of leads) servicoMap.set(l.service_tag ?? 'outros', (servicoMap.get(l.service_tag ?? 'outros') ?? 0) + 1);
   const porServico = [...servicoMap.entries()].map(([tag, count]) => ({ tag, label: productLabels[tag] ?? SERVICE_LABELS[tag] ?? tag, count })).sort((a, b) => b.count - a.count);
 
+  // ── Site: o que as pessoas PEDEM nos formulários (necessidades) ──
+  // Vem de lead_drafts (captura progressiva), então conta também quem escolheu e
+  // não enviou. Por serviço: necessidades mais marcadas + se pedem uma ou várias.
+  const NEED_LABELS: Record<string, string> = { crm: 'CRM', ia: 'IA', nao_sei: 'Não sei', outro: 'Outro' };
+  const prettyNeed = (id: string) =>
+    NEED_LABELS[id] ?? id.replace(/[_-]+/g, ' ').replace(/^./, (c) => c.toUpperCase());
+  const drafts = (draftRows.data ?? []) as { service_tag: string | null; needs: string[] | null; submitted_at: string | null }[];
+  const demandMap = new Map<string, { total: number; enviados: number; needs: Map<string, number>; one: number; multi: number }>();
+  for (const d of drafts) {
+    const arr = (d.needs ?? []).filter((n): n is string => typeof n === 'string' && n.length > 0);
+    if (arr.length === 0) continue;
+    const svc = d.service_tag ?? 'outros';
+    const e = demandMap.get(svc) ?? { total: 0, enviados: 0, needs: new Map(), one: 0, multi: 0 };
+    e.total += 1;
+    if (d.submitted_at) e.enviados += 1;
+    for (const n of arr) e.needs.set(n, (e.needs.get(n) ?? 0) + 1);
+    if (arr.length === 1) e.one += 1; else e.multi += 1;
+    demandMap.set(svc, e);
+  }
+  const formDemand: FormDemand[] = [...demandMap.entries()]
+    .map(([service, e]) => ({
+      service,
+      label: productLabels[service] ?? SERVICE_LABELS[service] ?? service,
+      total: e.total,
+      enviados: e.enviados,
+      one: e.one,
+      multi: e.multi,
+      needs: [...e.needs.entries()]
+        .map(([id, count]) => ({ label: prettyNeed(id), count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8),
+    }))
+    .sort((a, b) => b.total - a.total);
+
   // ── Negócio: faturamento no período + fluxo de caixa (fidedigno) ──
   const faturamento = recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + r.amount, 0);
   // A receber = pendente que ainda vai vencer, de hoje até o FIM DO MÊS do período.
@@ -213,6 +248,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       porCta,
       porServico,
       formFunnels,
+      formDemand,
     },
     temDadosSite: visitas + ctas.length + formEvents.length > 0,
   };

@@ -18,6 +18,15 @@ const fmtDur = (secs: number) => {
 
 export type FunnelStep = { label: string; count: number };
 export type FormFunnel = { form: string; steps: FunnelStep[] };
+export type FormDemand = {
+  service: string;
+  label: string;
+  total: number;
+  enviados: number;
+  one: number;
+  multi: number;
+  needs: { label: string; count: number }[];
+};
 export type ServiceCount = { tag: string; label: string; count: number };
 export type CtaCount = { label: string; count: number };
 export type DayCount = { day: string; count: number };
@@ -47,6 +56,7 @@ export type DashboardData = {
     porCta: CtaCount[];
     porServico: ServiceCount[];
     formFunnels: FormFunnel[];
+    formDemand: FormDemand[];
   };
   temDadosSite: boolean;
 };
@@ -239,6 +249,41 @@ export function DashboardView({ data }: { data: DashboardData }) {
               </p>
             </>
           )}
+        </Section>
+      </div>
+
+      {/* O que as pessoas pedem — necessidades marcadas nos formulários, inclusive
+          de quem não enviou (captura progressiva). Mostra a demanda real por serviço. */}
+      <div className="mb-6">
+        <Section title="O que as pessoas pedem" sub={`· necessidades marcadas · ${rangeLabel}`}>
+          {s.formDemand.length === 0 ? (
+            <p className="py-2 text-sm text-text-muted">
+              Ninguém marcou uma necessidade no período. Assim que começarem a escolher o que precisam no formulário, aparece aqui — mesmo quem não enviar.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {s.formDemand.map((d) => (
+                <div key={d.service} className="rounded-md border border-[#191918]/[0.06] p-4">
+                  <div className="mb-1 flex items-baseline justify-between gap-2">
+                    <p className="font-mono text-[11px] font-medium tracking-tight text-text-primary">{d.label}</p>
+                    <p className="font-mono text-[11px] text-text-muted">
+                      {nf(d.total)} {d.total === 1 ? 'pessoa' : 'pessoas'}
+                      {d.enviados > 0 && <span className="text-success"> · {nf(d.enviados)} enviou</span>}
+                    </p>
+                  </div>
+                  <p className="mb-3 text-[11px] text-text-muted">
+                    {nf(d.one)} pediram <strong className="font-medium text-text-secondary">só um</strong> · {nf(d.multi)} pediram <strong className="font-medium text-text-secondary">vários</strong>
+                  </p>
+                  <div className="flex flex-col gap-2.5">
+                    <RankBars data={d.needs} labelWidth={150} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="mt-4 text-[11px] text-text-muted">
+            Conta cada pessoa que marcou ao menos uma necessidade (por sessão), tenha enviado ou não. “Vários” = marcou duas ou mais.
+          </p>
         </Section>
       </div>
 
