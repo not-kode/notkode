@@ -69,8 +69,11 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
   // Rótulo da etapa = "Qualificação::<posição>::<nome legível>" para o dashboard mostrar
   // qual formulário e em que etapa a pessoa parou (não só um número).
+  // Fluxo: primeiro o que a pessoa precisa, depois o contexto (prazo/descrição) e
+  // o CONTATO por último (mais leve: nome + um canal). Pedir contato só no fim,
+  // depois da pessoa investir no que quer, reduz o abandono no meio.
   const FORM_NAME = 'Qualificação';
-  const STEP_NAMES = ['Necessidades', 'Contato', 'Prazo'];
+  const STEP_NAMES = ['Necessidades', 'Prazo', 'Contato'];
   const formStarted = useRef(false);
   useEffect(() => {
     if (status === 'success') return;
@@ -122,10 +125,12 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
       needs: d.needs.includes(id) ? d.needs.filter((n) => n !== id) : [...d.needs, id],
     }));
 
+  const hasChannel = isValidEmail(data.email) || data.whatsapp.replace(/\D/g, '').length >= 10;
   const canContinue =
     (step === 0 && data.needs.length > 0) ||
-    (step === 1 && data.name && isValidEmail(data.email) && data.whatsapp.replace(/\D/g, '').length >= 10) ||
-    (step === 2 && data.timing);
+    (step === 1 && !!data.timing) ||
+    // Contato mais leve: nome + UM canal (WhatsApp OU e-mail), não os dois.
+    (step === 2 && !!data.name.trim() && hasChannel);
 
   const submit = async () => {
     setStatus('submitting');
@@ -286,7 +291,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           </div>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
               {schema.identity?.title ?? t('identityTitle')}
@@ -369,7 +374,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 1 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
               {schema.context.title ?? t('contextTitleDefault')}
