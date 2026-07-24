@@ -16,7 +16,7 @@ const fmtDur = (secs: number) => {
   return s ? `${m}min ${s}s` : `${m}min`;
 };
 
-export type FunnelStep = { label: string; count: number };
+export type FunnelStep = { label: string; count: number; origins?: { label: string; count: number }[] };
 export type FormFunnel = { form: string; formType?: string | null; steps: FunnelStep[] };
 export type ServiceCount = { tag: string; label: string; count: number };
 export type CtaCount = { label: string; count: number };
@@ -67,17 +67,24 @@ function Kpi({ label, value, tone, hint }: { label: string; value: string; tone?
 // Barra de funil: largura e % SEMPRE em relação ao início (quantos dos que
 // começaram chegaram até aqui). Barra em tinta; vermelho no maior abandono;
 // azul na etapa "Enviou".
-function Bar({ label, value, top, drop, wLabel = 'w-28', highlight }: { label: string; value: number; top: number; drop?: boolean; wLabel?: string; highlight?: boolean }) {
+function Bar({ label, value, top, drop, wLabel = 'w-28', highlight, origins }: { label: string; value: number; top: number; drop?: boolean; wLabel?: string; highlight?: boolean; origins?: { label: string; count: number }[] }) {
   // Zero é zero: sem largura mínima, senão a barra vazia vira um "pontinho" enganoso.
   const w = top > 0 && value > 0 ? Math.max(1.5, (value / top) * 100) : 0;
   const barTone = highlight ? 'bg-primary' : drop ? 'bg-danger/70' : 'bg-navy/85';
+  // Tooltip nativo: de onde vieram as pessoas que chegaram a esta etapa.
+  const originTitle = origins && origins.length
+    ? `De onde vieram: ${origins.map((o) => `${o.label} ${o.count}`).join(' · ')}`
+    : undefined;
   return (
     <div className="flex items-center gap-3">
       <div className={`${wLabel} shrink-0 truncate text-right text-xs ${drop ? 'font-medium text-danger' : 'text-text-secondary'}`} title={label}>{label}</div>
-      <div className="relative h-6 flex-1 overflow-hidden rounded-sm bg-[#191918]/[0.06]">
+      <div
+        className="relative h-6 flex-1 overflow-hidden rounded-sm bg-[#191918]/[0.06] cursor-help"
+        title={originTitle}
+      >
         <div className={`h-full rounded-sm ${barTone}`} style={{ width: `${w}%` }} />
       </div>
-      <div className="flex w-20 shrink-0 items-baseline justify-end gap-1.5">
+      <div className="flex w-20 shrink-0 items-baseline justify-end gap-1.5" title={originTitle}>
         <span className="font-mono text-xs font-medium text-text-primary">{nf(value)}</span>
         <span className="font-mono text-[11px] text-text-muted">{pct(value, top)}</span>
       </div>
@@ -222,7 +229,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
                       </p>
                       <div className="flex flex-col gap-2.5">
                         {f.steps.map((step, i) => (
-                          <Bar key={step.label} label={step.label} value={step.count} top={top} drop={i === drop} highlight={i === f.steps.length - 1} wLabel="w-44" />
+                          <Bar key={step.label} label={step.label} value={step.count} top={top} drop={i === drop} highlight={i === f.steps.length - 1} wLabel="w-44" origins={step.origins} />
                         ))}
                       </div>
                     </div>

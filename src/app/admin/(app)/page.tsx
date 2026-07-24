@@ -72,7 +72,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const [pv, ctaRows, pvRows, srcRows, formRows, leadRows, wonDeals, engRows, recRows] = await Promise.all([
     supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', toISO),
-    supabase.from('events').select('created_at, session_id').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
+    supabase.from('events').select('created_at, session_id, referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('type, label, session_id, service_tag').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', toISO),
@@ -92,13 +92,33 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   // ── Site: funil de formulário POR PÁGINA (service_tag) ──
   // Cada página tem seu formulário; mostramos, por página, quantos iniciaram e
   // quantos chegaram a cada etapa até enviar — pra ver em qual etapa a galera sai.
-  const distinct = (pred: (e: FormEv) => boolean) =>
-    new Set(formEvents.filter((e) => pred(e) && e.session_id).map((e) => e.session_id)).size;
   const parseStep = (label: string | null) => {
     const parts = (label ?? '').split('::');
     return parts.length === 3 ? { form: parts[0], pos: Number(parts[1]), name: parts[2] } : null;
   };
   const prettyService = (s: string) => SERVICE_LABELS[s] ?? s.replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // Origem de ENTRADA por sessão (a 1ª visualização de página): usada no tooltip do
+  // funil pra mostrar de onde vieram as pessoas que chegaram a cada etapa.
+  const sessOrigin = new Map<string, { t: number; origin: string }>();
+  for (const r of (pvRows.data ?? []) as { created_at: string; session_id: string | null; referrer: string | null; utm_source: string | null }[]) {
+    if (!r.session_id) continue;
+    const t = new Date(r.created_at).getTime();
+    const cur = sessOrigin.get(r.session_id);
+    if (!cur || t < cur.t) sessOrigin.set(r.session_id, { t, origin: classifySource(r.referrer, r.utm_source) });
+  }
+  // Conjunto de sessões que satisfazem o predicado + a quebra por origem dessas sessões.
+  const sessionsOf = (pred: (e: FormEv) => boolean) =>
+    new Set(formEvents.filter((e) => pred(e) && e.session_id).map((e) => e.session_id as string));
+  const originsOf = (sessions: Set<string>): { label: string; count: number }[] => {
+    const m = new Map<string, number>();
+    for (const s of sessions) {
+      const o = sessOrigin.get(s)?.origin ?? 'Direto';
+      m.set(o, (m.get(o) ?? 0) + 1);
+    }
+    return [...m.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+  };
+
   const services = [...new Set(formEvents.map((e) => e.service_tag).filter((s): s is string => !!s))];
   const formFunnels: FormFunnel[] = services
     .map((svc) => {
@@ -113,12 +133,15 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         if (p) stepsMeta.set(p.pos, p.name);
       }
       const ordered = [...stepsMeta.entries()].sort((a, b) => a[0] - b[0]);
+      const mkStep = (label: string, pred: (e: FormEv) => boolean): FunnelStep => {
+        const sess = sessionsOf(pred);
+        return { label, count: sess.size, origins: originsOf(sess) };
+      };
       const steps: FunnelStep[] = [
-        ...ordered.map(([pos, name]) => ({
-          label: name,
-          count: distinct((e) => inSvc(e) && e.type === 'form_step' && parseStep(e.label)?.pos === pos),
-        })),
-        { label: 'Enviou', count: distinct((e) => inSvc(e) && e.type === 'form_submit') },
+        ...ordered.map(([pos, name]) =>
+          mkStep(name, (e) => inSvc(e) && e.type === 'form_step' && parseStep(e.label)?.pos === pos),
+        ),
+        mkStep('Enviou', (e) => inSvc(e) && e.type === 'form_submit'),
       ];
       return { form: prettyService(svc), formType, steps };
     })
