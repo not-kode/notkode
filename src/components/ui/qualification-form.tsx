@@ -82,11 +82,19 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  // Captura progressiva: salva o rascunho conforme a pessoa preenche (só com algum contato).
+  // Captura progressiva: salva o rascunho conforme a pessoa preenche/escolhe — já a
+  // partir da 1ª necessidade marcada, mesmo sem contato. Assim registramos o que o
+  // público pede, inclusive de quem desiste antes de se identificar.
   useEffect(() => {
     if (status === 'success') return;
-    const hasContact = data.name.trim() || data.email.trim() || data.whatsapp.replace(/\D/g, '').length > 0;
-    if (!hasContact) return;
+    const hasSomething =
+      data.needs.length > 0 ||
+      data.name.trim() ||
+      data.email.trim() ||
+      data.whatsapp.replace(/\D/g, '').length > 0 ||
+      !!data.timing ||
+      data.description.trim();
+    if (!hasSomething) return;
     const id = setTimeout(() => {
       saveLeadDraft({
         service_tag: schema.serviceTag,

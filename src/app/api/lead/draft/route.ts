@@ -41,13 +41,17 @@ export async function POST(req: Request) {
   const name = str(body.name, 200);
   const email = str(body.email, 200);
   const whatsapp = str(body.whatsapp, 40);
-
-  // Sem nenhum contato ainda → não cria rascunho (evita lixo anônimo).
-  if (!name && !email && !whatsapp) return NextResponse.json({ ok: true });
-
   const needs = Array.isArray(body.needs)
     ? (body.needs.filter((n) => typeof n === 'string').slice(0, 30) as string[])
     : null;
+  const timing = str(body.timing, 120);
+  const description = str(body.description, 2000);
+
+  // Registra assim que a pessoa escolhe/preenche QUALQUER coisa (necessidade, prazo,
+  // descrição ou contato) — mesmo antes de se identificar. Só ignora o rascunho
+  // totalmente vazio. Upsert por session_id, então não duplica: atualiza o mesmo.
+  const hasAnything = !!(name || email || whatsapp || (needs && needs.length) || timing || description);
+  if (!hasAnything) return NextResponse.json({ ok: true });
 
   const row = {
     session_id,
@@ -58,8 +62,8 @@ export async function POST(req: Request) {
     email,
     whatsapp,
     needs,
-    timing: str(body.timing, 120),
-    description: str(body.description, 2000),
+    timing,
+    description,
     last_step: str(body.last_step, 120),
     utm_source: str(body.utm_source, 128),
     utm_medium: str(body.utm_medium, 128),
