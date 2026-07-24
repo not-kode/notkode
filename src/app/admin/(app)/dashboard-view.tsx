@@ -71,23 +71,32 @@ function Bar({ label, value, top, drop, wLabel = 'w-28', highlight, origins }: {
   // Zero é zero: sem largura mínima, senão a barra vazia vira um "pontinho" enganoso.
   const w = top > 0 && value > 0 ? Math.max(1.5, (value / top) * 100) : 0;
   const barTone = highlight ? 'bg-primary' : drop ? 'bg-danger/70' : 'bg-navy/85';
-  // Tooltip nativo: de onde vieram as pessoas que chegaram a esta etapa.
-  const originTitle = origins && origins.length
-    ? `De onde vieram: ${origins.map((o) => `${o.label} ${o.count}`).join(' · ')}`
-    : undefined;
+  const hasOrigins = !!(origins && origins.length);
   return (
-    <div className="flex items-center gap-3">
+    <div className="group relative flex items-center gap-3">
       <div className={`${wLabel} shrink-0 truncate text-right text-xs ${drop ? 'font-medium text-danger' : 'text-text-secondary'}`} title={label}>{label}</div>
-      <div
-        className="relative h-6 flex-1 overflow-hidden rounded-sm bg-[#191918]/[0.06] cursor-help"
-        title={originTitle}
-      >
+      <div className="relative h-6 flex-1 overflow-hidden rounded-sm bg-[#191918]/[0.06]">
         <div className={`h-full rounded-sm ${barTone}`} style={{ width: `${w}%` }} />
       </div>
-      <div className="flex w-20 shrink-0 items-baseline justify-end gap-1.5" title={originTitle}>
+      <div className="flex w-20 shrink-0 items-baseline justify-end gap-1.5">
         <span className="font-mono text-xs font-medium text-text-primary">{nf(value)}</span>
         <span className="font-mono text-[11px] text-text-muted">{pct(value, top)}</span>
       </div>
+
+      {/* Tooltip (CSS puro): de onde vieram as pessoas que chegaram a esta etapa. */}
+      {hasOrigins && (
+        <div className="pointer-events-none absolute right-0 top-full z-30 mt-1 hidden min-w-[11rem] rounded-md border border-[#191918]/[0.10] bg-surface-base p-2.5 shadow-lg group-hover:block">
+          <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">De onde vieram · {nf(value)}</p>
+          <ul className="flex flex-col gap-1">
+            {origins!.map((o) => (
+              <li key={o.label} className="flex items-center justify-between gap-4 text-[12px]">
+                <span className="text-text-secondary">{o.label}</span>
+                <span className="font-mono tabular-nums text-text-primary">{nf(o.count)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
