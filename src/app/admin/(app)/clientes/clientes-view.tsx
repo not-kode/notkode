@@ -650,6 +650,14 @@ function ProjectHeader({ client, productLabels = {} }: { client: ClientView; pro
   const valorAvulso = client.contratos.filter(isLive).reduce((s, e) => s + (e.valor ?? 0), 0);
   const valorLabel = mrr > 0 ? `${brl(mrr)}/mês` : valorAvulso > 0 ? brl(valorAvulso) : '—';
 
+  // Contratos "vivos" para a quebra por serviço — ativos primeiro, pausados depois.
+  const liveList = client.contratos.filter(isLive).sort((a, b) => (b.mrr ?? 0) - (a.mrr ?? 0));
+  const engValorLabel = (e: Contrato) =>
+    [
+      (e.mrr ?? 0) > 0 ? `${brl(e.mrr!)}/mês` : null,
+      (e.valor ?? 0) > 0 ? `${brl(e.valor!)} avulso` : null,
+    ].filter(Boolean).join(' · ') || '—';
+
   const stageLabel = live ? (STAGE_LABELS[live.status] ?? live.status) : client.contratos.length ? 'Encerrado' : 'Sem contrato';
   const lifeTone = live ? (LIFE_TONE[live.lifecycle] ?? LIFE_TONE.encerrado) : 'bg-black/[0.06] text-text-secondary';
 
@@ -689,6 +697,35 @@ function ProjectHeader({ client, productLabels = {} }: { client: ClientView; pro
           </p>
         </div>
       </div>
+
+      {/* Quebra por contrato/serviço: quanto cada um pesa e o total recorrente. */}
+      {liveList.length > 0 && (
+        <div className="mt-3 border-t border-primary/10 pt-3">
+          <p className={cellLabel + ' mb-2'}>Contratos &amp; serviços ({liveList.length})</p>
+          <ul className="flex flex-col gap-1">
+            {liveList.map((e) => (
+              <li key={e.id} className="flex items-center justify-between gap-2 text-xs">
+                <span className="flex min-w-0 items-center gap-1.5 text-text-secondary">
+                  <span className="truncate">{e.title ?? 'Contrato'}</span>
+                  {e.lifecycle === 'pausado' && (
+                    <span className="shrink-0 rounded-full bg-warning/12 px-1.5 font-label text-[9px] uppercase tracking-wider text-warning">pausado</span>
+                  )}
+                </span>
+                <span className="shrink-0 font-medium tabular-nums text-text-primary">{engValorLabel(e)}</span>
+              </li>
+            ))}
+          </ul>
+          {(mrr > 0 || valorAvulso > 0) && (
+            <div className="mt-2 flex items-center justify-between gap-2 border-t border-primary/10 pt-2">
+              <span className={cellLabel}>Total recorrente</span>
+              <span className="font-semibold tabular-nums text-primary">
+                {mrr > 0 ? `${brl(mrr)}/mês` : '—'}
+                {valorAvulso > 0 && <span className="ml-1.5 font-normal text-text-muted">+ {brl(valorAvulso)} avulso</span>}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="mt-3 flex flex-col gap-1.5 border-t border-primary/10 pt-3 text-xs">
         <div className="flex gap-2">
