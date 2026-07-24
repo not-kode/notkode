@@ -163,8 +163,8 @@ export async function createDeal(formData: FormData): Promise<void> {
     source: 'manual',
     service_tag: services[0] ?? null,
     service_tags: services,
-    valor_pontual: recorrente ? null : valor,
-    mrr: recorrente ? mrr || null : null,
+    valor_pontual: recorrente ? 0 : valor,
+    mrr: recorrente ? mrr : 0,
     repasse_valor: repasseValor || null,
     repasse_para: repassePara,
     precisa_nota: precisaNota,
@@ -250,12 +250,13 @@ export async function updateDeal(formData: FormData): Promise<void> {
   // Só um dos valores fica gravado — o outro é zerado para não misturar as contas.
   if (formData.has('billing')) {
     const recorrente = String(formData.get('billing')) === 'recorrente';
+    // Colunas NOT NULL default 0 — zera o lado que não vale (nunca null).
     if (recorrente) {
-      patch.mrr = parseValor(formData.get('mrr')) || null;
-      patch.valor_pontual = null;
+      patch.mrr = parseValor(formData.get('mrr'));
+      patch.valor_pontual = 0;
     } else {
       patch.valor_pontual = parseValor(formData.get('valor_pontual'));
-      patch.mrr = null;
+      patch.mrr = 0;
     }
     patch.repasse_valor = parseValor(formData.get('repasse_valor')) || null;
     patch.repasse_para = String(formData.get('repasse_para') ?? '').trim() || null;
