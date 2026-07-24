@@ -88,7 +88,10 @@ export async function createDeal(formData: FormData): Promise<void> {
   const stageRaw = String(formData.get('stage') ?? 'novo').trim();
   const stage = DEAL_STAGES.includes(stageRaw as DealStage) ? stageRaw : 'novo';
 
-  const valor = parseValor(formData.get('valor_pontual'));
+  // Cobrança à vista (valor_pontual) ou recorrente mensal (mrr) — nunca os dois.
+  const recorrente = String(formData.get('billing') ?? 'pontual') === 'recorrente';
+  const valor = recorrente ? 0 : parseValor(formData.get('valor_pontual'));
+  const mrr = recorrente ? parseValor(formData.get('mrr')) : 0;
   const repasseValor = parseValor(formData.get('repasse_valor'));
   const repassePara = String(formData.get('repasse_para') ?? '').trim() || null;
   const precisaNota = formData.get('precisa_nota') === 'on';
@@ -160,7 +163,8 @@ export async function createDeal(formData: FormData): Promise<void> {
     source: 'manual',
     service_tag: services[0] ?? null,
     service_tags: services,
-    valor_pontual: valor,
+    valor_pontual: recorrente ? null : valor,
+    mrr: recorrente ? mrr || null : null,
     repasse_valor: repasseValor || null,
     repasse_para: repassePara,
     precisa_nota: precisaNota,
@@ -242,10 +246,17 @@ export async function updateDeal(formData: FormData): Promise<void> {
   if (organizationId) patch.organization_id = organizationId;
   if (contactId) patch.contact_id = contactId;
 
-  const valorRaw = formData.get('valor_pontual');
-  if (valorRaw != null) {
-    patch.valor_pontual = parseValor(valorRaw);
-    // O bloco financeiro vem sempre junto do valor no form.
+  // Bloco financeiro: o form manda sempre o marcador 'billing' (à vista vs recorrente).
+  // Só um dos valores fica gravado — o outro é zerado para não misturar as contas.
+  if (formData.has('billing')) {
+    const recorrente = String(formData.get('billing')) === 'recorrente';
+    if (recorrente) {
+      patch.mrr = parseValor(formData.get('mrr')) || null;
+      patch.valor_pontual = null;
+    } else {
+      patch.valor_pontual = parseValor(formData.get('valor_pontual'));
+      patch.mrr = null;
+    }
     patch.repasse_valor = parseValor(formData.get('repasse_valor')) || null;
     patch.repasse_para = String(formData.get('repasse_para') ?? '').trim() || null;
     patch.precisa_nota = formData.get('precisa_nota') === 'on';
@@ -288,7 +299,17 @@ export async function winDeal(formData: FormData): Promise<void> {
     .update({ stage: 'ganho', updated_at: new Date().toISOString() })
     .eq('id', id);
 
-  // Descobre (ou cria) o contrato vinculado a este negócio.
+  // Parcelas/mensalidades planejadas do negócio — usadas para as datas de vigência
+  // e o ciclo do contrato, e mais abaixo copiadas como cobranças.
+  const { data: parcelas } = await supabase
+    .from('deal_installments')
+    .select('description, amount, due_date')
+    .eq('deal_id', id)
+    .order('due_date', { ascending: true });
+
+  // Descobre (ou cria) o contrato vinculado a este negócio. SEMPRE um contrato
+  // próprio: cada negócio ganho vira seu contrato/cobranças, mesmo que o cliente
+  // já tenha outros — assim uma venda nova não some dentro de um contrato antigo.
   let engagementId: string | null = null;
   const { data: existing } = await supabase
     .from('deal_engagements')
@@ -299,44 +320,37 @@ export async function winDeal(formData: FormData): Promise<void> {
   if (existing && existing.length > 0) {
     engagementId = existing[0].engagement_id;
   } else {
-    // Se a empresa já tem um contrato "de verdade" (com escopo ou proposta
-    // anexada), liga o negócio a ESSE — evita criar um contrato-fantasma vazio.
-    const { data: contratos } = await supabase
-      .from('engagements')
-      .select('id')
-      .eq('organization_id', deal.organization_id)
-      .or('scope.not.is.null,proposal_path.not.is.null')
-      .order('created_at', { ascending: false })
-      .limit(1);
+    const isRecurring = Number(deal.mrr ?? 0) > 0;
+    let title = 'Contrato';
+    if (deal.service_tag) {
+      const { data: prod } = await supabase.from('products').select('name').eq('key', deal.service_tag).maybeSingle();
+      title = prod?.name ?? SERVICE_TITLES[deal.service_tag] ?? 'Contrato';
+    }
 
-    if (contratos && contratos.length > 0) {
-      engagementId = contratos[0].id;
-      await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: engagementId });
-    } else {
-      // Nenhum contrato existente — cria o esboço herdando valor/MRR do deal.
-      const isRecurring = Number(deal.mrr ?? 0) > 0;
-      let title = 'Contrato';
-      if (deal.service_tag) {
-        const { data: prod } = await supabase.from('products').select('name').eq('key', deal.service_tag).maybeSingle();
-        title = prod?.name ?? SERVICE_TITLES[deal.service_tag] ?? 'Contrato';
-      }
-      const { data: eng } = await supabase
-        .from('engagements')
-        .insert({
-          organization_id: deal.organization_id,
-          type: isRecurring ? 'recorrente' : 'pontual',
-          status: 'aguardando',
-          title,
-          valor: deal.valor_pontual ?? null,
-          mrr: isRecurring ? deal.mrr : null,
-          notes: deal.notes ?? null,
-        })
-        .select('id')
-        .single();
-      if (eng) {
-        engagementId = eng.id;
-        await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: eng.id });
-      }
+    // Vigência e ciclo vêm das mensalidades geradas no card.
+    const start_date = parcelas && parcelas.length > 0 ? parcelas[0].due_date : null;
+    const end_date = parcelas && parcelas.length > 0 ? parcelas[parcelas.length - 1].due_date : null;
+    const billing_cycle = isRecurring && parcelas && parcelas.length > 0 ? `mensal (${parcelas.length}x)` : null;
+
+    const { data: eng } = await supabase
+      .from('engagements')
+      .insert({
+        organization_id: deal.organization_id,
+        type: isRecurring ? 'recorrente' : 'pontual',
+        status: 'aguardando',
+        title,
+        valor: isRecurring ? null : deal.valor_pontual ?? null,
+        mrr: isRecurring ? deal.mrr : null,
+        billing_cycle,
+        start_date,
+        end_date,
+        notes: deal.notes ?? null,
+      })
+      .select('id')
+      .single();
+    if (eng) {
+      engagementId = eng.id;
+      await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: eng.id });
     }
   }
 
@@ -363,11 +377,6 @@ export async function winDeal(formData: FormData): Promise<void> {
       .select('id', { count: 'exact', head: true })
       .eq('engagement_id', engagementId);
     if (!count) {
-      const { data: parcelas } = await supabase
-        .from('deal_installments')
-        .select('description, amount, due_date')
-        .eq('deal_id', id)
-        .order('due_date', { ascending: true });
       if (parcelas && parcelas.length > 0) {
         await supabase.from('receivables').insert(
           parcelas.map((p) => ({
@@ -477,6 +486,39 @@ export async function generateInstallments(formData: FormData): Promise<void> {
       deal_id,
       description: `Parcela ${i + 1}/${count}`,
       amount: cents / 100,
+      due_date: date.toISOString().slice(0, 10),
+    };
+  });
+
+  await supabase.from('deal_installments').delete().eq('deal_id', deal_id);
+  await supabase.from('deal_installments').insert(rows);
+  revalidatePath('/admin/pipeline');
+}
+
+/**
+ * Gera N mensalidades iguais ao valor mensal (mrr) do negócio, com vencimentos
+ * mensais a partir da data escolhida. É o gerador do negócio RECORRENTE (ex.:
+ * fechado por 6 meses). SUBSTITUI as mensalidades atuais. Ao ganhar, viram as
+ * cobranças mensais do contrato no financeiro.
+ */
+export async function generateRecurringInstallments(formData: FormData): Promise<void> {
+  const deal_id = String(formData.get('deal_id') ?? '');
+  const months = parseInt(String(formData.get('months') ?? ''), 10);
+  const first = String(formData.get('first_due_date') ?? '');
+  if (!deal_id || !first || !Number.isFinite(months) || months < 1 || months > 60) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data: deal } = await supabase.from('deals').select('mrr').eq('id', deal_id).single();
+  const mensal = Number(deal?.mrr ?? 0);
+  if (!(mensal > 0)) return;
+
+  const [y, m, d] = first.split('-').map(Number);
+  const rows = Array.from({ length: months }, (_, i) => {
+    const date = new Date(Date.UTC(y, m - 1 + i, d)); // meses somam corretamente
+    return {
+      deal_id,
+      description: `Mensalidade ${i + 1}/${months}`,
+      amount: mensal,
       due_date: date.toISOString().slice(0, 10),
     };
   });

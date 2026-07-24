@@ -10,6 +10,7 @@ import {
   addDealInstallment,
   deleteDealInstallment,
   generateInstallments,
+  generateRecurringInstallments,
 } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS, type DealStage } from './stages';
 import { normalizeOrgName, type OrgOption, type Product } from './orgs';
@@ -198,9 +199,10 @@ const parseNum = (raw: string): number => {
 };
 
 /**
- * Bloco financeiro do negócio: valor, estágio, repasse pro gestor e nota fiscal.
- * Com "precisa de nota" marcado, mostra na hora os 6% pagos e o valor líquido
- * (já descontando também o repasse, se houver).
+ * Bloco financeiro do negócio: tipo de cobrança (à vista ou recorrente mensal),
+ * valor, estágio, repasse pro gestor e nota fiscal. Com "precisa de nota" marcado,
+ * mostra na hora os 6% pagos e o valor líquido (já descontando também o repasse).
+ * No recorrente, as contas são sobre o valor mensal.
  */
 function FinanceFields({
   deal,
@@ -211,27 +213,70 @@ function FinanceFields({
   stageOptions: readonly string[];
   currentStage: string;
 }) {
+  const [billing, setBilling] = useState<'pontual' | 'recorrente'>(
+    deal?.mrr != null && deal.mrr > 0 ? 'recorrente' : 'pontual',
+  );
   const [valor, setValor] = useState(deal?.valor_pontual != null ? String(deal.valor_pontual) : '');
+  const [mrr, setMrr] = useState(deal?.mrr != null && deal.mrr > 0 ? String(deal.mrr) : '');
   const [repasseValor, setRepasseValor] = useState(deal?.repasse_valor != null ? String(deal.repasse_valor) : '');
   const [precisaNota, setPrecisaNota] = useState(deal?.precisa_nota ?? false);
 
-  const v = parseNum(valor);
+  const recorrente = billing === 'recorrente';
+  const v = recorrente ? parseNum(mrr) : parseNum(valor);
   const nf = precisaNota ? v * 0.06 : 0;
   const rep = parseNum(repasseValor);
   const liquido = v - nf - rep;
+  const sufixo = recorrente ? '/mês' : '';
 
   return (
     <>
+      {/* Marcador do tipo de cobrança lido pelo servidor. */}
+      <input type="hidden" name="billing" value={billing} />
+
+      <div>
+        <label className={labelCls}>Cobrança</label>
+        <div className="grid grid-cols-2 gap-1.5">
+          {([
+            ['pontual', 'À vista / pontual'],
+            ['recorrente', 'Recorrente (mensal)'],
+          ] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setBilling(key)}
+              className={[
+                'rounded-md border px-2.5 py-1.5 text-sm transition-colors',
+                billing === key
+                  ? 'border-primary/50 bg-primary/[0.06] font-medium text-text-primary'
+                  : 'border-black/[0.08] text-text-secondary hover:border-primary/40',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={labelCls}>Valor (R$)</label>
-          <input
-            name="valor_pontual"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            placeholder="0"
-            className={inputCls}
-          />
+          <label className={labelCls}>{recorrente ? 'Valor mensal (R$)' : 'Valor (R$)'}</label>
+          {recorrente ? (
+            <input
+              name="mrr"
+              value={mrr}
+              onChange={(e) => setMrr(e.target.value)}
+              placeholder="0"
+              className={inputCls}
+            />
+          ) : (
+            <input
+              name="valor_pontual"
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              placeholder="0"
+              className={inputCls}
+            />
+          )}
         </div>
         <div>
           <label className={labelCls}>Estágio</label>
@@ -244,6 +289,13 @@ function FinanceFields({
           </select>
         </div>
       </div>
+
+      {recorrente && (
+        <p className="-mt-1 rounded-md border border-primary/20 bg-primary/[0.03] px-2.5 py-2 font-label text-[10px] text-text-secondary">
+          Defina o prazo (nº de meses) e gere as mensalidades logo abaixo, em “Parcelas do negócio”.
+          Ao ganhar, elas viram as cobranças mensais do contrato.
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -277,15 +329,15 @@ function FinanceFields({
           <p className="mt-1.5 rounded-md border border-black/[0.06] bg-[#F4F5F7] px-2.5 py-2 font-label text-[11px] text-text-secondary">
             {precisaNota && (
               <>
-                NF (6%): <strong>{brl2(nf)}</strong> ·{' '}
+                NF (6%): <strong>{brl2(nf)}{sufixo}</strong> ·{' '}
               </>
             )}
             {rep > 0 && (
               <>
-                Repasse: <strong>{brl2(rep)}</strong> ·{' '}
+                Repasse: <strong>{brl2(rep)}{sufixo}</strong> ·{' '}
               </>
             )}
-            Líquido: <strong className="text-text-primary">{brl2(liquido)}</strong>
+            Líquido: <strong className="text-text-primary">{brl2(liquido)}{sufixo}</strong>
           </p>
         )}
       </div>
@@ -584,18 +636,47 @@ function ProposalSection({ deal }: { deal: BoardDeal }) {
 function InstallmentsSection({ deal }: { deal: BoardDeal }) {
   const total = deal.installments.reduce((s, p) => s + p.amount, 0);
   const valor = deal.valor_pontual ?? 0;
+  const mrr = deal.mrr ?? 0;
+  const recorrente = mrr > 0;
 
   return (
     <section>
       <div className="mb-2 flex items-center justify-between">
         <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">
-          Parcelas do negócio ({deal.installments.length})
+          {recorrente ? 'Mensalidades do negócio' : 'Parcelas do negócio'} ({deal.installments.length})
         </p>
         {total > 0 && <span className="font-label text-[10px] text-text-muted">{brl(total)}</span>}
       </div>
 
-      {/* Gerador automático: divide o valor do negócio em N vezes. */}
-      {valor > 0 ? (
+      {/* Gerador automático. No recorrente: N mensalidades iguais ao valor mensal.
+          No à vista: divide o valor total em N parcelas. */}
+      {recorrente ? (
+        <form action={generateRecurringInstallments} className="mb-2 flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/[0.03] p-2.5">
+          <input type="hidden" name="deal_id" value={deal.id} />
+          <p className="font-label text-[10px] uppercase tracking-wider text-text-secondary">
+            Gerar mensalidades de {brl(mrr)}/mês
+          </p>
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <input
+                name="months"
+                type="number"
+                min={1}
+                max={60}
+                defaultValue={6}
+                required
+                className={inputCls + ' w-14 text-center'}
+              />
+              <span className="font-label text-[11px] text-text-secondary">meses desde</span>
+            </div>
+            <input name="first_due_date" type="date" required className={inputCls} />
+            <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90">
+              Gerar
+            </button>
+          </div>
+          <p className="font-label text-[10px] text-text-muted">Gerar substitui as mensalidades atuais. Ex.: 6 meses = 6 cobranças de {brl(mrr)}.</p>
+        </form>
+      ) : valor > 0 ? (
         <form action={generateInstallments} className="mb-2 flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/[0.03] p-2.5">
           <input type="hidden" name="deal_id" value={deal.id} />
           <p className="font-label text-[10px] uppercase tracking-wider text-text-secondary">

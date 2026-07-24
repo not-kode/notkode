@@ -159,7 +159,11 @@ export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: B
                     <span className="font-medium leading-tight text-text-primary">
                       {deal.org?.name ?? deal.name ?? 'Sem nome'}
                     </span>
-                    {deal.valor_pontual ? (
+                    {deal.mrr ? (
+                      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 font-label text-sm font-bold tabular-nums text-primary">
+                        {brl(deal.mrr)}<span className="text-[10px] font-medium">/mês</span>
+                      </span>
+                    ) : deal.valor_pontual ? (
                       <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 font-label text-sm font-bold tabular-nums text-primary">
                         {brl(deal.valor_pontual)}
                       </span>
