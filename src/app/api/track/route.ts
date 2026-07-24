@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { isBotUA } from '@/lib/bot';
+import { isInternalRequest } from '@/lib/internal-ip';
 
 // Tracking próprio, leve e à prova de falhas: grava um evento em `events`.
 // Nunca deve quebrar o site — qualquer erro é engolido e respondido com ok:false.
@@ -16,6 +17,9 @@ export async function POST(req: Request) {
   // Robô (crawler, preview de link) não vira métrica de visita.
   const ua = req.headers.get('user-agent');
   if (isBotUA(ua)) return NextResponse.json({ ok: true });
+
+  // Tráfego interno da equipe (IP configurado) não vira métrica.
+  if (isInternalRequest(req)) return NextResponse.json({ ok: true });
 
   let body: Record<string, unknown>;
   try {

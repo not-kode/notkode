@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { isBotUA } from '@/lib/bot';
+import { isInternalRequest } from '@/lib/internal-ip';
 
 // Ingestão das gravações de sessão (rrweb). Recebe um "chunk" de eventos e grava
 // em session_recordings. À prova de falhas — nunca deve afetar o site.
@@ -9,6 +10,9 @@ export async function POST(req: Request) {
   // Robô (crawler, preview de link) não vira gravação de sessão.
   const ua = req.headers.get('user-agent');
   if (isBotUA(ua)) return NextResponse.json({ ok: true });
+
+  // Tráfego interno da equipe (IP configurado) não vira gravação.
+  if (isInternalRequest(req)) return NextResponse.json({ ok: true });
 
   let body: { session_id?: unknown; page?: unknown; events?: unknown };
   try {

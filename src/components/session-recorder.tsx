@@ -4,10 +4,25 @@ import { useEffect } from 'react';
 import { getSessionId } from '@/components/analytics';
 
 // Gravação de sessão first-party com rrweb. Roda SÓ no site público (montado no
-// layout [locale]). Inputs mascarados (não grava texto digitado). À prova de
-// falhas: dynamic import, qualquer erro é engolido e nunca afeta a navegação.
+// layout [locale]). Digitação: nome e opções ficam visíveis; e-mail, telefone e
+// CPF/CNPJ são mascarados (a Notkode já recebe o contato completo no lead ao
+// enviar — não precisa guardar dado sensível cru na gravação). À prova de falhas:
+// dynamic import, qualquer erro é engolido e nunca afeta a navegação.
 
 type RRWebEvent = unknown;
+
+// Decide, por campo, se o valor digitado é sensível (contato) e deve ser mascarado.
+// Olha o type do input e pistas no name/id/autocomplete/inputmode/placeholder.
+function isSensitiveField(el: HTMLElement | null): boolean {
+  if (!el) return true; // na dúvida, mascara
+  const type = (el.getAttribute('type') || '').toLowerCase();
+  if (type === 'email' || type === 'tel' || type === 'password') return true;
+  const hints = [
+    el.getAttribute('name'), el.getAttribute('id'), el.getAttribute('autocomplete'),
+    el.getAttribute('inputmode'), el.getAttribute('placeholder'),
+  ].join(' ').toLowerCase();
+  return /mail|phone|tel|whats|celular|fone|cpf|cnpj|documento|cep/.test(hints);
+}
 
 export function SessionRecorder() {
   useEffect(() => {
@@ -52,7 +67,11 @@ export function SessionRecorder() {
               setTimeout(() => flush(false), 400);
             }
           },
-          maskAllInputs: true, // não grava o que é digitado
+          // Mascara tudo por padrão, mas o maskInputFn devolve o texto real dos
+          // campos NÃO sensíveis (nome, opções, escopo). Contato fica mascarado.
+          maskAllInputs: true,
+          maskInputFn: (text: string, el: HTMLElement) =>
+            isSensitiveField(el) ? '•'.repeat(Math.min(text.length, 40)) : text,
           recordCanvas: false,
           collectFonts: false,
           sampling: { mousemove: 50, scroll: 150 },
