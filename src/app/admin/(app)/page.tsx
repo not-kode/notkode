@@ -77,14 +77,14 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     supabase.from('events').select('type, label, session_id').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
-    supabase.from('engagements').select('organization_id, lifecycle, mrr'),
+    supabase.from('engagements').select('organization_id, lifecycle, mrr, valor, type, start_date'),
     supabase.from('receivables').select('amount, status, due_date, paid_at'),
   ]);
 
   const ctas = (ctaRows.data ?? []) as { label: string | null }[];
   const formEvents = (formRows.data ?? []) as { type: string; label: string | null; session_id: string | null }[];
   const leads = (leadRows.data ?? []) as { service_tag: string | null }[];
-  const engs = (engRows.data ?? []) as { organization_id: string | null; lifecycle: string; mrr: number | null }[];
+  const engs = (engRows.data ?? []) as { organization_id: string | null; lifecycle: string; mrr: number | null; valor: number | null; type: string; start_date: string | null }[];
   const recs = (recRows.data ?? []) as { amount: number; status: string; due_date: string; paid_at: string | null }[];
   const visitas = pv.count ?? 0;
 
@@ -163,6 +163,14 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const mrr = engs.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
   const clientesAtivos = new Set(engs.filter((e) => (e.lifecycle === 'ativo' || e.lifecycle === 'pausado') && e.organization_id).map((e) => e.organization_id)).size;
 
+  // Novo no PERÍODO: contratos que COMEÇARAM (start_date) dentro do filtro. Base
+  // mais fidedigna que a data de cadastro (que ficou toda no dia da migração).
+  // Separa o mensal novo (MRR que passou a entrar) do avulso/pontual — sem misturar.
+  const novoNoPeriodo = engs.filter((e) => e.start_date != null && e.start_date >= fromStr && e.start_date <= toStr);
+  const mrrNovo = novoNoPeriodo.reduce((s, e) => s + (e.mrr ?? 0), 0);
+  const novoAvulso = novoNoPeriodo.reduce((s, e) => s + (e.valor ?? 0), 0);
+  const contratosNovos = novoNoPeriodo.length;
+
   // Receita por mês — 12 meses móveis (histórico, independente do filtro).
   const receitaPorMes: { mes: string; valor: number }[] = [];
   for (let i = 11; i >= 0; i--) {
@@ -193,7 +201,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
   const data: DashboardData = {
     rangeLabel: range.label,
-    negocio: { faturamento, aReceber, emAtraso, mrr, clientesAtivos, ganhos: wonDeals.count ?? 0, receitaPorMes },
+    negocio: { faturamento, aReceber, emAtraso, mrr, mrrNovo, novoAvulso, contratosNovos, clientesAtivos, ganhos: wonDeals.count ?? 0, receitaPorMes },
     site: {
       visitas,
       sessoes,

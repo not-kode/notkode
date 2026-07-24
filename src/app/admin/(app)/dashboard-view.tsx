@@ -29,6 +29,9 @@ export type DashboardData = {
     aReceber: number;
     emAtraso: number;
     mrr: number;
+    mrrNovo: number;
+    novoAvulso: number;
+    contratosNovos: number;
     clientesAtivos: number;
     ganhos: number;
     receitaPorMes: MonthRevenue[];
@@ -135,11 +138,13 @@ export function DashboardView({ data }: { data: DashboardData }) {
       {/* ════════════════ NEGÓCIO — o que importa primeiro ════════════════ */}
       <GroupLabel>Negócio · {rangeLabel}</GroupLabel>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
         <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint="recebido no período" />
         <Kpi label="A receber" value={brl(n.aReceber)} hint="no prazo, até o fim do mês" />
         <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido" />
         <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês" />
+        <Kpi label="MRR novo" value={brl(n.mrrNovo)} tone={n.mrrNovo > 0 ? 'accent' : undefined} hint={`recorrente/mês iniciado no período${n.contratosNovos > 0 ? ` · ${nf(n.contratosNovos)} contrato${n.contratosNovos === 1 ? '' : 's'}` : ''}`} />
+        <Kpi label="Novo avulso" value={brl(n.novoAvulso)} hint="pontual iniciado no período" />
         <Kpi label="Clientes ativos" value={nf(n.clientesAtivos)} hint="hoje" />
         <Kpi label="Negócios ganhos" value={nf(n.ganhos)} hint="desde o início" />
       </div>
