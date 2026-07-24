@@ -17,7 +17,7 @@ const fmtDur = (secs: number) => {
 };
 
 export type FunnelStep = { label: string; count: number };
-export type FormFunnel = { form: string; steps: FunnelStep[] };
+export type FormFunnel = { form: string; formType?: string | null; steps: FunnelStep[] };
 export type ServiceCount = { tag: string; label: string; count: number };
 export type CtaCount = { label: string; count: number };
 export type DayCount = { day: string; count: number };
@@ -191,7 +191,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
 
       {/* Formulários — card dedicado (há mais de um formulário no site) */}
       <div className="mb-6">
-        <Section title="Formulários" sub={`· onde as pessoas param · ${rangeLabel}`}>
+        <Section title="Formulários" sub={`· por página · onde as pessoas param · ${rangeLabel}`}>
           {s.formFunnels.length === 0 ? (
             <p className="py-2 text-sm text-text-muted">Ninguém começou um formulário no período.</p>
           ) : (
@@ -203,18 +203,13 @@ export function DashboardView({ data }: { data: DashboardData }) {
                   const sent = f.steps[f.steps.length - 1]?.count ?? 0;
                   const drop = biggestDropIndex(f.steps);
                   const smallSample = started < 10;
-                  // Onde cada formulário mora no site (pra ninguém confundir os funis).
-                  const FORM_WHERE: Record<string, string> = {
-                    'Orçamento': 'calculadora das páginas de site/landing',
-                    'Qualificação': 'form de Sistemas com IA, Parcerias e Agentes',
-                  };
                   return (
                     <div key={f.form} className="rounded-md border border-[#191918]/[0.06] p-4">
                       <div className="mb-1 flex items-baseline justify-between gap-2">
                         <p className="font-mono text-[11px] font-medium tracking-tight text-text-primary">
                           {f.form}
-                          {FORM_WHERE[f.form] && (
-                            <span className="ml-1.5 font-normal normal-case text-text-muted">· {FORM_WHERE[f.form]}</span>
+                          {f.formType && (
+                            <span className="ml-1.5 font-normal normal-case text-text-muted">· {f.formType}</span>
                           )}
                         </p>
                         <p className="font-mono text-[11px] text-text-muted">

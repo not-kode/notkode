@@ -74,7 +74,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('created_at, session_id').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
-    supabase.from('events').select('type, label, session_id').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', toISO),
+    supabase.from('events').select('type, label, session_id, service_tag').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
     supabase.from('engagements').select('organization_id, lifecycle, mrr, valor, type, start_date'),
@@ -82,39 +82,48 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   ]);
 
   const ctas = (ctaRows.data ?? []) as { label: string | null }[];
-  const formEvents = (formRows.data ?? []) as { type: string; label: string | null; session_id: string | null }[];
+  type FormEv = { type: string; label: string | null; session_id: string | null; service_tag: string | null };
+  const formEvents = (formRows.data ?? []) as FormEv[];
   const leads = (leadRows.data ?? []) as { service_tag: string | null }[];
   const engs = (engRows.data ?? []) as { organization_id: string | null; lifecycle: string; mrr: number | null; valor: number | null; type: string; start_date: string | null }[];
   const recs = (recRows.data ?? []) as { amount: number; status: string; due_date: string; paid_at: string | null }[];
   const visitas = pv.count ?? 0;
 
-  // ── Site: funil de formulário (por formulário, com etapas nomeadas) ──
-  const distinct = (pred: (e: { type: string; label: string | null }) => boolean) =>
+  // ── Site: funil de formulário POR PÁGINA (service_tag) ──
+  // Cada página tem seu formulário; mostramos, por página, quantos iniciaram e
+  // quantos chegaram a cada etapa até enviar — pra ver em qual etapa a galera sai.
+  const distinct = (pred: (e: FormEv) => boolean) =>
     new Set(formEvents.filter((e) => pred(e) && e.session_id).map((e) => e.session_id)).size;
   const parseStep = (label: string | null) => {
     const parts = (label ?? '').split('::');
     return parts.length === 3 ? { form: parts[0], pos: Number(parts[1]), name: parts[2] } : null;
   };
-  const forms = [...new Set(
-    formEvents.map((e) => (e.type === 'form_step' ? parseStep(e.label)?.form : e.type === 'form_start' ? e.label : null)).filter((f): f is string => !!f),
-  )];
-  const formFunnels: FormFunnel[] = forms.map((form) => {
-    const stepsMeta = new Map<number, string>();
-    for (const e of formEvents) {
-      if (e.type !== 'form_step') continue;
-      const p = parseStep(e.label);
-      if (p && p.form === form) stepsMeta.set(p.pos, p.name);
-    }
-    const ordered = [...stepsMeta.entries()].sort((a, b) => a[0] - b[0]);
-    const steps: FunnelStep[] = [
-      ...ordered.map(([pos, name]) => ({
-        label: name,
-        count: distinct((e) => e.type === 'form_step' && parseStep(e.label)?.form === form && parseStep(e.label)?.pos === pos),
-      })),
-      { label: 'Enviou', count: distinct((e) => e.type === 'form_submit' && e.label === form) },
-    ];
-    return { form, steps };
-  }).filter((f) => f.steps.some((s) => s.count > 0));
+  const prettyService = (s: string) => SERVICE_LABELS[s] ?? s.replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const services = [...new Set(formEvents.map((e) => e.service_tag).filter((s): s is string => !!s))];
+  const formFunnels: FormFunnel[] = services
+    .map((svc) => {
+      const inSvc = (e: FormEv) => e.service_tag === svc;
+      // Nome do formulário daquela página (Qualificação, Orçamento…), pra legenda.
+      const formType =
+        formEvents.filter(inSvc).map((e) => (e.type === 'form_start' ? e.label : parseStep(e.label)?.form)).find((f): f is string => !!f) ?? null;
+      const stepsMeta = new Map<number, string>();
+      for (const e of formEvents) {
+        if (!inSvc(e) || e.type !== 'form_step') continue;
+        const p = parseStep(e.label);
+        if (p) stepsMeta.set(p.pos, p.name);
+      }
+      const ordered = [...stepsMeta.entries()].sort((a, b) => a[0] - b[0]);
+      const steps: FunnelStep[] = [
+        ...ordered.map(([pos, name]) => ({
+          label: name,
+          count: distinct((e) => inSvc(e) && e.type === 'form_step' && parseStep(e.label)?.pos === pos),
+        })),
+        { label: 'Enviou', count: distinct((e) => inSvc(e) && e.type === 'form_submit') },
+      ];
+      return { form: prettyService(svc), formType, steps };
+    })
+    .filter((f) => f.steps.some((s) => s.count > 0))
+    .sort((a, b) => (b.steps[0]?.count ?? 0) - (a.steps[0]?.count ?? 0));
 
   // ── Site: visitas por dia (bucket adapta ao tamanho do intervalo) ──
   const bucketDays = days <= 45 ? 1 : days <= 180 ? 7 : 30;
