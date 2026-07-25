@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useTransition, type ReactNode } from 'react';
-import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement } from '../financeiro/actions';
+import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement, updateReceivable, deleteReceivable } from '../financeiro/actions';
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
@@ -223,6 +223,11 @@ function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientV
     fd.set('id', id);
     start(() => unmarkReceivable(fd));
   };
+  const removeParcela = (id: string) => {
+    const fd = new FormData();
+    fd.set('id', id);
+    start(() => deleteReceivable(fd));
+  };
   const changeLifecycle = (id: string, lifecycle: string) => {
     const fd = new FormData();
     fd.set('id', id);
@@ -329,7 +334,7 @@ function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientV
                   <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-primary">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Ativos ({ativos.length})
                   </p>
-                  {ativos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
+                  {ativos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
                 </div>
               )}
               {encerrados.length > 0 && (
@@ -337,7 +342,7 @@ function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientV
                   <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">
                     <span className="h-1.5 w-1.5 rounded-full bg-text-muted/50" /> Encerrados / inativos ({encerrados.length})
                   </p>
-                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
+                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
                 </div>
               )}
             </div>
@@ -348,7 +353,7 @@ function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientV
   );
 }
 
-function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onChangeLifecycle, onDelete, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
+function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onSaveParcela, onDeleteParcela, onChangeLifecycle, onDelete, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onSaveParcela: (fd: FormData) => void; onDeleteParcela: (id: string) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
   const isConcluded = eng.lifecycle === 'encerrado' || eng.lifecycle === 'churn';
   const isActive = eng.lifecycle === 'ativo';
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -563,17 +568,7 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
         {eng.parcelas.length > 0 ? (
           <ul className="flex flex-col gap-1">
             {eng.parcelas.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-text-secondary">{r.description ?? '—'} <span className="text-text-muted">· {fmtDate(r.due_date)} · {brl(r.amount)}</span></span>
-                {r.status === 'recebido' ? (
-                  <span className="flex shrink-0 items-center gap-1.5">
-                    <span className="font-label text-[10px] text-success">✓ pago</span>
-                    <button onClick={() => onUnmark(r.id)} disabled={pending} className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger disabled:opacity-50">desfazer</button>
-                  </span>
-                ) : (
-                  <button onClick={() => onMarkPaid(r.id, r.amount)} disabled={pending} className="shrink-0 rounded border border-success/40 px-2 py-0.5 text-[10px] font-medium text-success transition hover:bg-success/10 disabled:opacity-50">Marcar</button>
-                )}
-              </li>
+              <ParcelaRow key={r.id} r={r} onMarkPaid={onMarkPaid} onUnmark={onUnmark} onSave={onSaveParcela} onDelete={onDeleteParcela} pending={pending} />
             ))}
           </ul>
         ) : (
@@ -583,6 +578,58 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
         )}
       </div>
     </div>
+  );
+}
+
+/** Uma parcela dentro do card de contrato: leitura, edição inline e exclusão. */
+function ParcelaRow({ r, onMarkPaid, onUnmark, onSave, onDelete, pending }: { r: Parcela; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onSave: (fd: FormData) => void; onDelete: (id: string) => void; pending: boolean }) {
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  if (editing) {
+    return (
+      <li>
+        <form
+          action={(fd) => { onSave(fd); setEditing(false); }}
+          className="flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2.5"
+        >
+          <input type="hidden" name="id" value={r.id} />
+          <input name="description" defaultValue={r.description ?? ''} className={inputCls} placeholder="Descrição" />
+          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2">
+            <input name="amount" inputMode="decimal" required defaultValue={String(r.amount)} className={inputCls} placeholder="Valor (R$)" />
+            <input name="due_date" type="date" required defaultValue={r.due_date} className={inputCls} />
+            <button type="submit" disabled={pending} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar</button>
+            <button type="button" onClick={() => setEditing(false)} className="rounded-md border border-black/[0.1] px-2.5 py-1.5 text-xs font-medium text-text-secondary transition hover:border-black/20">Cancelar</button>
+          </div>
+          {confirmDelete ? (
+            <span className="flex items-center gap-2 text-[10px] text-danger">
+              Excluir esta parcela?
+              <button type="button" onClick={() => { onDelete(r.id); setEditing(false); }} disabled={pending} className="rounded bg-danger px-2 py-0.5 font-medium text-white disabled:opacity-60">Excluir</button>
+              <button type="button" onClick={() => setConfirmDelete(false)} className="text-text-muted underline decoration-dotted">cancelar</button>
+            </span>
+          ) : (
+            <button type="button" onClick={() => setConfirmDelete(true)} className="self-start font-label text-[10px] uppercase tracking-wider text-text-muted underline decoration-dotted transition hover:text-danger">Excluir parcela</button>
+          )}
+        </form>
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex items-center justify-between gap-2 text-xs">
+      <span className="text-text-secondary">{r.description ?? '—'} <span className="text-text-muted">· {fmtDate(r.due_date)} · {brl(r.amount)}</span></span>
+      <span className="flex shrink-0 items-center gap-1.5">
+        {r.status === 'recebido' ? (
+          <>
+            <span className="font-label text-[10px] text-success">✓ pago</span>
+            <button onClick={() => onUnmark(r.id)} disabled={pending} className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger disabled:opacity-50">desfazer</button>
+          </>
+        ) : (
+          <button onClick={() => onMarkPaid(r.id, r.amount)} disabled={pending} className="rounded border border-success/40 px-2 py-0.5 text-[10px] font-medium text-success transition hover:bg-success/10 disabled:opacity-50">Marcar</button>
+        )}
+        <button onClick={() => setEditing(true)} className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-primary">editar</button>
+      </span>
+    </li>
   );
 }
 
