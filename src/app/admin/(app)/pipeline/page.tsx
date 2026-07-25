@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
-import { PipelineBoard, type BoardDeal } from './board';
+import { PipelineBoard, dealTotal, type BoardDeal } from './board';
 import { NewDealDialog } from './new-deal-dialog';
 import { type OrgOption, type Product } from './orgs';
 
@@ -125,66 +125,46 @@ export default async function PipelinePage() {
 
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');
 
-  // Quanto o pipeline vale: quem já tem parcelas planejadas vale a soma delas
-  // (é o contratado de verdade); quem ainda não tem vale o valor do negócio.
-  // Negócio só de MRR ficava fora da conta antes e não somava nada.
-  const dealTotal = (d: BoardDeal) =>
-    d.installments.length > 0
-      ? d.installments.reduce((s, p) => s + p.amount, 0)
-      : (d.valor_pontual ?? 0) + (d.mrr ?? 0);
+  // Quanto o pipeline vale por inteiro e quanto viraria receita todo mês se tudo
+  // fechasse. Fechar R$ 65 mil parcelado não é R$ 65 mil por mês.
   const openValue = openDeals.reduce((sum, d) => sum + dealTotal(d), 0);
-
-  // E quanto disso cairia neste mês, pelas datas das parcelas: fechar R$ 50 mil
-  // em 10x não é R$ 50 mil entrando agora.
-  const mesAtual = new Date().toISOString().slice(0, 7);
-  const mesLabel = new Date().toLocaleDateString('pt-BR', { month: 'long' });
-  const openNoMes = openDeals
-    .flatMap((d) => d.installments)
-    .filter((p) => p.due_date.slice(0, 7) === mesAtual)
-    .reduce((s, p) => s + p.amount, 0);
-  const semParcelas = openDeals.filter((d) => d.installments.length === 0).length;
+  const openMensal = openDeals.reduce((sum, d) => sum + (d.mrr ?? 0), 0);
+  const recorrentes = openDeals.filter((d) => (d.mrr ?? 0) > 0).length;
   const won = deals.filter((d) => d.stage === 'ganho').length;
   const lost = deals.filter((d) => d.stage === 'perdido').length;
 
   return (
-    <div>
-      <header className="mb-6">
-        <p className="eyebrow mb-1">
-          <span className="status-dot" />
-          Pipeline de vendas
-        </p>
-        <div className="flex items-end justify-between gap-4">
-          <h1 className="text-2xl font-semibold tracking-tight">Negócios</h1>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 font-label text-xs text-text-muted">
-              {won > 0 && (
-                <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">
-                  {won} ganho{won === 1 ? '' : 's'}
-                </span>
-              )}
-              {lost > 0 && (
-                <span className="rounded-full bg-danger/10 px-2 py-0.5 text-danger">
-                  {lost} perdido{lost === 1 ? '' : 's'}
-                </span>
-              )}
-            </div>
-            <NewDealDialog orgOptions={orgOptions} products={products} />
+    <div className="flex min-h-[calc(100vh-5rem)] flex-col">
+      <header className="mb-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="eyebrow mb-1">
+              <span className="status-dot" />
+              Pipeline de vendas
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight">Negócios</h1>
           </div>
+          <NewDealDialog orgOptions={orgOptions} products={products} />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">
-          <div className="rounded-md border border-black/[0.06] bg-white p-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">
             <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Se fechar tudo</p>
-            <p className="mt-1 text-xl font-semibold text-text-primary">{brl(openValue)}</p>
-            <p className="mt-1 font-label text-[10px] text-text-muted/70">
-              {openDeals.length} em aberto{semParcelas > 0 && ` · ${semParcelas} sem parcelas`}
+            <p className="mt-0.5 text-xl font-semibold text-text-primary">{brl(openValue)}</p>
+            <p className="font-label text-[10px] text-text-muted/70">{openDeals.length} em aberto</p>
+          </div>
+          <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">
+            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Por mês</p>
+            <p className="mt-0.5 text-xl font-semibold text-primary">{brl(openMensal)}</p>
+            <p className="font-label text-[10px] text-text-muted/70">{recorrentes} recorrente{recorrentes === 1 ? '' : 's'}</p>
+          </div>
+          {(won > 0 || lost > 0) && (
+            <p className="font-label text-[11px] text-text-muted">
+              {won > 0 && <span className="text-success">{won} ganho{won === 1 ? '' : 's'}</span>}
+              {won > 0 && lost > 0 && ' · '}
+              {lost > 0 && <span className="text-danger">{lost} perdido{lost === 1 ? '' : 's'}</span>}
             </p>
-          </div>
-          <div className="rounded-md border border-black/[0.06] bg-white p-4">
-            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Entra em {mesLabel}</p>
-            <p className="mt-1 text-xl font-semibold text-primary">{brl(openNoMes)}</p>
-            <p className="mt-1 font-label text-[10px] text-text-muted/70">parcelas que vencem no mês</p>
-          </div>
+          )}
         </div>
       </header>
 

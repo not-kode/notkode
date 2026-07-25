@@ -65,6 +65,15 @@ const STAGE_ACCENT: Record<DealStage, string> = {
 const brl = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
+/**
+ * Valor do negócio: com parcelas planejadas vale a soma delas (é o contratado de
+ * verdade, inclusive nos recorrentes); sem parcelas, o valor cheio do negócio.
+ */
+export const dealTotal = (d: BoardDeal) =>
+  d.installments.length > 0
+    ? d.installments.reduce((s, p) => s + p.amount, 0)
+    : (d.valor_pontual ?? 0) + (d.mrr ?? 0);
+
 export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: BoardDeal[]; products?: Product[] }) {
   const [deals, setDeals] = useState(initialDeals);
   const [overStage, setOverStage] = useState<DealStage | null>(null);
@@ -95,10 +104,11 @@ export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: B
 
   return (
     <>
-    <div className="flex gap-3 overflow-x-auto pb-4">
+    <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-4">
       {PIPELINE_STAGES.map((stage) => {
         const cards = deals.filter((d) => d.stage === stage);
-        const total = cards.reduce((s, d) => s + (d.valor_pontual ?? 0), 0);
+        const total = cards.reduce((s, d) => s + dealTotal(d), 0);
+        const totalMes = cards.reduce((s, d) => s + (d.mrr ?? 0), 0);
         const isOver = overStage === stage;
         return (
           <section
@@ -132,9 +142,12 @@ export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: B
                 {cards.length}
               </span>
             </div>
-            <p className="mb-2 px-3 font-label text-[10px] text-text-muted">{total > 0 ? brl(total) : '—'}</p>
+            <p className="mb-2 px-3 font-label text-[10px] text-text-muted">
+              {total > 0 ? brl(total) : '—'}
+              {totalMes > 0 && <span className="text-text-muted/70"> · {brl(totalMes)}/mês</span>}
+            </p>
 
-            <div className="flex min-h-[80px] flex-1 flex-col gap-2 px-2 pb-3">
+            <div className="flex min-h-[80px] flex-1 flex-col gap-2 overflow-y-auto px-2 pb-3">
               {cards.map((deal) => (
                 <article
                   key={deal.id}
