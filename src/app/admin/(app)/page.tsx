@@ -78,7 +78,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
     supabase.from('engagements').select('organization_id, lifecycle, mrr'),
-    supabase.from('receivables').select('amount, status, due_date, paid_at'),
+    supabase.from('receivables').select('amount, status, due_date, paid_at, paid_amount'),
   ]);
 
   const ctas = (ctaRows.data ?? []) as { label: string | null }[];
@@ -86,7 +86,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const formEvents = (formRows.data ?? []) as FormEv[];
   const leads = (leadRows.data ?? []) as { service_tag: string | null }[];
   const engs = (engRows.data ?? []) as { organization_id: string | null; lifecycle: string; mrr: number | null }[];
-  const recs = (recRows.data ?? []) as { amount: number; status: string; due_date: string; paid_at: string | null }[];
+  const recs = (recRows.data ?? []) as { amount: number; status: string; due_date: string; paid_at: string | null; paid_amount: number | null }[];
   const visitas = pv.count ?? 0;
 
   // ── Site: funil de formulário POR PÁGINA (service_tag) ──
@@ -184,7 +184,10 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const porServico = [...servicoMap.entries()].map(([tag, count]) => ({ tag, label: productLabels[tag] ?? SERVICE_LABELS[tag] ?? tag, count })).sort((a, b) => b.count - a.count);
 
   // ── Negócio: faturamento no período + fluxo de caixa (fidedigno) ──
-  const faturamento = recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + r.amount, 0);
+  // Vale o que entrou de verdade (paid_amount), não o valor cheio da parcela —
+  // um pagamento parcial não pode virar faturamento cheio. Mesma régua do Financeiro.
+  const recebidoDe = (r: { amount: number; paid_amount: number | null }) => r.paid_amount ?? r.amount;
+  const faturamento = recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + recebidoDe(r), 0);
   // A receber = pendente que ainda vai vencer, de hoje até o FIM DO MÊS do período.
   // (o período "este mês" vai só até hoje para o faturamento; aqui olhamos o mês
   //  inteiro para não zerar uma parcela que vence mais pra frente no mesmo mês.)
@@ -200,7 +203,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const valor = recs.filter((r) => r.status === 'recebido' && r.paid_at?.startsWith(key)).reduce((s, r) => s + r.amount, 0);
+    const valor = recs.filter((r) => r.status === 'recebido' && r.paid_at?.startsWith(key)).reduce((s, r) => s + recebidoDe(r), 0);
     receitaPorMes.push({ mes: `${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`, valor });
   }
 

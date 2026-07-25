@@ -59,7 +59,8 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
       .select('id, title, type, valor, mrr, start_date, end_date, scope, renewal_note, client_obligations, provider_obligations, proposal_path, proposal_name, organizations(name, legal_name, tax_id, legal_rep, legal_rep_cpf, address_street, address_number, address_district, address_city, address_state, address_zip)')
       .eq('id', id)
       .single(),
-    supabase.from('receivables').select('description, amount, due_date').eq('engagement_id', id).order('due_date'),
+    // Parcela cancelada não entra no contrato: o documento mostra o que foi de fato acordado.
+    supabase.from('receivables').select('description, amount, due_date').eq('engagement_id', id).neq('status', 'cancelado').order('due_date'),
   ]);
 
   const eng = engData as unknown as Eng | null;
