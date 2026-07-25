@@ -5,7 +5,7 @@ import { moveDealStage } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_LABELS, type DealStage } from './stages';
 import { DealDrawer } from './deal-drawer';
 import { type Product } from './orgs';
-import { dealTotal } from './deal-value';
+import { dealTotal, dealMonthlyNet } from './deal-value';
 
 export type OrgInfo = {
   id: string;
@@ -100,7 +100,7 @@ export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: B
       {PIPELINE_STAGES.map((stage) => {
         const cards = deals.filter((d) => d.stage === stage);
         const total = cards.reduce((s, d) => s + dealTotal(d), 0);
-        const totalMes = cards.reduce((s, d) => s + (d.mrr ?? 0), 0);
+        const totalMes = cards.reduce((s, d) => s + dealMonthlyNet(d), 0);
         const isOver = overStage === stage;
         return (
           <section

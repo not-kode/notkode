@@ -1,7 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
 import { PipelineBoard, type BoardDeal } from './board';
-import { dealTotal } from './deal-value';
+import { dealTotal, dealMonthly, dealMonthlyNet } from './deal-value';
 import { NewDealDialog } from './new-deal-dialog';
 import { type OrgOption, type Product } from './orgs';
 
@@ -127,10 +127,12 @@ export default async function PipelinePage() {
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');
 
   // Quanto o pipeline vale por inteiro e quanto viraria receita todo mês se tudo
-  // fechasse. Fechar R$ 65 mil parcelado não é R$ 65 mil por mês.
+  // fechasse. Fechar R$ 65 mil parcelado não é R$ 65 mil por mês — e do mensal
+  // ainda saem o repasse ao parceiro e a nota.
   const openValue = openDeals.reduce((sum, d) => sum + dealTotal(d), 0);
-  const openMensal = openDeals.reduce((sum, d) => sum + (d.mrr ?? 0), 0);
-  const recorrentes = openDeals.filter((d) => (d.mrr ?? 0) > 0).length;
+  const openMensalBruto = openDeals.reduce((sum, d) => sum + dealMonthly(d), 0);
+  const openMensal = openDeals.reduce((sum, d) => sum + dealMonthlyNet(d), 0);
+  const mensais = openDeals.filter((d) => dealMonthly(d) > 0).length;
   const won = deals.filter((d) => d.stage === 'ganho').length;
   const lost = deals.filter((d) => d.stage === 'perdido').length;
 
@@ -155,9 +157,11 @@ export default async function PipelinePage() {
             <p className="font-label text-[10px] text-text-muted/70">{openDeals.length} em aberto</p>
           </div>
           <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">
-            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Por mês</p>
+            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Por mês, líquido</p>
             <p className="mt-0.5 text-xl font-semibold text-primary">{brl(openMensal)}</p>
-            <p className="font-label text-[10px] text-text-muted/70">{recorrentes} recorrente{recorrentes === 1 ? '' : 's'}</p>
+            <p className="font-label text-[10px] text-text-muted/70">
+              {brl(openMensalBruto)} bruto · {mensais} negócio{mensais === 1 ? '' : 's'}
+            </p>
           </div>
           {(won > 0 || lost > 0) && (
             <p className="font-label text-[11px] text-text-muted">
