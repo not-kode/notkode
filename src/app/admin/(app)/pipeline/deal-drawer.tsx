@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import {
   createDeal,
   updateDeal,
@@ -15,7 +15,9 @@ import {
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_TAGS, SERVICE_LABELS, type DealStage } from './stages';
 import { normalizeOrgName, type OrgOption, type Product } from './orgs';
 import { ProductsManager } from './products-manager';
+import { ProductSelect } from './product-select';
 import type { BoardDeal } from './board';
+import { AutoSaveForm } from '../_shared/auto-save-form';
 
 const brl = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -364,6 +366,16 @@ export function DealDrawer({
   const [savePending, startSave] = useTransition();
   const [winPending, startWin] = useTransition();
   const [manageOpen, setManageOpen] = useState(false);
+  // Salvamento pendente do autosave: garante que o que foi digitado agora não se
+  // perca se o painel for fechado antes da pausa.
+  const flushRef = useRef<(() => void) | null>(null);
+  const fechar = () => { flushRef.current?.(); onClose(); };
+  // O seletor de produto não é um <input>: precisa pedir o salvamento na mão.
+  const salvarAgora = () => {
+    const form = document.getElementById('dealForm') as HTMLFormElement | null;
+    if (form?.checkValidity()) form.requestSubmit();
+  };
+
 
   // Opções de produto: tabela products (ativos), com fallback pra lista antiga do
   // código; tags já gravadas no negócio continuam aparecendo mesmo se desativadas.
@@ -397,7 +409,7 @@ export function DealDrawer({
       {/* Overlay */}
       <button
         aria-label="Fechar"
-        onClick={onClose}
+        onClick={fechar}
         className="absolute inset-0 bg-black/20 backdrop-blur-[1px]"
       />
 
@@ -437,7 +449,7 @@ export function DealDrawer({
             )}
           </div>
           <button
-            onClick={onClose}
+            onClick={fechar}
             className="rounded-md p-1 text-text-muted transition-colors hover:bg-black/[0.04] hover:text-text-primary"
             aria-label="Fechar"
           >
@@ -462,19 +474,16 @@ export function DealDrawer({
           </div>
         )}
 
-        {/* Form — mesmos campos para criar e editar. O botão de salvar fica na
-            barra fixa do rodapé (form="dealForm"), depois da proposta/parcelas. */}
-        <form
+        {/* Mesmos campos para criar e editar. Na edição não há botão de salvar:
+            o formulário grava sozinho a cada alteração. */}
+        <AutoSaveForm
           id="dealForm"
+          auto={!isNew}
+          flushRef={flushRef}
           action={(fd) =>
-            startSave(async () => {
-              if (isNew) {
-                await createDeal(fd);
-                onClose();
-              } else {
-                await updateDeal(fd);
-              }
-            })
+            isNew
+              ? startSave(async () => { await createDeal(fd); onClose(); })
+              : updateDeal(fd)
           }
           className="flex flex-col gap-4 px-5 pt-4"
         >
@@ -513,36 +522,17 @@ export function DealDrawer({
           )}
 
           <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="font-label text-[10px] uppercase tracking-[0.12em] text-text-muted">
-                Produto / serviço (pode marcar mais de um)
-              </label>
-              <button
-                type="button"
-                onClick={() => setManageOpen(true)}
-                className="font-label text-[10px] uppercase tracking-wider text-text-muted underline decoration-dotted transition-colors hover:text-primary"
-              >
-                gerenciar
-              </button>
-            </div>
+            <label className="mb-1 block font-label text-[10px] uppercase tracking-[0.12em] text-text-muted">
+              Produto / serviço (pode marcar mais de um)
+            </label>
             <input type="hidden" name="service_tags_present" value="1" />
-            <div className="grid grid-cols-2 gap-1.5">
-              {productOptions.map((s) => (
-                <label
-                  key={s.key}
-                  className="flex cursor-pointer items-center gap-2 rounded-md border border-black/[0.08] px-2.5 py-1.5 text-sm text-text-secondary transition-colors hover:border-primary/40 has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.05] has-[:checked]:text-text-primary"
-                >
-                  <input
-                    type="checkbox"
-                    name="service_tag"
-                    value={s.key}
-                    defaultChecked={deal?.service_tags?.includes(s.key) ?? false}
-                    className="h-3.5 w-3.5 accent-primary"
-                  />
-                  {s.label}
-                </label>
-              ))}
-            </div>
+            <ProductSelect
+              options={productOptions.map((o) => ({ key: o.key, label: o.label }))}
+              defaultSelected={deal?.service_tags ?? []}
+              name="service_tag"
+              onManage={() => setManageOpen(true)}
+              onChangeSelection={isNew ? undefined : salvarAgora}
+            />
           </div>
 
           <FinanceFields deal={deal} stageOptions={stageOptions} currentStage={currentStage} />
@@ -557,31 +547,29 @@ export function DealDrawer({
               placeholder="Contexto do negócio, origem da indicação, condições, próximos passos…"
             />
           </div>
-        </form>
+        </AutoSaveForm>
 
         {/* Proposta e parcelas exigem o negócio já salvo (precisam do id). */}
-        {isNew ? (
-          <p className="mt-5 border-t border-black/[0.06] px-5 py-4 font-label text-[11px] text-text-muted">
-            Preencha os dados e crie o negócio. Depois de criado, você anexa a proposta e lança as parcelas aqui mesmo.
-          </p>
-        ) : (
+        {!isNew && (
           <div className="mt-5 flex flex-col gap-5 border-t border-black/[0.06] px-5 py-4">
             <ProposalSection deal={deal!} />
             <InstallmentsSection deal={deal!} />
           </div>
         )}
 
-        {/* Barra fixa de ação: salva os dados do negócio (form acima). */}
-        <div className="sticky bottom-0 mt-auto border-t border-black/[0.06] bg-white px-5 py-3">
-          <button
-            type="submit"
-            form="dealForm"
-            disabled={savePending}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
-          >
-            {savePending ? (isNew ? 'Criando…' : 'Salvando…') : isNew ? 'Criar negócio' : 'Salvar negócio'}
-          </button>
-        </div>
+        {/* Criar exige confirmação; editar salva sozinho. */}
+        {isNew && (
+          <div className="sticky bottom-0 mt-auto border-t border-black/[0.06] bg-white px-5 py-3">
+            <button
+              type="submit"
+              form="dealForm"
+              disabled={savePending}
+              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60"
+            >
+              {savePending ? 'Criando…' : 'Criar negócio'}
+            </button>
+          </div>
+        )}
       </aside>
 
       {manageOpen && <ProductsManager products={products} onClose={() => setManageOpen(false)} />}
@@ -674,7 +662,6 @@ function InstallmentsSection({ deal }: { deal: BoardDeal }) {
               Gerar
             </button>
           </div>
-          <p className="font-label text-[10px] text-text-muted">Gerar substitui as mensalidades atuais. Ex.: 6 meses = 6 cobranças de {brl(mrr)}.</p>
         </form>
       ) : valor > 0 ? (
         <form action={generateInstallments} className="mb-2 flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/[0.03] p-2.5">
@@ -700,13 +687,8 @@ function InstallmentsSection({ deal }: { deal: BoardDeal }) {
               Gerar
             </button>
           </div>
-          <p className="font-label text-[10px] text-text-muted">Gerar substitui as parcelas atuais. À vista? Deixe em 1x.</p>
         </form>
-      ) : (
-        <p className="mb-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] px-2.5 py-2 font-label text-[10px] text-text-muted">
-          Preencha o valor do negócio e salve para parcelar automaticamente.
-        </p>
-      )}
+      ) : null}
 
       {deal.installments.length > 0 && (
         <ul className="mb-2 flex flex-col gap-1">
@@ -744,9 +726,6 @@ function InstallmentsSection({ deal }: { deal: BoardDeal }) {
         </form>
       </details>
 
-      <p className="mt-1.5 font-label text-[10px] text-text-muted">
-        Ao ganhar o negócio, as parcelas viram as cobranças do contrato no financeiro.
-      </p>
     </section>
   );
 }

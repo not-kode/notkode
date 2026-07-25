@@ -85,9 +85,6 @@ export function ProductsManager({ products, onClose }: { products: Product[]; on
           </div>
         </form>
 
-        <p className="mt-2 font-label text-[10px] text-text-muted">
-          Renomear salva ao sair do campo. Desativar esconde das opções sem perder o histórico.
-        </p>
       </div>
     </div>
   );

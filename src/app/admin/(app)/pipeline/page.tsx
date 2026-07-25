@@ -124,7 +124,25 @@ export default async function PipelinePage() {
   }));
 
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');
-  const openValue = openDeals.reduce((sum, d) => sum + (d.valor_pontual ?? 0), 0);
+
+  // Quanto o pipeline vale: quem já tem parcelas planejadas vale a soma delas
+  // (é o contratado de verdade); quem ainda não tem vale o valor do negócio.
+  // Negócio só de MRR ficava fora da conta antes e não somava nada.
+  const dealTotal = (d: BoardDeal) =>
+    d.installments.length > 0
+      ? d.installments.reduce((s, p) => s + p.amount, 0)
+      : (d.valor_pontual ?? 0) + (d.mrr ?? 0);
+  const openValue = openDeals.reduce((sum, d) => sum + dealTotal(d), 0);
+
+  // E quanto disso cairia neste mês, pelas datas das parcelas: fechar R$ 50 mil
+  // em 10x não é R$ 50 mil entrando agora.
+  const mesAtual = new Date().toISOString().slice(0, 7);
+  const mesLabel = new Date().toLocaleDateString('pt-BR', { month: 'long' });
+  const openNoMes = openDeals
+    .flatMap((d) => d.installments)
+    .filter((p) => p.due_date.slice(0, 7) === mesAtual)
+    .reduce((s, p) => s + p.amount, 0);
+  const semParcelas = openDeals.filter((d) => d.installments.length === 0).length;
   const won = deals.filter((d) => d.stage === 'ganho').length;
   const lost = deals.filter((d) => d.stage === 'perdido').length;
 
@@ -139,9 +157,6 @@ export default async function PipelinePage() {
           <h1 className="text-2xl font-semibold tracking-tight">Negócios</h1>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 font-label text-xs text-text-muted">
-              <span>
-                {openDeals.length} em aberto · <span className="text-text-secondary">{brl(openValue)}</span>
-              </span>
               {won > 0 && (
                 <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">
                   {won} ganho{won === 1 ? '' : 's'}
@@ -156,6 +171,21 @@ export default async function PipelinePage() {
             <NewDealDialog orgOptions={orgOptions} products={products} />
           </div>
         </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:max-w-md">
+          <div className="rounded-md border border-black/[0.06] bg-white p-4">
+            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Se fechar tudo</p>
+            <p className="mt-1 text-xl font-semibold text-text-primary">{brl(openValue)}</p>
+            <p className="mt-1 font-label text-[10px] text-text-muted/70">
+              {openDeals.length} em aberto{semParcelas > 0 && ` · ${semParcelas} sem parcelas`}
+            </p>
+          </div>
+          <div className="rounded-md border border-black/[0.06] bg-white p-4">
+            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Entra em {mesLabel}</p>
+            <p className="mt-1 text-xl font-semibold text-primary">{brl(openNoMes)}</p>
+            <p className="mt-1 font-label text-[10px] text-text-muted/70">parcelas que vencem no mês</p>
+          </div>
+        </div>
       </header>
 
       {error && (
@@ -165,7 +195,6 @@ export default async function PipelinePage() {
       )}
 
       <PipelineBoard initialDeals={deals} products={products} />
-      <p className="mt-3 font-label text-[10px] text-text-muted/70">Arraste os cards entre as colunas para mudar o estágio.</p>
     </div>
   );
 }

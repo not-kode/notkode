@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { DEAL_STAGES, SERVICE_TAGS, type DealStage } from './stages';
-import { normalizeOrgName } from './orgs';
+import { normalizeOrgName, type Product } from './orgs';
 
 export async function moveDealStage(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
@@ -541,22 +541,42 @@ function slugifyProduct(name: string): string {
   );
 }
 
-/** Adiciona um produto/serviço à lista (tabela products, gerida pelo sistema). */
-export async function addProduct(formData: FormData): Promise<void> {
+/**
+ * Cria um produto/serviço e devolve o registro — o seletor do negócio precisa da
+ * key para já deixar o produto novo marcado. Nome repetido reaproveita o que
+ * existe em vez de criar duplicata.
+ */
+export async function createProduct(formData: FormData): Promise<Product | null> {
   const name = String(formData.get('name') ?? '').trim();
-  if (!name) return;
+  if (!name) return null;
   const billing_type = String(formData.get('billing_type') ?? '') === 'recorrente' ? 'recorrente' : 'pontual';
 
   const supabase = getSupabaseAdmin();
-  const { data: existing } = await supabase.from('products').select('key, sort');
-  const keys = new Set((existing ?? []).map((p) => p.key));
+  const { data: existing } = await supabase.from('products').select('key, name, active, sort');
+  const rows = existing ?? [];
+
+  const jaExiste = rows.find((p) => p.name.trim().toLowerCase() === name.toLowerCase());
+  if (jaExiste) {
+    // Se estava desativado, reativa: a intenção de quem digitou é usar de novo.
+    if (!jaExiste.active) await supabase.from('products').update({ active: true }).eq('key', jaExiste.key);
+    revalidatePath('/admin/pipeline');
+    return { key: jaExiste.key, name: jaExiste.name, active: true };
+  }
+
+  const keys = new Set(rows.map((p) => p.key));
   const base = slugifyProduct(name);
   let key = base;
   for (let i = 2; keys.has(key); i++) key = `${base}-${i}`;
-  const sort = Math.max(0, ...(existing ?? []).map((p) => p.sort ?? 0)) + 1;
+  const sort = Math.max(0, ...rows.map((p) => p.sort ?? 0)) + 1;
 
   await supabase.from('products').insert({ key, name, billing_type, sort });
   revalidatePath('/admin/pipeline');
+  return { key, name, active: true };
+}
+
+/** Adiciona um produto/serviço à lista (uso em `<form action>`, sem retorno). */
+export async function addProduct(formData: FormData): Promise<void> {
+  await createProduct(formData);
 }
 
 /** Renomeia um produto (o key/slug gravado nos negócios não muda). */
