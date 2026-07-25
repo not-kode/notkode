@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { DashboardView, type DashboardData, type DayCount, type FunnelStep, type FormFunnel } from './dashboard-view';
+import { DashboardView, type DashboardData, type DayCount, type FunnelStep, type FormFunnel, type MonthProjection } from './dashboard-view';
 import { resolveRange } from './period';
+import { pendingMonthly } from './financeiro/recurring';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,7 +70,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const toStr = ymd(toDate);
   const countHead = { count: 'exact' as const, head: true };
 
-  const [pv, ctaRows, pvRows, srcRows, formRows, leadRows, wonDeals, engRows, recRows] = await Promise.all([
+  const [pv, ctaRows, pvRows, srcRows, formRows, leadRows, wonDeals, engRows, recRows, dealRows, dealInstRows] = await Promise.all([
     supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('events').select('created_at, session_id, referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
@@ -77,16 +78,31 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     supabase.from('events').select('type, label, session_id, service_tag').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', toISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
-    supabase.from('engagements').select('organization_id, lifecycle, mrr'),
-    supabase.from('receivables').select('amount, status, due_date, paid_at, paid_amount'),
+    supabase.from('engagements').select('id, organization_id, lifecycle, type, mrr, start_date, end_date'),
+    supabase.from('receivables').select('amount, status, due_date, paid_at, paid_amount, engagement_id'),
+    supabase.from('deals').select('id, stage'),
+    supabase.from('deal_installments').select('deal_id, amount, due_date'),
   ]);
 
   const ctas = (ctaRows.data ?? []) as { label: string | null }[];
   type FormEv = { type: string; label: string | null; session_id: string | null; service_tag: string | null };
   const formEvents = (formRows.data ?? []) as FormEv[];
   const leads = (leadRows.data ?? []) as { service_tag: string | null }[];
-  const engs = (engRows.data ?? []) as { organization_id: string | null; lifecycle: string; mrr: number | null }[];
-  const recs = (recRows.data ?? []) as { amount: number; status: string; due_date: string; paid_at: string | null; paid_amount: number | null }[];
+  const engs = (engRows.data ?? []) as {
+    id: string; organization_id: string | null; lifecycle: string; type: string;
+    mrr: number | null; start_date: string | null; end_date: string | null;
+  }[];
+  const recs = (recRows.data ?? []) as { amount: number; status: string; due_date: string; paid_at: string | null; paid_amount: number | null; engagement_id: string | null }[];
+
+  // Parcelas dos negócios ainda em aberto: é a parte da projeção que depende de
+  // fechar. Negócio ganho já virou contrato e aparece como parcela a receber.
+  const abertos = new Set(
+    ((dealRows.data ?? []) as { id: string; stage: string }[])
+      .filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido')
+      .map((d) => d.id),
+  );
+  const parcelasPipeline = ((dealInstRows.data ?? []) as { deal_id: string; amount: number; due_date: string }[])
+    .filter((p) => abertos.has(p.deal_id));
   const visitas = pv.count ?? 0;
 
   // ── Site: funil de formulário POR PÁGINA (service_tag) ──
@@ -198,13 +214,45 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const mrr = engs.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
   const clientesAtivos = new Set(engs.filter((e) => (e.lifecycle === 'ativo' || e.lifecycle === 'pausado') && e.organization_id).map((e) => e.organization_id)).size;
 
-  // Receita por mês — 12 meses móveis (histórico, independente do filtro).
-  const receitaPorMes: { mes: string; valor: number }[] = [];
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  // Receita mês a mês, olhando pra trás e pra frente: 5 meses de histórico, o mês
+  // corrente e 6 à frente. O passado é o que entrou; o futuro separa o que já está
+  // contratado (parcelas dos contratos) do que ainda depende de fechar (parcelas
+  // dos negócios em aberto no pipeline).
+  const mesAtualKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  // Vencimentos já lançados por contrato: base para prever as mensalidades dos
+  // meses à frente que ainda não foram lançadas (mesma régua do Financeiro).
+  const duesByEng = new Map<string, string[]>();
+  for (const r of recs) {
+    if (!r.engagement_id) continue;
+    duesByEng.set(r.engagement_id, [...(duesByEng.get(r.engagement_id) ?? []), r.due_date]);
+  }
+
+  const receitaPorMes: MonthProjection[] = [];
+  for (let i = -5; i <= 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const valor = recs.filter((r) => r.status === 'recebido' && r.paid_at?.startsWith(key)).reduce((s, r) => s + recebidoDe(r), 0);
-    receitaPorMes.push({ mes: `${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`, valor });
+    // Mensalidade de contrato ativo que ainda não virou parcela também é receita
+    // contratada: sem isso a projeção despenca nos meses à frente só porque o
+    // lançamento é manual. Passado fica de fora — lá vale o que aconteceu.
+    const recorrentePrevisto =
+      key >= mesAtualKey
+        ? pendingMonthly(engs, duesByEng, key).reduce((s, p) => s + (p.eng.mrr ?? 0), 0)
+        : 0;
+    receitaPorMes.push({
+      mes: `${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`,
+      recebido: recs
+        .filter((r) => r.status === 'recebido' && r.paid_at?.startsWith(key))
+        .reduce((s, r) => s + recebidoDe(r), 0),
+      aReceber:
+        recs
+          .filter((r) => r.status !== 'recebido' && r.status !== 'cancelado' && r.due_date.startsWith(key))
+          .reduce((s, r) => s + r.amount, 0) + recorrentePrevisto,
+      pipeline: parcelasPipeline
+        .filter((p) => p.due_date.startsWith(key))
+        .reduce((s, p) => s + p.amount, 0),
+      atual: key === mesAtualKey,
+    });
   }
 
   // Sessões únicas + tempo médio de sessão (da 1ª à última visualização de página).

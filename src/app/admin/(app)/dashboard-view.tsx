@@ -3,7 +3,7 @@
 // Identidade Notkode: creme quente + tinta (#191918/navy), azul só como acento.
 import { Suspense } from 'react';
 import { PeriodFilter } from './period-filter';
-import { VisitsChart, SourceDonut, RankBars, RevenueBars } from './charts';
+import { VisitsChart, SourceDonut, RankBars, RevenueProjection } from './charts';
 
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const nf = (n: number) => n.toLocaleString('pt-BR');
@@ -21,7 +21,14 @@ export type FormFunnel = { form: string; formType?: string | null; steps: Funnel
 export type ServiceCount = { tag: string; label: string; count: number };
 export type CtaCount = { label: string; count: number };
 export type DayCount = { day: string; count: number };
-export type MonthRevenue = { mes: string; valor: number };
+/** Mês da projeção: o que entrou, o que está contratado e o que depende do pipeline. */
+export type MonthProjection = {
+  mes: string;
+  recebido: number;
+  aReceber: number;
+  pipeline: number;
+  atual: boolean;
+};
 export type DashboardData = {
   rangeLabel: string;
   negocio: {
@@ -31,7 +38,7 @@ export type DashboardData = {
     mrr: number;
     clientesAtivos: number;
     ganhos: number;
-    receitaPorMes: MonthRevenue[];
+    receitaPorMes: MonthProjection[];
   };
   site: {
     visitas: number;
@@ -136,7 +143,7 @@ function biggestDropIndex(steps: FunnelStep[]): number {
 export function DashboardView({ data }: { data: DashboardData }) {
   const { negocio: n, site: s, rangeLabel } = data;
   const semVisitas = s.visitasPorDia.every((d) => d.count === 0);
-  const temReceita = n.receitaPorMes.some((m) => m.valor > 0);
+  const temReceita = n.receitaPorMes.some((m) => m.recebido + m.aReceber + m.pipeline > 0);
 
   return (
     <div className="-mx-4 -my-6 min-h-full bg-surface-elevated px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
@@ -161,8 +168,8 @@ export function DashboardView({ data }: { data: DashboardData }) {
       </div>
 
       <div className="mb-8">
-        <Section title="Receita por mês" sub="· 12 meses (recebido)">
-          {temReceita ? <RevenueBars data={n.receitaPorMes} /> : <Empty>Sem receita registrada.</Empty>}
+        <Section title="Receita por mês" sub="· 5 meses atrás e 6 à frente">
+          {temReceita ? <RevenueProjection data={n.receitaPorMes} /> : <Empty>Sem receita registrada.</Empty>}
         </Section>
       </div>
 
