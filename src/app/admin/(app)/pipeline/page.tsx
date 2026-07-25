@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
-import { PipelineBoard, dealTotal, type BoardDeal } from './board';
+import { PipelineBoard, type BoardDeal } from './board';
+import { dealTotal } from './deal-value';
 import { NewDealDialog } from './new-deal-dialog';
 import { type OrgOption, type Product } from './orgs';
 

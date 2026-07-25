@@ -5,6 +5,7 @@ import { moveDealStage } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_LABELS, type DealStage } from './stages';
 import { DealDrawer } from './deal-drawer';
 import { type Product } from './orgs';
+import { dealTotal } from './deal-value';
 
 export type OrgInfo = {
   id: string;
@@ -64,15 +65,6 @@ const STAGE_ACCENT: Record<DealStage, string> = {
 
 const brl = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-
-/**
- * Valor do negócio: com parcelas planejadas vale a soma delas (é o contratado de
- * verdade, inclusive nos recorrentes); sem parcelas, o valor cheio do negócio.
- */
-export const dealTotal = (d: BoardDeal) =>
-  d.installments.length > 0
-    ? d.installments.reduce((s, p) => s + p.amount, 0)
-    : (d.valor_pontual ?? 0) + (d.mrr ?? 0);
 
 export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: BoardDeal[]; products?: Product[] }) {
   const [deals, setDeals] = useState(initialDeals);
