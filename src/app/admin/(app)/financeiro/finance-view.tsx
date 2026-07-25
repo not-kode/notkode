@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
+import { AutoSaveForm } from '../_shared/auto-save-form';
 import { createReceivable, deleteReceivable, generateMonthlyReceivables, markReceivablePaid, unmarkReceivable, updateReceivable } from './actions';
 import { isRecurring, monthlyDueDate, pendingMonthly } from './recurring';
 
@@ -53,10 +54,7 @@ function Kpi({ label, value, tone, count, onClick }: { label: string; value: str
     >
       <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
       <p className={`mt-1 text-xl font-semibold ${tone ?? 'text-text-primary'}`}>{value}</p>
-      <p className="mt-1 font-label text-[10px] text-text-muted/70">
-        {count != null && `${count} ${count === 1 ? 'item' : 'itens'} · `}
-        <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100">ver detalhe</span>
-      </p>
+      {count != null && <p className="mt-1 font-label text-[10px] text-text-muted/70">{count} {count === 1 ? 'item' : 'itens'}</p>}
     </button>
   );
 }
@@ -136,7 +134,6 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Financeiro</h1>
-          <p className="mt-1 text-sm text-text-muted">Fluxo de caixa por mês — parcelas e recebimentos.</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Filtro de mês global */}
@@ -227,7 +224,6 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
             </table>
           </div>
         )}
-        <p className="mt-2 font-label text-[10px] text-text-muted/70">Clique numa parcela para editar ou excluir. Só entra em “Recebido” o que você marcar aqui — nada é presumido. Os contratos ficam dentro de cada cliente.</p>
       </section>
 
       {newParcela && (
@@ -261,7 +257,7 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
           engagements={engagements}
           pending={pending}
           onClose={() => setEditing(null)}
-          onSubmit={(fd) => start(async () => { await updateReceivable(fd); setEditing(null); })}
+          onSubmit={(fd) => start(() => updateReceivable(fd))}
           onDelete={() => start(async () => {
             const fd = new FormData();
             fd.set('id', editing.id);
@@ -296,12 +292,6 @@ function DetailDrawer({ which, month, listas, duesByEng, isLate, pending, onClos
     atrasado: 'Atrasado',
     recebido: `Recebido · ${monthLabel(month)}`,
   };
-  const subtitles: Record<DetailKey, string> = {
-    mrr: 'Contratos recorrentes vivos e a mensalidade do mês aberto.',
-    aReceber: 'Parcelas pendentes que ainda vão vencer neste mês.',
-    atrasado: 'Parcelas vencidas e não recebidas, de qualquer mês.',
-    recebido: 'Parcelas com baixa registrada neste mês.',
-  };
   const parcelas = which === 'mrr' ? [] : listas[which];
 
   return (
@@ -309,10 +299,7 @@ function DetailDrawer({ which, month, listas, duesByEng, isLate, pending, onClos
       <button aria-label="Fechar" onClick={onClose} className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
       <aside className="relative flex h-full w-full max-w-[30rem] flex-col overflow-y-auto border-l border-black/[0.06] bg-white shadow-xl">
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-black/[0.06] bg-white px-5 py-4">
-          <div>
-            <h2 className="text-lg font-semibold text-text-primary">{titles[which]}</h2>
-            <p className="mt-0.5 text-xs text-text-muted">{subtitles[which]}</p>
-          </div>
+          <h2 className="text-lg font-semibold text-text-primary">{titles[which]}</h2>
           <button onClick={onClose} className="rounded-md p-1 text-text-muted hover:bg-black/[0.04] hover:text-text-primary" aria-label="Fechar">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
@@ -378,9 +365,6 @@ function DetailDrawer({ which, month, listas, duesByEng, isLate, pending, onClos
           )}
         </div>
 
-        {which !== 'mrr' && parcelas.length > 0 && (
-          <p className="mt-auto border-t border-black/[0.06] px-5 py-3 font-label text-[10px] text-text-muted/70">Clique numa parcela para editar.</p>
-        )}
       </aside>
     </div>
   );
@@ -399,23 +383,25 @@ function ParcelaDrawer({ parcela, engagements, defaultDate, pending, onClose, on
   const editMode = !!parcela;
   const [status, setStatus] = useState(parcela?.status ?? 'pendente');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const flushRef = useRef<(() => void) | null>(null);
+  const fechar = () => { flushRef.current?.(); onClose(); };
   const today = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <button aria-label="Fechar" onClick={onClose} className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
+      <button aria-label="Fechar" onClick={fechar} className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
       <aside className="relative flex h-full w-full max-w-[26rem] flex-col overflow-y-auto border-l border-black/[0.06] bg-white shadow-xl">
         <div className="flex items-start justify-between gap-3 border-b border-black/[0.06] px-5 py-4">
           <div>
             <h2 className="text-lg font-semibold text-text-primary">{editMode ? 'Editar parcela' : 'Nova parcela'}</h2>
             {parcela?.org_name && <p className="mt-0.5 text-xs text-text-muted">{parcela.org_name}</p>}
           </div>
-          <button onClick={onClose} className="rounded-md p-1 text-text-muted hover:bg-black/[0.04] hover:text-text-primary" aria-label="Fechar">
+          <button onClick={fechar} className="rounded-md p-1 text-text-muted hover:bg-black/[0.04] hover:text-text-primary" aria-label="Fechar">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <form action={onSubmit} className="flex flex-col gap-3 px-5 py-4">
+        <AutoSaveForm action={onSubmit} auto={editMode} flushRef={flushRef} className="flex flex-col gap-3 px-5 py-4">
           {editMode && <input type="hidden" name="id" value={parcela.id} />}
           <div>
             <label className={labelCls}>Descrição</label>
@@ -464,10 +450,12 @@ function ParcelaDrawer({ parcela, engagements, defaultDate, pending, onClose, on
             </>
           )}
 
-          <button type="submit" disabled={pending} className="mt-1 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60">
-            {pending ? 'Salvando…' : editMode ? 'Salvar alterações' : 'Adicionar parcela'}
-          </button>
-        </form>
+          {!editMode && (
+            <button type="submit" disabled={pending} className="mt-1 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60">
+              {pending ? 'Salvando…' : 'Adicionar parcela'}
+            </button>
+          )}
+        </AutoSaveForm>
 
         {editMode && onDelete && (
           <div className="mt-auto border-t border-black/[0.06] px-5 py-4">

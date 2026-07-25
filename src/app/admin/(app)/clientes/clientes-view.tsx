@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useTransition, type ReactNode } from 'react';
+import { useRef, useState, useTransition, type ReactNode } from 'react';
 import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement, updateReceivable, deleteReceivable } from '../financeiro/actions';
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
+import { AutoSaveForm } from '../_shared/auto-save-form';
 
 export type ClientContact = { id: string; name: string | null; role: string | null; email: string | null; whatsapp: string | null };
 export type Parcela = { id: string; description: string | null; amount: number; due_date: string; status: string; paid_amount: number | null; paid_at: string | null };
@@ -200,7 +201,6 @@ export function ClientesView({ clients, productLabels = {} }: { clients: ClientV
           </table>
         </div>
       )}
-      <p className="mt-2 font-label text-[10px] text-text-muted/70">Clique num cliente para ver dados cadastrais, contratos e parcelas.</p>
 
       {selected && <ClientDrawer client={selected} productLabels={productLabels} onClose={() => setSelectedId(null)} />}
     </div>
@@ -269,12 +269,11 @@ function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientV
       {tab === 'cadastro' && (
         <>
           {/* Dados cadastrais */}
-          <form action={(fd) => start(() => updateOrganization(fd))} className="flex flex-col gap-3">
+          <AutoSaveForm action={updateOrganization} className="flex flex-col gap-3">
             <input type="hidden" name="id" value={client.id} />
             <Field label="Nome (como aparece no sistema)" name="name" defaultValue={client.name} placeholder="Nome do cliente" />
             <OrgFiscalFields org={client} />
-            <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60">{pending ? 'Salvando…' : 'Salvar cadastro'}</button>
-          </form>
+          </AutoSaveForm>
 
           {/* Contatos */}
           {client.contacts.length > 0 && (
@@ -463,13 +462,12 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
       </div>
 
       {editingDetails && (
-        <form action={(fd) => { onSaveDetails(fd); setEditingDetails(false); }} className="mt-3 flex flex-col gap-3 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
+        <AutoSaveForm action={onSaveDetails} className="mt-3 flex flex-col gap-3 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
           <input type="hidden" name="id" value={eng.id} />
           <Field label="Título" name="title" defaultValue={eng.title} placeholder="Ex: Sistema de gestão" />
           <div><label className={labelCls}>Tipo</label>
             <select name="type" className={inputCls} defaultValue={eng.type}><option value="recorrente">Recorrente</option><option value="pontual">Pontual</option></select>
           </div>
-          <p className="-mt-1 font-label text-[10px] text-text-muted">A situação (ativo, pausado…) se edita direto no card, acima.</p>
           <div className="grid grid-cols-2 gap-3">
             <div><label className={labelCls}>Mensal / MRR (R$)</label><input name="mrr" inputMode="decimal" defaultValue={eng.mrr != null ? String(eng.mrr) : ''} className={inputCls} placeholder="2500" /></div>
             <div><label className={labelCls}>Valor avulso (R$)</label><input name="valor" inputMode="decimal" defaultValue={eng.valor != null ? String(eng.valor) : ''} className={inputCls} placeholder="650" /></div>
@@ -478,15 +476,12 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
             <div><label className={labelCls}>Início</label><input name="start_date" type="date" defaultValue={eng.start_date ?? ''} className={inputCls} /></div>
             <div><label className={labelCls}>Fim</label><input name="end_date" type="date" defaultValue={eng.end_date ?? ''} className={inputCls} /></div>
           </div>
-          <div className="flex items-center gap-3">
-            <button type="submit" disabled={pending} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar alterações</button>
-            <button type="button" onClick={() => setEditingDetails(false)} className="font-label text-[11px] text-text-muted hover:text-text-secondary">cancelar</button>
-          </div>
-        </form>
+          <button type="button" onClick={() => setEditingDetails(false)} className="self-start font-label text-[11px] text-text-muted hover:text-text-secondary">fechar</button>
+        </AutoSaveForm>
       )}
 
       {editing && (
-        <form action={(fd) => { onSaveContract(fd); setEditing(false); }} className="mt-3 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
+        <AutoSaveForm action={onSaveContract} className="mt-3 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
           <input type="hidden" name="id" value={eng.id} />
           <div>
             <label className={labelCls}>Objeto / escopo (Cláusula 1)</label>
@@ -499,18 +494,13 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
           <div>
             <label className={labelCls}>Obrigações da CONTRATANTE (Cláusula 2)</label>
             <textarea name="client_obligations" defaultValue={eng.client_obligations ?? DEFAULT_CLIENT_OBLIGATIONS} rows={5} className={inputCls + ' resize-y'} />
-            <p className="mt-1 font-label text-[10px] text-text-muted">Uma obrigação por linha — o contrato numera automático (2.1, 2.2…). Texto padrão genérico; ajuste conforme o caso.</p>
           </div>
           <div>
             <label className={labelCls}>Obrigações da CONTRATADA (Cláusula 3)</label>
             <textarea name="provider_obligations" defaultValue={eng.provider_obligations ?? DEFAULT_PROVIDER_OBLIGATIONS} rows={5} className={inputCls + ' resize-y'} />
-            <p className="mt-1 font-label text-[10px] text-text-muted">Uma por linha (3.1, 3.2…). O escopo detalhado vem da proposta anexa.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button type="submit" disabled={pending} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar</button>
-            <button type="button" onClick={() => setEditing(false)} className="font-label text-[11px] text-text-muted hover:text-text-secondary">cancelar</button>
-          </div>
-        </form>
+          <button type="button" onClick={() => setEditing(false)} className="self-start font-label text-[11px] text-text-muted hover:text-text-secondary">fechar</button>
+        </AutoSaveForm>
       )}
 
       {/* Proposta anexa */}
@@ -585,21 +575,22 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
 function ParcelaRow({ r, onMarkPaid, onUnmark, onSave, onDelete, pending }: { r: Parcela; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onSave: (fd: FormData) => void; onDelete: (id: string) => void; pending: boolean }) {
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const flushRef = useRef<(() => void) | null>(null);
 
   if (editing) {
     return (
       <li>
-        <form
-          action={(fd) => { onSave(fd); setEditing(false); }}
+        <AutoSaveForm
+          action={onSave}
+          flushRef={flushRef}
           className="flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2.5"
         >
           <input type="hidden" name="id" value={r.id} />
           <input name="description" defaultValue={r.description ?? ''} className={inputCls} placeholder="Descrição" />
-          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
             <input name="amount" inputMode="decimal" required defaultValue={String(r.amount)} className={inputCls} placeholder="Valor (R$)" />
             <input name="due_date" type="date" required defaultValue={r.due_date} className={inputCls} />
-            <button type="submit" disabled={pending} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Salvar</button>
-            <button type="button" onClick={() => setEditing(false)} className="rounded-md border border-black/[0.1] px-2.5 py-1.5 text-xs font-medium text-text-secondary transition hover:border-black/20">Cancelar</button>
+            <button type="button" onClick={() => { flushRef.current?.(); setEditing(false); }} className="rounded-md border border-black/[0.1] px-2.5 py-1.5 text-xs font-medium text-text-secondary transition hover:border-black/20">Fechar</button>
           </div>
           {confirmDelete ? (
             <span className="flex items-center gap-2 text-[10px] text-danger">
@@ -610,7 +601,7 @@ function ParcelaRow({ r, onMarkPaid, onUnmark, onSave, onDelete, pending }: { r:
           ) : (
             <button type="button" onClick={() => setConfirmDelete(true)} className="self-start font-label text-[10px] uppercase tracking-wider text-text-muted underline decoration-dotted transition hover:text-danger">Excluir parcela</button>
           )}
-        </form>
+        </AutoSaveForm>
       </li>
     );
   }
