@@ -473,6 +473,19 @@ export async function deleteDealInstallment(formData: FormData): Promise<void> {
 }
 
 /**
+ * Vencimento i meses depois da primeira data, sem transbordar de mês. Somar mês
+ * direto no Date faz 31/08 + 1 virar 01/10 (setembro não tem 31), o que deixava
+ * um mês vazio e o seguinte com duas parcelas na projeção de receita. Dia que
+ * não existe no mês cai no último dia dele.
+ */
+function vencimentoMensal(y: number, m: number, d: number, i: number): string {
+  const ano = y;
+  const mes = m - 1 + i;
+  const ultimoDia = new Date(Date.UTC(ano, mes + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(ano, mes, Math.min(d, ultimoDia))).toISOString().slice(0, 10);
+}
+
+/**
  * Gera N parcelas automaticamente dividindo o valor total do negócio,
  * com vencimentos mensais a partir da data escolhida. SUBSTITUI as parcelas
  * atuais do negócio. A sobra de centavos vai na última parcela.
@@ -495,12 +508,11 @@ export async function generateInstallments(formData: FormData): Promise<void> {
   const [y, m, d] = first.split('-').map(Number);
   const rows = Array.from({ length: count }, (_, i) => {
     const cents = base + (i === count - 1 ? remainder : 0);
-    const date = new Date(Date.UTC(y, m - 1 + i, d)); // meses somam corretamente
     return {
       deal_id,
       description: `Parcela ${i + 1}/${count}`,
       amount: cents / 100,
-      due_date: date.toISOString().slice(0, 10),
+      due_date: vencimentoMensal(y, m, d, i),
     };
   });
 
@@ -528,12 +540,11 @@ export async function generateRecurringInstallments(formData: FormData): Promise
 
   const [y, m, d] = first.split('-').map(Number);
   const rows = Array.from({ length: months }, (_, i) => {
-    const date = new Date(Date.UTC(y, m - 1 + i, d)); // meses somam corretamente
     return {
       deal_id,
       description: `Mensalidade ${i + 1}/${months}`,
       amount: mensal,
-      due_date: date.toISOString().slice(0, 10),
+      due_date: vencimentoMensal(y, m, d, i),
     };
   });
 
