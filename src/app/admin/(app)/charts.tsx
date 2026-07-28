@@ -2,6 +2,7 @@
 
 // Gráficos do /admin com Recharts, no tema Notkode (tinta sobre creme, azul como
 // acento). Paleta categórica do donut validada para daltonismo/contraste sobre o creme.
+import { useState } from 'react';
 import {
   Area, AreaChart, Bar, BarChart, Cell, LabelList, Pie, PieChart,
   ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -79,7 +80,7 @@ export function VisitsChart({ data }: { data: DayCount[] }) {
 
 // ─────────────────────────── Receita por mês: realizado + projeção ──
 const brl0 = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-type MonthProjection = { mes: string; recebido: number; aReceber: number; pipeline: number; atual: boolean };
+type MonthProjection = { key: string; mes: string; recebido: number; aReceber: number; pipeline: number; atual: boolean };
 
 // Cores das três séries (validadas: banda de luminosidade, croma, separação para
 // daltonismo e contraste sobre o creme). A cor segue a série, nunca o rank.
@@ -117,22 +118,57 @@ function ProjectionTooltip({ active, payload }: { active?: boolean; payload?: { 
  * Barras empilhadas por mês: o que já entrou, o que está contratado e o que ainda
  * depende de fechar negócio. Uma linha marca o mês corrente, separando o que é
  * histórico do que é projeção.
+ *
+ * A janela vem do servidor de janeiro do ano corrente até 12 meses à frente; o
+ * botão aqui escolhe o recorte, porque "o ano fechado" e "o que vem pela frente"
+ * respondem perguntas diferentes.
  */
 export function RevenueProjection({ data }: { data: MonthProjection[] }) {
-  const atual = data.find((d) => d.atual)?.mes;
+  const [janela, setJanela] = useState<'ano' | 'frente'>('ano');
+  const ano = data.find((d) => d.atual)?.key.slice(0, 4) ?? String(new Date().getFullYear());
+  const idxAtual = data.findIndex((d) => d.atual);
+
+  const meses = janela === 'ano'
+    ? data.filter((d) => d.key.startsWith(ano))
+    : data.slice(Math.max(0, idxAtual), Math.max(0, idxAtual) + 12);
+
+  const atual = meses.find((d) => d.atual)?.mes;
+  const total = meses.reduce((s, m) => s + m.recebido + m.aReceber + m.pipeline, 0);
+  const realizado = meses.reduce((s, m) => s + m.recebido, 0);
+
+  const tab = (ativo: boolean) =>
+    `rounded px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${
+      ativo ? 'bg-[#191918]/[0.07] text-text-primary' : 'text-text-muted hover:text-text-secondary'
+    }`;
+
   return (
     <div>
-      <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-        {SERIES.map((s) => (
-          <span key={s.key} className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">
-            <span className="inline-block h-2 w-2 rounded-sm" style={{ background: s.color }} />
-            {s.label}
-          </span>
-        ))}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {SERIES.map((s) => (
+            <span key={s.key} className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">
+              <span className="inline-block h-2 w-2 rounded-sm" style={{ background: s.color }} />
+              {s.label}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 rounded-md border border-[#191918]/[0.08] p-0.5">
+          <button type="button" onClick={() => setJanela('ano')} className={tab(janela === 'ano')}>{ano}</button>
+          <button type="button" onClick={() => setJanela('frente')} className={tab(janela === 'frente')}>12 meses à frente</button>
+        </div>
       </div>
+
+      {/* Total da janela: o número que o gráfico inteiro representa. */}
+      <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="font-mono text-[22px] font-medium leading-none tracking-tight text-text-primary">{brl0(total)}</span>
+        <span className="font-mono text-[11px] text-text-muted">
+          {janela === 'ano' ? `no ano · ${brl0(realizado)} já recebido` : 'previsto nos próximos 12 meses'}
+        </span>
+      </div>
+
       <div className="h-52 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
+          <BarChart data={meses} margin={{ top: 8, right: 8, bottom: 0, left: -8 }}>
             <XAxis dataKey="mes" tick={{ fontSize: 9, fontFamily: 'var(--font-mono, monospace)', fill: INK, fillOpacity: 0.5 }} axisLine={false} tickLine={false} interval={0} />
             <YAxis width={44} tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))} tick={{ fontSize: 9, fontFamily: 'var(--font-mono, monospace)', fill: INK, fillOpacity: 0.4 }} axisLine={false} tickLine={false} />
             <Tooltip content={<ProjectionTooltip />} cursor={{ fill: INK, fillOpacity: 0.04 }} />

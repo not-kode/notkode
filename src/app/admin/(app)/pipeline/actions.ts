@@ -11,7 +11,13 @@ export async function moveDealStage(formData: FormData): Promise<void> {
   if (!id || !DEAL_STAGES.includes(stage as DealStage)) return;
 
   const supabase = getSupabaseAdmin();
-  await supabase.from('deals').update({ stage, updated_at: new Date().toISOString() }).eq('id', id);
+  const agora = new Date().toISOString();
+  // stage_changed_at só muda quando a ETAPA muda: é o que faz o "parado há X dias"
+  // medir tempo na coluna, e não tempo desde a última edição qualquer do negócio.
+  await supabase
+    .from('deals')
+    .update({ stage, updated_at: agora, stage_changed_at: agora })
+    .eq('id', id);
 
   revalidatePath('/admin/pipeline');
 }
@@ -270,7 +276,13 @@ export async function updateDeal(formData: FormData): Promise<void> {
   }
 
   const stageRaw = String(formData.get('stage') ?? '').trim();
-  if (DEAL_STAGES.includes(stageRaw as DealStage)) patch.stage = stageRaw;
+  if (DEAL_STAGES.includes(stageRaw as DealStage)) {
+    patch.stage = stageRaw;
+    // Só reinicia o "parado há X dias" se a etapa realmente mudou: salvar o
+    // negócio para corrigir um telefone não pode fazer ele parecer recém-movido.
+    const { data: atual } = await supabase.from('deals').select('stage').eq('id', id).single();
+    if (atual && atual.stage !== stageRaw) patch.stage_changed_at = new Date().toISOString();
+  }
   if (notes !== undefined) patch.notes = notes;
 
   await supabase.from('deals').update(patch).eq('id', id);
@@ -295,9 +307,10 @@ export async function winDeal(formData: FormData): Promise<void> {
     .single();
   if (!deal) return;
 
+  const fechadoEm = new Date().toISOString();
   await supabase
     .from('deals')
-    .update({ stage: 'ganho', updated_at: new Date().toISOString() })
+    .update({ stage: 'ganho', updated_at: fechadoEm, stage_changed_at: fechadoEm })
     .eq('id', id);
 
   // Parcelas/mensalidades planejadas do negócio — usadas para as datas de vigência

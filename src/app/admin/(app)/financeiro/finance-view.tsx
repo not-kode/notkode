@@ -73,7 +73,8 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
   const [detail, setDetail] = useState<DetailKey | null>(null);
   const [pending, start] = useTransition();
 
-  const isLate = (r: RecView) => r.status === 'pendente' && r.due_date < todayStr;
+  // Mesma régua da Visão geral: atrasado é o marcado como tal OU o pendente já vencido.
+  const isLate = (r: RecView) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr);
   const monthShort = MONTHS[Number(month.slice(5)) - 1].slice(0, 3);
 
   // Listas que compõem cada KPI — o número e o "de onde vem" saem da mesma fonte.
@@ -81,7 +82,8 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
     const recorrentes = engagements.filter(isRecurring);
     const aReceber = receivables.filter((r) => r.status === 'pendente' && ym(r.due_date) === month && !isLate(r));
     const atrasado = receivables.filter(isLate);
-    const recebido = receivables.filter((r) => r.status === 'recebido' && ym(r.paid_at ?? r.due_date) === month);
+    // Faturamento é pela data em que o dinheiro entrou (paid_at), igual à Visão geral.
+    const recebido = receivables.filter((r) => r.status === 'recebido' && !!r.paid_at && ym(r.paid_at) === month);
     return { recorrentes, aReceber, atrasado, recebido };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engagements, receivables, month, todayStr]);

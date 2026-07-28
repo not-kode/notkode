@@ -23,6 +23,8 @@ export type CtaCount = { label: string; count: number };
 export type DayCount = { day: string; count: number };
 /** Mês da projeção: o que entrou, o que está contratado e o que depende do pipeline. */
 export type MonthProjection = {
+  /** AAAA-MM, usado para recortar a janela (ano corrente x próximos 12 meses). */
+  key: string;
   mes: string;
   recebido: number;
   aReceber: number;
@@ -159,16 +161,16 @@ export function DashboardView({ data }: { data: DashboardData }) {
       <GroupLabel>Negócio · {rangeLabel}</GroupLabel>
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint="recebido no período" />
-        <Kpi label="A receber" value={brl(n.aReceber)} hint="no prazo, até o fim do mês" />
-        <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido" />
-        <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês" />
+        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`recebido · ${rangeLabel}`} />
+        <Kpi label="A receber" value={brl(n.aReceber)} hint={`no prazo · ${rangeLabel}`} />
+        <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido · total" />
+        <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês · hoje" />
         <Kpi label="Clientes ativos" value={nf(n.clientesAtivos)} hint="hoje" />
         <Kpi label="Negócios ganhos" value={nf(n.ganhos)} hint="desde o início" />
       </div>
 
       <div className="mb-8">
-        <Section title="Receita por mês" sub="· 5 meses atrás e 6 à frente">
+        <Section title="Receita por mês" sub="· realizado e projeção">
           {temReceita ? <RevenueProjection data={n.receitaPorMes} /> : <Empty>Sem receita registrada.</Empty>}
         </Section>
       </div>

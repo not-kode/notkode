@@ -24,6 +24,13 @@ export type ResolvedRange = {
   toDate: Date;
   days: number;
   label: string;
+  /**
+   * Fim do recorte para métricas do SITE. "Este mês"/"Este ano" cobrem o período
+   * inteiro (para o financeiro enxergar o que ainda vai vencer), mas visita no
+   * futuro não existe: o tracking para em hoje.
+   */
+  siteToDate: Date;
+  siteToISO: string;
 };
 
 // Aceita ?from=YYYY-MM-DD&to=YYYY-MM-DD (custom) ou ?range=<preset>. Default 30 dias.
@@ -47,21 +54,26 @@ export function resolveRange(sp: { range?: string; from?: string; to?: string })
   switch (key) {
     case '7d': return pack(key, daysAgo(6), to, 'Últimos 7 dias');
     case '90d': return pack(key, daysAgo(89), to, 'Últimos 90 dias');
-    case 'month': return pack(key, new Date(y, m, 1), to, `${MONTHS[m]}/${y}`);
+    // Mês/ano corrente cobrem o período INTEIRO, não só até hoje: senão "a receber"
+    // nasce zerado, já que o que ainda vai vencer cai depois de hoje.
+    case 'month': return pack(key, new Date(y, m, 1), endOfDay(new Date(y, m + 1, 0)), `${MONTHS[m]}/${y}`);
     case 'lastmonth': {
       const from = new Date(y, m - 1, 1);
       return pack(key, from, endOfDay(new Date(y, m, 0)), `${MONTHS[from.getMonth()]}/${from.getFullYear()}`);
     }
-    case 'year': return pack(key, new Date(y, 0, 1), to, `${y}`);
+    case 'year': return pack(key, new Date(y, 0, 1), endOfDay(new Date(y, 11, 31)), `${y}`);
     case '30d':
     default: return pack('30d', daysAgo(29), to, 'Últimos 30 dias');
   }
 
   function pack(k: RangeKey | 'custom', fromDate: Date, toDate: Date, label: string): ResolvedRange {
+    // Métrica de site nunca passa de hoje (não existe visita no futuro).
+    const siteToDate = toDate.getTime() > now.getTime() ? endOfDay(now) : toDate;
     return {
       key: k, fromDate, toDate,
       fromISO: fromDate.toISOString(), toISO: toDate.toISOString(),
-      days: Math.max(1, Math.round((toDate.getTime() - fromDate.getTime()) / 86_400_000) + 1),
+      siteToDate, siteToISO: siteToDate.toISOString(),
+      days: Math.max(1, Math.round((siteToDate.getTime() - fromDate.getTime()) / 86_400_000) + 1),
       label,
     };
   }

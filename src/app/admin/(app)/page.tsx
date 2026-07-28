@@ -61,7 +61,7 @@ function classifySource(referrer: string | null, utmSource: string | null): stri
 export default async function AdminHome({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = ((await searchParams) ?? {}) as Record<string, string | undefined>;
   const range = resolveRange({ range: sp.range, from: sp.from, to: sp.to });
-  const { fromISO, toISO, fromDate, toDate, days } = range;
+  const { fromISO, fromDate, toDate, days, siteToISO, siteToDate } = range;
 
   const supabase = getSupabaseAdmin();
   const now = new Date();
@@ -71,12 +71,12 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const countHead = { count: 'exact' as const, head: true };
 
   const [pv, ctaRows, pvRows, srcRows, formRows, leadRows, wonDeals, engRows, recRows, dealRows, dealInstRows] = await Promise.all([
-    supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
-    supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', toISO),
-    supabase.from('events').select('created_at, session_id, referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
-    supabase.from('events').select('referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', toISO),
-    supabase.from('events').select('type, label, session_id, service_tag').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', toISO),
-    supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', toISO),
+    supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO),
+    supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', siteToISO),
+    supabase.from('events').select('created_at, session_id, referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO),
+    supabase.from('events').select('referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO),
+    supabase.from('events').select('type, label, session_id, service_tag').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', siteToISO),
+    supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', siteToISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
     supabase.from('engagements').select('id, organization_id, lifecycle, type, mrr, start_date, end_date'),
     supabase.from('receivables').select('amount, status, due_date, paid_at, paid_amount, engagement_id'),
@@ -169,7 +169,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const stepMs = bucketDays * 86_400_000;
   const starts: Date[] = [];
   const buckets = new Map<string, number>();
-  for (let t = fromDate.getTime(); t <= toDate.getTime(); t += stepMs) {
+  for (let t = fromDate.getTime(); t <= siteToDate.getTime(); t += stepMs) {
     const d = new Date(t);
     starts.push(d);
     buckets.set(ymd(d), 0);
@@ -204,20 +204,20 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   // um pagamento parcial não pode virar faturamento cheio. Mesma régua do Financeiro.
   const recebidoDe = (r: { amount: number; paid_amount: number | null }) => r.paid_amount ?? r.amount;
   const faturamento = recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + recebidoDe(r), 0);
-  // A receber = pendente que ainda vai vencer, de hoje até o FIM DO MÊS do período.
-  // (o período "este mês" vai só até hoje para o faturamento; aqui olhamos o mês
-  //  inteiro para não zerar uma parcela que vence mais pra frente no mesmo mês.)
-  const mesFim = ymd(new Date(toDate.getFullYear(), toDate.getMonth() + 1, 0));
-  const aReceber = recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date <= mesFim).reduce((s, r) => s + r.amount, 0);
+  // A receber = pendente ainda no prazo com vencimento DENTRO do período escolhido.
+  // Os presets de mês/ano cobrem o período inteiro (ver period.ts), então o que
+  // vence mais pra frente no mesmo recorte entra aqui em vez de sumir.
+  const aReceber = recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date >= fromStr && r.due_date <= toStr).reduce((s, r) => s + r.amount, 0);
   // Em atraso = status 'atrasado' OU pendente já vencido (regra unificada).
   const emAtraso = recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr)).reduce((s, r) => s + r.amount, 0);
   const mrr = engs.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
   const clientesAtivos = new Set(engs.filter((e) => (e.lifecycle === 'ativo' || e.lifecycle === 'pausado') && e.organization_id).map((e) => e.organization_id)).size;
 
-  // Receita mês a mês, olhando pra trás e pra frente: 5 meses de histórico, o mês
-  // corrente e 6 à frente. O passado é o que entrou; o futuro separa o que já está
+  // Receita mês a mês. O passado é o que entrou; o futuro separa o que já está
   // contratado (parcelas dos contratos) do que ainda depende de fechar (parcelas
   // dos negócios em aberto no pipeline).
+  // A janela vai de janeiro do ano corrente até 12 meses à frente: cobre tanto a
+  // visão "ano inteiro" quanto a "próximos 12 meses", e quem escolhe é o gráfico.
   const mesAtualKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   // Vencimentos já lançados por contrato: base para prever as mensalidades dos
@@ -229,8 +229,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   }
 
   const receitaPorMes: MonthProjection[] = [];
-  for (let i = -5; i <= 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+  const primeiroMes = new Date(now.getFullYear(), 0, 1);
+  const ultimoMes = new Date(now.getFullYear(), now.getMonth() + 12, 1);
+  for (let d = primeiroMes; d <= ultimoMes; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) {
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     // Mensalidade de contrato ativo que ainda não virou parcela também é receita
     // contratada: sem isso a projeção despenca nos meses à frente só porque o
@@ -240,6 +241,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         ? pendingMonthly(engs, duesByEng, key).reduce((s, p) => s + (p.eng.mrr ?? 0), 0)
         : 0;
     receitaPorMes.push({
+      key,
       mes: `${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`,
       recebido: recs
         .filter((r) => r.status === 'recebido' && r.paid_at?.startsWith(key))

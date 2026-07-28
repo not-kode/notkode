@@ -1,8 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
 import { PipelineBoard, type BoardDeal } from './board';
-import { dealTotal, dealMonthly, dealMonthlyNet } from './deal-value';
-import { NewDealDialog } from './new-deal-dialog';
+import { dealTotal, dealTotalNet, dealMonthly, dealMonthlyNet, dealMrrNet } from './deal-value';
 import { type OrgOption, type Product } from './orgs';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +24,7 @@ type OrgRow = {
 type DealRow = {
   id: string;
   stage: DealStage;
+  stage_changed_at: string | null;
   service_tag: string | null;
   service_tags: string[] | null;
   source: string | null;
@@ -55,7 +55,7 @@ export default async function PipelinePage() {
   const { data, error } = await supabase
     .from('deals')
     .select(
-      'id, stage, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, ' +
+      'id, stage, stage_changed_at, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, ' +
         'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
         'organizations(id, name, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep), ' +
         'deal_installments(id, description, amount, due_date)',
@@ -100,10 +100,19 @@ export default async function PipelinePage() {
   const { data: prodRows } = await supabase.from('products').select('key, name, active').order('sort');
   const products: Product[] = (prodRows ?? []).map((p) => ({ key: p.key, name: p.name, active: p.active }));
 
+  // MRR que já existe hoje: base para mostrar de quanto para quanto o recorrente
+  // iria se o pipeline inteiro fechasse.
+  const { data: engRows } = await supabase
+    .from('engagements')
+    .select('mrr, lifecycle')
+    .eq('lifecycle', 'ativo');
+  const mrrAtual = (engRows ?? []).reduce((s, e) => s + (e.mrr ?? 0), 0);
+
   const rows = (data ?? []) as unknown as DealRow[];
   const deals: BoardDeal[] = rows.map((r) => ({
     id: r.id,
     stage: r.stage,
+    stage_changed_at: r.stage_changed_at,
     service_tag: r.service_tag,
     service_tags: r.service_tags ?? [],
     source: r.source,
@@ -127,12 +136,16 @@ export default async function PipelinePage() {
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');
 
   // Quanto o pipeline vale por inteiro e quanto viraria receita todo mês se tudo
-  // fechasse. Fechar R$ 65 mil parcelado não é R$ 65 mil por mês — e do mensal
-  // ainda saem o repasse ao parceiro e a nota.
-  const openValue = openDeals.reduce((sum, d) => sum + dealTotal(d), 0);
+  // fechasse. Fechar R$ 65 mil parcelado não é R$ 65 mil por mês. Os números de
+  // destaque são sempre LÍQUIDOS (sem o repasse ao parceiro e sem a nota): é o
+  // que entra de verdade. O bruto fica como referência, em letra miúda.
+  const openValueBruto = openDeals.reduce((sum, d) => sum + dealTotal(d), 0);
+  const openValue = openDeals.reduce((sum, d) => sum + dealTotalNet(d), 0);
   const openMensalBruto = openDeals.reduce((sum, d) => sum + dealMonthly(d), 0);
   const openMensal = openDeals.reduce((sum, d) => sum + dealMonthlyNet(d), 0);
   const mensais = openDeals.filter((d) => dealMonthly(d) > 0).length;
+  // Recorrente: de quanto para quanto o MRR iria se tudo fechasse.
+  const mrrPipeline = openDeals.reduce((sum, d) => sum + dealMrrNet(d), 0);
   const won = deals.filter((d) => d.stage === 'ganho').length;
   const lost = deals.filter((d) => d.stage === 'perdido').length;
 
@@ -147,24 +160,38 @@ export default async function PipelinePage() {
             </p>
             <h1 className="text-2xl font-semibold tracking-tight">Negócios</h1>
           </div>
-          <NewDealDialog orgOptions={orgOptions} products={products} />
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-stretch gap-3">
           <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">
             <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Se fechar tudo</p>
             <p className="mt-0.5 text-xl font-semibold text-text-primary">{brl(openValue)}</p>
-            <p className="font-label text-[10px] text-text-muted/70">{openDeals.length} em aberto</p>
+            <p className="font-label text-[10px] text-text-muted/70">
+              {openDeals.length} em aberto
+              {openValueBruto > openValue && <> · {brl(openValueBruto)} bruto</>}
+            </p>
           </div>
           <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">
-            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Por mês, líquido</p>
+            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Por mês</p>
             <p className="mt-0.5 text-xl font-semibold text-primary">{brl(openMensal)}</p>
             <p className="font-label text-[10px] text-text-muted/70">
               {brl(openMensalBruto)} bruto · {mensais} negócio{mensais === 1 ? '' : 's'}
             </p>
           </div>
+          {/* De quanto para quanto o recorrente iria: o número que diz se vale o esforço. */}
+          {mrrPipeline > 0 && (
+            <div className="min-w-[13rem] rounded-md border border-primary/25 bg-primary/[0.04] px-4 py-3">
+              <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Recorrente</p>
+              <p className="mt-0.5 flex items-baseline gap-1.5 text-xl font-semibold text-text-primary">
+                {brl(mrrAtual)}
+                <span className="font-label text-sm font-normal text-text-muted">→</span>
+                <span className="text-primary">{brl(mrrAtual + mrrPipeline)}</span>
+              </p>
+              <p className="font-label text-[10px] text-text-muted/70">hoje → se fechar tudo</p>
+            </div>
+          )}
           {(won > 0 || lost > 0) && (
-            <p className="font-label text-[11px] text-text-muted">
+            <p className="self-center font-label text-[11px] text-text-muted">
               {won > 0 && <span className="text-success">{won} ganho{won === 1 ? '' : 's'}</span>}
               {won > 0 && lost > 0 && ' · '}
               {lost > 0 && <span className="text-danger">{lost} perdido{lost === 1 ? '' : 's'}</span>}
@@ -179,7 +206,7 @@ export default async function PipelinePage() {
         </p>
       )}
 
-      <PipelineBoard initialDeals={deals} products={products} />
+      <PipelineBoard initialDeals={deals} products={products} orgOptions={orgOptions} />
     </div>
   );
 }

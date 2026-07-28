@@ -356,11 +356,14 @@ export function DealDrawer({
   onClose,
   orgOptions = [],
   products = [],
+  defaultStage,
 }: {
   deal: BoardDeal | null;
   onClose: () => void;
   orgOptions?: OrgOption[];
   products?: Product[];
+  /** Etapa em que o negócio novo nasce (vem do "+" da coluna do kanban). */
+  defaultStage?: DealStage;
 }) {
   const isNew = deal === null;
   const [savePending, startSave] = useTransition();
@@ -395,14 +398,14 @@ export function DealDrawer({
   }, [products, deal]);
 
   const isWon = deal?.stage === 'ganho';
-  const currentStage = deal?.stage ?? 'novo';
+  const currentStage = deal?.stage ?? defaultStage ?? 'novo';
   // Ganho/perdido saem das colunas; ainda assim mostramos o estágio atual no select.
   const stageOptions = PIPELINE_STAGES.includes(currentStage as (typeof PIPELINE_STAGES)[number])
     ? [...PIPELINE_STAGES]
     : [currentStage, ...PIPELINE_STAGES];
 
   const title = isNew ? 'Novo negócio' : deal!.org?.name ?? deal!.name ?? 'Negócio';
-  const eyebrow = isNew ? 'Entrada manual' : STAGE_LABELS[deal!.stage];
+  const eyebrow = isNew ? `Novo em ${STAGE_LABELS[currentStage as DealStage]}` : STAGE_LABELS[deal!.stage];
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -620,12 +623,66 @@ function ProposalSection({ deal }: { deal: BoardDeal }) {
   );
 }
 
+/**
+ * Gerador de parcelas do projeto ÚNICO: divide o valor cheio em N. Mostra o valor
+ * de cada parcela enquanto você digita — é o que denuncia na hora quando o valor
+ * digitado era uma mensalidade e não o total do contrato.
+ */
+function SplitInstallments({ dealId, valor }: { dealId: string; valor: number }) {
+  const [count, setCount] = useState(1);
+  const cada = count > 0 ? valor / count : 0;
+
+  return (
+    <form action={generateInstallments} className="mb-2 flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/[0.03] p-2.5">
+      <input type="hidden" name="deal_id" value={dealId} />
+      <p className="font-label text-[10px] uppercase tracking-wider text-text-secondary">
+        Parcelar {brl(valor)} automaticamente
+      </p>
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <input
+            name="count"
+            type="number"
+            min={1}
+            max={60}
+            value={count}
+            onChange={(e) => setCount(Math.max(1, Math.min(60, Number(e.target.value) || 1)))}
+            required
+            className={inputCls + ' w-14 text-center'}
+          />
+          <span className="font-label text-[11px] text-text-secondary">x a partir de</span>
+        </div>
+        <input name="first_due_date" type="date" required className={inputCls} />
+        <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90">
+          Gerar
+        </button>
+      </div>
+      {count > 1 && (
+        <p className="font-label text-[10px] text-text-secondary">
+          Vai gerar <strong>{count}x de {brl(cada)}</strong>. O valor cheio do contrato é que se divide;
+          se {brl(valor)} for a mensalidade, o negócio é recorrente, não pontual.
+        </p>
+      )}
+    </form>
+  );
+}
+
 /** Parcelas planejadas do negócio. Ao ganhar, viram as cobranças do contrato (financeiro). */
 function InstallmentsSection({ deal }: { deal: BoardDeal }) {
   const total = deal.installments.reduce((s, p) => s + p.amount, 0);
   const valor = deal.valor_pontual ?? 0;
   const mrr = deal.mrr ?? 0;
   const recorrente = mrr > 0;
+
+  // Parcela que não bate com a cobrança do negócio. Acontece quando o negócio é
+  // criado como pontual, as parcelas são geradas (valor dividido) e depois ele
+  // vira recorrente: as parcelas velhas ficam e alimentam a projeção com um valor
+  // que não existe. Aqui isso aparece em vez de passar batido.
+  const desalinhada =
+    deal.installments.length > 0 &&
+    (recorrente
+      ? deal.installments.some((p) => Math.abs(p.amount - mrr) > 0.01)
+      : valor > 0 && Math.abs(total - valor) > 0.01);
 
   return (
     <section>
@@ -635,6 +692,23 @@ function InstallmentsSection({ deal }: { deal: BoardDeal }) {
         </p>
         {total > 0 && <span className="font-label text-[10px] text-text-muted">{brl(total)}</span>}
       </div>
+
+      {desalinhada && (
+        <p className="mb-2 rounded-md border border-warning/30 bg-warning/[0.06] px-2.5 py-2 text-[11px] leading-relaxed text-text-secondary">
+          {recorrente ? (
+            <>
+              A mensalidade é <strong>{brl(mrr)}/mês</strong>, mas as parcelas lançadas não são desse
+              valor. Elas continuam valendo na projeção de receita. Gere as mensalidades de novo abaixo
+              para corrigir.
+            </>
+          ) : (
+            <>
+              As parcelas somam <strong>{brl(total)}</strong> e o negócio vale <strong>{brl(valor)}</strong>.
+              A projeção usa as parcelas. Gere de novo abaixo para corrigir.
+            </>
+          )}
+        </p>
+      )}
 
       {/* Gerador automático. No recorrente: N mensalidades iguais ao valor mensal.
           No à vista: divide o valor total em N parcelas. */}
@@ -664,30 +738,7 @@ function InstallmentsSection({ deal }: { deal: BoardDeal }) {
           </div>
         </form>
       ) : valor > 0 ? (
-        <form action={generateInstallments} className="mb-2 flex flex-col gap-2 rounded-md border border-primary/20 bg-primary/[0.03] p-2.5">
-          <input type="hidden" name="deal_id" value={deal.id} />
-          <p className="font-label text-[10px] uppercase tracking-wider text-text-secondary">
-            Parcelar {brl(valor)} automaticamente
-          </p>
-          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-            <div className="flex items-center gap-1.5">
-              <input
-                name="count"
-                type="number"
-                min={1}
-                max={60}
-                defaultValue={1}
-                required
-                className={inputCls + ' w-14 text-center'}
-              />
-              <span className="font-label text-[11px] text-text-secondary">x a partir de</span>
-            </div>
-            <input name="first_due_date" type="date" required className={inputCls} />
-            <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary/90">
-              Gerar
-            </button>
-          </div>
-        </form>
+        <SplitInstallments dealId={deal.id} valor={valor} />
       ) : null}
 
       {deal.installments.length > 0 && (

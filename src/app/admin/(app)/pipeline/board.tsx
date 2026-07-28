@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { moveDealStage } from './actions';
 import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_LABELS, type DealStage } from './stages';
 import { DealDrawer } from './deal-drawer';
-import { type Product } from './orgs';
+import { type OrgOption, type Product } from './orgs';
 import { dealTotal, dealMonthlyNet } from './deal-value';
 
 export type OrgInfo = {
@@ -32,6 +32,8 @@ export type DealInstallment = {
 export type BoardDeal = {
   id: string;
   stage: DealStage;
+  /** Quando o negócio entrou nesta etapa. Base do "parado há X dias". */
+  stage_changed_at: string | null;
   service_tag: string | null;
   service_tags: string[];
   source: string | null;
@@ -66,11 +68,35 @@ const STAGE_ACCENT: Record<DealStage, string> = {
 const brl = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
-export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: BoardDeal[]; products?: Product[] }) {
+/**
+ * Há quantos dias o negócio está parado nesta etapa. Só vira aviso a partir de
+ * duas semanas: antes disso é o tempo normal de uma negociação respirar.
+ */
+const DIAS_MORNO = 14;
+const DIAS_FRIO = 30;
+
+function diasParado(desde: string | null): number | null {
+  if (!desde) return null;
+  const ms = Date.now() - new Date(desde).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return null;
+  return Math.floor(ms / 86_400_000);
+}
+
+export function PipelineBoard({
+  initialDeals,
+  products = [],
+  orgOptions = [],
+}: {
+  initialDeals: BoardDeal[];
+  products?: Product[];
+  orgOptions?: OrgOption[];
+}) {
   const [deals, setDeals] = useState(initialDeals);
   const [overStage, setOverStage] = useState<DealStage | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Etapa em que o novo negócio vai nascer (o "+" do cabeçalho de cada coluna).
+  const [novoEm, setNovoEm] = useState<DealStage | null>(null);
   const [, startTransition] = useTransition();
 
   // Mantém o servidor como fonte da verdade após revalidação.
@@ -130,8 +156,22 @@ export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: B
               <span className="font-label text-[11px] uppercase tracking-[0.14em] text-text-secondary">
                 {STAGE_LABELS[stage]}
               </span>
-              <span className="rounded-full bg-black/[0.05] px-1.5 font-label text-[10px] text-text-muted">
-                {cards.length}
+              <span className="flex items-center gap-1.5">
+                <span className="rounded-full bg-black/[0.05] px-1.5 font-label text-[10px] text-text-muted">
+                  {cards.length}
+                </span>
+                {/* Negócio nasce direto na coluna em que você está olhando. */}
+                <button
+                  type="button"
+                  onClick={() => setNovoEm(stage)}
+                  aria-label={`Novo negócio em ${STAGE_LABELS[stage]}`}
+                  title={`Novo negócio em ${STAGE_LABELS[stage]}`}
+                  className="flex h-5 w-5 items-center justify-center rounded text-text-muted transition-colors hover:bg-primary/10 hover:text-primary"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
               </span>
             </div>
             <p className="mb-2 px-3 font-label text-[10px] text-text-muted">
@@ -199,16 +239,31 @@ export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: B
                     </div>
                   )}
 
-                  {(deal.proposal_path || deal.installments.length > 0) && (
-                    <div className="mt-2 flex items-center gap-2 font-label text-[10px] text-text-muted">
-                      {deal.proposal_path && <span title="Proposta anexada">📎 proposta</span>}
-                      {deal.installments.length > 0 && (
-                        <span title="Parcelas lançadas">
-                          {deal.installments.length}x parcela{deal.installments.length === 1 ? '' : 's'}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {(() => {
+                    const dias = diasParado(deal.stage_changed_at);
+                    const parado = dias != null && dias >= DIAS_MORNO;
+                    if (!deal.proposal_path && deal.installments.length === 0 && !parado) return null;
+                    return (
+                      <div className="mt-2 flex flex-wrap items-center gap-2 font-label text-[10px] text-text-muted">
+                        {deal.proposal_path && <span title="Proposta anexada">📎 proposta</span>}
+                        {deal.installments.length > 0 && (
+                          <span title="Parcelas lançadas">
+                            {deal.installments.length}x parcela{deal.installments.length === 1 ? '' : 's'}
+                          </span>
+                        )}
+                        {parado && (
+                          <span
+                            title={`Sem mudar de etapa desde ${new Date(deal.stage_changed_at!).toLocaleDateString('pt-BR')}`}
+                            className={`ml-auto rounded-full px-1.5 py-0.5 ${
+                              dias >= DIAS_FRIO ? 'bg-danger/10 text-danger' : 'bg-warning/15 text-warning'
+                            }`}
+                          >
+                            parado há {dias}d
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </article>
               ))}
               {cards.length === 0 && (
@@ -221,7 +276,16 @@ export function PipelineBoard({ initialDeals, products = [] }: { initialDeals: B
         );
       })}
     </div>
-    {selected && <DealDrawer deal={selected} products={products} onClose={() => setSelectedId(null)} />}
+    {selected && <DealDrawer deal={selected} products={products} orgOptions={orgOptions} onClose={() => setSelectedId(null)} />}
+    {novoEm && (
+      <DealDrawer
+        deal={null}
+        defaultStage={novoEm}
+        products={products}
+        orgOptions={orgOptions}
+        onClose={() => setNovoEm(null)}
+      />
+    )}
     </>
   );
 }

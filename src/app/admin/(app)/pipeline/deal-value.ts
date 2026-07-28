@@ -16,12 +16,35 @@ const NOTA = 0.06;
 /**
  * Valor cheio do negócio: com parcelas planejadas vale a soma delas — é o
  * contratado de verdade, inclusive nos recorrentes. Sem parcelas, o valor do
- * negócio. É o número de "se fechar tudo": bruto, sem descontar nada.
+ * negócio. Bruto, antes de repasse e nota.
  */
 export function dealTotal(d: DealValue): number {
   return d.installments.length > 0
     ? d.installments.reduce((s, p) => s + p.amount, 0)
     : (d.valor_pontual ?? 0) + (d.mrr ?? 0);
+}
+
+/**
+ * O que de fato entra se o negócio fechar: o valor cheio menos o repasse ao
+ * parceiro e menos a nota, quando o cliente precisa dela. É este o número de
+ * "se fechar tudo" — dinheiro que entra, não dinheiro que passa pela conta.
+ */
+export function dealTotalNet(d: DealValue): number {
+  const bruto = dealTotal(d);
+  if (bruto <= 0) return 0;
+  const nota = d.precisa_nota ? bruto * NOTA : 0;
+  return Math.max(0, bruto - (d.repasse_valor ?? 0) - nota);
+}
+
+/**
+ * A parte RECORRENTE líquida do negócio: quanto ele somaria ao MRR se fechasse.
+ * Negócio pontual, mesmo parcelado, não entra — parcela acaba, mensalidade não.
+ */
+export function dealMrrNet(d: DealValue): number {
+  const mrr = d.mrr ?? 0;
+  if (mrr <= 0) return 0;
+  const nota = d.precisa_nota ? mrr * NOTA : 0;
+  return Math.max(0, mrr - (d.repasse_valor ?? 0) - nota);
 }
 
 /**
