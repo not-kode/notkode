@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analytics';
+import { WhatsAppFallback } from '@/components/ui/whatsapp-fallback';
 
 export type QualificationOption = { id: string; label: string };
 
@@ -73,15 +74,25 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   // o CONTATO por último (mais leve: nome + um canal). Pedir contato só no fim,
   // depois da pessoa investir no que quer, reduz o abandono no meio.
   const FORM_NAME = 'Qualificação';
-  const STEP_NAMES = ['Necessidades', 'Prazo', 'Contato'];
+  const STEP_NAMES = ['Contato', 'Necessidades', 'Prazo'];
+  // O funil só começa a contar na PRIMEIRA INTERAÇÃO real (marcar uma opção, digitar
+  // algo). Antes isto disparava no mount, então bastava a página carregar para inflar
+  // o topo do funil com gente que nem chegou a rolar até o formulário.
   const formStarted = useRef(false);
+
+  const trackStep = (s: number) =>
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: `${FORM_NAME}::${s + 1}::${STEP_NAMES[s] ?? String(s + 1)}` });
+
+  const markInteraction = () => {
+    if (formStarted.current || status === 'success') return;
+    formStarted.current = true;
+    track({ type: 'form_start', service_tag: schema.serviceTag, label: FORM_NAME });
+    trackStep(step);
+  };
+
   useEffect(() => {
-    if (status === 'success') return;
-    if (!formStarted.current) {
-      formStarted.current = true;
-      track({ type: 'form_start', service_tag: schema.serviceTag, label: FORM_NAME });
-    }
-    track({ type: 'form_step', service_tag: schema.serviceTag, label: `${FORM_NAME}::${step + 1}::${STEP_NAMES[step] ?? String(step + 1)}` });
+    if (status === 'success' || !formStarted.current) return;
+    trackStep(step);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
@@ -116,21 +127,31 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, step, status]);
 
-  const update = <K extends keyof FormData>(key: K, val: FormData[K]) =>
+  const update = <K extends keyof FormData>(key: K, val: FormData[K]) => {
+    markInteraction();
     setData((d) => ({ ...d, [key]: val }));
+  };
 
-  const toggleNeed = (id: string) =>
+  const toggleNeed = (id: string) => {
+    markInteraction();
     setData((d) => ({
       ...d,
       needs: d.needs.includes(id) ? d.needs.filter((n) => n !== id) : [...d.needs, id],
     }));
+  };
 
-  const hasChannel = isValidEmail(data.email) || data.whatsapp.replace(/\D/g, '').length >= 10;
+  // CONTATO NA FRENTE. Antes o contato era a última etapa, com a ideia de que pedir
+  // dados no fim reduziria o abandono. Na prática deu 0 lead em 20 dias: 100% das
+  // sessões paravam na 1ª etapa, então nem o contato nem as respostas chegavam.
+  // Com o contato primeiro, quem preencher e desistir no meio já fica gravado em
+  // lead_drafts e aparece no admin para a gente ligar.
+  const hasWhatsapp = data.whatsapp.replace(/\D/g, '').length >= 10;
+  const emailOkOuVazio = !data.email.trim() || isValidEmail(data.email);
   const canContinue =
-    (step === 0 && data.needs.length > 0) ||
-    (step === 1 && !!data.timing) ||
-    // Contato mais leve: nome + UM canal (WhatsApp OU e-mail), não os dois.
-    (step === 2 && !!data.name.trim() && hasChannel);
+    // Etapa 1 — contato: nome, empresa e WhatsApp obrigatórios; e-mail opcional.
+    (step === 0 && !!data.name.trim() && !!data.company.trim() && hasWhatsapp && emailOkOuVazio) ||
+    (step === 1 && data.needs.length > 0) ||
+    (step === 2 && !!data.timing);
 
   const submit = async () => {
     setStatus('submitting');
@@ -221,6 +242,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   const sizes = schema.identity?.companySizes ?? defaultSizes;
 
   return (
+    <>
     <div
       className="rounded-2xl border border-black/[0.08] overflow-hidden"
       style={{ background: 'hsl(55 100% 97%)' }}
@@ -251,7 +273,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
 
       {/* Step content */}
       <div className="p-6 lg:p-8">
-        {step === 0 && (
+        {step === 1 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
               {schema.needs.title}
@@ -291,7 +313,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 0 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
               {schema.identity?.title ?? t('identityTitle')}
@@ -339,8 +361,20 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
                 </Field>
               </div>
 
+              {/* WhatsApp antes do e-mail: é o canal obrigatório e o que a gente usa. */}
               <div className="grid sm:grid-cols-2 gap-3">
-                <Field label={t('fieldEmail')}>
+                <Field label={t('fieldWhatsapp')}>
+                  <input
+                    type="tel"
+                    value={data.whatsapp}
+                    onChange={(e) => update('whatsapp', formatWhatsApp(e.target.value))}
+                    placeholder={t('fieldWhatsappPlaceholder')}
+                    className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
+                    style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+                  />
+                </Field>
+
+                <Field label={t('fieldEmailOptional')}>
                   <input
                     type="email"
                     value={data.email}
@@ -358,23 +392,12 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
                     <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldEmailInvalid')}</span>
                   )}
                 </Field>
-
-                <Field label={t('fieldWhatsapp')}>
-                  <input
-                    type="tel"
-                    value={data.whatsapp}
-                    onChange={(e) => update('whatsapp', formatWhatsApp(e.target.value))}
-                    placeholder={t('fieldWhatsappPlaceholder')}
-                    className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-                    style={{ border: '1px solid rgba(25,25,24,0.10)' }}
-                  />
-                </Field>
               </div>
             </div>
           </div>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <div>
             <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
               {schema.context.title ?? t('contextTitleDefault')}
@@ -413,8 +436,8 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
         )}
       </div>
 
-      {/* Consent line on final step */}
-      {step === 2 && (
+      {/* Consentimento fica junto de onde os dados são digitados: a 1ª etapa. */}
+      {step === 0 && (
         <div className="px-6 lg:px-8 pb-4 -mt-2">
           <p className="font-mono text-[10px] text-text-dim leading-relaxed">
             {t('consentBefore')}
@@ -470,6 +493,8 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
         )}
       </div>
     </div>
+    <WhatsAppFallback serviceTag={schema.serviceTag} />
+    </>
   );
 }
 

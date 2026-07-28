@@ -10,6 +10,7 @@ const ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: '/agentes-automacao',    changeFrequency: 'monthly', priority: 0.9 },
   { path: '/sites',                changeFrequency: 'monthly', priority: 0.9 },
   { path: '/brandbook',            changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/apps',                 changeFrequency: 'monthly', priority: 0.8 },
   { path: '/parcerias',            changeFrequency: 'monthly', priority: 0.7 },
   { path: '/cases',                changeFrequency: 'monthly', priority: 0.8 },
   { path: '/sobre',                changeFrequency: 'monthly', priority: 0.7 },

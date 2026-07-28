@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/footer';
 import { LangSync } from '@/components/layout/lang-sync';
 import { Analytics } from '@/components/analytics';
 import { SessionRecorder } from '@/components/session-recorder';
+import { WhatsAppFloat } from '@/components/ui/whatsapp-float';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -51,6 +52,7 @@ export default async function LocaleLayout({
       <Header />
       <main className="overflow-x-clip">{children}</main>
       <Footer />
+      <WhatsAppFloat />
     </NextIntlClientProvider>
   );
 }

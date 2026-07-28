@@ -40,6 +40,11 @@ export function Reveal({
       setVisible(true);
       return;
     }
+    // Revela assim que QUALQUER parte do bloco encosta na área de detecção, e
+    // antecipa 200px abaixo da dobra para o conteúdo já chegar pronto ao entrar na
+    // tela. Antes exigia 15% do bloco visível e ainda encolhia a área em 80px, então
+    // blocos altos ficavam em branco por um bom tempo mesmo já estando na viewport —
+    // é o que dava a sensação de página lenta ou quebrada.
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -47,7 +52,7 @@ export function Reveal({
           obs.unobserve(el);
         }
       },
-      { threshold: 0.15, rootMargin: '0px 0px -80px 0px' }
+      { threshold: 0, rootMargin: '0px 0px 200px 0px' }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -57,12 +62,17 @@ export function Reveal({
     <div
       ref={ref}
       style={{
-        transitionDelay: `${delay}ms`,
+        // Teto no delay em cascata: alguns blocos pediam 400ms, que somado à
+        // transição fazia o conteúdo levar quase um segundo para ficar legível.
+        // O escalonamento continua existindo, só não atrasa a leitura.
+        transitionDelay: `${Math.min(delay, 180)}ms`,
         transform: visible ? 'none' : dirMap[direction](distance),
         opacity: visible ? 1 : 0,
       }}
       className={cn(
-        'transition-[transform,opacity] duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform',
+        // 800ms era longo demais para conteúdo de leitura: somado ao delay em cascata,
+        // dava mais de 1s até o texto ficar legível.
+        'transition-[transform,opacity] duration-[420ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform',
         className
       )}
     >

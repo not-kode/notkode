@@ -21,6 +21,7 @@ export const routing = defineRouting({
     },
     '/ecommerce': '/ecommerce',
     '/brandbook': '/brandbook',
+    '/apps': '/apps',
     '/parcerias': {
       pt: '/parcerias',
       en: '/partners',

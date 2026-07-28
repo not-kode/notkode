@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle, Sparkles } from 'lucide-react';
 import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analytics';
+import { WhatsAppFallback } from '@/components/ui/whatsapp-fallback';
 
 // ── Schema types ──────────────────────────────────────────────────────────
 
@@ -204,22 +205,35 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   // qual formulário e em que etapa a pessoa parou (não só um número).
   const FORM_NAME = 'Orçamento';
   const stepName = (i: number) => (i < schema.fields.length ? schema.fields[i].label : 'Identificação');
+  // O funil só começa a contar na PRIMEIRA INTERAÇÃO real (escolher uma opção, digitar
+  // algo). Antes isto disparava no mount, então bastava a página carregar para inflar
+  // o topo do funil com gente que nem chegou a rolar até o formulário.
   const formStarted = useRef(false);
+
+  const trackStep = (s: number) =>
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: `${FORM_NAME}::${s + 1}::${stepName(s)}` });
+
+  const markInteraction = () => {
+    if (formStarted.current || status === 'success') return;
+    formStarted.current = true;
+    track({ type: 'form_start', service_tag: schema.serviceTag, label: FORM_NAME });
+    trackStep(step);
+  };
+
   useEffect(() => {
-    if (status === 'success') return;
-    if (!formStarted.current) {
-      formStarted.current = true;
-      track({ type: 'form_start', service_tag: schema.serviceTag, label: FORM_NAME });
-    }
-    track({ type: 'form_step', service_tag: schema.serviceTag, label: `${FORM_NAME}::${step + 1}::${stepName(step)}` });
+    if (status === 'success' || !formStarted.current) return;
+    trackStep(step);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  // Captura progressiva: salva o rascunho conforme a pessoa preenche (só com algum contato).
+  // Captura progressiva: salva o rascunho já a partir da PRIMEIRA escolha, mesmo sem
+  // contato. Antes só gravava quando havia nome/e-mail/WhatsApp, então perdíamos o
+  // registro do que o público pede quando desiste antes de se identificar.
   useEffect(() => {
     if (status === 'success') return;
+    const picked = summarizeSelection(schema, selection).map((s) => `${s.label}: ${s.valueLabels.join(', ')}`);
     const hasContact = name.trim() || email.trim() || whatsapp.replace(/\D/g, '').length > 0;
-    if (!hasContact) return;
+    if (!picked.length && !hasContact) return;
     const id = setTimeout(() => {
       saveLeadDraft({
         service_tag: schema.serviceTag,
@@ -228,27 +242,36 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
         company,
         email,
         whatsapp,
+        needs: picked,
         description: notes,
         last_step: stepName(step),
       });
     }, 900);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, company, email, whatsapp, notes, step, status]);
+  }, [name, company, email, whatsapp, notes, selection, step, status]);
 
-  const setSingle = (fieldId: string, value: string) =>
+  const setSingle = (fieldId: string, value: string) => {
+    markInteraction();
     setSelection((prev) => ({ ...prev, [fieldId]: value }));
+  };
 
-  const toggleMulti = (fieldId: string, value: string) =>
+  const toggleMulti = (fieldId: string, value: string) => {
+    markInteraction();
     setSelection((prev) => {
       const current = (prev[fieldId] as string[]) ?? [];
       const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
       return { ...prev, [fieldId]: next };
     });
+  };
 
+  // Contato mais leve na última etapa: nome + UM canal (WhatsApp ou e-mail), igual ao
+  // formulário de qualificação. Exigir nome + empresa + WhatsApp + e-mail de uma vez
+  // era o maior atrito do funil, logo no passo em que a pessoa decide.
+  const hasChannel = whatsapp.replace(/\D/g, '').length >= 10 || isValidEmail(email);
   const canAdvance = currentField
     ? isFieldComplete(currentField, selection[currentField.id])
-    : Boolean(name && company.trim() && whatsapp.replace(/\D/g, '').length >= 10 && isValidEmail(email) && status !== 'submitting');
+    : Boolean(name.trim() && hasChannel && status !== 'submitting');
 
   const goNext = useCallback(() => {
     if (!canAdvance) return;
@@ -397,8 +420,9 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   const copy = schema.copy ?? {};
 
   return (
+    <div className="max-w-3xl mx-auto">
     <div
-      className="rounded-2xl border border-black/[0.08] overflow-hidden max-w-3xl mx-auto"
+      className="rounded-2xl border border-black/[0.08] overflow-hidden"
       style={{ background: 'hsl(55 100% 97%)' }}
     >
       {/* ── Progress bar ── */}
@@ -515,6 +539,8 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
           </button>
         )}
       </div>
+    </div>
+    <WhatsAppFallback serviceTag={schema.serviceTag} />
     </div>
   );
 }

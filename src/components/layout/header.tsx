@@ -21,6 +21,9 @@ export function Header() {
             {t('sistemasIA')}
           </Link>
           <ServicesMenu />
+          <Link href="/apps" data-cta="nav-apps" className="text-text-secondary hover:text-primary transition-colors">
+            {t('apps')}
+          </Link>
           <Link href="/parcerias" data-cta="nav-parcerias" className="text-text-secondary hover:text-primary transition-colors">
             {t('parcerias')}
           </Link>

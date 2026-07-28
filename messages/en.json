@@ -14,6 +14,7 @@
     "ecommerceDesc": "Online store built to convert: catalog to checkout.",
     "brandbook": "Brand & Brandbook",
     "brandbookDesc": "Logo, palette, typography and complete brandbook.",
+    "apps": "Our apps",
     "cases": "Cases",
     "parcerias": "Partners",
     "sobre": "About",
@@ -32,7 +33,6 @@
     "homeHeroLine3b": "handles it for you.",
     "heroPrimaryCta": "Explore solutions",
     "heroSecondaryCta": "See cases",
-
     "activationEyebrow": "How we activate AI in your business",
     "activationTitlePre": "Applying AI any which way gets you nowhere.",
     "activationTitleAccent": "Activate it where it truly pays off.",
@@ -46,20 +46,16 @@
     "activationCtaText": "Want to implement AI in your company? Talk to us.",
     "activationCtaButton": "Chat on WhatsApp",
     "activationCtaWhatsappMessage": "Hi! I'd like to understand where AI can drive results in my business. Can we talk?",
-
-
     "logoStripLabel": "Companies that trusted Notkode",
     "trustBandLine1": "companies that",
     "trustBandLine2": "trusted",
     "trustBandLine3": "Notkode.",
-
     "stats": {
       "projects": "Projects delivered",
       "rating": "Average rating",
       "experience": "Years in market",
       "countries": "Countries served"
     },
-
     "showcaseEyebrow": "The flagship",
     "showcaseTitle": "One system. Your entire operation.",
     "showcaseTitleMainDefault": "One system. Your entire",
@@ -110,7 +106,6 @@
     "pshV4RowRewrite": "Rewrite",
     "pshV4RowRewriteValue": "zero",
     "pshV4Footer": "architecture ready from day 1",
-
     "caseEyebrow": "Featured case",
     "caseTitle": "Loss Prevention",
     "caseSegment": "Loss prevention · AI system · 2025",
@@ -126,7 +121,6 @@
     "caseAuthor": "Loss Prevention",
     "caseAuthorRole": "Notkode client · São Paulo",
     "caseCta": "See all cases",
-
     "servicesEyebrow": "What we deliver",
     "servicesTitle": "Everything your company needs, custom-made.",
     "servicesTitlePre": "The ways to",
@@ -144,7 +138,6 @@
     "serviceEcommerceDesc": "Custom store or orchestration of the one you already have, with automation and AI in the funnel. Without bleeding on platform fees.",
     "serviceBrandbookTitle": "Brand & Brandbook",
     "serviceBrandbookDesc": "Logo, palette, typography and applications. Enough for your brand to run consistently.",
-
     "processEyebrow": "How we work",
     "processTitlePre": "The",
     "processTitleAccent": "FastForge™ methodology",
@@ -173,7 +166,6 @@
     "process3Desc": "You track progress every week and watch the product take shape.",
     "process4Title": "Launch & Growth",
     "process4Desc": "We launch together and keep evolving based on what the data shows.",
-
     "testimonialsEyebrow": "What clients say",
     "testimonialsTitle": "Stories from those who built with Notkode.",
     "testimonialsTitlePre": "Stories from those who built with",
@@ -191,7 +183,6 @@
     "testimonial4Quote": "Very attentive service, always with logical and efficient counterpoints. The project was delivered on time and the quality was perfect. I recommend with full confidence.",
     "testimonial4Author": "Rodrigo Nascimento",
     "testimonial4Role": "LTS Corretagem",
-
     "agencyEyebrow": "For agencies",
     "agencyTitle": "Multiply your revenue with white-label dev",
     "agencyTitlePre": "Multiply your",
@@ -212,7 +203,6 @@
     "agencyMockLine1": "You close. We deliver.",
     "agencyMockLine2": "The product ships with your brand.",
     "agencyMockLine3": "More clients, no extra hires",
-
     "finalCtaEyebrow": "Ready to start?",
     "finalCtaTitle": "Let's find where AI drives results in your business.",
     "finalCtaDesc": "Start with the diagnosis. We understand your operation and point out the first paths to activate AI.",
@@ -235,7 +225,6 @@
     "heroDesc": "In the AI era, the software adapts to you, not the other way around. We build a custom system, with AI already embedded where it actually cuts manual work.",
     "heroCtaPrimary": "I'm interested",
     "heroCtaSecondary": "Request diagnosis",
-
     "chaosPhase1Heading": "Does this sound",
     "chaosPhase1HeadingAccent": "familiar?",
     "chaosBullet1": "Your company grew, but the operation still runs on duct-tape workarounds.",
@@ -255,7 +244,6 @@
     "chaosIconCrm": "CRM",
     "chaosIconAgenda": "Calendar",
     "chaosIconFinanceiro": "Finance",
-
     "sobMedidaEyebrow": "Why custom-built",
     "sobMedidaTitleLine1": "No system works",
     "sobMedidaTitleLine2Before": "as well as one ",
@@ -267,11 +255,9 @@
     "sobMedidaPillar2Body": "Plenty of companies want to apply AI and don't know where to start. Almost always it's because their tools don't talk to each other or pieces are missing. A unified system fixes that base, and clears the way.",
     "sobMedidaPillar3Title": "AI is embedded by design.",
     "sobMedidaPillar3Body": "Every flow is designed from the start around where AI cuts manual work. It's not a plugin glued on later, it's part of the architecture. The result is less repetitive work from day one.",
-
     "showcaseEyebrow": "What you'll get",
     "showcaseTitleMain": "Built around your scenario,",
     "showcaseTitleAccent": "in one place.",
-
     "caseSegment": "Corporate education · Unified system + AI · 2025",
     "caseProblem": "An operation spread across seven tools that didn't talk: Excel for tracking, Google Drive for certificates, JotForms for enrollments, Google Forms for training feedback, Framer for the website, Airtable as CRM, and Sendgrid for email. Every training still required printed materials, and each class meant juggling spreadsheets and tabs.",
     "caseSolution": "We unified site, admin panel, and client panel into a single system, designed around Loss Prevention's scenario. The full journey, promoting, enrolling, training, evaluating, and issuing certificates, went fully digital, in one place. AI took over the repetitive work: email campaigns are generated in two minutes, with AI itself analyzing past results to improve the next one. The team only reviews what AI did or steps in where a human is actually needed.",
@@ -281,7 +267,6 @@
     "caseMetric2Label": "to run an email campaign",
     "caseMetric3Value": "3 months",
     "caseMetric3Label": "payback on the investment",
-
     "faqTitleLine1": "The questions everyone",
     "faqTitleAccent": "asks before starting.",
     "faq1Q": "Why custom-built instead of off-the-shelf SaaS?",
@@ -298,11 +283,9 @@
     "faq6A": "Yes. Because the system is designed around your scenario, AI starts with the right context, your data, processes, and rules. It's not a generic chatbot bolted onto tools that don't talk: it's AI embedded in the flows where it cuts manual work.",
     "faq7Q": "Do you work with companies of any size?",
     "faq7A": "Yes. We serve everyone from growing companies to larger operations. The system starts at the size that makes sense today and scales with you.",
-
     "formTitleLine1": "Tell us your scenario",
     "formTitleAccent": "and we'll design it.",
     "formDesc": "Three short questions to set up a 30-minute conversation built around you. No templates, no cold pitches, no commitment.",
-
     "qualNeedsTitle": "What do you need to solve?",
     "qualNeedsSubtitle": "You can pick more than one. Pick the last one if you're still figuring it out.",
     "qualNeedCentralizar": "Centralize multiple tools into one system",
@@ -368,8 +351,8 @@
   },
   "QualificationForm": {
     "stepLabel": "Step {step} of {total}",
-    "identityTitle": "Who are you?",
-    "identitySubtitle": "Just the essentials so we can reach out.",
+    "identityTitle": "First, who are we talking to?",
+    "identitySubtitle": "Just the essentials to get started.",
     "fieldName": "Your name",
     "fieldNamePlaceholder": "What should we call you?",
     "fieldCompany": "Company",
@@ -407,7 +390,13 @@
     "waFormFilled": "I just filled out the form on the site.",
     "waInterestLabel": "Interest",
     "waTimingLabel": "When",
-    "waFallbackMessage": "I just filled out the form on the site, I'd like to move things forward."
+    "waFallbackMessage": "I just filled out the form on the site, I'd like to move things forward.",
+    "fieldEmailOptional": "Email (optional)"
+  },
+  "Contact": {
+    "whatsappFallbackLabel": "Rather talk to someone?",
+    "whatsappFallbackCta": "Message us on WhatsApp",
+    "whatsappFallbackMessage": "Hi! I came from the Notkode website and I'd like to talk about a project."
   },
   "Cases": {
     "metaTitle": "Cases · Notkode",
@@ -416,10 +405,14 @@
     "heroTitleAccent": "real",
     "heroTitlePost": "results.",
     "heroDesc": "50+ projects delivered in 6 years to growing companies, internal systems, SaaS, e-commerce, and websites. Each case solved a real pain and generated a number that matters.",
-    "stat1Value": "50+", "stat1Label": "projects delivered",
-    "stat2Value": "4",   "stat2Label": "categories",
-    "stat3Value": "4",   "stat3Label": "countries served",
-    "stat4Value": "9.8", "stat4Label": "average rating",
+    "stat1Value": "50+",
+    "stat1Label": "projects delivered",
+    "stat2Value": "4",
+    "stat2Label": "categories",
+    "stat3Value": "4",
+    "stat3Label": "countries served",
+    "stat4Value": "9.8",
+    "stat4Label": "average rating",
     "ctaPrimary": "I want to be the next case",
     "ctaSecondary": "Explore portfolio",
     "gridFilterLabel": "Filter:",
@@ -453,9 +446,12 @@
     "card3Desc": "Identity manual with usage rules: spacing, proportions, correct and forbidden uses.",
     "card4Title": "Practical applications",
     "card4Desc": "Templates for social, stationery (business card, signature), and presentations, ready to use.",
-    "stat1Value": "30+",  "stat1Label": "identities delivered",
-    "stat2Value": "2",    "stat2Label": "to 3 weeks from briefing",
-    "stat3Value": "100%", "stat3Label": "editable vector files",
+    "stat1Value": "30+",
+    "stat1Label": "identities delivered",
+    "stat2Value": "2",
+    "stat2Label": "to 3 weeks from briefing",
+    "stat3Value": "100%",
+    "stat3Label": "editable vector files",
     "faqTitleLine1": "Quick questions",
     "faqTitleAccent": "before closing.",
     "faq1Q": "Do I need a brandbook if I already have a logo?",
@@ -472,6 +468,75 @@
     "comboLinkSistema": "System",
     "comboLinkLoja": "Store",
     "comboTag": "combo with discount"
+  },
+  "Apps": {
+    "metaTitle": "Notkode apps | Mobile apps, desktop programs and web apps",
+    "metaDesc": "Beyond custom systems, Notkode builds mobile apps, desktop programs and web apps. Meet the products we created, shipped and keep running.",
+    "heroTitlePre": "We build apps",
+    "heroTitleAccent": "too.",
+    "heroDesc": "Beyond custom systems, Notkode builds mobile apps, programs you install on your computer, and web apps. The products below are ours: they're live, in use, and you can try them right now.",
+    "ratingSuffix": "ratings",
+    "platforms": {
+      "ios": "iOS",
+      "android": "Android",
+      "mac": "macOS",
+      "windows": "Windows",
+      "web": "Web"
+    },
+    "items": {
+      "creia": {
+        "name": "Creia | Daily Devotional",
+        "tagline": "mobile app",
+        "description": "One devotional a day in a few minutes: a verse, a reflection and a guided prayer. It also brings the full Bible and narrated stories of up to 4 minutes.",
+        "cta": "View on the App Store"
+      },
+      "fala": {
+        "name": "Fala que eu te escuto",
+        "tagline": "desktop program",
+        "description": "Hold a key, speak, and the text lands wherever your cursor is. Works in any program, runs offline on your computer, and it's free.",
+        "cta": "Download free"
+      },
+      "simbos": {
+        "name": "SimbOS",
+        "tagline": "web app",
+        "description": "One place where you and your AI tools share files, tasks and notes. The AI remembers context between conversations, so you don't repeat yourself.",
+        "cta": "Explore"
+      },
+      "easycoexistence": {
+        "name": "EasyCoexistence",
+        "tagline": "web app",
+        "description": "Automate WhatsApp Business without giving up the app on your phone. Scan a QR code and the same number works both in the app and on Meta's official API, with the chat history intact. Ships with an MCP you can plug into Claude Code.",
+        "cta": "Explore"
+      }
+    },
+    "builtByEyebrow": "why this matters to you",
+    "builtByDesc": "Every one of these products went the whole way in our hands: idea, design, build, store release and maintenance after launch. Same team, same process behind our client projects. What we do for ourselves is what we do for you.",
+    "ctaTitlePre": "Want to build",
+    "ctaTitleAccent": "yours?",
+    "ctaDesc": "Tell us what you have in mind. We come back with a real path: what can be done, how long it takes and what it costs.",
+    "qualWhatsappMessage": "I saw Notkode's apps on the website and I want to build mine.",
+    "qualSuccessTitle": "We got your idea.",
+    "qualSuccessBody": "Within 24 hours someone from the team reaches out by email and WhatsApp to understand the project and map the path.",
+    "qualNeedsTitle": "What do you want to build?",
+    "qualNeedsSubtitle": "Pick more than one if you like. Pick the last one if you're not sure yet.",
+    "qualNeedMobile": "An app for iPhone and Android",
+    "qualNeedDesktop": "A desktop program",
+    "qualNeedWeb": "A web product / SaaS",
+    "qualNeedWhatsapp": "Official WhatsApp integration",
+    "qualNeedEvoluir": "Evolve an app that already exists",
+    "qualNeedNaoSei": "Not sure yet",
+    "qualIdentityTitle": "First, who are we talking to?",
+    "qualIdentitySubtitle": "Just the essentials to get started.",
+    "qualSize1": "Just me / 1–3 people",
+    "qualSize2": "4–10 people",
+    "qualSize3": "11–30 people",
+    "qualSize4": "30+ people",
+    "qualContextTitle": "When do you want to start?",
+    "qualContextSubtitle": "Let us know if it's already decided or still exploration.",
+    "qualTimingDecidido": "Already decided, I want to start",
+    "qualTiming30dias": "Within 30 days",
+    "qualTimingFuturo": "Further ahead",
+    "qualTimingPesquisa": "Just researching"
   },
   "Privacy": {
     "metaTitle": "Privacy policy · Notkode",
@@ -516,9 +581,12 @@
     "painFooterMid": ", plus ",
     "painFooterBold2": "3.4% on everything you sell",
     "painFooterEnd": ". With your own system, that becomes a one-time investment, no growth ceiling and no renting pieces of your own operation.",
-    "result1Value": "4–8 wks", "result1Label": "from briefing to live store",
-    "result2Value": "100%",    "result2Label": "of the code is yours · no lock-in",
-    "result3Value": "0%",      "result3Label": "royalty on your sales",
+    "result1Value": "4–8 wks",
+    "result1Label": "from briefing to live store",
+    "result2Value": "100%",
+    "result2Label": "of the code is yours · no lock-in",
+    "result3Value": "0%",
+    "result3Label": "royalty on your sales",
     "scenariosEyebrow": "For which scenario",
     "scenariosTitlePre": "Three scenarios, the same",
     "scenariosTitleAccent": "care.",
@@ -572,9 +640,12 @@
     "heroTitleAccent": "without you in the loop.",
     "heroDesc": "We automate WhatsApp customer support, order organization, billing, and the repetitive tasks that eat your team's day. You get hours back and your customer is answered immediately, even at 3am.",
     "heroCta": "Build my project",
-    "result1Value": "10–40h", "result1Label": "freed per week in operations",
-    "result2Value": "~2 wks", "result2Label": "from briefing to agent in production",
-    "result3Value": "24/7",   "result3Label": "coverage with no extra hires",
+    "result1Value": "10–40h",
+    "result1Label": "freed per week in operations",
+    "result2Value": "~2 wks",
+    "result2Label": "from briefing to agent in production",
+    "result3Value": "24/7",
+    "result3Label": "coverage with no extra hires",
     "useCasesEyebrow": "Common use cases",
     "useCasesTitlePre": "Where automation makes the biggest",
     "useCasesTitleAccent": "difference.",
@@ -633,9 +704,12 @@
     "heroTitleAccent": "weeks.",
     "heroDesc": "An LP for the campaign launching Monday, or a brand-new institutional site. We design around your goal, not around the template that's easiest for us.",
     "heroCta": "Build my site",
-    "stat1Value": "2–4 wks", "stat1Label": "from briefing to live",
-    "stat2Value": "60+",     "stat2Label": "sites delivered",
-    "stat3Value": "95+",     "stat3Label": "average PageSpeed score",
+    "stat1Value": "2–4 wks",
+    "stat1Label": "from briefing to live",
+    "stat2Value": "60+",
+    "stat2Label": "sites delivered",
+    "stat3Value": "95+",
+    "stat3Label": "average PageSpeed score",
     "typesTitleLine1Pre": "The choice",
     "typesTitleLine1Accent": "isn't",
     "typesTitleLine1Post": "about templates.",
@@ -763,8 +837,8 @@
     "qualNeedAgentes": "WhatsApp Agents & Automation",
     "qualNeedIdentidade": "Visual identity / Brandbook",
     "qualNeedNaoSei": "Still figuring it out",
-    "qualIdentityTitle": "About your agency.",
-    "qualIdentitySubtitle": "Just the essentials so we get the context.",
+    "qualIdentityTitle": "First, about your agency.",
+    "qualIdentitySubtitle": "Just the essentials to get started.",
     "qualSize1": "Solo / 1–3 people",
     "qualSize2": "4–10 people",
     "qualSize3": "11–30 people",

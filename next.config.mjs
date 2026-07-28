@@ -5,6 +5,10 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Permite rodar um segundo `next dev` em paralelo (ex.: conferir uma mudança sem
+  // derrubar o servidor que já está aberto). Dois processos na mesma pasta .next
+  // corrompem o cache e um deles morre. Sem a env, nada muda.
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   experimental: {
     // Uploads de proposta (HTML/PDF) via server action — libera acima do 1MB padrão.
     serverActions: { bodySizeLimit: '10mb' },

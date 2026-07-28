@@ -95,6 +95,7 @@ export function MobileMenu() {
               )}
             </li>
 
+            <MobileNavItem href="/apps"      label={t('apps')}      onClick={close} />
             <MobileNavItem href="/parcerias" label={t('parcerias')} onClick={close} />
             <MobileNavItem href="/sobre"     label={t('sobre')}     onClick={close} />
           </ul>
@@ -123,7 +124,7 @@ export function MobileMenu() {
   );
 }
 
-function MobileNavItem({ href, label, onClick, featured = false }: { href: '/sistemas-ia' | '/parcerias' | '/sobre'; label: string; onClick: () => void; featured?: boolean }) {
+function MobileNavItem({ href, label, onClick, featured = false }: { href: '/sistemas-ia' | '/apps' | '/parcerias' | '/sobre'; label: string; onClick: () => void; featured?: boolean }) {
   return (
     <li>
       <Link
