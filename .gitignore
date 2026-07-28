@@ -5,6 +5,9 @@ node_modules
 
 # Build output
 .next/
+# Pastas de build alternativas (NEXT_DIST_DIR), usadas para rodar um segundo
+# servidor de dev/build sem brigar com o .next do que já está aberto.
+.next-*/
 out/
 build/
 dist/
