@@ -1,5 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { ONBOARDING_TEMPLATES } from '@/lib/onboarding-schema';
 import { ClientesView, type ClientView } from './clientes-view';
+import type { BriefingRow } from '../onboarding/onboarding-view';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +28,9 @@ type CoRow = {
   contacts: { id: string; name: string | null; contact_channels: Channel[] | null } | null;
 };
 type BriefRow = {
-  organization_id: string | null; token: string; status: string;
-  product_name: string | null; submitted_at: string | null;
+  id: string; organization_id: string | null; token: string; status: string;
+  product_name: string | null; submitted_at: string | null; created_at: string;
+  template_key: string | null; respostas: Record<string, string | string[]> | null;
 };
 type DealRow = { id: string; organization_id: string | null };
 type LeadRow = {
@@ -62,7 +65,7 @@ export default async function ClientesPage() {
       .select('organization_id, role, contacts(id, name, contact_channels(kind, value, is_primary))'),
     supabase
       .from('onboarding_briefings')
-      .select('organization_id, token, status, product_name, submitted_at')
+      .select('id, organization_id, token, status, product_name, submitted_at, created_at, template_key, respostas')
       .order('created_at', { ascending: false }),
     supabase
       .from('deals')
@@ -81,6 +84,24 @@ export default async function ClientesPage() {
   const briefs = (briefData ?? []) as BriefRow[];
   const deals = (dealData ?? []) as DealRow[];
   const leads = (leadData ?? []) as LeadRow[];
+
+  // Anexos do briefing: lista o Storage por token e assina URLs de download.
+  const arquivos: Record<string, { name: string; url: string | null }[]> = {};
+  await Promise.all(
+    briefs.map(async (b) => {
+      const { data: list } = await supabase.storage.from('onboarding').list(b.token);
+      arquivos[b.id] = await Promise.all(
+        (list ?? [])
+          .filter((f) => f.name && f.id !== null)
+          .map(async (f) => {
+            const { data: signed } = await supabase.storage
+              .from('onboarding')
+              .createSignedUrl(`${b.token}/${f.name}`, 3600);
+            return { name: f.name, url: signed?.signedUrl ?? null };
+          }),
+      );
+    }),
+  );
 
   const clients: ClientView[] = orgs.map((o) => {
     const brief = briefs.find((b) => b.organization_id === o.id);
@@ -103,6 +124,20 @@ export default async function ClientesPage() {
           url: `${SITE_URL}/onboarding/${brief.token}`,
         }
       : null,
+    briefings: briefs
+      .filter((b) => b.organization_id === o.id)
+      .map((b): BriefingRow => ({
+        id: b.id,
+        token: b.token,
+        orgName: o.name ?? 'Cliente',
+        product_name: b.product_name,
+        template: b.template_key ?? 'produto',
+        status: b.status,
+        submitted_at: b.submitted_at,
+        created_at: b.created_at,
+        respostas: b.respostas ?? {},
+        files: arquivos[b.id] ?? [],
+      })),
     contacts: cos
       .filter((c) => c.organization_id === o.id && c.contacts)
       .map((c) => ({
@@ -137,5 +172,7 @@ export default async function ClientesPage() {
   // negociando (organização criada pelo pipeline) vive só no funil.
   const soClientes = clients.filter((c) => c.contratos.length > 0);
 
-  return <ClientesView clients={soClientes} productLabels={productLabels} />;
+  const templates = Object.entries(ONBOARDING_TEMPLATES).map(([key, t]) => ({ key, label: t.label }));
+
+  return <ClientesView clients={soClientes} productLabels={productLabels} templates={templates} />;
 }

@@ -10,7 +10,6 @@ const NAV = [
   { href: '/admin/financeiro', label: 'Financeiro' },
   { href: '/admin/clientes', label: 'Clientes' },
   { href: '/admin/entregas', label: 'Entregas' },
-  { href: '/admin/onboarding', label: 'Onboarding' },
   { href: '/admin/sessoes', label: 'Sessões' },
 ];
 

@@ -9,28 +9,36 @@ import {
   createPhase, updatePhase, deletePhase, movePhase,
   generateClientToken, revokeClientToken,
 } from './actions';
-import { PHASE_LABELS, type PhaseStatus } from './status';
+import { AlertTriangle, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid, Link2, List, Plus, Trash2 } from 'lucide-react';
+import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
 import type { PhaseView, ProjectView, Send, TaskView } from './types';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
-import { DateCell, InlineText, fmtDate, hoje, inputCls } from './ui';
+import { ChipSelect, DateChip, InlineText, fmtDate, hoje, inputCls } from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
 
 const PREF_VISAO = 'notkode.entregas.visao';
 
-const PHASE_DOT: Record<PhaseStatus, string> = {
-  pendente: 'bg-black/15',
+const tabCls = (ativo: boolean) =>
+  `inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
+    ativo ? 'bg-white text-text-primary shadow-[0_1px_2px_rgba(16,24,40,0.08)]' : 'text-text-muted hover:text-text-primary'
+  }`;
+
+const PHASE_STATUS_DOT: Record<PhaseStatus, string> = {
+  pendente: 'bg-neutral-300',
   em_andamento: 'bg-primary',
   concluida: 'bg-success',
   pausada: 'bg-warning',
 };
 
-const tabCls = (ativo: boolean) =>
-  `rounded-md px-3 py-1.5 font-label text-[11px] uppercase tracking-wider transition-colors ${
-    ativo ? 'bg-primary/10 text-primary' : 'text-text-muted hover:text-text-primary'
-  }`;
+const PHASE_STATUS_TOM: Record<PhaseStatus, string> = {
+  pendente: 'bg-black/[0.04] text-text-secondary',
+  em_andamento: 'bg-primary/10 text-primary',
+  concluida: 'bg-success/12 text-[#15803D]',
+  pausada: 'bg-warning/15 text-[#B45309]',
+};
 
 export function EntregasView({ projects }: { projects: ProjectView[] }) {
   const [abertoId, setAbertoId] = useState<string | null>(projects[0]?.id ?? null);
@@ -99,8 +107,9 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
       </header>
 
       {daSemana.length > 0 && (
-        <section className="mb-5 rounded-md border border-warning/30 bg-warning/[0.05] px-4 py-3">
-          <p className="mb-2 font-label text-[11px] uppercase tracking-wider text-text-secondary">
+        <section className="mb-5 rounded-md border border-warning/30 bg-warning/[0.06] px-4 py-3">
+          <p className="mb-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#B45309]">
+            <AlertTriangle className="h-3.5 w-3.5" />
             Vence nos próximos 7 dias ({daSemana.length})
           </p>
           <ul className="flex flex-col gap-1">
@@ -108,12 +117,14 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
               const atrasada = !!t.dueDate && t.dueDate < hoje();
               return (
                 <li key={t.id} className="flex items-baseline gap-2 text-sm">
-                  <span className={`font-label text-[11px] tabular-nums ${atrasada ? 'font-semibold text-danger' : 'text-text-muted'}`}>
+                  <span className={`text-[11px] tabular-nums ${atrasada ? 'font-semibold text-danger' : 'text-text-muted'}`}>
                     {fmtDate(t.dueDate)}
                   </span>
-                  <span className="text-text-primary">{t.title}</span>
-                  <span className="font-label text-[11px] text-text-muted">· {t.projeto}</span>
-                  {atrasada && <span className="font-label text-[10px] uppercase tracking-wider text-danger">atrasada</span>}
+                  <span className="text-[13px] text-text-primary">{t.title}</span>
+                  <span className="text-[11px] text-text-muted">· {t.projeto}</span>
+                  {atrasada && (
+                    <span className="rounded-full bg-danger/12 px-1.5 py-0.5 text-[10px] font-medium text-danger">atrasada</span>
+                  )}
                 </li>
               );
             })}
@@ -154,15 +165,19 @@ function ProjectPanel({ project, aba, setAba, visao, setVisao }: {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1 rounded-md border border-black/[0.06] bg-white p-1">
+        <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
           <button onClick={() => setAba('tasks')} className={tabCls(aba === 'tasks')}>Tasks</button>
           <button onClick={() => setAba('cronograma')} className={tabCls(aba === 'cronograma')}>Cronograma</button>
         </div>
 
         {aba === 'tasks' && (
-          <div className="flex items-center gap-1 rounded-md border border-black/[0.06] bg-white p-1">
-            <button onClick={() => setVisao('kanban')} className={tabCls(visao === 'kanban')}>Kanban</button>
-            <button onClick={() => setVisao('lista')} className={tabCls(visao === 'lista')}>Lista</button>
+          <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
+            <button onClick={() => setVisao('kanban')} className={tabCls(visao === 'kanban')}>
+              <LayoutGrid className="h-3.5 w-3.5" />Kanban
+            </button>
+            <button onClick={() => setVisao('lista')} className={tabCls(visao === 'lista')}>
+              <List className="h-3.5 w-3.5" />Lista
+            </button>
           </div>
         )}
       </div>
@@ -181,14 +196,12 @@ function ProjectPanel({ project, aba, setAba, visao, setVisao }: {
 
           <section>
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-label text-[11px] uppercase tracking-[0.14em] text-text-secondary">
-                Etapas do cronograma
-              </h2>
+              <h2 className="text-[13px] font-semibold text-text-primary">Etapas do cronograma</h2>
               <button
                 onClick={() => setNovaEtapa((v) => !v)}
-                className="rounded-md border border-black/[0.1] px-2.5 py-1 text-xs font-medium text-text-secondary transition hover:border-primary/40 hover:text-primary"
+                className="inline-flex items-center gap-1.5 rounded-sm border border-black/[0.1] bg-white px-2.5 py-1 text-xs font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
               >
-                {novaEtapa ? 'Cancelar' : '+ Etapa'}
+                {novaEtapa ? 'Cancelar' : <><Plus className="h-3.5 w-3.5" />Etapa</>}
               </button>
             </div>
 
@@ -235,8 +248,11 @@ function ProjectPanel({ project, aba, setAba, visao, setVisao }: {
 
 function ClientLink({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
   return (
-    <section className="rounded-md border border-black/[0.06] bg-white px-4 py-3">
-      <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Acompanhamento do cliente</p>
+    <section className="rounded-md border border-black/[0.07] bg-white px-4 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+      <p className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-text-primary">
+        <Link2 className="h-3.5 w-3.5 text-text-muted" />
+        Acompanhamento do cliente
+      </p>
       {project.clientUrl ? (
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <code className="min-w-0 flex-1 truncate rounded bg-black/[0.04] px-2 py-1 text-xs text-text-secondary">
@@ -251,7 +267,7 @@ function ClientLink({ project, pending, send }: { project: ProjectView; pending:
           <button
             onClick={() => send(revokeClientToken, { engagement_id: project.id })}
             disabled={pending}
-            className="font-label text-[10px] uppercase tracking-wider text-text-muted underline decoration-dotted transition hover:text-danger disabled:opacity-50"
+            className="text-[11px] text-text-muted underline decoration-dotted transition hover:text-danger disabled:opacity-50"
           >
             revogar
           </button>
@@ -286,57 +302,62 @@ function PhaseRow({ phase, tarefas, primeira, ultima, pending, send }: {
   const atrasada = !!phase.endDate && phase.endDate < hoje() && phase.status !== 'concluida';
 
   return (
-    <li className="flex flex-wrap items-center gap-2 rounded-md border border-black/[0.06] bg-white px-3 py-2">
-      <span className={`h-2 w-2 shrink-0 rounded-full ${PHASE_DOT[phase.status]}`} />
+    <li className="group flex flex-wrap items-center gap-2 rounded-md border border-black/[0.07] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+      <span className={`h-2 w-2 shrink-0 rounded-full ${PHASE_STATUS_DOT[phase.status]}`} />
 
       <InlineText
         value={phase.name}
         onSave={(v) => send(updatePhase, { id: phase.id, name: v })}
-        className="min-w-0 flex-1 text-sm font-medium text-text-primary"
+        className="min-w-0 flex-1 text-[13px] font-semibold text-text-primary"
       />
 
-      <DateCell value={phase.startDate} onSave={(v) => send(updatePhase, { id: phase.id, start_date: v })} placeholder="início" />
-      <span className="font-label text-[11px] text-text-muted">a</span>
-      <DateCell value={phase.endDate} onSave={(v) => send(updatePhase, { id: phase.id, end_date: v })} atrasada={atrasada} placeholder="fim" />
+      {tarefas > 0 && (
+        <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-text-muted">
+          {tarefas} tarefa{tarefas === 1 ? '' : 's'}
+        </span>
+      )}
 
-      {tarefas > 0 && <span className="font-label text-[11px] text-text-muted">· {tarefas} tarefa{tarefas === 1 ? '' : 's'}</span>}
+      <DateChip value={phase.startDate} onSave={(v) => send(updatePhase, { id: phase.id, start_date: v })} placeholder="início" />
+      <span className="text-[11px] text-text-muted">→</span>
+      <DateChip value={phase.endDate} onSave={(v) => send(updatePhase, { id: phase.id, end_date: v })} atrasada={atrasada} placeholder="fim" />
 
-      <select
+      <ChipSelect
         value={phase.status}
-        onChange={(e) => send(updatePhase, { id: phase.id, status: e.target.value })}
-        disabled={pending}
-        className="rounded border border-black/[0.08] bg-white px-1.5 py-1 font-label text-[11px] text-text-secondary"
-      >
-        {(Object.keys(PHASE_LABELS) as PhaseStatus[]).map((s) => (
-          <option key={s} value={s}>{PHASE_LABELS[s]}</option>
-        ))}
-      </select>
+        onChange={(v) => send(updatePhase, { id: phase.id, status: v })}
+        tone={PHASE_STATUS_TOM[phase.status]}
+        titulo="Situação da etapa"
+        options={PHASE_STATUSES.map((s) => ({ value: s, label: PHASE_LABELS[s], dot: PHASE_STATUS_DOT[s] }))}
+      />
 
       {/* Visível para o cliente: a etapa aparece (ou não) no link de acompanhamento. */}
       <button
         onClick={() => send(updatePhase, { id: phase.id, client_visible: phase.clientVisible ? 'off' : 'on' })}
         disabled={pending}
         title={phase.clientVisible ? 'O cliente vê esta etapa' : 'Etapa interna: o cliente não vê'}
-        className={`rounded px-1.5 py-1 font-label text-[10px] uppercase tracking-wider transition-colors ${
-          phase.clientVisible ? 'bg-primary/10 text-primary' : 'bg-black/[0.05] text-text-muted'
+        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${
+          phase.clientVisible ? 'bg-primary/10 text-primary' : 'bg-black/[0.04] text-text-muted'
         }`}
       >
+        {phase.clientVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
         {phase.clientVisible ? 'cliente vê' : 'interna'}
       </button>
 
-      <span className="flex items-center gap-0.5">
-        <button onClick={() => send(movePhase, { id: phase.id, dir: 'up' })} disabled={pending || primeira} className="rounded px-1 text-text-muted transition hover:bg-black/[0.04] hover:text-text-primary disabled:opacity-25" aria-label="Subir">↑</button>
-        <button onClick={() => send(movePhase, { id: phase.id, dir: 'down' })} disabled={pending || ultima} className="rounded px-1 text-text-muted transition hover:bg-black/[0.04] hover:text-text-primary disabled:opacity-25" aria-label="Descer">↓</button>
+      <span className="flex items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
+        <button onClick={() => send(movePhase, { id: phase.id, dir: 'up' })} disabled={pending || primeira} className="rounded p-1 text-text-muted transition hover:bg-black/[0.04] hover:text-text-primary disabled:opacity-25" aria-label="Subir">
+          <ChevronUp className="h-3.5 w-3.5" />
+        </button>
+        <button onClick={() => send(movePhase, { id: phase.id, dir: 'down' })} disabled={pending || ultima} className="rounded p-1 text-text-muted transition hover:bg-black/[0.04] hover:text-text-primary disabled:opacity-25" aria-label="Descer">
+          <ChevronDown className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => { if (confirm(`Apagar a etapa "${phase.name}"? As tarefas dela viram tarefas sem etapa.`)) send(deletePhase, { id: phase.id }); }}
+          disabled={pending}
+          className="rounded p-1 text-text-muted/60 transition hover:bg-danger/10 hover:text-danger disabled:opacity-30"
+          aria-label="Apagar etapa"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
       </span>
-
-      <button
-        onClick={() => { if (confirm(`Apagar a etapa "${phase.name}"? As tarefas dela viram tarefas sem etapa.`)) send(deletePhase, { id: phase.id }); }}
-        disabled={pending}
-        className="font-label text-[14px] leading-none text-text-muted/40 transition hover:text-danger disabled:opacity-30"
-        aria-label="Apagar etapa"
-      >
-        ×
-      </button>
     </li>
   );
 }

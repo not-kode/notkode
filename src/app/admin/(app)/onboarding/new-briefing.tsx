@@ -11,8 +11,17 @@ const labelCls = 'mb-1 block font-label text-[10px] uppercase tracking-[0.12em] 
 type Org = { id: string; name: string };
 type Template = { key: string; label: string };
 
-/** Botão "+ Novo briefing": escolhe cliente, produto e o template de perguntas. */
-export function NewBriefing({ orgs, templates }: { orgs: Org[]; templates: Template[] }) {
+/**
+ * Botão "+ Novo briefing": escolhe cliente, produto e o template de perguntas.
+ * Dentro da ficha de um cliente (aba Onboarding) o cliente já está definido,
+ * então passa `org` e o campo some do formulário.
+ */
+export function NewBriefing({ orgs, templates, org, discreto }: {
+  orgs: Org[];
+  templates: Template[];
+  org?: Org;
+  discreto?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
 
@@ -21,7 +30,11 @@ export function NewBriefing({ orgs, templates }: { orgs: Org[]; templates: Templ
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90"
+        className={
+          discreto
+            ? 'inline-flex items-center gap-1.5 rounded-sm border border-black/[0.1] bg-white px-2.5 py-1 text-xs font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition-colors hover:border-primary/40 hover:text-primary'
+            : 'inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-primary/90'
+        }
       >
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M12 5v14M5 12h14" />
@@ -47,24 +60,30 @@ export function NewBriefing({ orgs, templates }: { orgs: Org[]; templates: Templ
                 <span className="status-dot" />
                 Onboarding
               </p>
-              <h3 className="text-base font-semibold tracking-tight text-text-primary">Novo briefing</h3>
+              <h3 className="text-base font-semibold tracking-tight text-text-primary">
+                Novo briefing{org ? ` · ${org.name}` : ''}
+              </h3>
             </div>
 
-            <div>
-              <label className={labelCls}>
-                Cliente<span className="text-danger"> *</span>
-              </label>
-              <select name="organization_id" required defaultValue="" className={inputCls}>
-                <option value="" disabled>
-                  Escolha o cliente…
-                </option>
-                {orgs.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
+            {org ? (
+              <input type="hidden" name="organization_id" value={org.id} />
+            ) : (
+              <div>
+                <label className={labelCls}>
+                  Cliente<span className="text-danger"> *</span>
+                </label>
+                <select name="organization_id" required defaultValue="" className={inputCls}>
+                  <option value="" disabled>
+                    Escolha o cliente…
                   </option>
-                ))}
-              </select>
-            </div>
+                  {orgs.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className={labelCls}>

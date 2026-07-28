@@ -1,17 +1,29 @@
 'use client';
 
-// Peças compartilhadas pelas três visualizações de Entregas (Kanban, Lista e Gantt).
+// Peças do quadro de Entregas. Aqui a linguagem visual é de ferramenta de tarefas
+// (cartão com sombra, avatar, chip de prioridade, prazo com calendário), e não a
+// do site: o que ajuda a bater o olho e entender é cor e forma, não sobriedade.
 
 import { useEffect, useRef, useState } from 'react';
+import { Calendar, Check, ChevronDown } from 'lucide-react';
+import { PRIORITIES, PRIORITY_LABELS, type Priority } from './status';
 
 export const inputCls =
-  'w-full rounded-md border border-black/[0.08] bg-white px-2.5 py-1.5 text-sm text-text-primary ' +
+  'w-full rounded-sm border border-black/[0.08] bg-white px-2.5 py-1.5 text-sm text-text-primary ' +
   'outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/10';
 
 export const fmtDate = (d: string | null | undefined) => {
   if (!d) return null;
   const [y, m, day] = d.split('-');
   return `${day}/${m}/${y.slice(2)}`;
+};
+
+/** "3 ago" — data curta, como se lê num cartão. */
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+export const fmtCurto = (d: string | null | undefined) => {
+  if (!d) return null;
+  const [, m, day] = d.split('-');
+  return `${Number(day)} ${MESES[Number(m) - 1]}`;
 };
 
 export const hoje = () => new Date().toISOString().slice(0, 10);
@@ -23,20 +35,217 @@ export const diffDias = (a: string, b: string) =>
 export const somaDias = (d: string, n: number) =>
   new Date(Date.parse(`${d}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
 
+// ── Avatar ───────────────────────────────────────────────────────────────────
+
+const CORES_AVATAR = [
+  'bg-cyan-600', 'bg-emerald-600', 'bg-violet-600', 'bg-amber-600',
+  'bg-rose-600', 'bg-teal-600', 'bg-indigo-600', 'bg-orange-600',
+];
+
+const iniciais = (nome: string) =>
+  nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('') || '?';
+
+/** Círculo com as iniciais de quem toca a tarefa; a cor é estável por nome. */
+export function Avatar({ nome, onClick }: { nome: string | null; onClick?: () => void }) {
+  if (!nome?.trim()) {
+    return (
+      <button
+        onClick={onClick}
+        title="Definir responsável"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-black/20 text-[10px] text-text-muted transition-colors hover:border-primary hover:text-primary"
+      >
+        +
+      </button>
+    );
+  }
+  const hash = [...nome].reduce((a, c) => a + c.charCodeAt(0), 0);
+  return (
+    <button
+      onClick={onClick}
+      title={nome}
+      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${CORES_AVATAR[hash % CORES_AVATAR.length]}`}
+    >
+      {iniciais(nome)}
+    </button>
+  );
+}
+
+// ── Menu suspenso ────────────────────────────────────────────────────────────
+
+function useForaDoElemento(aberto: boolean, fechar: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!aberto) return;
+    const fora = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) fechar();
+    };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') fechar(); };
+    document.addEventListener('mousedown', fora);
+    document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('mousedown', fora); document.removeEventListener('keydown', esc); };
+  }, [aberto, fechar]);
+  return ref;
+}
+
+const PRIORITY_DOT: Record<Priority, string> = {
+  baixa: 'bg-neutral-300',
+  media: 'bg-primary',
+  alta: 'bg-warning',
+  urgente: 'bg-danger',
+};
+
+const PRIORITY_CHIP: Record<Priority, string> = {
+  baixa: 'bg-black/[0.04] text-text-muted',
+  media: 'bg-primary/10 text-primary',
+  alta: 'bg-warning/15 text-[#B45309]',
+  urgente: 'bg-danger/12 text-danger',
+};
+
+/** Chip de prioridade que abre a escolha ao clicar. */
+export function PriorityChip({ value, onChange, compacto }: {
+  value: Priority;
+  onChange: (v: Priority) => void;
+  compacto?: boolean;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const ref = useForaDoElemento(aberto, () => setAberto(false));
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setAberto((v) => !v)}
+        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-80 ${PRIORITY_CHIP[value]}`}
+        title="Prioridade"
+      >
+        <span className={`h-1.5 w-1.5 rounded-full ${PRIORITY_DOT[value]}`} />
+        {!compacto && PRIORITY_LABELS[value]}
+      </button>
+
+      {aberto && (
+        <div className="absolute left-0 top-full z-40 mt-1 w-32 overflow-hidden rounded-md border border-black/[0.08] bg-white py-1 shadow-lg">
+          {PRIORITIES.map((p) => (
+            <button
+              key={p}
+              onClick={() => { onChange(p); setAberto(false); }}
+              className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs text-text-secondary transition-colors hover:bg-black/[0.04]"
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${PRIORITY_DOT[p]}`} />
+              {PRIORITY_LABELS[p]}
+              {p === value && <Check className="ml-auto h-3 w-3 text-primary" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Menu genérico (status, etapa) com a mesma cara do chip de prioridade. */
+export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] text-text-secondary', titulo, placeholder }: {
+  value: string;
+  options: { value: string; label: string; dot?: string }[];
+  onChange: (v: string) => void;
+  tone?: string;
+  titulo?: string;
+  placeholder?: string;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const ref = useForaDoElemento(aberto, () => setAberto(false));
+  const atual = options.find((o) => o.value === value);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setAberto((v) => !v)}
+        title={titulo}
+        className={`inline-flex max-w-[9rem] items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-80 ${tone}`}
+      >
+        {atual?.dot && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${atual.dot}`} />}
+        <span className="truncate">{atual?.label ?? placeholder ?? '—'}</span>
+        <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
+      </button>
+
+      {aberto && (
+        <div className="absolute left-0 top-full z-40 mt-1 max-h-56 w-44 overflow-y-auto rounded-md border border-black/[0.08] bg-white py-1 shadow-lg">
+          {options.map((o) => (
+            <button
+              key={o.value}
+              onClick={() => { onChange(o.value); setAberto(false); }}
+              className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs text-text-secondary transition-colors hover:bg-black/[0.04]"
+            >
+              {o.dot && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${o.dot}`} />}
+              <span className="truncate">{o.label}</span>
+              {o.value === value && <Check className="ml-auto h-3 w-3 shrink-0 text-primary" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+/** Prazo como chip com calendário: vermelho quando venceu, âmbar quando é hoje ou amanhã. */
+export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto = true }: {
+  value: string | null;
+  onSave: (v: string) => void;
+  atrasada?: boolean;
+  placeholder?: string;
+  curto?: boolean;
+}) {
+  const [editando, setEditando] = useState(false);
+  const proxima = !!value && !atrasada && diffDias(hoje(), value) <= 1;
+
+  if (editando) {
+    return (
+      <input
+        type="date"
+        autoFocus
+        defaultValue={value ?? ''}
+        onBlur={(e) => { setEditando(false); if (e.target.value !== (value ?? '')) onSave(e.target.value); }}
+        className="rounded-sm border border-primary/40 bg-white px-1.5 py-0.5 text-[11px] text-text-primary outline-none"
+      />
+    );
+  }
+
+  const tom = atrasada
+    ? 'bg-danger/12 text-danger'
+    : proxima
+      ? 'bg-warning/15 text-[#B45309]'
+      : value
+        ? 'bg-black/[0.04] text-text-secondary'
+        : 'text-text-muted hover:bg-black/[0.04]';
+
+  return (
+    <button
+      onClick={() => setEditando(true)}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors ${tom}`}
+      title={value ? `Prazo: ${fmtDate(value)}` : 'Definir prazo'}
+    >
+      <Calendar className="h-3 w-3" />
+      {(curto ? fmtCurto(value) : fmtDate(value)) ?? placeholder}
+    </button>
+  );
+}
+
+// ── Texto editável ───────────────────────────────────────────────────────────
+
 /**
  * Texto que vira campo ao clicar e salva ao sair. É assim que se renomeia uma
  * tarefa ou uma etapa: sem abrir modal, sem botão de salvar.
  */
 export function InlineText({
-  value, onSave, placeholder, className = '', title,
+  value, onSave, placeholder, className = '', title, abrirAoMontar,
 }: {
   value: string;
   onSave: (v: string) => void;
   placeholder?: string;
   className?: string;
   title?: string;
+  abrirAoMontar?: boolean;
 }) {
-  const [editando, setEditando] = useState(false);
+  const [editando, setEditando] = useState(!!abrirAoMontar);
   const [rascunho, setRascunho] = useState(value);
   const ref = useRef<HTMLInputElement>(null);
 
@@ -61,7 +270,7 @@ export function InlineText({
           if (e.key === 'Enter') confirmar();
           if (e.key === 'Escape') { setRascunho(value); setEditando(false); }
         }}
-        className={`${inputCls} ${className}`}
+        className="w-full rounded-sm border border-primary/40 bg-white px-1.5 py-0.5 text-inherit outline-none"
         placeholder={placeholder}
       />
     );
@@ -71,42 +280,9 @@ export function InlineText({
     <button
       onClick={() => setEditando(true)}
       title={title ?? 'Clique para renomear'}
-      className={`min-w-0 truncate rounded px-1 py-0.5 text-left transition-colors hover:bg-black/[0.04] ${className}`}
+      className={`min-w-0 truncate rounded-sm px-1 py-0.5 text-left transition-colors hover:bg-black/[0.04] ${className}`}
     >
       {value || <span className="text-text-muted">{placeholder ?? '—'}</span>}
-    </button>
-  );
-}
-
-/** Campo de data enxuto: mostra a data formatada e abre o seletor nativo ao clicar. */
-export function DateCell({ value, onSave, atrasada, placeholder = '—' }: {
-  value: string | null;
-  onSave: (v: string) => void;
-  atrasada?: boolean;
-  placeholder?: string;
-}) {
-  const [editando, setEditando] = useState(false);
-
-  if (editando) {
-    return (
-      <input
-        type="date"
-        autoFocus
-        defaultValue={value ?? ''}
-        onBlur={(e) => { setEditando(false); if (e.target.value !== (value ?? '')) onSave(e.target.value); }}
-        className={`${inputCls} w-[8.5rem] py-1 text-xs`}
-      />
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setEditando(true)}
-      className={`rounded px-1 py-0.5 font-label text-[11px] tabular-nums transition-colors hover:bg-black/[0.04] ${
-        atrasada ? 'font-semibold text-danger' : value ? 'text-text-secondary' : 'text-text-muted'
-      }`}
-    >
-      {fmtDate(value) ?? placeholder}
     </button>
   );
 }

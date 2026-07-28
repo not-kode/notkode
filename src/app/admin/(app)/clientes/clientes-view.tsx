@@ -1,12 +1,17 @@
 'use client';
 
-import Link from 'next/link';
 import { useRef, useState, useTransition, type ReactNode } from 'react';
 import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement, updateReceivable, deleteReceivable } from '../financeiro/actions';
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
 import { AutoSaveForm } from '../_shared/auto-save-form';
+import { NewBriefing } from '../onboarding/new-briefing';
+import { CopyLink } from '../onboarding/copy-link';
+import {
+  BriefingConteudo, CopyButton, StatusBadge, buildCopyBlock, fmtDateShort as fmtBriefingDate,
+  type BriefingRow,
+} from '../onboarding/onboarding-view';
 
 export type ClientContact = { id: string; name: string | null; role: string | null; email: string | null; whatsapp: string | null };
 export type Parcela = { id: string; description: string | null; amount: number; due_date: string; status: string; paid_amount: number | null; paid_at: string | null };
@@ -25,8 +30,12 @@ export type ClientView = {
   legal_rep: string | null; legal_rep_cpf: string | null;
   contacts: ClientContact[]; contratos: Contrato[];
   briefing: ClientBriefing | null;
+  briefings: BriefingRow[];
   leadOrigin: LeadOrigin | null;
 };
+/** O link do briefing é público e a URL do site é a mesma em qualquer ambiente. */
+const SITE_URL_CLIENTE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
+
 export type ClientBriefing = {
   status: string; product_name: string | null; submitted_at: string | null; url: string;
 };
@@ -144,7 +153,11 @@ function Field({ label, name, defaultValue, placeholder, className = '' }: { lab
   );
 }
 
-export function ClientesView({ clients, productLabels = {} }: { clients: ClientView[]; productLabels?: Record<string, string> }) {
+export function ClientesView({ clients, productLabels = {}, templates = [] }: {
+  clients: ClientView[];
+  productLabels?: Record<string, string>;
+  templates?: { key: string; label: string }[];
+}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = clients.find((c) => c.id === selectedId) ?? null;
 
@@ -202,15 +215,27 @@ export function ClientesView({ clients, productLabels = {} }: { clients: ClientV
         </div>
       )}
 
-      {selected && <ClientDrawer client={selected} productLabels={productLabels} onClose={() => setSelectedId(null)} />}
+      {selected && (
+        <ClientDrawer
+          client={selected}
+          productLabels={productLabels}
+          templates={templates}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </div>
   );
 }
 
-function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientView; productLabels?: Record<string, string>; onClose: () => void }) {
+function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
+  client: ClientView;
+  productLabels?: Record<string, string>;
+  templates?: { key: string; label: string }[];
+  onClose: () => void;
+}) {
   const [pending, start] = useTransition();
   const [newContract, setNewContract] = useState(false);
-  const [tab, setTab] = useState<'contratos' | 'cadastro'>(client.contratos.length > 0 ? 'contratos' : 'cadastro');
+  const [tab, setTab] = useState<'contratos' | 'cadastro' | 'onboarding'>(client.contratos.length > 0 ? 'contratos' : 'cadastro');
 
   const markPaid = (id: string, amount: number) => {
     const fd = new FormData();
@@ -243,8 +268,10 @@ function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientV
   const ativos = client.contratos.filter(isLive);
   const encerrados = client.contratos.filter((e) => !isLive(e));
 
+  const briefingsPendentes = client.briefings.filter((b) => b.status !== 'enviado').length;
   const tabs: [typeof tab, string][] = [
     ['contratos', `Contratos (${client.contratos.length})`],
+    ['onboarding', `Onboarding${client.briefings.length ? ` (${client.briefings.length}${briefingsPendentes ? `, ${briefingsPendentes} aguardando` : ''})` : ''}`],
     ['cadastro', 'Cadastro & contatos'],
   ];
 
@@ -265,6 +292,10 @@ function ClientDrawer({ client, productLabels = {}, onClose }: { client: ClientV
           </button>
         ))}
       </div>
+
+      {tab === 'onboarding' && (
+        <OnboardingTab client={client} templates={templates} />
+      )}
 
       {tab === 'cadastro' && (
         <>
@@ -784,14 +815,76 @@ function BriefingCard({ briefing }: { briefing: ClientBriefing }) {
           {copied ? '✓ copiado' : '⧉ copiar link'}
         </button>
         {enviado && (
-          <Link
-            href="/admin/onboarding"
-            className="rounded-md bg-primary px-2.5 py-1.5 font-label text-[11px] font-semibold text-white transition hover:bg-primary/90"
-          >
-            ver respostas ↗
-          </Link>
+          <span className="font-label text-[10px] text-text-muted">respostas na aba Onboarding</span>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Onboarding do cliente: os briefings dele, com link para copiar e as respostas
+ * ali dentro. Antes isso era uma tela separada no menu; onboarding é assunto do
+ * cliente, então mora na ficha dele.
+ */
+function OnboardingTab({ client, templates }: { client: ClientView; templates: { key: string; label: string }[] }) {
+  const [abertoId, setAbertoId] = useState<string | null>(client.briefings[0]?.id ?? null);
+  const aberto = client.briefings.find((b) => b.id === abertoId) ?? null;
+
+  return (
+    <div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">
+          {client.briefings.length} briefing{client.briefings.length === 1 ? '' : 's'}
+        </p>
+        <NewBriefing
+          orgs={[]}
+          templates={templates}
+          org={{ id: client.id, name: client.name ?? 'Cliente' }}
+          discreto
+        />
+      </div>
+
+      {client.briefings.length === 0 ? (
+        <p className="rounded-md border border-black/[0.06] bg-white px-4 py-8 text-center text-sm text-text-muted">
+          Nenhum briefing ainda. Crie um e mande o link para o cliente responder.
+        </p>
+      ) : (
+        <ul className="mb-4 flex flex-col gap-2">
+          {client.briefings.map((b) => {
+            const enviado = b.status === 'enviado';
+            const ativo = b.id === abertoId;
+            return (
+              <li key={b.id}>
+                <button
+                  onClick={() => setAbertoId(ativo ? null : b.id)}
+                  className={`flex w-full flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-left transition-colors ${
+                    ativo ? 'border-primary/40 bg-primary/[0.04]' : 'border-black/[0.06] bg-white hover:border-black/15'
+                  }`}
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
+                    {b.product_name ?? 'Briefing'}
+                  </span>
+                  <StatusBadge enviado={enviado} />
+                  <span className="font-label text-[10px] text-text-muted">
+                    {enviado ? `respondido em ${fmtBriefingDate(b.submitted_at)}` : `criado em ${fmtBriefingDate(b.created_at)}`}
+                  </span>
+                </button>
+
+                {ativo && (
+                  <div className="mt-2 overflow-hidden rounded-md border border-black/[0.06] bg-white">
+                    <div className="flex flex-wrap items-center gap-2 border-b border-black/[0.06] px-4 py-2.5">
+                      <CopyButton text={buildCopyBlock(b)} label="copiar tudo" />
+                      <CopyLink url={`${SITE_URL_CLIENTE}/onboarding/${b.token}`} />
+                    </div>
+                    <BriefingConteudo row={b} />
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

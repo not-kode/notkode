@@ -5,13 +5,19 @@
 // para não trazer dependência nova só por causa disso.
 
 import { useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import { createTask, deleteTask, moveTask, updateTask } from './actions';
-import {
-  PRIORITIES, PRIORITY_LABELS, PRIORITY_TONE, TASK_LABELS, TASK_STATUSES,
-  type Priority, type TaskStatus,
-} from './status';
+import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
 import type { PhaseView, Send, TaskView } from './types';
-import { DateCell, InlineText, hoje, inputCls } from './ui';
+import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, hoje } from './ui';
+
+/** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
+const COLUNA_TOM: Record<TaskStatus, string> = {
+  a_fazer: 'bg-neutral-300',
+  fazendo: 'bg-primary',
+  revisao: 'bg-warning',
+  feito: 'bg-success',
+};
 
 export function KanbanView({ tasks, phases, projectId, pending, send }: {
   tasks: TaskView[];
@@ -21,75 +27,103 @@ export function KanbanView({ tasks, phases, projectId, pending, send }: {
   send: Send;
 }) {
   const [arrastando, setArrastando] = useState<string | null>(null);
+  const [alvo, setAlvo] = useState<TaskStatus | null>(null);
+  const [criandoEm, setCriandoEm] = useState<TaskStatus | null>(null);
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {TASK_STATUSES.map((status) => {
-        const daColuna = tasks
-          .filter((t) => t.status === status)
-          .sort((a, b) => a.sort - b.sort);
+        const daColuna = tasks.filter((t) => t.status === status).sort((a, b) => a.sort - b.sort);
+        const destacada = alvo === status && arrastando;
 
         return (
-          <div
+          <section
             key={status}
-            onDragOver={(e) => { if (arrastando) e.preventDefault(); }}
+            onDragOver={(e) => { if (arrastando) { e.preventDefault(); setAlvo(status); } }}
+            onDragLeave={() => setAlvo((a) => (a === status ? null : a))}
             onDrop={(e) => {
               e.preventDefault();
               const id = e.dataTransfer.getData('text/plain');
               setArrastando(null);
-              if (!id) return;
-              const atual = tasks.find((t) => t.id === id);
-              // Soltar no vazio da coluna = fim da fila.
-              if (atual && atual.status === status && daColuna[daColuna.length - 1]?.id === id) return;
-              send(moveTask, { id, status, before: '' });
+              setAlvo(null);
+              if (id) send(moveTask, { id, status, before: '' });
             }}
-            className="flex min-h-[8rem] flex-col rounded-md border border-black/[0.06] bg-black/[0.015] p-2"
+            className={`flex min-h-[9rem] flex-col overflow-hidden rounded-md border transition-colors ${
+              destacada ? 'border-primary/50 bg-primary/[0.04]' : 'border-black/[0.07] bg-neutral-50'
+            }`}
           >
-            <div className="mb-2 flex items-baseline justify-between px-1">
-              <span className="font-label text-[11px] uppercase tracking-wider text-text-secondary">
-                {TASK_LABELS[status]}
-              </span>
-              <span className="font-label text-[11px] tabular-nums text-text-muted">{daColuna.length}</span>
-            </div>
+            <span className={`h-1 w-full ${COLUNA_TOM[status]}`} aria-hidden />
 
-            <div className="flex flex-1 flex-col gap-2">
+            <header className="flex items-center justify-between px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <h3 className="text-[13px] font-semibold text-text-primary">{TASK_LABELS[status]}</h3>
+                <span className="rounded-full bg-black/[0.06] px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-text-muted">
+                  {daColuna.length}
+                </span>
+              </div>
+              <button
+                onClick={() => setCriandoEm(status)}
+                className="rounded-sm p-1 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-primary"
+                title="Nova tarefa nesta coluna"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </header>
+
+            <div className="flex flex-1 flex-col gap-2 px-2 pb-2">
               {daColuna.map((t) => (
                 <TaskCard
                   key={t.id}
                   task={t}
                   phases={phases}
-                  pending={pending}
                   send={send}
                   onDragStart={() => setArrastando(t.id)}
-                  onDragEnd={() => setArrastando(null)}
+                  onDragEnd={() => { setArrastando(null); setAlvo(null); }}
                   onDropBefore={(id) => send(moveTask, { id, status, before: t.id })}
                   arrastando={arrastando}
                 />
               ))}
-            </div>
 
-            <NovaTarefa projectId={projectId} status={status} send={send} />
-          </div>
+              {criandoEm === status && (
+                <NovaTarefa
+                  projectId={projectId}
+                  status={status}
+                  send={send}
+                  onFim={() => setCriandoEm(null)}
+                />
+              )}
+
+              {daColuna.length === 0 && criandoEm !== status && (
+                <button
+                  onClick={() => setCriandoEm(status)}
+                  className="flex flex-1 items-center justify-center rounded-sm border border-dashed border-black/10 py-6 text-[12px] text-text-muted transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  {pending ? 'salvando…' : 'nada aqui'}
+                </button>
+              )}
+            </div>
+          </section>
         );
       })}
     </div>
   );
 }
 
-function TaskCard({ task, phases, pending, send, onDragStart, onDragEnd, onDropBefore, arrastando }: {
+function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, arrastando }: {
   task: TaskView;
   phases: PhaseView[];
-  pending: boolean;
   send: Send;
   onDragStart: () => void;
   onDragEnd: () => void;
   onDropBefore: (id: string) => void;
   arrastando: string | null;
 }) {
+  const [editandoQuem, setEditandoQuem] = useState(false);
   const atrasada = !!task.dueDate && task.dueDate < hoje() && task.status !== 'feito';
+  const etapa = phases.find((p) => p.id === task.phaseId);
 
   return (
-    <div
+    <article
       draggable
       onDragStart={(e) => { e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed = 'move'; onDragStart(); }}
       onDragEnd={onDragEnd}
@@ -100,98 +134,103 @@ function TaskCard({ task, phases, pending, send, onDragStart, onDragEnd, onDropB
         const id = e.dataTransfer.getData('text/plain');
         if (id && id !== task.id) onDropBefore(id);
       }}
-      className={`group relative overflow-hidden rounded-md border border-black/[0.07] bg-white pl-2 pr-2.5 py-2 transition-shadow hover:shadow-sm ${
+      className={`group cursor-grab rounded-md border border-black/[0.07] bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition-shadow hover:shadow-[0_4px_12px_rgba(16,24,40,0.10)] active:cursor-grabbing ${
         arrastando === task.id ? 'opacity-40' : ''
       }`}
     >
-      {/* Tarja de prioridade */}
-      <span className={`absolute left-0 top-0 h-full w-1 ${PRIORITY_TONE[task.priority]}`} aria-hidden />
-
-      <div className="flex items-start gap-1.5 pl-1.5">
+      <div className="flex items-start gap-1">
         <InlineText
           value={task.title}
           onSave={(v) => send(updateTask, { id: task.id, title: v })}
-          className="flex-1 text-[13px] text-text-primary"
+          className={`flex-1 text-[13px] leading-snug ${task.status === 'feito' ? 'text-text-muted line-through' : 'text-text-primary'}`}
         />
         <button
           onClick={() => send(deleteTask, { id: task.id })}
-          disabled={pending}
-          className="shrink-0 font-label text-[14px] leading-none text-text-muted/40 opacity-0 transition group-hover:opacity-100 hover:text-danger"
+          className="shrink-0 rounded p-0.5 text-text-muted/50 opacity-0 transition group-hover:opacity-100 hover:bg-danger/10 hover:text-danger"
           aria-label="Apagar tarefa"
         >
-          ×
+          <Trash2 className="h-3 w-3" />
         </button>
       </div>
 
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 pl-1.5">
-        <InlineText
-          value={task.assignee ?? ''}
-          onSave={(v) => send(updateTask, { id: task.id, assignee: v })}
-          placeholder="quem"
-          className="font-label text-[11px] text-text-secondary"
-          title="Clique para definir o responsável"
-        />
-        <DateCell
+      {etapa && (
+        <p className="mt-1.5 truncate text-[11px] text-text-muted" title={etapa.name}>{etapa.name}</p>
+      )}
+
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <PriorityChip value={task.priority} onChange={(v) => send(updateTask, { id: task.id, priority: v })} />
+        <DateChip
           value={task.dueDate}
           onSave={(v) => send(updateTask, { id: task.id, due_date: v })}
           atrasada={atrasada}
-          placeholder="prazo"
         />
-        <PrioritySelect value={task.priority} onChange={(v) => send(updateTask, { id: task.id, priority: v })} disabled={pending} />
+      </div>
+
+      <div className="mt-2 flex items-center justify-between gap-2 border-t border-black/[0.05] pt-2">
+        {editandoQuem ? (
+          <InlineText
+            value={task.assignee ?? ''}
+            onSave={(v) => { send(updateTask, { id: task.id, assignee: v }); setEditandoQuem(false); }}
+            placeholder="quem toca"
+            className="flex-1 text-[12px] text-text-secondary"
+            abrirAoMontar
+          />
+        ) : (
+          <div className="flex min-w-0 items-center gap-1.5">
+            <Avatar nome={task.assignee} onClick={() => setEditandoQuem(true)} />
+            {task.assignee && (
+              <button onClick={() => setEditandoQuem(true)} className="truncate text-[12px] text-text-secondary hover:text-text-primary">
+                {task.assignee}
+              </button>
+            )}
+          </div>
+        )}
+
         {phases.length > 0 && (
-          <select
+          <ChipSelect
             value={task.phaseId ?? ''}
-            onChange={(e) => send(updateTask, { id: task.id, phase_id: e.target.value })}
-            disabled={pending}
-            className="max-w-[8rem] truncate rounded border border-black/[0.08] bg-white px-1 py-0.5 font-label text-[10px] text-text-secondary"
-            title="Etapa do cronograma"
-          >
-            <option value="">sem etapa</option>
-            {phases.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+            onChange={(v) => send(updateTask, { id: task.id, phase_id: v })}
+            titulo="Etapa do cronograma"
+            placeholder="etapa"
+            options={[{ value: '', label: 'sem etapa' }, ...phases.map((p) => ({ value: p.id, label: p.name }))]}
+          />
         )}
       </div>
-    </div>
+    </article>
   );
 }
 
-export function PrioritySelect({ value, onChange, disabled }: {
-  value: Priority;
-  onChange: (v: Priority) => void;
-  disabled?: boolean;
+/** Cartão em branco no fim da coluna: digita, Enter cria e já abre o próximo. */
+function NovaTarefa({ projectId, status, send, onFim }: {
+  projectId: string;
+  status: TaskStatus;
+  send: Send;
+  onFim: () => void;
 }) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value as Priority)}
-      disabled={disabled}
-      className="rounded border border-black/[0.08] bg-white px-1 py-0.5 font-label text-[10px] text-text-secondary"
-      title="Prioridade"
-    >
-      {PRIORITIES.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
-    </select>
-  );
-}
-
-/** Cadastro em sequência: envia, limpa e o cursor continua no campo. */
-function NovaTarefa({ projectId, status, send }: { projectId: string; status: TaskStatus; send: Send }) {
   const [titulo, setTitulo] = useState('');
 
-  const criar = () => {
+  const criar = (continuar: boolean) => {
     const limpo = titulo.trim();
-    if (!limpo) return;
-    send(createTask, { engagement_id: projectId, title: limpo, status });
+    if (limpo) send(createTask, { engagement_id: projectId, title: limpo, status });
     setTitulo('');
+    if (!continuar || !limpo) onFim();
   };
 
   return (
-    <input
-      value={titulo}
-      onChange={(e) => setTitulo(e.target.value)}
-      onKeyDown={(e) => { if (e.key === 'Enter') criar(); }}
-      onBlur={criar}
-      placeholder="+ tarefa"
-      className={`${inputCls} mt-2 bg-transparent py-1 text-[13px] placeholder:text-text-muted`}
-    />
+    <div className="rounded-md border border-primary/30 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+      <input
+        autoFocus
+        value={titulo}
+        onChange={(e) => setTitulo(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') criar(true);
+          if (e.key === 'Escape') onFim();
+        }}
+        onBlur={() => criar(false)}
+        placeholder="O que precisa ser feito?"
+        className="w-full text-[13px] text-text-primary outline-none placeholder:text-text-muted"
+      />
+      <p className="mt-1 text-[10px] text-text-muted">Enter para criar · Esc para fechar</p>
+    </div>
   );
 }

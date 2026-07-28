@@ -31,7 +31,7 @@ function fmtDate(iso: string | null): string {
   }).format(new Date(iso));
 }
 
-function fmtDateShort(iso: string | null): string {
+export function fmtDateShort(iso: string | null): string {
   if (!iso) return '—';
   return new Intl.DateTimeFormat('pt-BR', {
     day: '2-digit', month: '2-digit', year: '2-digit',
@@ -58,7 +58,7 @@ function countAnswers(respostas: Record<string, string | string[]>): number {
 }
 
 /** Monta o bloco de texto do briefing inteiro para copiar. */
-function buildCopyBlock(r: BriefingRow): string {
+export function buildCopyBlock(r: BriefingRow): string {
   const lines: string[] = [];
   lines.push(`# ${r.orgName}${r.product_name ? ` — ${r.product_name}` : ''}`);
   lines.push(`Status: ${r.status === 'enviado' ? 'respondido' : 'aguardando'}`);
@@ -83,7 +83,7 @@ function buildCopyBlock(r: BriefingRow): string {
   return lines.join('\n').trim();
 }
 
-function StatusBadge({ enviado }: { enviado: boolean }) {
+export function StatusBadge({ enviado }: { enviado: boolean }) {
   return (
     <span
       className={[
@@ -96,7 +96,7 @@ function StatusBadge({ enviado }: { enviado: boolean }) {
   );
 }
 
-function CopyButton({
+export function CopyButton({
   text,
   label,
   className = 'border-border-subtle text-text-secondary hover:border-primary hover:text-primary',
@@ -205,9 +205,7 @@ function BriefingDrawer({
   onClose: () => void;
 }) {
   const enviado = row.status === 'enviado';
-  const sections = answeredSections(row.respostas, row.template);
   const copyText = useMemo(() => buildCopyBlock(row), [row]);
-  const clientMessage = useMemo(() => buildClientMessage(row), [row]);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -253,8 +251,24 @@ function BriefingDrawer({
           </div>
         </div>
 
-        {/* Corpo */}
-        <div className="px-6 py-5">
+        <BriefingConteudo row={row} />
+      </aside>
+    </div>
+  );
+}
+
+/**
+ * O briefing por dentro: mensagem pronta pro cliente, anexos e respostas por
+ * seção. Vive fora do drawer porque a mesma coisa aparece na aba Onboarding
+ * dentro do cliente, em /admin/clientes.
+ */
+export function BriefingConteudo({ row }: { row: BriefingRow }) {
+  const sections = answeredSections(row.respostas, row.template);
+  const clientMessage = useMemo(() => buildClientMessage(row), [row]);
+
+  return (
+    <div className="px-6 py-5">
+
           {/* Retorno pro cliente — mensagem pronta pra colar (não exibe o texto) */}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/25 bg-primary/[0.04] px-4 py-3">
             <div>
@@ -314,8 +328,6 @@ function BriefingDrawer({
               ))}
             </div>
           )}
-        </div>
-      </aside>
     </div>
   );
 }

@@ -16,27 +16,45 @@ type Barra = {
   tipo: 'etapa' | 'tarefa';
   concluida: boolean;
   atrasada: boolean;
+  cor: number;
   sub?: string;
 };
 
+/** Uma cor por etapa, para a barra da tarefa herdar a cor da etapa dela. */
+const CORES = [
+  { barra: 'bg-cyan-500', clara: 'bg-cyan-200', texto: 'text-cyan-700' },
+  { barra: 'bg-violet-500', clara: 'bg-violet-200', texto: 'text-violet-700' },
+  { barra: 'bg-emerald-500', clara: 'bg-emerald-200', texto: 'text-emerald-700' },
+  { barra: 'bg-amber-500', clara: 'bg-amber-200', texto: 'text-amber-700' },
+  { barra: 'bg-rose-500', clara: 'bg-rose-200', texto: 'text-rose-700' },
+  { barra: 'bg-teal-500', clara: 'bg-teal-200', texto: 'text-teal-700' },
+];
+
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
 /** Janela do gráfico: do primeiro começo ao último prazo, com uma folga nas pontas. */
-function janela(barras: Barra[]): { de: string; ate: string; dias: number } {
+function janela(barras: Barra[]): { de: string; dias: number } {
   const hj = hoje();
   const inicios = barras.map((b) => b.inicio).concat(hj);
   const fins = barras.map((b) => b.fim).concat(hj);
-  const de = somaDias(inicios.reduce((a, b) => (a < b ? a : b)), -2);
-  const ate = somaDias(fins.reduce((a, b) => (a > b ? a : b)), 2);
-  return { de, ate, dias: Math.max(1, diffDias(de, ate)) };
+  const de = somaDias(inicios.reduce((a, b) => (a < b ? a : b)), -3);
+  const ate = somaDias(fins.reduce((a, b) => (a > b ? a : b)), 3);
+  return { de, dias: Math.max(1, diffDias(de, ate)) };
 }
 
-/** Marcas do cabeçalho: uma por semana quando cabe, senão uma por mês. */
-function marcas(de: string, dias: number): { pos: number; label: string }[] {
-  const passo = dias <= 60 ? 7 : 30;
-  const out: { pos: number; label: string }[] = [];
+/** Marcas do cabeçalho: por semana quando cabe, senão por mês. */
+function marcas(de: string, dias: number): { pos: number; label: string; forte: boolean }[] {
+  const passo = dias <= 70 ? 7 : 30;
+  const out: { pos: number; label: string; forte: boolean }[] = [];
   for (let d = 0; d <= dias; d += passo) {
     const data = somaDias(de, d);
     const [, m, dia] = data.split('-');
-    out.push({ pos: (d / dias) * 100, label: passo === 7 ? `${dia}/${m}` : `${m}` });
+    const primeiroDoMes = Number(dia) <= passo;
+    out.push({
+      pos: (d / dias) * 100,
+      label: passo === 7 ? `${Number(dia)} ${MESES[Number(m) - 1]}` : MESES[Number(m) - 1],
+      forte: passo === 30 || primeiroDoMes,
+    });
   }
   return out;
 }
@@ -57,7 +75,7 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
   const barras: Barra[] = [];
   const semData: { id: string; titulo: string; etapa: string | null }[] = [];
 
-  for (const p of phases) {
+  phases.forEach((p, i) => {
     const tarefas = tasks.filter((t) => t.phaseId === p.id);
     // A etapa sem data própria assume o intervalo das tarefas dela: melhor uma
     // barra deduzida do que uma faixa vazia no cronograma do cliente.
@@ -74,6 +92,7 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
         tipo: 'etapa',
         concluida: p.status === 'concluida',
         atrasada: fim < hj && p.status !== 'concluida',
+        cor: i % CORES.length,
         sub: PHASE_LABELS[p.status],
       });
     }
@@ -90,9 +109,10 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
         tipo: 'tarefa',
         concluida: t.status === 'feito',
         atrasada: fim < hj && t.status !== 'feito',
+        cor: i % CORES.length,
       });
     }
-  }
+  });
 
   for (const t of tasks.filter((x) => !x.phaseId)) {
     const inicio = t.startDate ?? t.dueDate;
@@ -106,14 +126,18 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
       tipo: 'tarefa',
       concluida: t.status === 'feito',
       atrasada: fim < hj && t.status !== 'feito',
+      cor: phases.length % CORES.length,
     });
   }
 
   if (barras.length === 0) {
     return (
-      <p className="rounded-md border border-black/[0.06] bg-white px-4 py-10 text-center text-sm text-text-muted">
-        Nenhuma tarefa com data ainda. Coloque começo e prazo nas tarefas e o cronograma se desenha sozinho.
-      </p>
+      <div className="rounded-md border border-black/[0.07] bg-white px-4 py-12 text-center shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+        <p className="text-sm text-text-secondary">Nenhuma tarefa com data ainda.</p>
+        <p className="mt-1 text-[13px] text-text-muted">
+          Coloque começo e prazo nas tarefas e o cronograma se desenha sozinho.
+        </p>
+      </div>
     );
   }
 
@@ -122,68 +146,89 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
   const hojePos = pos(hj);
 
   return (
-    <div className="rounded-md border border-black/[0.06] bg-white">
+    <div className="overflow-hidden rounded-md border border-black/[0.07] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
       {titulo && (
-        <div className="border-b border-black/[0.05] px-4 py-2.5">
-          <p className="font-label text-[11px] uppercase tracking-wider text-text-secondary">{titulo}</p>
-        </div>
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.06] bg-neutral-50 px-4 py-2.5">
+          <h3 className="text-[13px] font-semibold text-text-primary">{titulo}</h3>
+          <div className="flex items-center gap-3 text-[11px] text-text-muted">
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-cyan-500" />etapa</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-cyan-200" />tarefa</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-success" />concluído</span>
+          </div>
+        </header>
       )}
 
       <div className="overflow-x-auto">
-        <div className="min-w-[42rem] px-4 py-3">
+        <div className="min-w-[44rem] px-4 py-3">
           {/* Régua */}
-          <div className="flex items-end gap-3 pb-1">
-            <div className="w-48 shrink-0" />
+          <div className="flex gap-3 pb-2">
+            <div className="w-52 shrink-0" />
             <div className="relative h-4 flex-1">
               {marcas(de, dias).map((m) => (
                 <span
                   key={m.pos}
-                  className="absolute -translate-x-1/2 font-label text-[10px] tabular-nums text-text-muted"
+                  className={`absolute -translate-x-1/2 text-[10px] tabular-nums ${m.forte ? 'font-medium text-text-secondary' : 'text-text-muted'}`}
                   style={{ left: `${m.pos}%` }}
                 >
                   {m.label}
                 </span>
               ))}
             </div>
+            <div className="w-24 shrink-0" />
           </div>
 
-          {/* Três colunas paralelas (nome, faixa, datas) para a linha do "hoje"
-              atravessar só a área das barras, sem depender de cálculo de offset. */}
+          {/* Três colunas paralelas (nome, faixa, prazo) para a linha do "hoje"
+              atravessar só a área das barras, sem cálculo de offset. */}
           <div className="flex gap-3">
-            <div className="flex w-48 shrink-0 flex-col gap-1.5">
+            <div className="flex w-52 shrink-0 flex-col gap-1">
               {barras.map((b) => (
                 <div
                   key={b.id}
-                  className={`flex h-6 items-center truncate ${b.tipo === 'etapa' ? 'text-sm font-medium text-text-primary' : 'pl-3 text-[13px] text-text-secondary'}`}
+                  className={`flex h-7 items-center truncate ${
+                    b.tipo === 'etapa'
+                      ? 'text-[13px] font-semibold text-text-primary'
+                      : 'pl-3 text-[12px] text-text-secondary'
+                  }`}
                   title={b.titulo}
                 >
+                  {b.tipo === 'tarefa' && <span className="mr-1.5 text-text-muted">└</span>}
                   {b.titulo}
                 </div>
               ))}
             </div>
 
-            <div className="relative flex flex-1 flex-col gap-1.5">
+            <div className="relative flex flex-1 flex-col gap-1">
               {hojePos >= 0 && hojePos <= 100 && (
-                <div
-                  className="pointer-events-none absolute top-0 bottom-0 z-10 border-l border-dashed border-primary/60"
-                  style={{ left: `${hojePos}%` }}
-                  aria-hidden
-                />
+                <>
+                  <div
+                    className="pointer-events-none absolute top-0 bottom-0 z-10 w-px bg-danger/50"
+                    style={{ left: `${hojePos}%` }}
+                    aria-hidden
+                  />
+                  <span
+                    className="pointer-events-none absolute -top-0.5 z-20 -translate-x-1/2 rounded-full bg-danger px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-white"
+                    style={{ left: `${hojePos}%` }}
+                  >
+                    hoje
+                  </span>
+                </>
               )}
+
               {barras.map((b) => {
                 const esquerda = Math.max(0, pos(b.inicio));
-                const largura = Math.max(1.2, Math.min(100, pos(b.fim)) - esquerda);
+                const largura = Math.max(1.5, Math.min(100, pos(b.fim)) - esquerda);
+                const cor = CORES[b.cor];
                 const tom = b.concluida
-                  ? 'bg-success/70'
+                  ? 'bg-success'
                   : b.atrasada && !modoCliente
-                    ? 'bg-danger/75'
+                    ? 'bg-danger'
                     : b.tipo === 'etapa'
-                      ? 'bg-navy/80'
-                      : 'bg-primary/70';
+                      ? cor.barra
+                      : cor.clara;
                 return (
-                  <div key={b.id} className="relative h-6 rounded-sm bg-black/[0.035]">
+                  <div key={b.id} className="relative h-7 rounded-sm bg-neutral-50">
                     <div
-                      className={`absolute top-1 h-4 rounded-sm ${tom}`}
+                      className={`absolute top-1.5 h-4 rounded-full ${tom} ${b.tipo === 'etapa' ? 'shadow-[0_1px_2px_rgba(16,24,40,0.12)]' : ''}`}
                       style={{ left: `${esquerda}%`, width: `${largura}%` }}
                       title={`${fmtDate(b.inicio)} a ${fmtDate(b.fim)}${b.sub ? ` · ${b.sub}` : ''}`}
                     />
@@ -192,10 +237,10 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
               })}
             </div>
 
-            <div className="flex w-28 shrink-0 flex-col gap-1.5">
+            <div className="flex w-24 shrink-0 flex-col gap-1">
               {barras.map((b) => (
-                <div key={b.id} className="flex h-6 items-center justify-end font-label text-[11px] tabular-nums text-text-muted">
-                  {fmtDate(b.inicio)} a {fmtDate(b.fim)}
+                <div key={b.id} className="flex h-7 items-center justify-end text-[11px] tabular-nums text-text-muted">
+                  {fmtDate(b.fim)}
                 </div>
               ))}
             </div>
@@ -204,15 +249,15 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
       </div>
 
       {semData.length > 0 && (
-        <div className="border-t border-black/[0.05] px-4 py-2.5">
-          <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">
+        <div className="border-t border-black/[0.06] bg-neutral-50 px-4 py-2.5">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
             Sem data ({semData.length})
           </p>
           <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
             {semData.map((t) => (
-              <li key={t.id} className="text-[13px] text-text-secondary">
+              <li key={t.id} className="text-[12px] text-text-secondary">
                 {t.titulo}
-                {t.etapa && <span className="font-label text-[11px] text-text-muted"> · {t.etapa}</span>}
+                {t.etapa && <span className="text-text-muted"> · {t.etapa}</span>}
               </li>
             ))}
           </ul>
