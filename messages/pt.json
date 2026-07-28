@@ -305,6 +305,8 @@
   },
   "PricingForm": {
     "stepLabel": "Etapa {step} de {total}",
+    "identifyTitle": "Primeiro, com quem a gente fala?",
+    "identifySubtitle": "Nome e um canal de contato. Assim a estimativa vai junto com a conversa, e não some numa tela que você fecha.",
     "navBack": "Voltar",
     "navContinue": "Continuar",
     "navSubmitting": "Enviando…",
@@ -333,6 +335,7 @@
     "timelineHeader": "❯ cronograma estimado",
     "nextStepHeader": "❯ próximo passo",
     "nextStepBody": "Esse é o esboço do seu projeto. Pra fechar o investimento exato, a gente conversa pra validar o que você preencheu e entender o contexto da sua operação.",
+    "nextStepBodyWithName": "{name}, esse é o esboço do seu projeto. Pra fechar o investimento exato, a gente conversa pra validar o que você preencheu e entender o contexto da sua operação.",
     "fieldName": "Seu nome",
     "fieldNamePlaceholder": "Como te chama?",
     "fieldCompany": "Empresa",

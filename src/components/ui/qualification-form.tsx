@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-rea
 import { useTranslations } from 'next-intl';
 import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analytics';
 import { WhatsAppFallback } from '@/components/ui/whatsapp-fallback';
+import { stepEventLabel, stepLabel } from '@/lib/form-steps';
 
 export type QualificationOption = { id: string; label: string };
 
@@ -68,20 +69,18 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   });
 
   // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
-  // Rótulo da etapa = "Qualificação::<posição>::<nome legível>" para o dashboard mostrar
-  // qual formulário e em que etapa a pessoa parou (não só um número).
-  // Fluxo: primeiro o que a pessoa precisa, depois o contexto (prazo/descrição) e
-  // o CONTATO por último (mais leve: nome + um canal). Pedir contato só no fim,
-  // depois da pessoa investir no que quer, reduz o abandono no meio.
+  // Rótulo vem de lib/form-steps, o mesmo módulo usado pelo formulário de orçamento
+  // e pelo dashboard, para as três telas falarem a mesma língua.
+  // Fluxo: contato primeiro, depois o que a pessoa precisa e o prazo.
   const FORM_NAME = 'Qualificação';
-  const STEP_NAMES = ['Contato', 'Necessidades', 'Prazo'];
+  const STEP_IDS = ['contato', 'necessidades', 'prazo'];
   // O funil só começa a contar na PRIMEIRA INTERAÇÃO real (marcar uma opção, digitar
   // algo). Antes isto disparava no mount, então bastava a página carregar para inflar
   // o topo do funil com gente que nem chegou a rolar até o formulário.
   const formStarted = useRef(false);
 
   const trackStep = (s: number) =>
-    track({ type: 'form_step', service_tag: schema.serviceTag, label: `${FORM_NAME}::${s + 1}::${STEP_NAMES[s] ?? String(s + 1)}` });
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: stepEventLabel(FORM_NAME, s + 1, STEP_IDS[s] ?? String(s + 1)) });
 
   const markInteraction = () => {
     if (formStarted.current || status === 'success') return;
@@ -120,7 +119,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
         needs: data.needs,
         timing: data.timing,
         description: data.description,
-        last_step: STEP_NAMES[step] ?? String(step + 1),
+        last_step: stepLabel(STEP_IDS[step] ?? String(step + 1)),
       });
     }, 900);
     return () => clearTimeout(id);

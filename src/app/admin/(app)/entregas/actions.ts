@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { PHASE_STATUSES, TASK_STATUSES, type PhaseStatus, type TaskStatus } from './status';
+import { PHASE_STATUSES, PRIORITIES, TASK_STATUSES, type PhaseStatus, type Priority, type TaskStatus } from './status';
 
 const str = (fd: FormData, key: string, max = 500): string | null => {
   const v = fd.get(key);
@@ -113,12 +113,28 @@ export async function createTask(formData: FormData): Promise<void> {
   const title = str(formData, 'title', 300);
   if (!engagement_id || !title) return;
 
-  await getSupabaseAdmin().from('project_tasks').insert({
+  const status = str(formData, 'status', 32);
+  const priority = str(formData, 'priority', 16);
+  const supabase = getSupabaseAdmin();
+
+  // Entra no fim da coluna em que foi criada, para não embaralhar a ordem manual.
+  const { data: ultima } = await supabase
+    .from('project_tasks')
+    .select('sort')
+    .eq('engagement_id', engagement_id)
+    .order('sort', { ascending: false })
+    .limit(1);
+
+  await supabase.from('project_tasks').insert({
     engagement_id,
     phase_id: str(formData, 'phase_id', 64),
     title,
+    start_date: date(formData, 'start_date'),
     due_date: date(formData, 'due_date'),
     assignee: str(formData, 'assignee', 120),
+    status: status && TASK_STATUSES.includes(status as TaskStatus) ? status : 'a_fazer',
+    priority: priority && PRIORITIES.includes(priority as Priority) ? priority : 'media',
+    sort: ((ultima?.[0]?.sort as number | undefined) ?? -1) + 1,
   });
 
   revalidar();
@@ -132,10 +148,14 @@ export async function updateTask(formData: FormData): Promise<void> {
   const title = str(formData, 'title', 300);
   if (title) patch.title = title;
   if (formData.has('notes')) patch.notes = str(formData, 'notes', 4000);
+  if (formData.has('start_date')) patch.start_date = date(formData, 'start_date');
   if (formData.has('due_date')) patch.due_date = date(formData, 'due_date');
   if (formData.has('assignee')) patch.assignee = str(formData, 'assignee', 120);
   if (formData.has('phase_id')) patch.phase_id = str(formData, 'phase_id', 64);
   if (formData.has('client_visible')) patch.client_visible = formData.get('client_visible') === 'on';
+
+  const priority = str(formData, 'priority', 16);
+  if (priority && PRIORITIES.includes(priority as Priority)) patch.priority = priority;
 
   const status = str(formData, 'status', 32);
   if (status && TASK_STATUSES.includes(status as TaskStatus)) {
@@ -145,6 +165,51 @@ export async function updateTask(formData: FormData): Promise<void> {
   }
 
   await getSupabaseAdmin().from('project_tasks').update(patch).eq('id', id);
+  revalidar();
+}
+
+/**
+ * Arrastar no Kanban: muda o status e recoloca a tarefa na ordem da coluna de
+ * destino. `before` é o id da tarefa sobre a qual ela foi solta (vazio = fim da
+ * coluna). A reordenação é feita reescrevendo o sort da coluna inteira, que é
+ * barato no volume de tarefas de um projeto e evita brigas de índice.
+ */
+export async function moveTask(formData: FormData): Promise<void> {
+  const id = str(formData, 'id', 64);
+  const status = str(formData, 'status', 32);
+  const before = str(formData, 'before', 64);
+  if (!id || !status || !TASK_STATUSES.includes(status as TaskStatus)) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data: atual } = await supabase
+    .from('project_tasks')
+    .select('id, engagement_id, status')
+    .eq('id', id)
+    .single();
+  if (!atual) return;
+
+  await supabase
+    .from('project_tasks')
+    .update({
+      status,
+      // Mesma regra do updateTask: a data de conclusão não pode mentir depois.
+      done_at: status === 'feito' ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+
+  const { data: coluna } = await supabase
+    .from('project_tasks')
+    .select('id, sort')
+    .eq('engagement_id', atual.engagement_id)
+    .eq('status', status)
+    .order('sort');
+
+  const ids = (coluna ?? []).map((t) => t.id as string).filter((t) => t !== id);
+  const alvo = before ? ids.indexOf(before) : -1;
+  ids.splice(alvo >= 0 ? alvo : ids.length, 0, id);
+
+  await Promise.all(ids.map((taskId, i) => supabase.from('project_tasks').update({ sort: i }).eq('id', taskId)));
   revalidar();
 }
 

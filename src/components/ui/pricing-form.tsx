@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle, Sparkles } from 'lucide-react';
 import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analytics';
 import { WhatsAppFallback } from '@/components/ui/whatsapp-fallback';
+import { stepEventLabel, stepLabel } from '@/lib/form-steps';
 
 // ── Schema types ──────────────────────────────────────────────────────────
 
@@ -184,7 +185,10 @@ function buildWhatsAppMessage(
 
 export function PricingForm({ schema }: { schema: PricingSchema }) {
   const t = useTranslations('PricingForm');
-  const totalSteps = schema.fields.length + 1; // +1 = reveal/identify
+  // Etapa 0 = identificação, depois as perguntas, e a última é a revelação do preço.
+  // O contato vem na frente porque quem desiste no meio já fica gravado com nome e
+  // WhatsApp; com ele no fim, 20 dias de tráfego não deixaram um único contato.
+  const totalSteps = schema.fields.length + 2; // identificação + campos + revelação
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [selection, setSelection] = useState<PricingSelection>(() => buildInitialSelection(schema));
@@ -195,23 +199,26 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   const [notes, setNotes]       = useState('');
   const [status, setStatus]     = useState<'idle' | 'submitting' | 'success'>('idle');
 
-  const isRevealStep = step === schema.fields.length;
-  const currentField = !isRevealStep ? schema.fields[step] : null;
+  const isIdentityStep = step === 0;
+  const isRevealStep = step === totalSteps - 1;
+  const currentField = !isIdentityStep && !isRevealStep ? schema.fields[step - 1] : null;
   const [min, max] = useMemo(() => schema.calc(selection), [selection, schema]);
   const isFrom = schema.priceMode === 'from';
 
   // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
-  // Rótulo da etapa = "Orçamento::<posição>::<nome legível>" para o dashboard mostrar
-  // qual formulário e em que etapa a pessoa parou (não só um número).
+  // Rótulo vem de lib/form-steps para o dashboard falar a mesma língua em todos os
+  // formulários (rótulo curto, com versão da sequência).
   const FORM_NAME = 'Orçamento';
-  const stepName = (i: number) => (i < schema.fields.length ? schema.fields[i].label : 'Identificação');
+  const stepId = (i: number) =>
+    i === 0 ? 'contato' : i <= schema.fields.length ? schema.fields[i - 1].id : 'proposta';
+  const stepName = (i: number) => stepLabel(stepId(i));
   // O funil só começa a contar na PRIMEIRA INTERAÇÃO real (escolher uma opção, digitar
   // algo). Antes isto disparava no mount, então bastava a página carregar para inflar
   // o topo do funil com gente que nem chegou a rolar até o formulário.
   const formStarted = useRef(false);
 
   const trackStep = (s: number) =>
-    track({ type: 'form_step', service_tag: schema.serviceTag, label: `${FORM_NAME}::${s + 1}::${stepName(s)}` });
+    track({ type: 'form_step', service_tag: schema.serviceTag, label: stepEventLabel(FORM_NAME, s + 1, stepId(s)) });
 
   const markInteraction = () => {
     if (formStarted.current || status === 'success') return;
@@ -265,13 +272,15 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
     });
   };
 
-  // Contato mais leve na última etapa: nome + UM canal (WhatsApp ou e-mail), igual ao
-  // formulário de qualificação. Exigir nome + empresa + WhatsApp + e-mail de uma vez
-  // era o maior atrito do funil, logo no passo em que a pessoa decide.
+  // Contato leve: nome + UM canal (WhatsApp ou e-mail), igual ao formulário de
+  // qualificação. Empresa e e-mail continuam opcionais; exigir tudo de uma vez era
+  // o maior atrito do funil.
   const hasChannel = whatsapp.replace(/\D/g, '').length >= 10 || isValidEmail(email);
-  const canAdvance = currentField
-    ? isFieldComplete(currentField, selection[currentField.id])
-    : Boolean(name.trim() && hasChannel && status !== 'submitting');
+  const canAdvance = isIdentityStep
+    ? Boolean(name.trim() && hasChannel)
+    : currentField
+      ? isFieldComplete(currentField, selection[currentField.id])
+      : status !== 'submitting';
 
   const goNext = useCallback(() => {
     if (!canAdvance) return;
@@ -431,7 +440,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
             {t('stepLabel', { step: step + 1, total: totalSteps })}
           </span>
-          <LiveEstimatePill min={min} max={max} from={isFrom} visible={step > 0 && !isRevealStep} />
+          <LiveEstimatePill min={min} max={max} from={isFrom} visible={step > 1 && !isRevealStep} />
         </div>
         <div className="flex gap-1.5">
           {Array.from({ length: totalSteps }).map((_, i) => (
@@ -452,6 +461,20 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             animation: `pf-slide-${direction > 0 ? 'in-right' : 'in-left'} 320ms cubic-bezier(0.16, 1, 0.3, 1)`,
           }}
         >
+          {isIdentityStep && (
+            <IdentityStep
+              name={name}
+              company={company}
+              whatsapp={whatsapp}
+              email={email}
+              onName={setName}
+              onCompany={setCompany}
+              onWhats={setWhatsapp}
+              onEmail={setEmail}
+              eyebrow={copy.eyebrow}
+            />
+          )}
+
           {currentField && (
             <FieldStep
               field={currentField}
@@ -470,14 +493,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
               max={max}
               isFrom={isFrom}
               name={name}
-              company={company}
-              whatsapp={whatsapp}
-              email={email}
               notes={notes}
-              onName={setName}
-              onCompany={setCompany}
-              onWhats={setWhatsapp}
-              onEmail={setEmail}
               onNotes={setNotes}
               title={copy.revealTitle ?? t('revealTitleDefault')}
               subtitle={copy.revealSubtitle ?? t('revealSubtitleDefault')}
@@ -486,8 +502,8 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
         </div>
       </div>
 
-      {/* ── Consent line (visible only on reveal step) ── */}
-      {isRevealStep && (
+      {/* ── Consentimento: onde a pessoa entrega o dado e onde ela envia ── */}
+      {(isIdentityStep || isRevealStep) && (
         <div className="px-6 lg:px-10 pb-4 -mt-2">
           <p className="font-mono text-[10px] text-text-dim leading-relaxed">
             {t('consentBefore')}
@@ -690,22 +706,106 @@ function LiveEstimatePill({ min, max, from, visible }: { min: number; max: numbe
   );
 }
 
+/**
+ * Primeira etapa: quem é a pessoa. Fica antes das perguntas porque o rascunho
+ * (lead_drafts) já nasce com nome e telefone, então quem some no meio do caminho
+ * continua sendo alguém para a gente ligar.
+ */
+function IdentityStep({
+  name, company, whatsapp, email,
+  onName, onCompany, onWhats, onEmail, eyebrow,
+}: {
+  name: string; company: string; whatsapp: string; email: string;
+  onName: (v: string) => void; onCompany: (v: string) => void;
+  onWhats: (v: string) => void; onEmail: (v: string) => void;
+  eyebrow?: string;
+}) {
+  const t = useTranslations('PricingForm');
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  return (
+    <div>
+      {eyebrow && (
+        <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest block mb-3">
+          {eyebrow}
+        </span>
+      )}
+      <h3 className="text-[20px] lg:text-[22px] font-semibold tracking-tight text-text-primary mb-2">
+        {t('identifyTitle')}
+      </h3>
+      <p className="text-[14px] text-text-secondary leading-relaxed mb-7">{t('identifySubtitle')}</p>
+
+      <div className="space-y-3">
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Field label={t('fieldName')}>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => onName(e.target.value)}
+              placeholder={t('fieldNamePlaceholder')}
+              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
+              style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+            />
+          </Field>
+          <Field label={t('fieldCompany')}>
+            <input
+              type="text"
+              value={company}
+              onChange={(e) => onCompany(e.target.value)}
+              placeholder={t('fieldCompanyPlaceholder')}
+              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
+              style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+            />
+          </Field>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Field label={t('fieldWhatsapp')}>
+            <input
+              type="tel"
+              value={whatsapp}
+              onChange={(e) => onWhats(formatWhatsApp(e.target.value))}
+              placeholder={t('fieldWhatsappPlaceholder')}
+              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
+              style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+            />
+          </Field>
+          <Field label={t('fieldEmail')}>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => onEmail(e.target.value)}
+              onBlur={() => setEmailTouched(true)}
+              placeholder={t('fieldEmailPlaceholder')}
+              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
+              style={{
+                border: emailTouched && email && !isValidEmail(email)
+                  ? '1px solid rgba(239,68,68,0.6)'
+                  : '1px solid rgba(25,25,24,0.10)',
+              }}
+            />
+            {emailTouched && email && !isValidEmail(email) && (
+              <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldEmailInvalid')}</span>
+            )}
+          </Field>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RevealStep({
   schema, selection,
-  min, max, isFrom, name, company, whatsapp, email, notes,
-  onName, onCompany, onWhats, onEmail, onNotes,
+  min, max, isFrom, name, notes, onNotes,
   title, subtitle,
 }: {
   schema: PricingSchema;
   selection: PricingSelection;
   min: number; max: number; isFrom: boolean;
-  name: string; company: string; whatsapp: string; email: string; notes: string;
-  onName: (v: string) => void; onCompany: (v: string) => void; onWhats: (v: string) => void;
-  onEmail: (v: string) => void; onNotes: (v: string) => void;
+  name: string; notes: string;
+  onNotes: (v: string) => void;
   title: string; subtitle: string;
 }) {
   const t = useTranslations('PricingForm');
-  const [emailTouched, setEmailTouched] = useState(false);
   const avg = Math.round(((min + max) / 2) / 100) * 100;
   const inclusions = schema.inclusions?.(selection) ?? [];
   const reportTitle = schema.reportTitle?.(selection) ?? t('reportTitleDefault');
@@ -772,7 +872,7 @@ function RevealStep({
         </div>
       )}
 
-      {/* ── Próximo passo: identificação ── */}
+      {/* ── Próximo passo: a pessoa já se identificou na primeira etapa ── */}
       <div className="rounded-b-2xl border border-black/[0.08] px-6 lg:px-10 py-7" style={{ background: 'hsl(55 100% 97%)' }}>
         <div className="flex items-center gap-2 mb-5">
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
@@ -781,72 +881,18 @@ function RevealStep({
           <div className="flex-1 h-px bg-black/[0.06]" />
         </div>
         <p className="text-[13px] text-text-secondary mb-5 leading-relaxed max-w-lg">
-          {t('nextStepBody')}
+          {name ? t('nextStepBodyWithName', { name }) : t('nextStepBody')}
         </p>
-        <div className="space-y-3">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Field label={t('fieldName')}>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => onName(e.target.value)}
-                placeholder={t('fieldNamePlaceholder')}
-                className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-                style={{ border: '1px solid rgba(25,25,24,0.10)' }}
-              />
-            </Field>
-            <Field label={t('fieldCompany')}>
-              <input
-                type="text"
-                value={company}
-                onChange={(e) => onCompany(e.target.value)}
-                placeholder={t('fieldCompanyPlaceholder')}
-                className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-                style={{ border: '1px solid rgba(25,25,24,0.10)' }}
-              />
-            </Field>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Field label={t('fieldWhatsapp')}>
-              <input
-                type="tel"
-                value={whatsapp}
-                onChange={(e) => onWhats(formatWhatsApp(e.target.value))}
-                placeholder={t('fieldWhatsappPlaceholder')}
-                className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-                style={{ border: '1px solid rgba(25,25,24,0.10)' }}
-              />
-            </Field>
-            <Field label={t('fieldEmail')}>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => onEmail(e.target.value)}
-              onBlur={() => setEmailTouched(true)}
-              placeholder={t('fieldEmailPlaceholder')}
-              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
-              style={{
-                border: emailTouched && email && !isValidEmail(email)
-                  ? '1px solid rgba(239,68,68,0.6)'
-                  : '1px solid rgba(25,25,24,0.10)',
-              }}
-            />
-            {emailTouched && email && !isValidEmail(email) && (
-              <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldEmailInvalid')}</span>
-            )}
-            </Field>
-          </div>
-          <Field label={t('fieldNotes')}>
-            <textarea
-              value={notes}
-              onChange={(e) => onNotes(e.target.value)}
-              rows={2}
-              placeholder={t('fieldNotesPlaceholder')}
-              className="w-full px-4 py-3 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors leading-relaxed resize-none"
-              style={{ border: '1px solid rgba(25,25,24,0.10)' }}
-            />
-          </Field>
-        </div>
+        <Field label={t('fieldNotes')}>
+          <textarea
+            value={notes}
+            onChange={(e) => onNotes(e.target.value)}
+            rows={2}
+            placeholder={t('fieldNotesPlaceholder')}
+            className="w-full px-4 py-3 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors leading-relaxed resize-none"
+            style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+          />
+        </Field>
       </div>
     </div>
   );

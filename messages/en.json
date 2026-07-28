@@ -305,6 +305,8 @@
   },
   "PricingForm": {
     "stepLabel": "Step {step} of {total}",
+    "identifyTitle": "First, who are we talking to?",
+    "identifySubtitle": "Your name and one way to reach you. That way the estimate travels with the conversation instead of dying on a closed tab.",
     "navBack": "Back",
     "navContinue": "Continue",
     "navSubmitting": "Sending…",
@@ -333,6 +335,7 @@
     "timelineHeader": "❯ estimated timeline",
     "nextStepHeader": "❯ next step",
     "nextStepBody": "This is the sketch of your project. To close the exact investment, we'll have a quick chat to validate what you filled in and understand your operation's context.",
+    "nextStepBodyWithName": "{name}, this is the sketch of your project. To close the exact investment, we’ll have a quick chat to validate what you filled in and understand your operation’s context.",
     "fieldName": "Your name",
     "fieldNamePlaceholder": "What should we call you?",
     "fieldCompany": "Company",

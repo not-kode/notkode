@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { DashboardView, type DashboardData, type DayCount, type FunnelStep, type FormFunnel, type MonthProjection } from './dashboard-view';
 import { resolveRange } from './period';
 import { pendingMonthly } from './financeiro/recurring';
+import { parseStepEventLabel } from '@/lib/form-steps';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,10 +109,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   // ── Site: funil de formulário POR PÁGINA (service_tag) ──
   // Cada página tem seu formulário; mostramos, por página, quantos iniciaram e
   // quantos chegaram a cada etapa até enviar — pra ver em qual etapa a galera sai.
-  const parseStep = (label: string | null) => {
-    const parts = (label ?? '').split('::');
-    return parts.length === 3 ? { form: parts[0], pos: Number(parts[1]), name: parts[2] } : null;
-  };
+  const parseStep = parseStepEventLabel;
   const prettyService = (s: string) => SERVICE_LABELS[s] ?? s.replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
   // Origem de ENTRADA por sessão (a 1ª visualização de página): usada no tooltip do
@@ -142,11 +140,22 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       // Nome do formulário daquela página (Qualificação, Orçamento…), pra legenda.
       const formType =
         formEvents.filter(inSvc).map((e) => (e.type === 'form_start' ? e.label : parseStep(e.label)?.form)).find((f): f is string => !!f) ?? null;
+      // O formulário muda de ordem de tempos em tempos. Somar medição velha e nova na
+      // mesma posição faria o painel mostrar uma sequência que não é a de hoje, então
+      // desenhamos só a versão mais recente e avisamos quando o período pega as duas.
+      const versoes = new Set<number>();
+      for (const e of formEvents) {
+        if (!inSvc(e) || e.type !== 'form_step') continue;
+        const p = parseStep(e.label);
+        if (p) versoes.add(p.version);
+      }
+      const versaoAtual = versoes.size ? Math.max(...versoes) : 1;
+
       const stepsMeta = new Map<number, string>();
       for (const e of formEvents) {
         if (!inSvc(e) || e.type !== 'form_step') continue;
         const p = parseStep(e.label);
-        if (p) stepsMeta.set(p.pos, p.name);
+        if (p && p.version === versaoAtual) stepsMeta.set(p.pos, p.name);
       }
       const ordered = [...stepsMeta.entries()].sort((a, b) => a[0] - b[0]);
       const mkStep = (label: string, pred: (e: FormEv) => boolean): FunnelStep => {
@@ -155,11 +164,15 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       };
       const steps: FunnelStep[] = [
         ...ordered.map(([pos, name]) =>
-          mkStep(name, (e) => inSvc(e) && e.type === 'form_step' && parseStep(e.label)?.pos === pos),
+          mkStep(name, (e) => {
+            if (!inSvc(e) || e.type !== 'form_step') return false;
+            const p = parseStep(e.label);
+            return !!p && p.version === versaoAtual && p.pos === pos;
+          }),
         ),
         mkStep('Enviou', (e) => inSvc(e) && e.type === 'form_submit'),
       ];
-      return { form: prettyService(svc), formType, steps };
+      return { form: prettyService(svc), formType, steps, mixedVersions: versoes.size > 1 };
     })
     .filter((f) => f.steps.some((s) => s.count > 0))
     .sort((a, b) => (b.steps[0]?.count ?? 0) - (a.steps[0]?.count ?? 0));

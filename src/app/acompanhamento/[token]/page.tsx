@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { PHASE_LABELS, type PhaseStatus, type TaskStatus } from '@/app/admin/(app)/entregas/status';
+import type { PhaseStatus, TaskStatus } from '@/app/admin/(app)/entregas/status';
+import { Gantt } from '@/app/admin/(app)/entregas/gantt';
 
 // Acompanhamento do cliente: o cronograma do projeto dele, por link com token e
 // sem login. Mostra SÓ o que estiver marcado como visível no /admin — etapa
@@ -19,25 +20,9 @@ type PhaseRow = {
   id: string; name: string; description: string | null; status: PhaseStatus;
   start_date: string | null; end_date: string | null; sort: number;
 };
-type TaskRow = { id: string; phase_id: string | null; title: string; status: TaskStatus };
-
-const fmt = (d: string | null) => {
-  if (!d) return null;
-  const [y, m, day] = d.split('-');
-  return `${day}/${m}/${y}`;
-};
-
-const DOT: Record<PhaseStatus, string> = {
-  pendente: 'border-black/15 bg-white',
-  em_andamento: 'border-primary bg-primary',
-  concluida: 'border-success bg-success',
-  pausada: 'border-warning bg-warning',
-};
-const PILL: Record<PhaseStatus, string> = {
-  pendente: 'bg-black/[0.05] text-text-muted',
-  em_andamento: 'bg-primary/10 text-primary',
-  concluida: 'bg-success/10 text-success',
-  pausada: 'bg-warning/15 text-warning',
+type TaskRow = {
+  id: string; phase_id: string | null; title: string; status: TaskStatus;
+  start_date: string | null; due_date: string | null;
 };
 
 export default async function AcompanhamentoPage({ params }: { params: Promise<{ token: string }> }) {
@@ -67,7 +52,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
       .order('sort'),
     supabase
       .from('project_tasks')
-      .select('id, phase_id, title, status')
+      .select('id, phase_id, title, status, start_date, due_date')
       .eq('engagement_id', eng.id)
       .eq('client_visible', true)
       .order('sort'),
@@ -79,7 +64,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
   const atual = phases.find((p) => p.status === 'em_andamento') ?? null;
 
   return (
-    <main className="mx-auto min-h-screen max-w-2xl px-5 py-12 sm:py-16">
+    <main className="mx-auto min-h-screen max-w-4xl px-5 py-12 sm:py-16">
       <header className="mb-10">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-text-muted">
           Notkode · Acompanhamento
@@ -115,60 +100,24 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
         )}
       </header>
 
-      {phases.length === 0 ? (
+      {phases.length === 0 && tasks.length === 0 ? (
         <p className="rounded-lg border border-black/[0.07] bg-white px-4 py-12 text-center text-sm text-text-muted">
           O cronograma está sendo montado. Em breve as etapas aparecem aqui.
         </p>
       ) : (
-        <ol className="relative flex flex-col">
-          {phases.map((phase, i) => {
-            const doPhase = tasks.filter((t) => t.phase_id === phase.id);
-            const ultima = i === phases.length - 1;
-            return (
-              <li key={phase.id} className="relative flex gap-4 pb-8 last:pb-0">
-                {/* Trilha da linha do tempo */}
-                <div className="flex flex-col items-center">
-                  <span className={`mt-1 h-3 w-3 shrink-0 rounded-full border-2 ${DOT[phase.status]}`} />
-                  {!ultima && <span className="mt-1 w-px flex-1 bg-black/[0.09]" />}
-                </div>
-
-                <div className="min-w-0 flex-1 pb-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base font-medium text-text-primary">{phase.name}</h2>
-                    <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${PILL[phase.status]}`}>
-                      {PHASE_LABELS[phase.status]}
-                    </span>
-                  </div>
-
-                  {(phase.start_date || phase.end_date) && (
-                    <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-                      {fmt(phase.start_date) ?? '—'} a {fmt(phase.end_date) ?? '—'}
-                    </p>
-                  )}
-
-                  {phase.description && (
-                    <p className="mt-2 text-sm leading-relaxed text-text-secondary">{phase.description}</p>
-                  )}
-
-                  {doPhase.length > 0 && (
-                    <ul className="mt-2.5 flex flex-col gap-1">
-                      {doPhase.map((t) => (
-                        <li key={t.id} className="flex items-baseline gap-2 text-sm">
-                          <span className={t.status === 'feito' ? 'text-success' : 'text-text-muted'}>
-                            {t.status === 'feito' ? '✓' : '·'}
-                          </span>
-                          <span className={t.status === 'feito' ? 'text-text-muted' : 'text-text-secondary'}>
-                            {t.title}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+        <Gantt
+          modoCliente
+          titulo="Cronograma"
+          phases={phases.map((p) => ({
+            id: p.id, name: p.name, description: p.description, status: p.status,
+            startDate: p.start_date, endDate: p.end_date, clientVisible: true,
+          }))}
+          tasks={tasks.map((t) => ({
+            id: t.id, phaseId: t.phase_id, title: t.title, notes: null, status: t.status,
+            priority: 'media' as const, startDate: t.start_date, dueDate: t.due_date,
+            assignee: null, clientVisible: true, sort: 0,
+          }))}
+        />
       )}
 
       <footer className="mt-12 border-t border-black/[0.07] pt-5">

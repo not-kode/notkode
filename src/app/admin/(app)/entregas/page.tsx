@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { EntregasView, type ProjectView } from './entregas-view';
-import type { PhaseStatus, TaskStatus } from './status';
+import { EntregasView } from './entregas-view';
+import type { ProjectView } from './types';
+import type { PhaseStatus, Priority, TaskStatus } from './status';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,8 +24,9 @@ type PhaseRow = {
 };
 type TaskRow = {
   id: string; engagement_id: string; phase_id: string | null; title: string;
-  notes: string | null; status: TaskStatus; due_date: string | null;
-  assignee: string | null; client_visible: boolean;
+  notes: string | null; status: TaskStatus; priority: Priority | null;
+  start_date: string | null; due_date: string | null;
+  assignee: string | null; client_visible: boolean; sort: number | null;
 };
 
 export default async function EntregasPage() {
@@ -61,7 +63,8 @@ export default async function EntregasPage() {
       .filter((t) => t.engagement_id === e.id)
       .map((t) => ({
         id: t.id, phaseId: t.phase_id, title: t.title, notes: t.notes, status: t.status,
-        dueDate: t.due_date, assignee: t.assignee, clientVisible: t.client_visible,
+        priority: t.priority ?? 'media', startDate: t.start_date, dueDate: t.due_date,
+        assignee: t.assignee, clientVisible: t.client_visible, sort: t.sort ?? 0,
       })),
   }));
 
