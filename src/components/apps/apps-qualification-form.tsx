@@ -25,7 +25,8 @@ export function AppsQualificationForm() {
     identity: {
       title: t('qualIdentityTitle'),
       subtitle: t('qualIdentitySubtitle'),
-      companySizes: [t('qualSize1'), t('qualSize2'), t('qualSize3'), t('qualSize4')],
+      // Faixas de tamanho ficam só no QualificationForm: lead que responde "4–10"
+      // aqui e "11–50" ali é o mesmo lead com duas réguas diferentes no CRM.
     },
     context: {
       title: t('qualContextTitle'),

@@ -25,7 +25,7 @@ export function ParceriasQualificationForm() {
     identity: {
       title: t('qualIdentityTitle'),
       subtitle: t('qualIdentitySubtitle'),
-      companySizes: [t('qualSize1'), t('qualSize2'), t('qualSize3'), t('qualSize4')],
+      // Ver comentário em apps-qualification-form: a régua de tamanho é uma só.
     },
     context: {
       title: t('qualContextTitle'),
