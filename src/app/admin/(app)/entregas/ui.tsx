@@ -28,6 +28,17 @@ export const fmtCurto = (d: string | null | undefined) => {
 
 export const hoje = () => new Date().toISOString().slice(0, 10);
 
+const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+
+/** "seg 21/07" — cabeçalho de dia na agenda. */
+export const fmtDia = (d: string) => {
+  const [ano, m, dia] = d.split('-');
+  // UTC no parse e no getUTCDay: data pura não tem fuso, e o horário local
+  // faria o dia da semana escorregar para o anterior.
+  const semana = DIAS[new Date(Date.parse(`${d}T00:00:00Z`)).getUTCDay()];
+  return `${semana} ${dia}/${m}${ano !== hoje().slice(0, 4) ? `/${ano.slice(2)}` : ''}`;
+};
+
 /** Diferença em dias entre duas datas AAAA-MM-DD (b − a). */
 export const diffDias = (a: string, b: string) =>
   Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
