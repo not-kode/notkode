@@ -30,7 +30,7 @@ export default async function SessaoPage({ params }: { params: Promise<{ id: str
     <div>
       <header className="mb-6">
         <Link href="/admin/sessoes" className="font-label text-xs text-text-muted transition-colors hover:text-primary">
-          ← Sessões
+          ← Comportamento
         </Link>
         <h1 className="mt-1 text-2xl font-semibold">Gravação da sessão</h1>
         <p className="mt-1 text-sm text-text-muted">

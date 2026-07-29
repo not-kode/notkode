@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Clique, PaginaHeatmap } from './data';
+import type { Clique, PaginaHeatmap } from './heatmap-data';
 
 // A página real entra num iframe (mesmo domínio, então dá para medir a altura
 // dela) e o calor é pintado por cima, num canvas do mesmo tamanho.

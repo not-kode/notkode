@@ -10,8 +10,7 @@ const NAV = [
   { href: '/admin/financeiro', label: 'Financeiro' },
   { href: '/admin/clientes', label: 'Clientes' },
   { href: '/admin/entregas', label: 'Entregas' },
-  { href: '/admin/sessoes', label: 'Sessões' },
-  { href: '/admin/mapa-de-calor', label: 'Mapa de calor' },
+  { href: '/admin/sessoes', label: 'Comportamento' },
 ];
 
 export function AdminNav() {

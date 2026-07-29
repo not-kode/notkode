@@ -13,6 +13,11 @@ const nextConfig = {
     // Uploads de proposta (HTML/PDF) via server action — libera acima do 1MB padrão.
     serverActions: { bodySizeLimit: '10mb' },
   },
+  // O mapa de calor virou sub-aba de Comportamento; a rota antiga não fica 404
+  // para quem tiver a aba aberta.
+  async redirects() {
+    return [{ source: '/admin/mapa-de-calor', destination: '/admin/sessoes?ver=calor', permanent: false }];
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
