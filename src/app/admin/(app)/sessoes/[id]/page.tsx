@@ -48,7 +48,7 @@ export default async function SessaoPage({ params }: { params: Promise<{ id: str
           Sessões novas já são gravadas por completo.
         </p>
       ) : (
-        <SessionPlayer events={events} />
+        <SessionPlayer events={events} sessionId={id} />
       )}
     </div>
   );

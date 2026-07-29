@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Replayer } from 'rrweb';
 import 'rrweb/dist/style.css';
+import { markWatched } from '../actions';
 
 // Player próprio em cima do Replayer do rrweb. O pacote rrweb-player (2.1.0)
 // foi publicado com o build quebrado no npm (a variável replayer nunca é
@@ -16,7 +17,7 @@ const fmt = (ms: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-export function SessionPlayer({ events }: { events: unknown[] }) {
+export function SessionPlayer({ events, sessionId }: { events: unknown[]; sessionId: string }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const replayerRef = useRef<Replayer | null>(null);
   const [failed, setFailed] = useState(false);
@@ -24,6 +25,11 @@ export function SessionPlayer({ events }: { events: unknown[] }) {
   const [current, setCurrent] = useState(0);
   const [total, setTotal] = useState(0);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
+
+  // Abrir a gravação já conta como vista; a lista deixa desmarcar depois.
+  useEffect(() => {
+    markWatched(sessionId).catch(() => { /* marcação é conveniência, não bloqueia o player */ });
+  }, [sessionId]);
 
   useEffect(() => {
     const frame = frameRef.current;
