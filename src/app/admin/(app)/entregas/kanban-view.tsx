@@ -13,6 +13,7 @@ import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, hoje } from './
 
 /** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
 const COLUNA_TOM: Record<TaskStatus, string> = {
+  backlog: 'bg-neutral-200',
   a_fazer: 'bg-neutral-300',
   fazendo: 'bg-primary',
   revisao: 'bg-warning',
@@ -31,7 +32,7 @@ export function KanbanView({ tasks, phases, projectId, pending, send }: {
   const [criandoEm, setCriandoEm] = useState<TaskStatus | null>(null);
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {TASK_STATUSES.map((status) => {
         const daColuna = tasks.filter((t) => t.status === status).sort((a, b) => a.sort - b.sort);
         const destacada = alvo === status && arrastando;

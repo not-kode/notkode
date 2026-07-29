@@ -16,6 +16,8 @@ export type TaskView = {
 export type ProjectView = {
   id: string; title: string | null; orgName: string | null; lifecycle: string;
   startDate: string | null; endDate: string | null; clientUrl: string | null;
+  /** Frente da própria casa (o sistema, o site, o pessoal), sem cliente do outro lado. */
+  isInternal: boolean;
   phases: PhaseView[]; tasks: TaskView[];
 };
 

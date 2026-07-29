@@ -9,7 +9,7 @@ import {
   createPhase, updatePhase, deletePhase, movePhase,
   generateClientToken, revokeClientToken,
 } from './actions';
-import { AlertTriangle, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid, Link2, List, Plus, Trash2 } from 'lucide-react';
+import { CalendarClock, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid, Link2, List, Plus, Trash2 } from 'lucide-react';
 import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
 import type { PhaseView, ProjectView, Send, TaskView } from './types';
 import { KanbanView } from './kanban-view';
@@ -57,17 +57,36 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
     localStorage.setItem(PREF_VISAO, v);
   };
 
-  // Tudo que vence nos próximos dias, de todos os projetos: a pergunta "o que
-  // eu tenho que entregar essa semana" não pode exigir abrir projeto por projeto.
-  const daSemana = useMemo(() => {
+  // O que está em jogo agora, de todos os projetos: a pergunta "o que eu tenho
+  // que entregar hoje" não pode exigir abrir projeto por projeto.
+  const { atrasadas, deHoje, daSemana } = useMemo(() => {
+    const hj = hoje();
     const limite = new Date();
     limite.setDate(limite.getDate() + 7);
-    const limiteStr = limite.toISOString().slice(0, 10);
-    return projects
-      .flatMap((p) => p.tasks.map((t) => ({ ...t, projeto: p.orgName ?? p.title ?? 'Sem nome' })))
-      .filter((t) => t.status !== 'feito' && t.dueDate && t.dueDate <= limiteStr)
+    const fimDaSemana = limite.toISOString().slice(0, 10);
+
+    const abertas = projects
+      .flatMap((p) =>
+        p.tasks.map((t) => ({ ...t, projeto: p.orgName ?? p.title ?? 'Sem nome', projetoId: p.id })),
+      )
+      .filter((t) => t.status !== 'feito' && !!t.dueDate)
       .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''));
+
+    return {
+      atrasadas: abertas.filter((t) => t.dueDate! < hj),
+      deHoje: abertas.filter((t) => t.dueDate === hj),
+      daSemana: abertas.filter((t) => t.dueDate! > hj && t.dueDate! <= fimDaSemana),
+    };
   }, [projects]);
+
+  // Cliente de um lado, casa do outro: são dois modos de trabalho diferentes.
+  const grupos = useMemo(
+    () => [
+      { titulo: 'Clientes', itens: projects.filter((p) => !p.isInternal) },
+      { titulo: 'Casa', itens: projects.filter((p) => p.isInternal) },
+    ].filter((g) => g.itens.length > 0),
+    [projects],
+  );
 
   if (projects.length === 0) {
     return (
@@ -82,67 +101,145 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
 
   return (
     <div>
-      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="eyebrow mb-1"><span className="status-dot" />Tarefas e cronograma</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Entregas</h1>
-        </div>
-
-        <select
-          value={abertoId ?? ''}
-          onChange={(e) => setAbertoId(e.target.value)}
-          className={`${inputCls} w-auto min-w-[14rem]`}
-          aria-label="Projeto"
-        >
-          {projects.map((p) => {
-            const feitas = p.tasks.filter((t) => t.status === 'feito').length;
-            return (
-              <option key={p.id} value={p.id}>
-                {p.orgName ?? p.title ?? 'Sem cliente'}
-                {p.tasks.length > 0 ? ` · ${feitas}/${p.tasks.length}` : ''}
-              </option>
-            );
-          })}
-        </select>
+      <header className="mb-5">
+        <p className="eyebrow mb-1"><span className="status-dot" />Tarefas e cronograma</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Entregas</h1>
       </header>
 
-      {daSemana.length > 0 && (
-        <section className="mb-5 rounded-md border border-warning/30 bg-warning/[0.06] px-4 py-3">
-          <p className="mb-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#B45309]">
-            <AlertTriangle className="h-3.5 w-3.5" />
-            Vence nos próximos 7 dias ({daSemana.length})
-          </p>
-          <ul className="flex flex-col gap-1">
-            {daSemana.map((t) => {
-              const atrasada = !!t.dueDate && t.dueDate < hoje();
-              return (
-                <li key={t.id} className="flex items-baseline gap-2 text-sm">
-                  <span className={`text-[11px] tabular-nums ${atrasada ? 'font-semibold text-danger' : 'text-text-muted'}`}>
-                    {fmtDate(t.dueDate)}
-                  </span>
-                  <span className="text-[13px] text-text-primary">{t.title}</span>
-                  <span className="text-[11px] text-text-muted">· {t.projeto}</span>
-                  {atrasada && (
-                    <span className="rounded-full bg-danger/12 px-1.5 py-0.5 text-[10px] font-medium text-danger">atrasada</span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
+      <Hoje atrasadas={atrasadas} deHoje={deHoje} daSemana={daSemana} irPara={setAbertoId} />
 
-      {aberto && (
-        <ProjectPanel
-          key={aberto.id}
-          project={aberto}
-          aba={aba}
-          setAba={setAba}
-          visao={visao}
-          setVisao={trocarVisao}
-        />
-      )}
+      <div className="flex flex-col gap-5 lg:flex-row">
+        {/* Lista de projetos em vez de dropdown: com vinte contratos, um campo
+            fechado esconde justamente o que precisa estar à vista. */}
+        <aside className="lg:w-60 lg:shrink-0">
+          <nav className="flex flex-col gap-4">
+            {grupos.map((g) => (
+              <div key={g.titulo}>
+                <p className="mb-1.5 px-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
+                  {g.titulo}
+                </p>
+                <ul className="flex flex-col gap-0.5">
+                  {g.itens.map((p) => {
+                    const abertas = p.tasks.filter((t) => t.status !== 'feito').length;
+                    const ativo = p.id === abertoId;
+                    return (
+                      <li key={p.id}>
+                        <button
+                          onClick={() => setAbertoId(p.id)}
+                          className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors ${
+                            ativo
+                              ? 'bg-primary/10 font-semibold text-primary'
+                              : 'text-text-secondary hover:bg-black/[0.04] hover:text-text-primary'
+                          }`}
+                        >
+                          <span className="min-w-0 flex-1 truncate">{p.orgName ?? p.title ?? 'Sem cliente'}</span>
+                          {abertas > 0 && (
+                            <span
+                              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums ${
+                                ativo ? 'bg-primary/15 text-primary' : 'bg-black/[0.06] text-text-muted'
+                              }`}
+                            >
+                              {abertas}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </aside>
+
+        <div className="min-w-0 flex-1">
+          {aberto && (
+            <ProjectPanel
+              key={aberto.id}
+              project={aberto}
+              aba={aba}
+              setAba={setAba}
+              visao={visao}
+              setVisao={trocarVisao}
+            />
+          )}
+        </div>
+      </div>
     </div>
+  );
+}
+
+type TarefaComProjeto = TaskView & { projeto: string; projetoId: string };
+
+/**
+ * O topo responde "o que eu faço agora": atrasado e de hoje em destaque, a
+ * semana logo abaixo em letra menor. Clicar leva para o projeto da tarefa.
+ */
+function Hoje({ atrasadas, deHoje, daSemana, irPara }: {
+  atrasadas: TarefaComProjeto[];
+  deHoje: TarefaComProjeto[];
+  daSemana: TarefaComProjeto[];
+  irPara: (id: string) => void;
+}) {
+  if (atrasadas.length === 0 && deHoje.length === 0 && daSemana.length === 0) return null;
+
+  const linha = (t: TarefaComProjeto, tom: string) => (
+    <li key={t.id}>
+      <button
+        onClick={() => irPara(t.projetoId)}
+        className="flex w-full items-baseline gap-2 rounded px-1 py-0.5 text-left transition-colors hover:bg-black/[0.03]"
+      >
+        <span className={`shrink-0 text-[11px] tabular-nums ${tom}`}>{fmtDate(t.dueDate)}</span>
+        <span className="min-w-0 truncate text-[13px] text-text-primary">{t.title}</span>
+        <span className="shrink-0 text-[11px] text-text-muted">· {t.projeto}</span>
+      </button>
+    </li>
+  );
+
+  return (
+    <section className="mb-5 overflow-hidden rounded-md border border-black/[0.07] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+      <header className="flex items-center gap-2 border-b border-black/[0.06] bg-neutral-50 px-4 py-2.5">
+        <CalendarClock className="h-3.5 w-3.5 text-text-muted" />
+        <h2 className="text-[13px] font-semibold text-text-primary">Para hoje</h2>
+        {atrasadas.length > 0 && (
+          <span className="rounded-full bg-danger/12 px-2 py-0.5 text-[11px] font-semibold text-danger">
+            {atrasadas.length} atrasada{atrasadas.length === 1 ? '' : 's'}
+          </span>
+        )}
+        {deHoje.length > 0 && (
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+            {deHoje.length} vence hoje
+          </span>
+        )}
+      </header>
+
+      <div className="px-3 py-2.5">
+        {atrasadas.length > 0 && (
+          <ul className="flex flex-col gap-0.5">
+            {atrasadas.map((t) => linha(t, 'font-semibold text-danger'))}
+          </ul>
+        )}
+        {deHoje.length > 0 && (
+          <ul className={`flex flex-col gap-0.5 ${atrasadas.length > 0 ? 'mt-1.5' : ''}`}>
+            {deHoje.map((t) => linha(t, 'font-semibold text-primary'))}
+          </ul>
+        )}
+        {atrasadas.length === 0 && deHoje.length === 0 && (
+          <p className="px-1 text-[13px] text-text-muted">Nada atrasado nem vencendo hoje.</p>
+        )}
+
+        {daSemana.length > 0 && (
+          <details className="mt-2 border-t border-black/[0.06] pt-2">
+            <summary className="cursor-pointer px-1 text-[11px] font-medium text-text-muted transition-colors hover:text-text-primary">
+              Ainda esta semana ({daSemana.length})
+            </summary>
+            <ul className="mt-1 flex flex-col gap-0.5">
+              {daSemana.map((t) => linha(t, 'text-text-muted'))}
+            </ul>
+          </details>
+        )}
+      </div>
+    </section>
   );
 }
 

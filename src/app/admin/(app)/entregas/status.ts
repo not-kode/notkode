@@ -11,10 +11,13 @@ export const PHASE_LABELS: Record<PhaseStatus, string> = {
   pausada: 'Pausada',
 };
 
-export const TASK_STATUSES = ['a_fazer', 'fazendo', 'revisao', 'feito'] as const;
+// "Backlog" é o que existe mas não entrou na fila; "A fazer" é o que está
+// puxado para agora. Sem a distinção, tudo que é ideia futura polui a fila real.
+export const TASK_STATUSES = ['backlog', 'a_fazer', 'fazendo', 'revisao', 'feito'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export const TASK_LABELS: Record<TaskStatus, string> = {
+  backlog: 'Backlog',
   a_fazer: 'A fazer',
   fazendo: 'Fazendo',
   revisao: 'Revisão',
@@ -26,7 +29,8 @@ export const TASK_ORDER: Record<TaskStatus, number> = {
   fazendo: 0,
   revisao: 1,
   a_fazer: 2,
-  feito: 3,
+  backlog: 3,
+  feito: 4,
 };
 
 export const PRIORITIES = ['baixa', 'media', 'alta', 'urgente'] as const;

@@ -15,6 +15,7 @@ type EngRow = {
   end_date: string | null;
   client_token: string | null;
   organization_id: string | null;
+  is_internal: boolean | null;
   organizations: { id: string; name: string | null } | null;
 };
 type PhaseRow = {
@@ -35,7 +36,7 @@ export default async function EntregasPage() {
   const [{ data: engData }, { data: phaseData }, { data: taskData }] = await Promise.all([
     supabase
       .from('engagements')
-      .select('id, title, lifecycle, start_date, end_date, client_token, organization_id, organizations(id, name)')
+      .select('id, title, lifecycle, start_date, end_date, client_token, organization_id, is_internal, organizations(id, name)')
       .order('created_at', { ascending: false }),
     supabase.from('project_phases').select('*').order('sort'),
     supabase.from('project_tasks').select('*').order('sort'),
@@ -53,6 +54,7 @@ export default async function EntregasPage() {
     startDate: e.start_date,
     endDate: e.end_date,
     clientUrl: e.client_token ? `${SITE_URL}/acompanhamento/${e.client_token}` : null,
+    isInternal: e.is_internal ?? false,
     phases: phases
       .filter((p) => p.engagement_id === e.id)
       .map((p) => ({
