@@ -11,6 +11,7 @@ const NAV = [
   { href: '/admin/clientes', label: 'Clientes' },
   { href: '/admin/entregas', label: 'Entregas' },
   { href: '/admin/sessoes', label: 'Sessões' },
+  { href: '/admin/mapa-de-calor', label: 'Mapa de calor' },
 ];
 
 export function AdminNav() {
