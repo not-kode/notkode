@@ -33,6 +33,7 @@ type TaskRow = {
   assignee: string | null; client_visible: boolean; sort: number | null;
   parent_task_id: string | null;
   time_spent_seconds: number | null; timer_started_at: string | null;
+  created_at: string;
 };
 
 export default async function EntregasPage() {
@@ -83,6 +84,7 @@ export default async function EntregasPage() {
         parentId: t.parent_task_id,
         tempoSegundos: t.time_spent_seconds ?? 0,
         timerDesde: t.timer_started_at,
+        createdAt: t.created_at,
       })),
   }));
 

@@ -17,6 +17,8 @@ export type TaskView = {
   tempoSegundos: number;
   /** Instante em que o cronômetro foi ligado; nulo quando está parado. */
   timerDesde: string | null;
+  /** Quando a tarefa entrou no sistema; ordena "mais recentes primeiro". */
+  createdAt: string;
 };
 
 /** Tarefa como as visões usam: no escopo "todos", carrega de que projeto veio. */

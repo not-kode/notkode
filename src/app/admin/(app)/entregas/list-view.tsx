@@ -5,9 +5,9 @@
 // que é como se lê um dia de trabalho. Etapa também saiu daqui: quem quiser
 // mexer nela abre a tarefa.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowDown, ArrowUp, Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import {
   PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS, TASK_STATUSES, type TaskStatus,
@@ -19,7 +19,17 @@ import { TaskDrawer } from './task-drawer';
 // 'manual' é a ordem do quadro, a que você monta arrastando. Clicar num
 // cabeçalho troca para aquela coluna; arrastar de volta devolve para a manual,
 // senão a lista mostraria uma ordem e o banco guardaria outra.
-type Coluna = 'manual' | 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
+type Coluna = 'manual' | 'criada' | 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
+
+/** Ordens prontas do seletor do topo, sem precisar caçar o cabeçalho certo. */
+const ORDENS: { id: string; label: string; col: Coluna; asc: boolean }[] = [
+  { id: 'manual',        label: 'Ordem do quadro',    col: 'manual',     asc: true },
+  { id: 'recentes',      label: 'Mais recentes',      col: 'criada',     asc: false },
+  { id: 'antigas',       label: 'Mais antigas',       col: 'criada',     asc: true },
+  { id: 'prazo',         label: 'Prazo mais próximo', col: 'prazo',      asc: true },
+  { id: 'prazo_longe',   label: 'Prazo mais distante', col: 'prazo',     asc: false },
+  { id: 'prioridade',    label: 'Prioridade',         col: 'prioridade', asc: true },
+];
 
 /** A ordem dos blocos: o que está em jogo primeiro, feito no fim. */
 const BLOCOS: TaskStatus[] = ['a_fazer', 'fazendo', 'revisao', 'backlog', 'feito'];
@@ -53,6 +63,13 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
 
+  // Esc larga a seleção: é a saída sem risco de esbarrar num botão da barra.
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelecao([]); };
+    document.addEventListener('keydown', esc);
+    return () => document.removeEventListener('keydown', esc);
+  }, []);
+
   const colunas: { id: Coluna; label: string; cls: string }[] = [
     { id: 'titulo', label: 'Tarefa', cls: 'min-w-[14rem]' },
     ...(mostrarProjeto ? [{ id: 'projeto' as Coluna, label: 'Projeto', cls: 'w-36' }] : []),
@@ -72,6 +89,7 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
       case 'inicio': return t.startDate ?? '9999';
       case 'prioridade': return PRIORITY_ORDER[t.priority];
       case 'tempo': return -t.tempoSegundos;
+      case 'criada': return t.createdAt;
       case 'prazo': return t.dueDate ?? '9999';
       default: return t.sort;
     }
@@ -89,9 +107,12 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
   const marcada = (id: string) => selecao.includes(id);
   const alternar = (id: string) =>
     setSelecao((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-  /** Aplica os campos informados em todas as selecionadas; a seleção continua. */
-  const editarLote = (campos: Record<string, string>) =>
+  // Toda ação em lote encerra a seleção: a barra sumir é o sinal de que a ação
+  // foi para o banco, e barra parada na tela vira clique sem querer.
+  const editarLote = (campos: Record<string, string>) => {
     send(bulkTasks, { acao: 'editar', ids: selecao.join(','), ...campos });
+    setSelecao([]);
+  };
   const apagarLote = () => {
     send(bulkTasks, { acao: 'apagar', ids: selecao.join(',') });
     setSelecao([]);
@@ -113,14 +134,34 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
     setArrastando(null);
     setAlvo(null);
     if (!id || id === before) return;
-    const ids = marcada(id) && selecao.length > 1 ? selecaoEmOrdem() : [id];
+    const lote = marcada(id) && selecao.length > 1;
+    const ids = lote ? selecaoEmOrdem() : [id];
     if (ids.includes(before)) return;
     setOrdem({ col: 'manual', asc: true });
     send(moveTask, { ids: ids.join(','), status, before });
+    if (lote) setSelecao([]);
   };
+
+  const ordemAtual = ORDENS.find((o) => o.col === ordem.col && o.asc === ordem.asc);
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Como a lista está ordenada. As colunas continuam clicáveis; isto aqui é
+          o atalho para as ordens que se usa todo dia, "mais recentes" à frente. */}
+      <div className="flex items-center justify-end gap-1.5">
+        <ArrowUpDown className="h-3.5 w-3.5 text-text-muted" />
+        <ChipSelect
+          value={ordemAtual?.id ?? '—'}
+          placeholder="personalizada"
+          titulo="Ordenar a lista"
+          onChange={(v) => {
+            const o = ORDENS.find((x) => x.id === v);
+            if (o) setOrdem({ col: o.col, asc: o.asc });
+          }}
+          options={ORDENS.map((o) => ({ value: o.id, label: o.label }))}
+        />
+      </div>
+
       {BLOCOS.map((status) => {
         const doBloco = ordenar(raizes.filter((t) => t.status === status));
         const fechado = fechados.includes(status);

@@ -117,7 +117,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
             id: t.id, phaseId: t.phase_id, title: t.title, notes: null, status: t.status,
             priority: 'media' as const, startDate: t.start_date, dueDate: t.due_date,
             assignee: t.assignee, clientVisible: true, parentId: t.parent_task_id, sort: 0,
-            tempoSegundos: 0, timerDesde: null,
+            tempoSegundos: 0, timerDesde: null, createdAt: '',
           }))}
         />
       )}
