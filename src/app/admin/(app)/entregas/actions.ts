@@ -401,3 +401,66 @@ export async function revokeClientToken(formData: FormData): Promise<void> {
   await getSupabaseAdmin().from('engagements').update({ client_token: null }).eq('id', engagement_id);
   revalidar();
 }
+
+// ── Conversa dentro da tarefa ────────────────────────────────────────────────
+
+export async function criarComentario(formData: FormData): Promise<void> {
+  const task_id = str(formData, 'task_id', 64);
+  const content = str(formData, 'content', 8000);
+  if (!task_id || !content) return;
+
+  await getSupabaseAdmin().from('task_comments').insert({
+    task_id,
+    content,
+    author: str(formData, 'author', 120) ?? RESPONSAVEL_PADRAO,
+  });
+  revalidar();
+}
+
+export async function apagarComentario(formData: FormData): Promise<void> {
+  const id = str(formData, 'id', 64);
+  if (!id) return;
+  await getSupabaseAdmin().from('task_comments').delete().eq('id', id);
+  revalidar();
+}
+
+// ── Notas ────────────────────────────────────────────────────────────────────
+
+const NOTE_KINDS = ['nota', 'aprendizado', 'pessoa', 'recurso'];
+
+export async function criarNota(formData: FormData): Promise<void> {
+  const title = str(formData, 'title', 300);
+  if (!title) return;
+  const kind = str(formData, 'kind', 24);
+
+  await getSupabaseAdmin().from('notes').insert({
+    engagement_id: str(formData, 'engagement_id', 64),
+    title,
+    content: str(formData, 'content', 40000),
+    kind: kind && NOTE_KINDS.includes(kind) ? kind : 'nota',
+  });
+  revalidar();
+}
+
+export async function atualizarNota(formData: FormData): Promise<void> {
+  const id = str(formData, 'id', 64);
+  if (!id) return;
+
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const title = str(formData, 'title', 300);
+  if (title) patch.title = title;
+  if (formData.has('content')) patch.content = str(formData, 'content', 40000);
+  if (formData.has('engagement_id')) patch.engagement_id = str(formData, 'engagement_id', 64);
+  const kind = str(formData, 'kind', 24);
+  if (kind && NOTE_KINDS.includes(kind)) patch.kind = kind;
+
+  await getSupabaseAdmin().from('notes').update(patch).eq('id', id);
+  revalidar();
+}
+
+export async function apagarNota(formData: FormData): Promise<void> {
+  const id = str(formData, 'id', 64);
+  if (!id) return;
+  await getSupabaseAdmin().from('notes').delete().eq('id', id);
+  revalidar();
+}

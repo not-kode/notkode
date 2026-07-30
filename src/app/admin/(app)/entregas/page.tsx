@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { EntregasView } from './entregas-view';
-import type { ProjectView } from './types';
+import type { ComentarioView, NotaView, ProjectView } from './types';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
 
 export const dynamic = 'force-dynamic';
@@ -49,6 +49,26 @@ export default async function EntregasPage() {
     supabase.from('project_tasks').select('*').order('sort'),
   ]);
 
+  // Conversa das tarefas e base de notas: vieram do SimbOS junto com as tarefas
+  // e são leves o bastante para a tela receber tudo de uma vez.
+  const [{ data: comentarioData }, { data: notaData }] = await Promise.all([
+    supabase.from('task_comments').select('id, task_id, author, content, created_at').order('created_at'),
+    supabase.from('notes').select('id, engagement_id, title, content, kind, tags, created_at, updated_at')
+      .order('updated_at', { ascending: false }),
+  ]);
+
+  const comentarios: ComentarioView[] = ((comentarioData ?? []) as {
+    id: string; task_id: string; author: string | null; content: string; created_at: string;
+  }[]).map((c) => ({ id: c.id, taskId: c.task_id, autor: c.author, texto: c.content, quando: c.created_at }));
+
+  const notas: NotaView[] = ((notaData ?? []) as {
+    id: string; engagement_id: string | null; title: string; content: string | null;
+    kind: string; tags: string[] | null; created_at: string; updated_at: string;
+  }[]).map((n) => ({
+    id: n.id, projetoId: n.engagement_id, titulo: n.title, conteudo: n.content,
+    tipo: n.kind, tags: n.tags ?? [], criadaEm: n.created_at, atualizadaEm: n.updated_at,
+  }));
+
   const engs = (engData ?? []) as unknown as EngRow[];
   const phases = (phaseData ?? []) as PhaseRow[];
   const tasks = (taskData ?? []) as TaskRow[];
@@ -88,5 +108,5 @@ export default async function EntregasPage() {
     (p) => p.lifecycle !== 'encerrado' || p.phases.length > 0 || p.tasks.length > 0,
   );
 
-  return <EntregasView projects={visiveis} />;
+  return <EntregasView projects={visiveis} comentarios={comentarios} notas={notas} />;
 }

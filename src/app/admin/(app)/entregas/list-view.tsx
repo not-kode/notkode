@@ -12,7 +12,7 @@ import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } 
 import {
   PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS, TASK_STATUSES, type TaskStatus,
 } from './status';
-import type { PhaseView, Send, TaskComProjeto } from './types';
+import type { ComentarioView, PhaseView, Send, TaskComProjeto } from './types';
 import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
@@ -42,8 +42,9 @@ const BLOCO_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success/12 text-[#15803D]',
 };
 
-export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
+export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProjeto, send }: {
   tasks: TaskComProjeto[];
+  comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
   mostrarProjeto: boolean;
@@ -436,6 +437,7 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
       {aberta && (
         <TaskDrawer
           task={aberta}
+          comentarios={comentarios.filter((c) => c.taskId === aberta.id)}
           subtarefas={subs(aberta.id)}
           phases={phasesDe(aberta.projetoId)}
           projectId={aberta.projetoId}

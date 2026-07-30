@@ -4,6 +4,7 @@ import { hoje, objeto, reais, somaDias, supabase, texto, type Ferramenta } from 
 import { ferramentasDeProjeto } from './projetos';
 import { ferramentasDeTarefa } from './tarefas';
 import { ferramentasDeNegocio } from './negocios';
+import { ferramentasDeNota } from './notas';
 
 /**
  * Uma chamada só para se situar: o que está atrasado, o que é de hoje, o que
@@ -110,6 +111,7 @@ export const todas: Ferramenta[] = [
   ...ferramentasDeProjeto,
   ...ferramentasDeTarefa,
   ...ferramentasDeNegocio,
+  ...ferramentasDeNota,
   ajuda,
 ];
 

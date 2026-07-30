@@ -9,13 +9,14 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Plus, Trash2, X } from 'lucide-react';
-import { createTask, deleteTask, toggleTimer, updateTask } from './actions';
+import { apagarComentario, createTask, criarComentario, deleteTask, toggleTimer, updateTask } from './actions';
 import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
-import type { PhaseView, Send, TaskView } from './types';
+import type { ComentarioView, PhaseView, Send, TaskView } from './types';
 import { ChipSelect, DateChip, PriorityChip, TimerChip, hoje } from './ui';
 
-export function TaskDrawer({ task, subtarefas, phases, projectId, send, onFechar }: {
+export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, send, onFechar }: {
   task: TaskView;
+  comentarios: ComentarioView[];
   subtarefas: TaskView[];
   phases: PhaseView[];
   projectId: string;
@@ -25,6 +26,7 @@ export function TaskDrawer({ task, subtarefas, phases, projectId, send, onFechar
   const [titulo, setTitulo] = useState(task.title);
   const [notas, setNotas] = useState(task.notes ?? '');
   const [novaSub, setNovaSub] = useState('');
+  const [comentario, setComentario] = useState('');
 
   // Trocar de tarefa sem fechar a gaveta tem que recarregar os campos.
   useEffect(() => {
@@ -220,6 +222,56 @@ export function TaskDrawer({ task, subtarefas, phases, projectId, send, onFechar
                 className="w-full rounded-sm border border-transparent px-1 py-1 text-[13px] text-text-primary outline-none transition-colors hover:border-black/[0.08] focus:border-primary/40"
               />
             </div>
+          </div>
+
+          {/* A conversa da tarefa: veio do SimbOS e continua aqui, porque é onde
+              fica registrado o que foi decidido no meio do caminho. */}
+          <div>
+            <p className="mb-1.5 flex items-center gap-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
+              Conversa
+              {comentarios.length > 0 && (
+                <span className="rounded-full bg-black/[0.06] px-1.5 py-0.5 tabular-nums normal-case tracking-normal">
+                  {comentarios.length}
+                </span>
+              )}
+            </p>
+
+            {comentarios.length > 0 && (
+              <ul className="mb-2 flex flex-col gap-2">
+                {comentarios.map((c) => (
+                  <li key={c.id} className="group rounded-md border border-black/[0.06] bg-neutral-50 px-2.5 py-2">
+                    <p className="mb-1 flex items-center gap-2 text-[11px] text-text-muted">
+                      <span className="font-medium text-text-secondary">{c.autor ?? 'alguém'}</span>
+                      {new Date(c.quando).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' })}
+                      <button
+                        onClick={() => { if (confirm('Apagar este comentário?')) send(apagarComentario, { id: c.id }); }}
+                        className="ml-auto rounded p-0.5 text-text-muted/40 transition hover:bg-danger/10 hover:text-danger"
+                        aria-label="Apagar comentário"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </p>
+                    <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-text-primary">{c.texto}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <textarea
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              onKeyDown={(e) => {
+                // Enter manda; Shift+Enter quebra linha, como em qualquer chat.
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  const limpo = comentario.trim();
+                  if (limpo) { send(criarComentario, { task_id: task.id, content: limpo }); setComentario(''); }
+                }
+              }}
+              rows={2}
+              placeholder="Escrever um comentário (Enter manda)"
+              className="w-full resize-y rounded-sm border border-black/[0.08] px-2.5 py-2 text-[13px] leading-relaxed text-text-primary outline-none transition-colors focus:border-primary/40"
+            />
           </div>
 
           {/* Visível para o cliente: mesma chave da etapa, no nível da tarefa. */}

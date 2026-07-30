@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Check, Plus, Trash2 } from 'lucide-react';
 import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
-import type { PhaseView, Send, TaskComProjeto, TaskView } from './types';
+import type { ComentarioView, PhaseView, Send, TaskComProjeto, TaskView } from './types';
 import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
@@ -21,8 +21,9 @@ const COLUNA_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success',
 };
 
-export function KanbanView({ tasks, phasesDe, projectId, mostrarProjeto, pending, send }: {
+export function KanbanView({ tasks, comentarios, phasesDe, projectId, mostrarProjeto, pending, send }: {
   tasks: TaskComProjeto[];
+  comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
   mostrarProjeto: boolean;
@@ -118,6 +119,7 @@ export function KanbanView({ tasks, phasesDe, projectId, mostrarProjeto, pending
       {aberta && (
         <TaskDrawer
           task={aberta}
+          comentarios={comentarios.filter((c) => c.taskId === aberta.id)}
           subtarefas={subs(aberta.id)}
           phases={phasesDe(aberta.projetoId)}
           projectId={aberta.projetoId}

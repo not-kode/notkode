@@ -19,10 +19,11 @@ import {
   Link2, List, Plus, Trash2,
 } from 'lucide-react';
 import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
-import type { PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
+import type { ComentarioView, NotaView, PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
+import { NotasView } from './notas-view';
 import { ChipSelect, DateChip, InlineText, fmtDuracao, hoje, inputCls, somaDias } from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
@@ -60,12 +61,19 @@ const PERIODOS = [
 ] as const;
 type Periodo = (typeof PERIODOS)[number]['id'];
 
-export function EntregasView({ projects }: { projects: ProjectView[] }) {
+/** Tasks, cronograma e a base de notas do cliente. */
+type Aba = 'tasks' | 'cronograma' | 'notas';
+
+export function EntregasView({ projects, comentarios, notas }: {
+  projects: ProjectView[];
+  comentarios: ComentarioView[];
+  notas: NotaView[];
+}) {
   const ativos = useMemo(() => projects.filter((p) => !p.archivedAt), [projects]);
   const arquivados = useMemo(() => projects.filter((p) => p.archivedAt), [projects]);
 
   const [abertoId, setAbertoId] = useState<string | null>(ativos[0]?.id ?? projects[0]?.id ?? null);
-  const [aba, setAba] = useState<'tasks' | 'cronograma'>('tasks');
+  const [aba, setAba] = useState<Aba>('tasks');
   const [visao, setVisao] = useState<'kanban' | 'lista'>('lista');
   const [escopo, setEscopo] = useState<'projeto' | 'todos'>('projeto');
   const [periodo, setPeriodo] = useState<Periodo>('tudo');
@@ -211,6 +219,8 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
             <ProjectPanel
               key={aberto.id}
               project={aberto}
+              comentarios={comentarios}
+              notas={notas}
               tarefas={filtradas}
               tarefasDoEscopo={doEscopo}
               phasesDe={phasesDe}
@@ -327,15 +337,17 @@ function Numeros({ tarefas }: { tarefas: TaskComProjeto[] }) {
 }
 
 function ProjectPanel({
-  project, tarefas, tarefasDoEscopo, phasesDe, aba, setAba, visao, setVisao,
+  project, comentarios, notas, tarefas, tarefasDoEscopo, phasesDe, aba, setAba, visao, setVisao,
   escopo, setEscopo, periodo, setPeriodo, pending, send,
 }: {
   project: ProjectView;
+  comentarios: ComentarioView[];
+  notas: NotaView[];
   tarefas: TaskComProjeto[];
   tarefasDoEscopo: TaskComProjeto[];
   phasesDe: (id: string) => PhaseView[];
-  aba: 'tasks' | 'cronograma';
-  setAba: (v: 'tasks' | 'cronograma') => void;
+  aba: Aba;
+  setAba: (v: Aba) => void;
   visao: 'kanban' | 'lista';
   setVisao: (v: 'kanban' | 'lista') => void;
   escopo: 'projeto' | 'todos';
@@ -347,6 +359,7 @@ function ProjectPanel({
 }) {
   const [novaEtapa, setNovaEtapa] = useState(false);
   const nome = project.orgName ?? project.title ?? 'Sem cliente';
+  const notasDoProjeto = notas.filter((n) => n.projetoId === project.id).length;
 
   return (
     <div>
@@ -354,6 +367,14 @@ function ProjectPanel({
         <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
           <button onClick={() => setAba('tasks')} className={tabCls(aba === 'tasks')}>Tasks</button>
           <button onClick={() => setAba('cronograma')} className={tabCls(aba === 'cronograma')}>Cronograma</button>
+          <button onClick={() => setAba('notas')} className={tabCls(aba === 'notas')}>
+            Notas
+            {notasDoProjeto > 0 && (
+              <span className="rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
+                {notasDoProjeto}
+              </span>
+            )}
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -386,7 +407,9 @@ function ProjectPanel({
         </p>
       )}
 
-      {aba === 'tasks' ? (
+      {aba === 'notas' ? (
+        <NotasView notas={notas} projectId={project.id} projetoNome={nome} send={send} />
+      ) : aba === 'tasks' ? (
         <>
           <Numeros tarefas={tarefasDoEscopo} />
 
@@ -418,6 +441,7 @@ function ProjectPanel({
 
           {visao === 'kanban' ? (
             <KanbanView
+              comentarios={comentarios}
               tasks={tarefas}
               phasesDe={phasesDe}
               projectId={project.id}
@@ -427,6 +451,7 @@ function ProjectPanel({
             />
           ) : (
             <ListView
+              comentarios={comentarios}
               tasks={tarefas}
               phasesDe={phasesDe}
               projectId={project.id}

@@ -36,3 +36,14 @@ export type ProjectView = {
 
 /** O que uma visualização precisa para editar uma tarefa. */
 export type Send = (action: (fd: FormData) => Promise<void>, campos: Record<string, string>) => void;
+
+/** Comentário dentro de uma tarefa: o histórico da conversa sobre ela. */
+export type ComentarioView = {
+  id: string; taskId: string; autor: string | null; texto: string; quando: string;
+};
+
+/** Nota da base de conhecimento, presa (ou não) a um projeto. */
+export type NotaView = {
+  id: string; projetoId: string | null; titulo: string; conteudo: string | null;
+  tipo: string; tags: string[]; criadaEm: string; atualizadaEm: string;
+};
