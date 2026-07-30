@@ -6,14 +6,17 @@
 // mexer nela abre a tarefa.
 
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, Check, ChevronRight, Plus, Trash2 } from 'lucide-react';
-import { bulkTasks, createTask, deleteTask, toggleTimer, updateTask } from './actions';
+import { ArrowDown, ArrowUp, Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { PRIORITY_ORDER, TASK_DOT, TASK_LABELS, type TaskStatus } from './status';
 import type { PhaseView, Send, TaskComProjeto } from './types';
 import { Avatar, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
-type Coluna = 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
+// 'manual' é a ordem do quadro, a que você monta arrastando. Clicar num
+// cabeçalho troca para aquela coluna; arrastar de volta devolve para a manual,
+// senão a lista mostraria uma ordem e o banco guardaria outra.
+type Coluna = 'manual' | 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
 
 /** A ordem dos blocos: o que está em jogo primeiro, feito no fim. */
 const BLOCOS: TaskStatus[] = ['a_fazer', 'fazendo', 'revisao', 'backlog', 'feito'];
@@ -33,7 +36,10 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
   mostrarProjeto: boolean;
   send: Send;
 }) {
-  const [ordem, setOrdem] = useState<{ col: Coluna; asc: boolean }>({ col: 'prazo', asc: true });
+  const [ordem, setOrdem] = useState<{ col: Coluna; asc: boolean }>({ col: 'manual', asc: true });
+  const [arrastando, setArrastando] = useState<string | null>(null);
+  const [alvo, setAlvo] = useState<string | null>(null);
+  const [punho, setPunho] = useState<string | null>(null);
   const [criandoEm, setCriandoEm] = useState<TaskStatus | null>(null);
   // Feito nasce fechado: é histórico, não fila.
   const [fechados, setFechados] = useState<TaskStatus[]>(['feito']);
@@ -53,7 +59,7 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
     { id: 'prioridade', label: 'Prioridade', cls: 'w-28' },
     { id: 'tempo', label: 'Tempo', cls: 'w-28' },
   ];
-  const colspan = colunas.length + 3;
+  const colspan = colunas.length + 4;
 
   const chave = (t: TaskComProjeto): string | number => {
     switch (ordem.col) {
@@ -63,7 +69,8 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
       case 'inicio': return t.startDate ?? '9999';
       case 'prioridade': return PRIORITY_ORDER[t.priority];
       case 'tempo': return -t.tempoSegundos;
-      default: return t.dueDate ?? '9999';
+      case 'prazo': return t.dueDate ?? '9999';
+      default: return t.sort;
     }
   };
 
@@ -84,6 +91,19 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
     setSelecao([]);
   };
 
+  /**
+   * Soltou: a tarefa vai para o status do bloco de destino, na posição em que
+   * foi solta (`before` vazio = fim do bloco). Como a posição só existe na ordem
+   * manual, arrastar devolve a lista para ela.
+   */
+  const soltar = (id: string, status: TaskStatus, before: string) => {
+    setArrastando(null);
+    setAlvo(null);
+    if (!id || id === before) return;
+    setOrdem({ col: 'manual', asc: true });
+    send(moveTask, { id, status, before });
+  };
+
   return (
     <div className="flex flex-col gap-3">
       {BLOCOS.map((status) => {
@@ -94,7 +114,15 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
         return (
           <section
             key={status}
-            className="overflow-hidden rounded-md border border-black/[0.07] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)]"
+            onDragOver={(e) => { if (arrastando) { e.preventDefault(); setAlvo(status); } }}
+            onDragLeave={() => setAlvo((a) => (a === status ? null : a))}
+            onDrop={(e) => {
+              e.preventDefault();
+              soltar(e.dataTransfer.getData('text/plain'), status, '');
+            }}
+            className={`overflow-hidden rounded-md border bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition-colors ${
+              arrastando && alvo === status ? 'border-primary/50' : 'border-black/[0.07]'
+            }`}
           >
             <header className="flex items-center gap-2 border-b border-black/[0.06] bg-neutral-50 px-3 py-2">
               <input
@@ -125,13 +153,25 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
               </span>
               <span className="text-[11px] tabular-nums text-text-muted">{doBloco.length}</span>
 
-              <button
-                onClick={() => { setCriandoEm(status); setFechados((f) => f.filter((s) => s !== status)); }}
-                className="ml-auto inline-flex items-center gap-1 text-[12px] text-text-muted transition-colors hover:text-primary"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Tarefa
-              </button>
+              <div className="ml-auto flex items-center gap-3">
+                {/* Ordenado por uma coluna, arrastar não teria onde encaixar:
+                    este atalho devolve a lista para a ordem que você monta. */}
+                {ordem.col !== 'manual' && (
+                  <button
+                    onClick={() => setOrdem({ col: 'manual', asc: true })}
+                    className="text-[11px] text-text-muted underline decoration-dotted transition-colors hover:text-primary"
+                  >
+                    voltar à ordem manual
+                  </button>
+                )}
+                <button
+                  onClick={() => { setCriandoEm(status); setFechados((f) => f.filter((s) => s !== status)); }}
+                  className="inline-flex items-center gap-1 text-[12px] text-text-muted transition-colors hover:text-primary"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Tarefa
+                </button>
+              </div>
             </header>
 
             {!fechado && (
@@ -139,6 +179,7 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
                 <table className="w-full min-w-[48rem] border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-black/[0.05]">
+                      <th className="w-6" />
                       <th className="w-8" />
                       <th className="w-9" />
                       {colunas.map((c) => {
@@ -167,11 +208,39 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
                       return (
                         <tr
                           key={t.id}
+                          // Só o punho puxa: linha inteira arrastável impede
+                          // selecionar texto e editar os campos de dentro.
+                          draggable={punho === t.id}
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/plain', t.id);
+                            e.dataTransfer.effectAllowed = 'move';
+                            setArrastando(t.id);
+                          }}
+                          onDragEnd={() => { setArrastando(null); setAlvo(null); setPunho(null); }}
+                          onDragOver={(e) => {
+                            if (arrastando && arrastando !== t.id) { e.preventDefault(); setAlvo(t.id); }
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            soltar(e.dataTransfer.getData('text/plain'), status, t.id);
+                          }}
                           className={`group border-b border-black/[0.04] transition-colors last:border-0 ${
+                            arrastando === t.id ? 'opacity-40' : ''
+                          } ${alvo === t.id && arrastando && arrastando !== t.id ? 'border-t-2 border-t-primary' : ''} ${
                             marcada(t.id) ? 'bg-primary/[0.05]' : 'hover:bg-neutral-50/70'
                           }`}
                         >
-                          <td className="py-2 pl-3 pr-0">
+                          <td
+                            onMouseDown={() => setPunho(t.id)}
+                            onMouseUp={() => setPunho(null)}
+                            title="Arraste para reordenar ou mudar de bloco"
+                            className="cursor-grab py-2 pl-2 pr-0 text-text-muted/40 transition-colors hover:text-text-muted active:cursor-grabbing"
+                          >
+                            <GripVertical className="h-3.5 w-3.5" />
+                          </td>
+
+                          <td className="py-2 pl-1 pr-0">
                             <input
                               type="checkbox"
                               checked={marcada(t.id)}
