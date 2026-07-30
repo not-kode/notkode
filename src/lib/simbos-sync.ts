@@ -15,6 +15,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import {
   PRIORIDADE_DO_SIMBOS, SIMBOS_WORKSPACE, STATUS_DO_SIMBOS, simbosAtivo, simbosCall,
 } from '@/lib/simbos';
+import { RESPONSAVEL_PADRAO } from '@/app/admin/(app)/entregas/status';
 
 type TaskSimbos = {
   id: string;
@@ -129,6 +130,9 @@ export async function sincronizarComSimbos(): Promise<ResultadoSync> {
         notes: r.description,
         status,
         priority,
+        // Tarefa que chega do SimbOS também nasce com dono: sem isso, metade da
+        // lista ficava sem responsável e a coluna "quem" não servia para nada.
+        assignee: RESPONSAVEL_PADRAO,
         due_date: r.dueDate,
         done_at: status === 'feito' ? r.updatedAt : null,
         simbos_synced_at: new Date().toISOString(),

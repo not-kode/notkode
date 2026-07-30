@@ -214,7 +214,7 @@ export async function moveTask(formData: FormData): Promise<void> {
   const pedidos = (str(formData, 'ids', 8000) ?? str(formData, 'id', 64) ?? '')
     .split(',')
     .filter(Boolean)
-    .slice(0, 200);
+    .slice(0, 500);
   const status = str(formData, 'status', 32);
   const before = str(formData, 'before', 64);
   if (!pedidos.length || !status || !TASK_STATUSES.includes(status as TaskStatus)) return;
@@ -277,7 +277,7 @@ export async function moveTask(formData: FormData): Promise<void> {
  */
 export async function bulkTasks(formData: FormData): Promise<void> {
   const acao = str(formData, 'acao', 16);
-  const ids = (str(formData, 'ids', 8000) ?? '').split(',').filter(Boolean).slice(0, 200);
+  const ids = (str(formData, 'ids', 8000) ?? '').split(',').filter(Boolean).slice(0, 500);
   if (!ids.length || !acao) return;
 
   const supabase = getSupabaseAdmin();
