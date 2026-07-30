@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { seoAlternates } from '@/lib/seo';
 import {
   ArrowDown, Layout, FileText, BookOpen, Globe2, Search, PenTool, Rocket,
   Sparkles, Code2, Wand2, Gauge as GaugeIcon,
@@ -23,7 +24,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Sites' });
-  return { title: t('metaTitle'), description: t('metaDesc') };
+  return {
+    title: t('metaTitle'),
+    description: t('metaDesc'),
+    alternates: seoAlternates(locale, '/sites'),
+  };
 }
 
 const SITE_SLIDES: StackSlide[] = [

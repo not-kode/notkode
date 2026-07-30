@@ -1,9 +1,15 @@
 import type { MetadataRoute } from 'next';
+import { routing } from '@/i18n/routing';
+import { CASES } from '@/data/cases';
+import { absoluteUrl } from '@/lib/seo';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
+type Href = Parameters<typeof absoluteUrl>[1];
 
-// Rotas estáticas do site (sem o /blog que ainda é placeholder)
-const ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }> = [
+// Rotas estáticas do site (sem o /blog que ainda é placeholder e está noindex).
+// O path é sempre o de português e o absoluteUrl traduz por locale. Montar a URL
+// na mão colocava /en/sistemas-ia no sitemap, que responde 307 para /en/ai-systems
+// e virava "página com redirecionamento" no Search Console.
+const ROUTES: Array<{ path: Href; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']; priority: number }> = [
   { path: '/',                     changeFrequency: 'monthly', priority: 1.0 },
   { path: '/sistemas-ia',          changeFrequency: 'monthly', priority: 0.9 },
   { path: '/ecommerce',            changeFrequency: 'monthly', priority: 0.9 },
@@ -17,21 +23,26 @@ const ROUTES: Array<{ path: string; changeFrequency: MetadataRoute.Sitemap[numbe
   { path: '/politica-privacidade', changeFrequency: 'yearly',  priority: 0.2 },
 ];
 
-const LOCALES = ['pt', 'en'];
-
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  return ROUTES.flatMap((r) =>
-    LOCALES.map((locale) => ({
-      url: `${SITE_URL}/${locale}${r.path === '/' ? '' : r.path}`,
+
+  const entries = (
+    href: Href,
+    changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'],
+    priority: number
+  ) =>
+    routing.locales.map((locale) => ({
+      url: absoluteUrl(locale, href),
       lastModified: now,
-      changeFrequency: r.changeFrequency,
-      priority: r.priority,
+      changeFrequency,
+      priority,
       alternates: {
-        languages: Object.fromEntries(
-          LOCALES.map((l) => [l, `${SITE_URL}/${l}${r.path === '/' ? '' : r.path}`])
-        ),
+        languages: Object.fromEntries(routing.locales.map((l) => [l, absoluteUrl(l, href)])),
       },
-    }))
-  );
+    }));
+
+  return [
+    ...ROUTES.flatMap((r) => entries(r.path, r.changeFrequency, r.priority)),
+    ...CASES.flatMap((c) => entries({ pathname: '/cases/[slug]', params: { slug: c.slug } }, 'monthly', 0.6)),
+  ];
 }

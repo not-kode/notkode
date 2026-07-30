@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { seoAlternates } from '@/lib/seo';
 import { ArrowUpRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/ui/reveal';
@@ -16,7 +17,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Cases' });
-  return { title: t('metaTitle'), description: t('metaDesc') };
+  return {
+    title: t('metaTitle'),
+    description: t('metaDesc'),
+    alternates: seoAlternates(locale, '/cases'),
+  };
 }
 
 function Stat({ value, label }: { value: string; label: string }) {

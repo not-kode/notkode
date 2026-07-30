@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { seoAlternates } from '@/lib/seo';
 import { ArrowUpRight, Linkedin } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SectionMarker } from '@/components/ui/section-marker';
@@ -18,6 +19,7 @@ export async function generateMetadata({
   return {
     title: t('metaTitle'),
     description: t('metaDesc'),
+    alternates: seoAlternates(locale, '/sobre'),
   };
 }
 

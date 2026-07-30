@@ -16,7 +16,17 @@ const nextConfig = {
   // O mapa de calor virou sub-aba de Comportamento; a rota antiga não fica 404
   // para quem tiver a aba aberta.
   async redirects() {
-    return [{ source: '/admin/mapa-de-calor', destination: '/admin/sessoes?ver=calor', permanent: false }];
+    return [
+      { source: '/admin/mapa-de-calor', destination: '/admin/sessoes?ver=calor', permanent: false },
+
+      // Rotas do site antigo (React Router) que o Google ainda tem indexadas. Sem
+      // isso elas caem no middleware do next-intl, viram /pt/companies e dão 404,
+      // o motivo "não encontrado (404)" no Search Console. /blog/:slug fica de fora
+      // de propósito: nunca houve post publicado, 404 ali é a resposta correta.
+      { source: '/companies', destination: '/pt', permanent: true },
+      { source: '/agencies', destination: '/pt/parcerias', permanent: true },
+      { source: '/about-us', destination: '/pt/sobre', permanent: true },
+    ];
   },
   images: {
     formats: ['image/avif', 'image/webp'],

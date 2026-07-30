@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { seoAlternates } from '@/lib/seo';
 import { ArrowDown, ShoppingCart, RefreshCw, Cpu, Search, PenTool, Rocket } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { CountUp } from '@/components/ui/count-up';
@@ -20,7 +21,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Ecommerce' });
-  return { title: t('metaTitle'), description: t('metaDesc') };
+  return {
+    title: t('metaTitle'),
+    description: t('metaDesc'),
+    alternates: seoAlternates(locale, '/ecommerce'),
+  };
 }
 
 const STORE_SLIDES: StackSlide[] = [

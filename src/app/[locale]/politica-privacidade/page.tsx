@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { seoAlternates } from '@/lib/seo';
 import { Reveal } from '@/components/ui/reveal';
 
 export async function generateMetadata({
@@ -13,6 +14,7 @@ export async function generateMetadata({
     title: t('metaTitle'),
     description: t('metaDesc'),
     robots: { index: true, follow: true },
+    alternates: seoAlternates(locale, '/politica-privacidade'),
   };
 }
 

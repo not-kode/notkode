@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { seoAlternates } from '@/lib/seo';
 import { Reveal } from '@/components/ui/reveal';
 import { AppCard } from '@/components/apps/app-card';
 import { AppsQualificationForm } from '@/components/apps/apps-qualification-form';
@@ -12,7 +13,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Apps' });
-  return { title: t('metaTitle'), description: t('metaDesc') };
+  return {
+    title: t('metaTitle'),
+    description: t('metaDesc'),
+    alternates: seoAlternates(locale, '/apps'),
+  };
 }
 
 export default async function AppsPage({

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { seoAlternates } from '@/lib/seo';
 import { ArrowDown, Bot, Workflow, MessageSquare, Zap, Search, PenTool, Rocket, Sparkles, FileSpreadsheet, Database } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { TiltCard } from '@/components/ui/tilt-card';
@@ -19,7 +20,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Agentes' });
-  return { title: t('metaTitle'), description: t('metaDesc') };
+  return {
+    title: t('metaTitle'),
+    description: t('metaDesc'),
+    alternates: seoAlternates(locale, '/agentes-automacao'),
+  };
 }
 
 export default async function AgentesAutomacaoPage({

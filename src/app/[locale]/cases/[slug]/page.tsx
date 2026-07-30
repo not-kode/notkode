@@ -1,5 +1,7 @@
+import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { seoAlternates } from '@/lib/seo';
 import { ArrowUpRight, ArrowLeft, ArrowRight, ExternalLink, Quote } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { Reveal } from '@/components/ui/reveal';
@@ -8,6 +10,24 @@ import { FinalCTA } from '@/components/home/final-cta';
 
 export function generateStaticParams() {
   return CASES.map((c) => ({ slug: c.slug }));
+}
+
+// Sem isso as 12 páginas de case herdavam o title genérico do layout e ficavam
+// sem canônica própria.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const item = getCaseBySlug(slug);
+  if (!item) return {};
+
+  return {
+    title: `${item.name}, case Notkode`,
+    description: item.description,
+    alternates: seoAlternates(locale, { pathname: '/cases/[slug]', params: { slug } }),
+  };
 }
 
 export default async function CaseDetailPage({

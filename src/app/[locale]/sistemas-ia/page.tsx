@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { seoAlternates } from '@/lib/seo';
 import { ArrowDown } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
 import { SistemasHeroBackground } from '@/components/sistemas-ia/sistemas-hero-background';
@@ -23,6 +24,7 @@ export async function generateMetadata({
   return {
     title: t('metaTitle'),
     description: t('metaDesc'),
+    alternates: seoAlternates(locale, '/sistemas-ia'),
   };
 }
 
