@@ -110,7 +110,12 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
   // Toda ação em lote encerra a seleção: a barra sumir é o sinal de que a ação
   // foi para o banco, e barra parada na tela vira clique sem querer.
   const editarLote = (campos: Record<string, string>) => {
-    send(bulkTasks, { acao: 'editar', ids: selecao.join(','), ...campos });
+    // Responsável vale para a tarefa e para as subtarefas dela: elas não estão
+    // na lista para serem marcadas, e quem toca a mãe toca as filhas.
+    const ids = 'assignee' in campos
+      ? [...new Set(selecao.flatMap((id) => [id, ...subs(id).map((s) => s.id)]))]
+      : selecao;
+    send(bulkTasks, { acao: 'editar', ids: ids.join(','), ...campos });
     setSelecao([]);
   };
   const apagarLote = () => {
