@@ -385,10 +385,10 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
 
                           {/* Sempre visível, de propósito: escondido no hover, ninguém
                               descobre que existe. Confirma antes, porque apagar aqui
-                              apaga também no SimbOS. */}
+                              não tem volta. */}
                           <td className="px-2 py-2 text-right">
                             <button
-                              onClick={() => { if (confirm(`Apagar a tarefa "${t.title}"? Ela sai também do SimbOS.`)) send(deleteTask, { id: t.id }); }}
+                              onClick={() => { if (confirm(`Apagar a tarefa "${t.title}"? Não tem como desfazer.`)) send(deleteTask, { id: t.id }); }}
                               className="rounded p-1 text-text-muted/45 transition hover:bg-danger/10 hover:text-danger"
                               aria-label="Apagar tarefa"
                               title="Apagar tarefa"
@@ -530,7 +530,7 @@ function BarraSelecao({ quantas, etapas, editar, apagar, limpar }: {
       <span className="h-4 w-px bg-black/[0.08]" />
 
       <button
-        onClick={() => { if (confirm(`Apagar ${quantas} tarefa(s)? Elas saem também do SimbOS.`)) apagar(); }}
+        onClick={() => { if (confirm(`Apagar ${quantas} tarefa(s)? Não tem como desfazer.`)) apagar(); }}
         className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.1] px-3 py-1 text-[12px] font-medium text-text-secondary transition hover:border-danger/40 hover:text-danger"
       >
         <Trash2 className="h-3.5 w-3.5" />

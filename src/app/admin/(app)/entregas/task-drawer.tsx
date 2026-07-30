@@ -81,7 +81,7 @@ export function TaskDrawer({ task, subtarefas, phases, projectId, send, onFechar
           </button>
           <span className="flex-1 font-label text-[10px] uppercase tracking-wider text-text-muted">Tarefa</span>
           <button
-            onClick={() => { if (confirm(`Apagar a tarefa "${task.title}"? Ela sai também do SimbOS.`)) { send(deleteTask, { id: task.id }); onFechar(); } }}
+            onClick={() => { if (confirm(`Apagar a tarefa "${task.title}"? Não tem como desfazer.`)) { send(deleteTask, { id: task.id }); onFechar(); } }}
             title="Apagar tarefa"
             className="rounded p-1 text-text-muted/60 transition hover:bg-danger/10 hover:text-danger"
           >

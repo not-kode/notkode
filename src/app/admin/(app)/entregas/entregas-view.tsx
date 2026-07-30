@@ -12,12 +12,11 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   createPhase, updatePhase, deletePhase, movePhase,
-  setProjectArchived, sincronizarSimbos,
-  generateClientToken, revokeClientToken,
+  setProjectArchived, generateClientToken, revokeClientToken,
 } from './actions';
 import {
   Archive, ArchiveRestore, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid,
-  Link2, List, Plus, RefreshCw, Trash2,
+  Link2, List, Plus, Trash2,
 } from 'lucide-react';
 import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
 import type { PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
@@ -84,8 +83,8 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
     start(async () => { await action(fd); router.refresh(); });
   };
 
-  // Tarefa criada em outro lugar (SimbOS, outra aba, o celular) tem que cair
-  // aqui sozinha. Enquanto a aba está à vista, a tela se atualiza de tempos em
+  // Tarefa criada em outro lugar (o MCP no terminal, outra aba, o celular) tem
+  // que cair aqui sozinha. Enquanto a aba está à vista, a tela se atualiza de tempos em
   // tempos; escondida, para de buscar, para não ficar consultando à toa.
   useEffect(() => {
     const atualizar = () => {
@@ -161,7 +160,6 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
           <p className="eyebrow mb-1"><span className="status-dot" />Projetos e cronograma</p>
           <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
         </div>
-        <SyncSimbos />
       </header>
 
       <div className="flex flex-col gap-5 lg:flex-row">
@@ -281,44 +279,6 @@ function ItemProjeto({ projeto, ativo, onClick }: { projeto: ProjectView; ativo:
         </span>
       )}
     </button>
-  );
-}
-
-/**
- * O SimbOS e o sistema andam juntos: o que muda aqui vai para lá na hora, e o
- * que muda lá é buscado quando esta tela abre. Este botão força a busca sem
- * precisar recarregar.
- */
-function SyncSimbos() {
-  const [rodando, setRodando] = useState(false);
-  const [resumo, setResumo] = useState<string | null>(null);
-
-  const rodar = async () => {
-    setRodando(true);
-    setResumo(null);
-    try {
-      const r = await sincronizarSimbos();
-      if (!r.ok) setResumo(r.motivo ?? 'não deu');
-      else if ((r.criadas ?? 0) + (r.atualizadas ?? 0) + (r.apagadas ?? 0) === 0) setResumo('já estava em dia');
-      else setResumo(`${r.criadas} nova(s), ${r.atualizadas} atualizada(s), ${r.apagadas} removida(s)`);
-    } finally {
-      setRodando(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-2">
-      {resumo && <span className="text-[11px] text-text-muted">{resumo}</span>}
-      <button
-        onClick={rodar}
-        disabled={rodando}
-        title="Puxar agora o que mudou no SimbOS"
-        className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-xs font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary disabled:opacity-60"
-      >
-        <RefreshCw className={`h-3.5 w-3.5 ${rodando ? 'animate-spin' : ''}`} />
-        {rodando ? 'Sincronizando' : 'Sincronizar SimbOS'}
-      </button>
-    </div>
   );
 }
 

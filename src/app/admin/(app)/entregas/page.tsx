@@ -1,13 +1,11 @@
-import { after } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { sincronizarSeVencido } from '@/lib/simbos-sync';
 import { EntregasView } from './entregas-view';
 import type { ProjectView } from './types';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
 
 export const dynamic = 'force-dynamic';
-// Ações em lote (responsável de duzentas tarefas, mover uma leva inteira) falam
-// com o SimbOS tarefa a tarefa; com o teto padrão de 10s elas morriam no meio.
+// Ações em lote (responsável de duzentas tarefas de uma vez) precisam de mais
+// que os 10s padrão para terminar.
 export const maxDuration = 60;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
@@ -40,13 +38,6 @@ type TaskRow = {
 };
 
 export default async function EntregasPage() {
-  // Depois de responder: abrir a tela puxa o que mudou no SimbOS, sem atrasar
-  // o carregamento. A varredura tem janela mínima, então navegar não martela.
-  // A tela se atualiza sozinha a cada 20s, e cada atualização passa por aqui: a
-  // janela de 45s é o que faz uma tarefa criada no SimbOS aparecer em menos de
-  // um minuto, sem martelar o servidor deles a cada carregamento.
-  after(async () => { await sincronizarSeVencido(45); });
-
   const supabase = getSupabaseAdmin();
 
   const [{ data: engData }, { data: phaseData }, { data: taskData }] = await Promise.all([

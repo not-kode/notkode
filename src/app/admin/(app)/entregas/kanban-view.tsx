@@ -189,7 +189,7 @@ function TaskCard({ task, phases, projeto, send, onDragStart, onDragEnd, onDropB
 
         {/* Sempre visível: ação escondida no hover ninguém acha. */}
         <button
-          onClick={() => { if (confirm(`Apagar a tarefa "${task.title}"? Ela sai também do SimbOS.`)) send(deleteTask, { id: task.id }); }}
+          onClick={() => { if (confirm(`Apagar a tarefa "${task.title}"? Não tem como desfazer.`)) send(deleteTask, { id: task.id }); }}
           className="shrink-0 rounded p-0.5 text-text-muted/45 transition hover:bg-danger/10 hover:text-danger"
           aria-label="Apagar tarefa"
           title="Apagar tarefa"

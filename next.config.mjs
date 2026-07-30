@@ -26,6 +26,13 @@ const nextConfig = {
       { source: '/companies', destination: '/pt', permanent: true },
       { source: '/agencies', destination: '/pt/parcerias', permanent: true },
       { source: '/about-us', destination: '/pt/sobre', permanent: true },
+
+      // Estas três aparecem no relatório de 404 do Search Console mas não estão
+      // no App.tsx do _legacy, devem vir de uma versão anterior ainda. Apontam
+      // para o serviço equivalente de hoje.
+      { source: '/systems', destination: '/pt/sistemas-ia', permanent: true },
+      { source: '/shop', destination: '/pt/ecommerce', permanent: true },
+      { source: '/agents', destination: '/pt/agentes-automacao', permanent: true },
     ];
   },
   images: {

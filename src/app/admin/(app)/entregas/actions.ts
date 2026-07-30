@@ -6,9 +6,6 @@ import {
   PHASE_STATUSES, PRIORITIES, RESPONSAVEL_PADRAO, TASK_STATUSES,
   type PhaseStatus, type Priority, type TaskStatus,
 } from './status';
-import { SIMBOS_WORKSPACE, simbosCall } from '@/lib/simbos';
-import { espelharAtualizacao, espelharCriacao, espelharExclusao, idSimbosDa } from './simbos-mirror';
-import { sincronizarComSimbos, type ResultadoSync } from '@/lib/simbos-sync';
 
 const str = (fd: FormData, key: string, max = 500): string | null => {
   const v = fd.get(key);
@@ -164,9 +161,8 @@ export async function createTask(formData: FormData): Promise<void> {
     status: status && TASK_STATUSES.includes(status as TaskStatus) ? status : 'a_fazer',
     priority: priority && PRIORITIES.includes(priority as Priority) ? priority : 'media',
     sort: ((ultima?.[0]?.sort as number | undefined) ?? -1) + 1,
-  }).select('id').maybeSingle();
+  });
 
-  if (criada?.id) await espelharCriacao(criada.id as string);
   revalidar();
 }
 
@@ -197,7 +193,6 @@ export async function updateTask(formData: FormData): Promise<void> {
   }
 
   await getSupabaseAdmin().from('project_tasks').update(patch).eq('id', id);
-  await espelharAtualizacao(id);
   revalidar();
 }
 
@@ -265,8 +260,6 @@ export async function moveTask(formData: FormData): Promise<void> {
     await Promise.all(ids.map((taskId, i) => supabase.from('project_tasks').update({ sort: i }).eq('id', taskId)));
   }
 
-  // Arrastar entre colunas é mudança de status: o SimbOS tem que saber.
-  await espelharVarias(atuais.filter((t) => t.status !== status).map((t) => t.id));
   revalidar();
 }
 
@@ -283,11 +276,7 @@ export async function bulkTasks(formData: FormData): Promise<void> {
   const supabase = getSupabaseAdmin();
 
   if (acao === 'apagar') {
-    for (const id of ids) {
-      const simbosId = await idSimbosDa(id);
-      await supabase.from('project_tasks').delete().eq('id', id);
-      await espelharExclusao(simbosId);
-    }
+    await supabase.from('project_tasks').delete().in('id', ids);
     revalidar();
     return;
   }
@@ -324,18 +313,7 @@ export async function bulkTasks(formData: FormData): Promise<void> {
     }
   }
 
-  // O SimbOS não conhece responsável nem etapa: mudar só isso não precisa de
-  // espelho nenhum. O que ele conhece vai em paralelo, em blocos.
-  if (['status', 'priority', 'due_date'].some((k) => k in patch)) await espelharVarias(ids);
-
   revalidar();
-}
-
-/** Espelha um monte de tarefas sem serializar uma atrás da outra. */
-async function espelharVarias(ids: string[], porVez = 8): Promise<void> {
-  for (let i = 0; i < ids.length; i += porVez) {
-    await Promise.all(ids.slice(i, i + porVez).map((id) => espelharAtualizacao(id)));
-  }
 }
 
 /**
@@ -379,27 +357,15 @@ export async function toggleTimer(formData: FormData): Promise<void> {
 export async function deleteTask(formData: FormData): Promise<void> {
   const id = str(formData, 'id', 64);
   if (!id) return;
-  // O id do SimbOS tem que ser lido antes de a linha sumir.
-  const simbosId = await idSimbosDa(id);
   await getSupabaseAdmin().from('project_tasks').delete().eq('id', id);
-  await espelharExclusao(simbosId);
   revalidar();
 }
 
-/**
- * Puxa agora o que mudou no SimbOS, sem esperar o ciclo de 10 minutos do cron.
- * Devolve o resumo para a tela dizer o que aconteceu.
- */
-export async function sincronizarSimbos(): Promise<ResultadoSync> {
-  const r = await sincronizarComSimbos();
-  revalidar();
-  return r;
-}
 
 // ── Arquivo do projeto ───────────────────────────────────────────────────────
 
 /**
- * Arquiva (ou desarquiva) o projeto aqui e no SimbOS. Arquivar não apaga nada:
+ * Arquiva (ou desarquiva) o projeto. Arquivar não apaga nada:
  * o projeto sai da barra lateral e das contas, e volta com um clique.
  */
 export async function setProjectArchived(formData: FormData): Promise<void> {
@@ -412,33 +378,6 @@ export async function setProjectArchived(formData: FormData): Promise<void> {
     .from('engagements')
     .update({ archived_at: arquivar ? new Date().toISOString() : null })
     .eq('id', engagement_id);
-
-  const { data } = await supabase
-    .from('engagements')
-    .select('simbos_project_id')
-    .eq('id', engagement_id)
-    .maybeSingle();
-
-  const projectId = data?.simbos_project_id as string | null | undefined;
-  if (projectId) {
-    // O update_project do SimbOS limpa o que não vier na chamada, então o nome,
-    // a descrição e o resto são relidos e repassados. O repoPath sai junto com o
-    // arquivamento de propósito: um repositório só tem um projeto ativo.
-    const lista = await simbosCall('list_projects', { workspaceSlug: SIMBOS_WORKSPACE }) as
-      | { id: string; name?: string; description?: string; repoPath?: string | null; goal?: string | null }[]
-      | null;
-    const atual = Array.isArray(lista) ? lista.find((p) => p.id === projectId) : null;
-
-    await simbosCall('update_project', {
-      workspaceSlug: SIMBOS_WORKSPACE,
-      projectId,
-      status: arquivar ? 'archived' : 'active',
-      ...(atual?.name ? { name: atual.name } : {}),
-      ...(atual?.description ? { description: atual.description } : {}),
-      goal: atual?.goal ?? null,
-      repoPath: arquivar ? null : atual?.repoPath ?? null,
-    });
-  }
 
   revalidar();
 }
