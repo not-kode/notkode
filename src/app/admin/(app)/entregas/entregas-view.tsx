@@ -28,6 +28,7 @@ import { ChipSelect, DateChip, InlineText, fmtDuracao, hoje, inputCls, somaDias 
 export type { PhaseView, ProjectView, TaskView } from './types';
 
 const PREF_VISAO = 'notkode.entregas.visao';
+const PREF_PROJETO = 'notkode.entregas.projeto';
 
 const tabCls = (ativo: boolean) =>
   `inline-flex max-w-[12rem] items-center gap-1.5 truncate rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
@@ -79,12 +80,22 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
 
   const aberto = projects.find((p) => p.id === abertoId) ?? ativos[0] ?? null;
 
-  // A escolha entre quadro e tabela é preferência de trabalho, não do dado:
-  // fica no navegador e vale para todos os projetos.
+  // Preferências de trabalho, não do dado: ficam no navegador. O projeto aberto
+  // entra aqui porque recarregar a página não pode jogar você em outro cliente.
   useEffect(() => {
     const salvo = localStorage.getItem(PREF_VISAO);
     if (salvo === 'kanban' || salvo === 'lista') setVisao(salvo);
+
+    const projeto = localStorage.getItem(PREF_PROJETO);
+    if (projeto && projects.some((p) => p.id === projeto)) setAbertoId(projeto);
+    // Só na montagem: depois disso quem manda é o clique.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const abrirProjeto = (id: string) => {
+    setAbertoId(id);
+    localStorage.setItem(PREF_PROJETO, id);
+  };
   const trocarVisao = (v: 'kanban' | 'lista') => {
     setVisao(v);
     localStorage.setItem(PREF_VISAO, v);
@@ -145,7 +156,7 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
                 <ul className="flex flex-col gap-0.5">
                   {g.itens.map((p) => (
                     <li key={p.id}>
-                      <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => setAbertoId(p.id)} />
+                      <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => abrirProjeto(p.id)} />
                     </li>
                   ))}
                 </ul>
@@ -166,7 +177,7 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
                   <ul className="mt-1 flex flex-col gap-0.5">
                     {arquivados.map((p) => (
                       <li key={p.id}>
-                        <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => setAbertoId(p.id)} />
+                        <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => abrirProjeto(p.id)} />
                       </li>
                     ))}
                   </ul>
