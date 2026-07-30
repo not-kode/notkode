@@ -38,7 +38,10 @@ type TaskRow = {
 export default async function EntregasPage() {
   // Depois de responder: abrir a tela puxa o que mudou no SimbOS, sem atrasar
   // o carregamento. A varredura tem janela mínima, então navegar não martela.
-  after(async () => { await sincronizarSeVencido(); });
+  // A tela se atualiza sozinha a cada 20s, e cada atualização passa por aqui: a
+  // janela de 45s é o que faz uma tarefa criada no SimbOS aparecer em menos de
+  // um minuto, sem martelar o servidor deles a cada carregamento.
+  after(async () => { await sincronizarSeVencido(45); });
 
   const supabase = getSupabaseAdmin();
 

@@ -9,6 +9,7 @@
 // cima são os números do trabalho e o tempo médio por tarefa.
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   createPhase, updatePhase, deletePhase, movePhase,
   setProjectArchived, sincronizarSimbos,
@@ -72,11 +73,31 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
   const [verArquivados, setVerArquivados] = useState(false);
   const [pending, start] = useTransition();
 
+  const router = useRouter();
+
   const send: Send = (action, campos) => {
     const fd = new FormData();
     for (const [k, v] of Object.entries(campos)) fd.set(k, v);
-    start(() => action(fd));
+    // O refresh depois da ação é cinto de segurança: a revalidação do servidor já
+    // deveria trazer o dado novo, e sem ele uma falha de cache aparece como
+    // "sumiu/não apareceu" na tela.
+    start(async () => { await action(fd); router.refresh(); });
   };
+
+  // Tarefa criada em outro lugar (SimbOS, outra aba, o celular) tem que cair
+  // aqui sozinha. Enquanto a aba está à vista, a tela se atualiza de tempos em
+  // tempos; escondida, para de buscar, para não ficar consultando à toa.
+  useEffect(() => {
+    const atualizar = () => {
+      if (document.visibilityState === 'visible') router.refresh();
+    };
+    const timer = setInterval(atualizar, 20_000);
+    document.addEventListener('visibilitychange', atualizar);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', atualizar);
+    };
+  }, [router]);
 
   const aberto = projects.find((p) => p.id === abertoId) ?? ativos[0] ?? null;
 
