@@ -364,7 +364,10 @@ export const ferramentasDeProjeto: Ferramenta[] = [
       return {
         projeto: alvo.nome, projeto_id: alvo.id, repositorio: alvo.repoPath,
         tarefas_abertas: abertas,
-        dica: 'Use este nome (ou o id) no campo "projeto" das outras ferramentas.',
+        arquivado: alvo.arquivado,
+        dica: alvo.arquivado
+          ? 'Este projeto está arquivado: trabalho antigo. Se voltou a rodar, desarquive antes de encher de tarefa.'
+          : 'Use este nome (ou o id) no campo "projeto" das outras ferramentas.',
       };
     },
   },

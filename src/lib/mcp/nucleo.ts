@@ -105,6 +105,7 @@ export type ProjetoAchado = {
   cliente: string | null;
   organization_id: string | null;
   repoPath: string | null;
+  arquivado: boolean;
   nome: string;
 };
 
@@ -145,10 +146,13 @@ export async function acharProjeto(termo: string): Promise<ProjetoAchado> {
   if (ehCaminho(termo)) {
     const caminho = arrumarCaminho(termo);
     // A pasta de dentro do repositório também vale: quem chama pode estar em
-    // src/ ou packages/x e continua sendo o mesmo cliente.
+    // src/ ou packages/x e continua sendo o mesmo cliente. Projeto arquivado
+    // também é reconhecido (senão trabalho antigo vira "pasta desconhecida"),
+    // mas o ativo ganha quando os dois apontam para a mesma pasta.
     const doRepo = todos
-      .filter((p) => p.repoPath && !p.arquivado && (caminho === p.repoPath || caminho.startsWith(p.repoPath + '/')))
-      .sort((a, b) => (b.repoPath?.length ?? 0) - (a.repoPath?.length ?? 0));
+      .filter((p) => p.repoPath && (caminho === p.repoPath || caminho.startsWith(p.repoPath + '/')))
+      .sort((a, b) =>
+        Number(a.arquivado) - Number(b.arquivado) || (b.repoPath?.length ?? 0) - (a.repoPath?.length ?? 0));
     if (!doRepo.length) {
       throw new ErroDeUso(
         `Nenhum projeto está ligado à pasta ${caminho}. Ligue com "definir_repositorio" ou diga o nome do cliente.`,
