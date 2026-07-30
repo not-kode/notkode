@@ -61,9 +61,11 @@ export async function POST(req: Request) {
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: 'notkode', title: 'Sistema Notkode', version: '1.0.0' },
         instructions:
-          'CRM e entregas da Notkode. Quase tudo aceita o nome do cliente no lugar de id. Comece por "panorama" ' +
-          'para se situar, ou "detalhar_projeto" para mergulhar num cliente. Tarefa criada aqui aparece na hora em ' +
-          'notkode.com.br/admin/entregas.',
+          'CRM e entregas da Notkode. Antes de criar ou consultar tarefa a partir de um repositório, chame ' +
+          '"projeto_daqui" com o diretório atual: ele diz de qual cliente é aquela pasta, e assim a tarefa não vai ' +
+          'parar no projeto errado. Quase tudo aceita o nome do cliente no lugar de id, e o campo "projeto" também ' +
+          'aceita o caminho da pasta direto. Comece por "panorama" para se situar, ou "detalhar_projeto" para ' +
+          'mergulhar num cliente. Tarefa criada aqui aparece na hora em notkode.com.br/admin/entregas.',
       });
 
     case 'ping':

@@ -3,8 +3,8 @@
 // prazos, encerramento).
 
 import {
-  ErroDeUso, acharCliente, acharProjeto, bool, data, num, objeto, obrigatorio,
-  opcoes, reais, str, supabase, texto, hoje, type Ferramenta,
+  ErroDeUso, acharCliente, acharProjeto, arrumarCaminho, bool, data, num, objeto,
+  obrigatorio, opcoes, reais, str, supabase, texto, hoje, type Ferramenta,
 } from './nucleo';
 
 const LIFECYCLES = ['ativo', 'pausado', 'encerrado'] as const;
@@ -19,7 +19,7 @@ type EngRow = {
   billing_cycle: string | null; notes: string | null; scope: string | null;
   client_obligations: string | null; provider_obligations: string | null; renewal_note: string | null;
   proposal_name: string | null; client_token: string | null; is_internal: boolean | null;
-  archived_at: string | null; organization_id: string | null;
+  archived_at: string | null; organization_id: string | null; repo_path: string | null;
   organizations: { name: string | null } | null;
 };
 
@@ -38,6 +38,7 @@ const resumo = (e: EngRow) => ({
   fim: e.end_date,
   interno: e.is_internal ?? false,
   arquivado: !!e.archived_at,
+  repositorio: e.repo_path,
 });
 
 export const ferramentasDeProjeto: Ferramenta[] = [
@@ -58,7 +59,7 @@ export const ferramentasDeProjeto: Ferramenta[] = [
         .select(
           'id, title, type, status, lifecycle, start_date, end_date, valor, mrr, billing_cycle, notes, scope, ' +
             'client_obligations, provider_obligations, renewal_note, proposal_name, client_token, is_internal, ' +
-            'archived_at, organization_id, organizations(name)',
+            'archived_at, organization_id, repo_path, organizations(name)',
         )
         .order('created_at', { ascending: false });
 
@@ -99,7 +100,7 @@ export const ferramentasDeProjeto: Ferramenta[] = [
             .select(
               'id, title, type, status, lifecycle, start_date, end_date, valor, mrr, billing_cycle, notes, scope, ' +
                 'client_obligations, provider_obligations, renewal_note, proposal_name, client_token, is_internal, ' +
-                'archived_at, organization_id, organizations(name)',
+                'archived_at, organization_id, repo_path, organizations(name)',
             )
             .eq('id', alvo.id)
             .maybeSingle(),
@@ -341,6 +342,59 @@ export const ferramentasDeProjeto: Ferramenta[] = [
       const { data: e } = await db.from('engagements').select('client_token').eq('id', alvo.id).maybeSingle();
       const token = e?.client_token as string | null | undefined;
       return { link: token ? `${SITE}/acompanhamento/${token}` : null };
+    },
+  },
+
+  {
+    nome: 'projeto_daqui',
+    descricao:
+      'De qual cliente é a pasta em que você está trabalhando. Chame no começo, com o diretório atual, antes de ' +
+      'criar tarefa a partir do terminal: assim a tarefa cai no projeto certo sem ninguém precisar lembrar o nome. ' +
+      'Se a pasta não estiver ligada a nada, ele diz e você usa "definir_repositorio".',
+    entrada: objeto({ caminho: texto('Caminho da pasta atual (o cwd). Subpastas do repositório também valem.') }, ['caminho']),
+    async executar(args) {
+      const alvo = await acharProjeto(obrigatorio(args, 'caminho'));
+      const db = supabase();
+      const { data: tarefas } = await db
+        .from('project_tasks')
+        .select('id, status')
+        .eq('engagement_id', alvo.id);
+
+      const abertas = ((tarefas ?? []) as { status: string }[]).filter((t) => t.status !== 'feito').length;
+      return {
+        projeto: alvo.nome, projeto_id: alvo.id, repositorio: alvo.repoPath,
+        tarefas_abertas: abertas,
+        dica: 'Use este nome (ou o id) no campo "projeto" das outras ferramentas.',
+      };
+    },
+  },
+
+  {
+    nome: 'definir_repositorio',
+    descricao:
+      'Liga uma pasta do computador a um projeto, para o "projeto_daqui" reconhecer o cliente dali em diante. ' +
+      'Um repositório fica ligado a um projeto ativo só.',
+    entrada: objeto(
+      {
+        projeto: texto('Nome do cliente, título ou id.'),
+        caminho: texto('Caminho da pasta do repositório. Vazio desliga o vínculo.'),
+      },
+      ['projeto'],
+    ),
+    async executar(args) {
+      const alvo = await acharProjeto(obrigatorio(args, 'projeto'));
+      const bruto = str(args, 'caminho');
+      const caminho = bruto ? arrumarCaminho(bruto) : null;
+
+      const { error } = await supabase().from('engagements').update({ repo_path: caminho }).eq('id', alvo.id);
+      if (error) {
+        throw new ErroDeUso(
+          error.message.includes('engagements_repo_path_ativo_idx')
+            ? `A pasta ${caminho} já está ligada a outro projeto ativo. Desligue lá antes.`
+            : `Não deu para salvar: ${error.message}`,
+        );
+      }
+      return caminho ? { ligado: alvo.nome, repositorio: caminho } : { desligado: alvo.nome };
     },
   },
 

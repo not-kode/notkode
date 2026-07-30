@@ -104,27 +104,58 @@ export type ProjetoAchado = {
   titulo: string | null;
   cliente: string | null;
   organization_id: string | null;
+  repoPath: string | null;
   nome: string;
 };
 
-/** Projeto (engagement) por id, por título ou pelo nome do cliente. */
+/** Parece caminho de pasta? Então a busca é pelo repositório, não pelo nome. */
+const ehCaminho = (termo: string) => termo.startsWith('/') || termo.startsWith('~') || termo.startsWith('.');
+
+/** Sem barra no fim e com o ~ resolvido: dois jeitos de escrever a mesma pasta. */
+export const arrumarCaminho = (caminho: string): string => {
+  const semTil = caminho.startsWith('~') ? caminho.replace(/^~/, process.env.HOME ?? '/Users/camila') : caminho;
+  return semTil.replace(/\/+$/, '');
+};
+
+/**
+ * Projeto (engagement) por id, por título, pelo nome do cliente ou pelo caminho
+ * do repositório em que se está trabalhando. O caminho é o que faz a tarefa
+ * criada do terminal cair no cliente certo sem ninguém dizer o nome.
+ */
 export async function acharProjeto(termo: string): Promise<ProjetoAchado> {
   const db = supabase();
   const { data: linhas } = await db
     .from('engagements')
-    .select('id, title, organization_id, organizations(name)')
+    .select('id, title, organization_id, repo_path, archived_at, organizations(name)')
     .order('created_at', { ascending: false });
 
   const todos = ((linhas ?? []) as unknown as {
-    id: string; title: string | null; organization_id: string | null;
-    organizations: { name: string | null } | null;
+    id: string; title: string | null; organization_id: string | null; repo_path: string | null;
+    archived_at: string | null; organizations: { name: string | null } | null;
   }[]).map((e) => ({
     id: e.id,
     titulo: e.title,
     cliente: e.organizations?.name ?? null,
     organization_id: e.organization_id,
+    repoPath: e.repo_path,
+    arquivado: !!e.archived_at,
     nome: e.organizations?.name ?? e.title ?? 'Sem nome',
   }));
+
+  if (ehCaminho(termo)) {
+    const caminho = arrumarCaminho(termo);
+    // A pasta de dentro do repositório também vale: quem chama pode estar em
+    // src/ ou packages/x e continua sendo o mesmo cliente.
+    const doRepo = todos
+      .filter((p) => p.repoPath && !p.arquivado && (caminho === p.repoPath || caminho.startsWith(p.repoPath + '/')))
+      .sort((a, b) => (b.repoPath?.length ?? 0) - (a.repoPath?.length ?? 0));
+    if (!doRepo.length) {
+      throw new ErroDeUso(
+        `Nenhum projeto está ligado à pasta ${caminho}. Ligue com "definir_repositorio" ou diga o nome do cliente.`,
+      );
+    }
+    return doRepo[0];
+  }
 
   if (EH_UUID.test(termo)) {
     const exato = todos.find((p) => p.id === termo);
