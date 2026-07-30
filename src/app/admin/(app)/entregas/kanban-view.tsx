@@ -6,10 +6,10 @@
 
 import { useState } from 'react';
 import { Check, Plus, Trash2 } from 'lucide-react';
-import { createTask, deleteTask, moveTask, updateTask } from './actions';
+import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
-import type { PhaseView, Send, TaskView } from './types';
-import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, hoje } from './ui';
+import type { PhaseView, Send, TaskComProjeto, TaskView } from './types';
+import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
 /** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
@@ -21,10 +21,11 @@ const COLUNA_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success',
 };
 
-export function KanbanView({ tasks, phases, projectId, pending, send }: {
-  tasks: TaskView[];
-  phases: PhaseView[];
+export function KanbanView({ tasks, phasesDe, projectId, mostrarProjeto, pending, send }: {
+  tasks: TaskComProjeto[];
+  phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
+  mostrarProjeto: boolean;
   pending: boolean;
   send: Send;
 }) {
@@ -80,7 +81,8 @@ export function KanbanView({ tasks, phases, projectId, pending, send }: {
                 <TaskCard
                   key={t.id}
                   task={t}
-                  phases={phases}
+                  phases={phasesDe(t.projetoId)}
+                  projeto={mostrarProjeto ? t.projetoNome : null}
                   send={send}
                   onDragStart={() => setArrastando(t.id)}
                   onDragEnd={() => { setArrastando(null); setAlvo(null); }}
@@ -117,8 +119,8 @@ export function KanbanView({ tasks, phases, projectId, pending, send }: {
         <TaskDrawer
           task={aberta}
           subtarefas={subs(aberta.id)}
-          phases={phases}
-          projectId={projectId}
+          phases={phasesDe(aberta.projetoId)}
+          projectId={aberta.projetoId}
           send={send}
           onFechar={() => setAberta(null)}
         />
@@ -127,9 +129,11 @@ export function KanbanView({ tasks, phases, projectId, pending, send }: {
   );
 }
 
-function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
+function TaskCard({ task, phases, projeto, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
   task: TaskView;
   phases: PhaseView[];
+  /** Nome do projeto, só quando o quadro mostra vários juntos. */
+  projeto: string | null;
   send: Send;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -194,8 +198,9 @@ function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, ar
         </button>
       </div>
 
-      {(etapa || subtarefas.length > 0) && (
+      {(etapa || projeto || subtarefas.length > 0) && (
         <p className="mt-1.5 flex items-center gap-2 text-[11px] text-text-muted">
+          {projeto && <span className="min-w-0 truncate font-medium text-text-secondary" title={projeto}>{projeto}</span>}
           {etapa && <span className="min-w-0 truncate" title={etapa.name}>{etapa.name}</span>}
           {subtarefas.length > 0 && (
             <span className="shrink-0 tabular-nums" title="Subtarefas concluídas">
@@ -211,6 +216,12 @@ function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, ar
           value={task.dueDate}
           onSave={(v) => send(updateTask, { id: task.id, due_date: v })}
           atrasada={atrasada}
+        />
+        <TimerChip
+          segundos={task.tempoSegundos}
+          rodandoDesde={task.timerDesde}
+          onToggle={() => send(toggleTimer, { id: task.id })}
+          desabilitado={task.status === 'feito'}
         />
       </div>
 

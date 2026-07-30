@@ -13,13 +13,22 @@ export type TaskView = {
   assignee: string | null; clientVisible: boolean; sort: number;
   /** Quando preenchido, a tarefa é subtarefa desta outra. */
   parentId: string | null;
+  /** Tempo já cronometrado, em segundos, sem contar o que está correndo agora. */
+  tempoSegundos: number;
+  /** Instante em que o cronômetro foi ligado; nulo quando está parado. */
+  timerDesde: string | null;
 };
+
+/** Tarefa como as visões usam: no escopo "todos", carrega de que projeto veio. */
+export type TaskComProjeto = TaskView & { projetoNome: string; projetoId: string };
 
 export type ProjectView = {
   id: string; title: string | null; orgName: string | null; lifecycle: string;
   startDate: string | null; endDate: string | null; clientUrl: string | null;
   /** Frente da própria casa (o sistema, o site, o pessoal), sem cliente do outro lado. */
   isInternal: boolean;
+  /** Arquivado: sai da barra lateral, mas o histórico continua aqui. */
+  archivedAt: string | null;
   phases: PhaseView[]; tasks: TaskView[];
 };
 

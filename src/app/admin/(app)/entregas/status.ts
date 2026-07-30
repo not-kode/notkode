@@ -24,14 +24,29 @@ export const TASK_LABELS: Record<TaskStatus, string> = {
   feito: 'Feito',
 };
 
-/** Ordem em que a tarefa aparece na lista: o que está em jogo primeiro. */
-export const TASK_ORDER: Record<TaskStatus, number> = {
-  fazendo: 0,
-  revisao: 1,
-  a_fazer: 2,
-  backlog: 3,
-  feito: 4,
+/** Bolinha e tarja de cada status. Ficavam copiadas em três telas. */
+export const TASK_DOT: Record<TaskStatus, string> = {
+  backlog: 'bg-neutral-200',
+  a_fazer: 'bg-neutral-300',
+  fazendo: 'bg-primary',
+  revisao: 'bg-warning',
+  feito: 'bg-success',
 };
+
+export const TASK_TOM: Record<TaskStatus, string> = {
+  backlog: 'bg-black/[0.03] text-text-muted',
+  a_fazer: 'bg-black/[0.04] text-text-secondary',
+  fazendo: 'bg-primary/10 text-primary',
+  revisao: 'bg-warning/15 text-[#B45309]',
+  feito: 'bg-success/12 text-[#15803D]',
+};
+
+/**
+ * Quem toca a tarefa, por padrão. Quase tudo aqui é a Camila que faz; quando for
+ * de outra pessoa, troca no campo. Melhor um palpite certo na maioria das vezes
+ * do que uma tarefa sem dono nenhum.
+ */
+export const RESPONSAVEL_PADRAO = 'Camila Gregório';
 
 export const PRIORITIES = ['baixa', 'media', 'alta', 'urgente'] as const;
 export type Priority = (typeof PRIORITIES)[number];

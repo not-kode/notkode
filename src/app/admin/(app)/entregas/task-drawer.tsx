@@ -9,26 +9,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Plus, Trash2, X } from 'lucide-react';
-import { createTask, deleteTask, updateTask } from './actions';
-import { TASK_LABELS, TASK_STATUSES } from './status';
+import { createTask, deleteTask, toggleTimer, updateTask } from './actions';
+import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
 import type { PhaseView, Send, TaskView } from './types';
-import { ChipSelect, DateChip, PriorityChip, hoje } from './ui';
-
-const STATUS_DOT: Record<string, string> = {
-  backlog: 'bg-neutral-200',
-  a_fazer: 'bg-neutral-300',
-  fazendo: 'bg-primary',
-  revisao: 'bg-warning',
-  feito: 'bg-success',
-};
-
-const STATUS_TOM: Record<string, string> = {
-  backlog: 'bg-black/[0.03] text-text-muted',
-  a_fazer: 'bg-black/[0.04] text-text-secondary',
-  fazendo: 'bg-primary/10 text-primary',
-  revisao: 'bg-warning/15 text-[#B45309]',
-  feito: 'bg-success/12 text-[#15803D]',
-};
+import { ChipSelect, DateChip, PriorityChip, TimerChip, hoje } from './ui';
 
 export function TaskDrawer({ task, subtarefas, phases, projectId, send, onFechar }: {
   task: TaskView;
@@ -126,14 +110,24 @@ export function TaskDrawer({ task, subtarefas, phases, projectId, send, onFechar
               <ChipSelect
                 value={task.status}
                 onChange={(v) => send(updateTask, { id: task.id, status: v })}
-                tone={STATUS_TOM[task.status]}
+                tone={TASK_TOM[task.status]}
                 titulo="Status"
-                options={TASK_STATUSES.map((s) => ({ value: s, label: TASK_LABELS[s], dot: STATUS_DOT[s] }))}
+                options={TASK_STATUSES.map((s) => ({ value: s, label: TASK_LABELS[s], dot: TASK_DOT[s] }))}
               />
             </dd>
 
             <dt className="text-text-muted">Prioridade</dt>
             <dd><PriorityChip value={task.priority} onChange={(v) => send(updateTask, { id: task.id, priority: v })} /></dd>
+
+            <dt className="text-text-muted">Tempo</dt>
+            <dd>
+              <TimerChip
+                segundos={task.tempoSegundos}
+                rodandoDesde={task.timerDesde}
+                onToggle={() => send(toggleTimer, { id: task.id })}
+                desabilitado={task.status === 'feito'}
+              />
+            </dd>
 
             <dt className="text-text-muted">Início</dt>
             <dd><DateChip value={task.startDate} onSave={(v) => send(updateTask, { id: task.id, start_date: v })} placeholder="sem início" /></dd>

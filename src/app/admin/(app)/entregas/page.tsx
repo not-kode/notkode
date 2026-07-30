@@ -18,6 +18,7 @@ type EngRow = {
   client_token: string | null;
   organization_id: string | null;
   is_internal: boolean | null;
+  archived_at: string | null;
   organizations: { id: string; name: string | null } | null;
 };
 type PhaseRow = {
@@ -31,6 +32,7 @@ type TaskRow = {
   start_date: string | null; due_date: string | null;
   assignee: string | null; client_visible: boolean; sort: number | null;
   parent_task_id: string | null;
+  time_spent_seconds: number | null; timer_started_at: string | null;
 };
 
 export default async function EntregasPage() {
@@ -43,7 +45,7 @@ export default async function EntregasPage() {
   const [{ data: engData }, { data: phaseData }, { data: taskData }] = await Promise.all([
     supabase
       .from('engagements')
-      .select('id, title, lifecycle, start_date, end_date, client_token, organization_id, is_internal, organizations(id, name)')
+      .select('id, title, lifecycle, start_date, end_date, client_token, organization_id, is_internal, archived_at, organizations(id, name)')
       .order('created_at', { ascending: false }),
     supabase.from('project_phases').select('*').order('sort'),
     supabase.from('project_tasks').select('*').order('sort'),
@@ -62,6 +64,7 @@ export default async function EntregasPage() {
     endDate: e.end_date,
     clientUrl: e.client_token ? `${SITE_URL}/acompanhamento/${e.client_token}` : null,
     isInternal: e.is_internal ?? false,
+    archivedAt: e.archived_at,
     phases: phases
       .filter((p) => p.engagement_id === e.id)
       .map((p) => ({
@@ -75,6 +78,8 @@ export default async function EntregasPage() {
         priority: t.priority ?? 'media', startDate: t.start_date, dueDate: t.due_date,
         assignee: t.assignee, clientVisible: t.client_visible, sort: t.sort ?? 0,
         parentId: t.parent_task_id,
+        tempoSegundos: t.time_spent_seconds ?? 0,
+        timerDesde: t.timer_started_at,
       })),
   }));
 

@@ -2,7 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { PHASE_STATUSES, PRIORITIES, TASK_STATUSES, type PhaseStatus, type Priority, type TaskStatus } from './status';
+import {
+  PHASE_STATUSES, PRIORITIES, RESPONSAVEL_PADRAO, TASK_STATUSES,
+  type PhaseStatus, type Priority, type TaskStatus,
+} from './status';
+import { SIMBOS_WORKSPACE, simbosCall } from '@/lib/simbos';
 import { espelharAtualizacao, espelharCriacao, espelharExclusao, idSimbosDa } from './simbos-mirror';
 import { sincronizarComSimbos, type ResultadoSync } from '@/lib/simbos-sync';
 
@@ -110,6 +114,27 @@ export async function movePhase(formData: FormData): Promise<void> {
 
 // ── Tarefas ──────────────────────────────────────────────────────────────────
 
+/**
+ * O que gravar para parar o cronômetro de uma tarefa, somando o que correu desde
+ * que foi ligado. Devolve objeto vazio quando o relógio já estava parado.
+ */
+async function fecharRelogio(id: string): Promise<Record<string, unknown>> {
+  const { data } = await getSupabaseAdmin()
+    .from('project_tasks')
+    .select('time_spent_seconds, timer_started_at')
+    .eq('id', id)
+    .maybeSingle();
+
+  const desde = data?.timer_started_at as string | null | undefined;
+  if (!desde) return {};
+
+  const corrido = Math.max(0, Math.round((Date.now() - Date.parse(desde)) / 1000));
+  return {
+    time_spent_seconds: ((data?.time_spent_seconds as number | null) ?? 0) + corrido,
+    timer_started_at: null,
+  };
+}
+
 export async function createTask(formData: FormData): Promise<void> {
   const engagement_id = str(formData, 'engagement_id', 64);
   const title = str(formData, 'title', 300);
@@ -134,7 +159,8 @@ export async function createTask(formData: FormData): Promise<void> {
     title,
     start_date: date(formData, 'start_date'),
     due_date: date(formData, 'due_date'),
-    assignee: str(formData, 'assignee', 120),
+    // Sem responsável dito, a tarefa nasce na mão da Camila: é quem toca quase tudo.
+    assignee: str(formData, 'assignee', 120) ?? RESPONSAVEL_PADRAO,
     status: status && TASK_STATUSES.includes(status as TaskStatus) ? status : 'a_fazer',
     priority: priority && PRIORITIES.includes(priority as Priority) ? priority : 'media',
     sort: ((ultima?.[0]?.sort as number | undefined) ?? -1) + 1,
@@ -166,6 +192,8 @@ export async function updateTask(formData: FormData): Promise<void> {
     patch.status = status;
     // Carimba quando ficou pronta; desmarcar limpa, senão a data mente depois.
     patch.done_at = status === 'feito' ? new Date().toISOString() : null;
+    // Tarefa concluída não pode continuar contando tempo.
+    if (status === 'feito') Object.assign(patch, await fecharRelogio(id));
   }
 
   await getSupabaseAdmin().from('project_tasks').update(patch).eq('id', id);
@@ -200,6 +228,7 @@ export async function moveTask(formData: FormData): Promise<void> {
       // Mesma regra do updateTask: a data de conclusão não pode mentir depois.
       done_at: status === 'feito' ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
+      ...(status === 'feito' ? await fecharRelogio(id) : {}),
     })
     .eq('id', id);
 
@@ -217,6 +246,44 @@ export async function moveTask(formData: FormData): Promise<void> {
   await Promise.all(ids.map((taskId, i) => supabase.from('project_tasks').update({ sort: i }).eq('id', taskId)));
   // Arrastar entre colunas é mudança de status: o SimbOS tem que saber.
   if (atual.status !== status) await espelharAtualizacao(id);
+  revalidar();
+}
+
+/**
+ * Liga ou desliga o cronômetro da tarefa. Só um relógio corre por vez: ligar um
+ * pausa o que estiver correndo, porque ninguém faz duas coisas ao mesmo tempo e
+ * relógio esquecido ligado estraga a média.
+ */
+export async function toggleTimer(formData: FormData): Promise<void> {
+  const id = str(formData, 'id', 64);
+  if (!id) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from('project_tasks')
+    .select('timer_started_at')
+    .eq('id', id)
+    .maybeSingle();
+  if (!data) return;
+
+  if (data.timer_started_at) {
+    await supabase.from('project_tasks').update(await fecharRelogio(id)).eq('id', id);
+    revalidar();
+    return;
+  }
+
+  const { data: correndo } = await supabase
+    .from('project_tasks')
+    .select('id')
+    .not('timer_started_at', 'is', null);
+  for (const t of (correndo ?? []) as { id: string }[]) {
+    await supabase.from('project_tasks').update(await fecharRelogio(t.id)).eq('id', t.id);
+  }
+
+  await supabase
+    .from('project_tasks')
+    .update({ timer_started_at: new Date().toISOString() })
+    .eq('id', id);
   revalidar();
 }
 
@@ -238,6 +305,53 @@ export async function sincronizarSimbos(): Promise<ResultadoSync> {
   const r = await sincronizarComSimbos();
   revalidar();
   return r;
+}
+
+// ── Arquivo do projeto ───────────────────────────────────────────────────────
+
+/**
+ * Arquiva (ou desarquiva) o projeto aqui e no SimbOS. Arquivar não apaga nada:
+ * o projeto sai da barra lateral e das contas, e volta com um clique.
+ */
+export async function setProjectArchived(formData: FormData): Promise<void> {
+  const engagement_id = str(formData, 'engagement_id', 64);
+  if (!engagement_id) return;
+  const arquivar = formData.get('arquivar') !== 'off';
+
+  const supabase = getSupabaseAdmin();
+  await supabase
+    .from('engagements')
+    .update({ archived_at: arquivar ? new Date().toISOString() : null })
+    .eq('id', engagement_id);
+
+  const { data } = await supabase
+    .from('engagements')
+    .select('simbos_project_id')
+    .eq('id', engagement_id)
+    .maybeSingle();
+
+  const projectId = data?.simbos_project_id as string | null | undefined;
+  if (projectId) {
+    // O update_project do SimbOS limpa o que não vier na chamada, então o nome,
+    // a descrição e o resto são relidos e repassados. O repoPath sai junto com o
+    // arquivamento de propósito: um repositório só tem um projeto ativo.
+    const lista = await simbosCall('list_projects', { workspaceSlug: SIMBOS_WORKSPACE }) as
+      | { id: string; name?: string; description?: string; repoPath?: string | null; goal?: string | null }[]
+      | null;
+    const atual = Array.isArray(lista) ? lista.find((p) => p.id === projectId) : null;
+
+    await simbosCall('update_project', {
+      workspaceSlug: SIMBOS_WORKSPACE,
+      projectId,
+      status: arquivar ? 'archived' : 'active',
+      ...(atual?.name ? { name: atual.name } : {}),
+      ...(atual?.description ? { description: atual.description } : {}),
+      goal: atual?.goal ?? null,
+      repoPath: arquivar ? null : atual?.repoPath ?? null,
+    });
+  }
+
+  revalidar();
 }
 
 // ── Link de acompanhamento do cliente ────────────────────────────────────────

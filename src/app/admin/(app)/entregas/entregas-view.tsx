@@ -3,27 +3,34 @@
 // Entregas: as tarefas de cada contrato em Kanban ou Lista, e o cronograma em
 // Gantt. Duas faces na mesma tela — aqui você vê tudo; o cliente, pelo link, vê
 // só o cronograma com o que estiver marcado como visível.
+//
+// O topo não tem mais uma segunda lista de tarefas: o recorte de tempo (hoje,
+// amanhã, semana, mês) virou filtro da própria lista de baixo, e o que ficou em
+// cima são os números do trabalho e o tempo médio por tarefa.
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import {
   createPhase, updatePhase, deletePhase, movePhase,
-  updateTask, deleteTask, sincronizarSimbos,
+  setProjectArchived, sincronizarSimbos,
   generateClientToken, revokeClientToken,
 } from './actions';
-import { Check, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid, Link2, List, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { PHASE_LABELS, PHASE_STATUSES, PRIORITY_TONE, type PhaseStatus } from './status';
-import type { PhaseView, ProjectView, Send, TaskView } from './types';
+import {
+  Archive, ArchiveRestore, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid,
+  Link2, List, Plus, RefreshCw, Trash2,
+} from 'lucide-react';
+import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
+import type { PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
-import { ChipSelect, DateChip, InlineText, fmtDate, hoje, inputCls } from './ui';
+import { ChipSelect, DateChip, InlineText, fmtDuracao, hoje, inputCls, somaDias } from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
 
 const PREF_VISAO = 'notkode.entregas.visao';
 
 const tabCls = (ativo: boolean) =>
-  `inline-flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
+  `inline-flex max-w-[12rem] items-center gap-1.5 truncate rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
     ativo ? 'bg-white text-text-primary shadow-[0_1px_2px_rgba(16,24,40,0.08)]' : 'text-text-muted hover:text-text-primary'
   }`;
 
@@ -41,18 +48,36 @@ const PHASE_STATUS_TOM: Record<PhaseStatus, string> = {
   pausada: 'bg-warning/15 text-[#B45309]',
 };
 
+const PERIODOS = [
+  { id: 'tudo',      label: 'Tudo' },
+  { id: 'atrasadas', label: 'Atrasadas' },
+  { id: 'hoje',      label: 'Hoje' },
+  { id: 'amanha',    label: 'Amanhã' },
+  { id: 'semana',    label: 'Semana' },
+  { id: 'mes',       label: 'Mês' },
+  { id: 'sem_prazo', label: 'Sem prazo' },
+] as const;
+type Periodo = (typeof PERIODOS)[number]['id'];
+
 export function EntregasView({ projects }: { projects: ProjectView[] }) {
-  const [abertoId, setAbertoId] = useState<string | null>(projects[0]?.id ?? null);
-  // A fila do topo edita tarefa de qualquer projeto, então tem transição própria.
-  const [filaPending, startFila] = useTransition();
-  const filaSend: Send = (action, campos) => {
+  const ativos = useMemo(() => projects.filter((p) => !p.archivedAt), [projects]);
+  const arquivados = useMemo(() => projects.filter((p) => p.archivedAt), [projects]);
+
+  const [abertoId, setAbertoId] = useState<string | null>(ativos[0]?.id ?? projects[0]?.id ?? null);
+  const [aba, setAba] = useState<'tasks' | 'cronograma'>('tasks');
+  const [visao, setVisao] = useState<'kanban' | 'lista'>('lista');
+  const [escopo, setEscopo] = useState<'projeto' | 'todos'>('projeto');
+  const [periodo, setPeriodo] = useState<Periodo>('tudo');
+  const [verArquivados, setVerArquivados] = useState(false);
+  const [pending, start] = useTransition();
+
+  const send: Send = (action, campos) => {
     const fd = new FormData();
     for (const [k, v] of Object.entries(campos)) fd.set(k, v);
-    startFila(() => action(fd));
+    start(() => action(fd));
   };
-  const [aba, setAba] = useState<'tasks' | 'cronograma'>('tasks');
-  const [visao, setVisao] = useState<'kanban' | 'lista'>('kanban');
-  const aberto = projects.find((p) => p.id === abertoId) ?? null;
+
+  const aberto = projects.find((p) => p.id === abertoId) ?? ativos[0] ?? null;
 
   // A escolha entre quadro e tabela é preferência de trabalho, não do dado:
   // fica no navegador e vale para todos os projetos.
@@ -65,30 +90,25 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
     localStorage.setItem(PREF_VISAO, v);
   };
 
-  // Tudo que está aberto, de todos os projetos: a pergunta "o que eu tenho que
-  // fazer" não pode exigir abrir projeto por projeto.
-  const abertas = useMemo(
-    () =>
-      projects.flatMap((p) =>
-        p.tasks
-          .filter((t) => t.status !== 'feito')
-          .map((t) => ({
-            ...t,
-            projeto: p.orgName ?? p.title ?? 'Sem nome',
-            projetoId: p.id,
-            interno: p.isInternal,
-          })),
-      ),
-    [projects],
-  );
+  // Escopo "todos" ignora arquivados: arquivar existe justamente para tirar da frente.
+  const doEscopo = useMemo<TaskComProjeto[]>(() => {
+    const comProjeto = (p: ProjectView): TaskComProjeto[] =>
+      p.tasks.map((t) => ({ ...t, projetoNome: p.orgName ?? p.title ?? 'Sem nome', projetoId: p.id }));
+    return escopo === 'todos' ? ativos.flatMap(comProjeto) : aberto ? comProjeto(aberto) : [];
+  }, [escopo, ativos, aberto]);
+
+  const filtradas = useMemo(() => recortar(doEscopo, periodo), [doEscopo, periodo]);
+
+  const fasesPorProjeto = useMemo(() => new Map(projects.map((p) => [p.id, p.phases])), [projects]);
+  const phasesDe = (id: string) => fasesPorProjeto.get(id) ?? [];
 
   // Cliente de um lado, casa do outro: são dois modos de trabalho diferentes.
   const grupos = useMemo(
     () => [
-      { titulo: 'Clientes', itens: projects.filter((p) => !p.isInternal) },
-      { titulo: 'Casa', itens: projects.filter((p) => p.isInternal) },
+      { titulo: 'Clientes', itens: ativos.filter((p) => !p.isInternal) },
+      { titulo: 'Casa', itens: ativos.filter((p) => p.isInternal) },
     ].filter((g) => g.itens.length > 0),
-    [projects],
+    [ativos],
   );
 
   if (projects.length === 0) {
@@ -112,8 +132,6 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
         <SyncSimbos />
       </header>
 
-      <Fila tarefas={abertas} irPara={setAbertoId} pending={filaPending} send={filaSend} />
-
       <div className="flex flex-col gap-5 lg:flex-row">
         {/* Lista de projetos em vez de dropdown: com vinte contratos, um campo
             fechado esconde justamente o que precisa estar à vista. */}
@@ -125,36 +143,36 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
                   {g.titulo}
                 </p>
                 <ul className="flex flex-col gap-0.5">
-                  {g.itens.map((p) => {
-                    const abertas = p.tasks.filter((t) => t.status !== 'feito').length;
-                    const ativo = p.id === abertoId;
-                    return (
-                      <li key={p.id}>
-                        <button
-                          onClick={() => setAbertoId(p.id)}
-                          className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors ${
-                            ativo
-                              ? 'bg-primary/10 font-semibold text-primary'
-                              : 'text-text-secondary hover:bg-black/[0.04] hover:text-text-primary'
-                          }`}
-                        >
-                          <span className="min-w-0 flex-1 truncate">{p.orgName ?? p.title ?? 'Sem cliente'}</span>
-                          {abertas > 0 && (
-                            <span
-                              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums ${
-                                ativo ? 'bg-primary/15 text-primary' : 'bg-black/[0.06] text-text-muted'
-                              }`}
-                            >
-                              {abertas}
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
+                  {g.itens.map((p) => (
+                    <li key={p.id}>
+                      <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => setAbertoId(p.id)} />
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
+
+            {arquivados.length > 0 && (
+              <div>
+                <button
+                  onClick={() => setVerArquivados((v) => !v)}
+                  className="flex w-full items-center gap-1.5 px-2 py-1 font-label text-[10px] uppercase tracking-wider text-text-muted transition-colors hover:text-text-secondary"
+                >
+                  <Archive className="h-3 w-3" />
+                  Arquivados ({arquivados.length})
+                  {verArquivados ? <ChevronUp className="ml-auto h-3 w-3" /> : <ChevronDown className="ml-auto h-3 w-3" />}
+                </button>
+                {verArquivados && (
+                  <ul className="mt-1 flex flex-col gap-0.5">
+                    {arquivados.map((p) => (
+                      <li key={p.id}>
+                        <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => setAbertoId(p.id)} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </nav>
         </aside>
 
@@ -163,15 +181,74 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
             <ProjectPanel
               key={aberto.id}
               project={aberto}
+              tarefas={filtradas}
+              tarefasDoEscopo={doEscopo}
+              phasesDe={phasesDe}
               aba={aba}
               setAba={setAba}
               visao={visao}
               setVisao={trocarVisao}
+              escopo={escopo}
+              setEscopo={setEscopo}
+              periodo={periodo}
+              setPeriodo={setPeriodo}
+              pending={pending}
+              send={send}
             />
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+/** Recorte de tempo da lista, pelo prazo da tarefa. */
+function recortar(tarefas: TaskComProjeto[], periodo: Periodo): TaskComProjeto[] {
+  const hj = hoje();
+  const amanha = somaDias(hj, 1);
+  const fimSemana = somaDias(hj, 7);
+  const mes = hj.slice(0, 7);
+
+  const passa = (t: TaskComProjeto) => {
+    switch (periodo) {
+      case 'tudo':      return true;
+      case 'atrasadas': return !!t.dueDate && t.dueDate < hj && t.status !== 'feito';
+      case 'hoje':      return t.dueDate === hj;
+      case 'amanha':    return t.dueDate === amanha;
+      case 'semana':    return !!t.dueDate && t.dueDate >= hj && t.dueDate <= fimSemana;
+      case 'mes':       return !!t.dueDate && t.dueDate.slice(0, 7) === mes;
+      case 'sem_prazo': return !t.dueDate;
+    }
+  };
+
+  // A subtarefa acompanha a mãe: filtrar por prazo não pode esvaziar o contador
+  // de subtarefas de uma tarefa que continua na lista.
+  const raizes = new Set(tarefas.filter((t) => !t.parentId && passa(t)).map((t) => t.id));
+  return tarefas.filter((t) => (t.parentId ? raizes.has(t.parentId) : raizes.has(t.id)));
+}
+
+function ItemProjeto({ projeto, ativo, onClick }: { projeto: ProjectView; ativo: boolean; onClick: () => void }) {
+  const abertas = projeto.tasks.filter((t) => t.status !== 'feito').length;
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors ${
+        ativo
+          ? 'bg-primary/10 font-semibold text-primary'
+          : 'text-text-secondary hover:bg-black/[0.04] hover:text-text-primary'
+      } ${projeto.archivedAt ? 'opacity-60' : ''}`}
+    >
+      <span className="min-w-0 flex-1 truncate">{projeto.orgName ?? projeto.title ?? 'Sem cliente'}</span>
+      {abertas > 0 && (
+        <span
+          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums ${
+            ativo ? 'bg-primary/15 text-primary' : 'bg-black/[0.06] text-text-muted'
+          }`}
+        >
+          {abertas}
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -213,205 +290,159 @@ function SyncSimbos() {
   );
 }
 
-type TarefaComProjeto = TaskView & { projeto: string; projetoId: string; interno: boolean };
-
-const FILTROS = [
-  { id: 'atrasadas', label: 'Atrasadas' },
-  { id: 'hoje',      label: 'Hoje' },
-  { id: 'semana',    label: 'Esta semana' },
-  { id: 'sem_prazo', label: 'Sem prazo' },
-  { id: 'todas',     label: 'Todas abertas' },
-] as const;
-type Filtro = (typeof FILTROS)[number]['id'];
-
 /**
- * Fila de trabalho de todos os projetos junto. Um filtro por vez, lista inteira
- * à vista (nada de recorte de seis dias: atrasado precisa ser visto por completo)
- * e as duas ações que resolvem a linha ali mesmo, concluir e apagar.
+ * Os números do escopo inteiro, sem o recorte de tempo: o filtro logo abaixo diz
+ * o que fazer agora, os cards dizem em que pé está o trabalho. A média conta só
+ * as tarefas concluídas que passaram pelo cronômetro.
  */
-function Fila({ tarefas, irPara, pending, send }: {
-  tarefas: TarefaComProjeto[];
-  irPara: (id: string) => void;
-  pending: boolean;
-  send: Send;
-}) {
-  const [filtro, setFiltro] = useState<Filtro>('atrasadas');
-  const [soCasa, setSoCasa] = useState<'tudo' | 'clientes' | 'casa'>('tudo');
+function Numeros({ tarefas }: { tarefas: TaskComProjeto[] }) {
+  const raizes = tarefas.filter((t) => !t.parentId);
   const hj = hoje();
+  const conta = (s: string) => raizes.filter((t) => t.status === s).length;
+  const atrasadas = raizes.filter((t) => !!t.dueDate && t.dueDate < hj && t.status !== 'feito').length;
 
-  const fimDaSemana = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    return d.toISOString().slice(0, 10);
-  }, []);
+  const cronometradas = raizes.filter((t) => t.status === 'feito' && t.tempoSegundos > 0);
+  const media = cronometradas.length
+    ? Math.round(cronometradas.reduce((s, t) => s + t.tempoSegundos, 0) / cronometradas.length)
+    : 0;
 
-  const porFiltro = (f: Filtro) =>
-    tarefas.filter((t) => {
-      if (soCasa === 'clientes' && t.interno) return false;
-      if (soCasa === 'casa' && !t.interno) return false;
-      switch (f) {
-        case 'atrasadas': return !!t.dueDate && t.dueDate < hj;
-        case 'hoje':      return t.dueDate === hj;
-        case 'semana':    return !!t.dueDate && t.dueDate > hj && t.dueDate <= fimDaSemana;
-        case 'sem_prazo': return !t.dueDate;
-        case 'todas':     return true;
-      }
-    });
-
-  const lista = porFiltro(filtro).sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999'));
+  const cards: { label: string; valor: string; tom?: string; nota?: string }[] = [
+    { label: 'Atrasadas', valor: String(atrasadas), tom: atrasadas > 0 ? 'text-danger' : undefined },
+    { label: 'A fazer', valor: String(conta('a_fazer')) },
+    { label: 'Fazendo', valor: String(conta('fazendo')), tom: 'text-primary' },
+    { label: 'Revisão', valor: String(conta('revisao')) },
+    { label: 'Concluídas', valor: String(conta('feito')), tom: 'text-[#15803D]' },
+    {
+      label: 'Tempo médio',
+      valor: media ? fmtDuracao(media) : '—',
+      nota: cronometradas.length
+        ? `${cronometradas.length} cronometrada${cronometradas.length === 1 ? '' : 's'}`
+        : 'sem cronômetro ainda',
+    },
+  ];
 
   return (
-    <section className="mb-5 overflow-hidden rounded-md border border-black/[0.07] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
-      <header className="flex flex-wrap items-center gap-2 border-b border-black/[0.06] bg-neutral-50 px-3 py-2">
-        {FILTROS.map((f) => {
-          const n = porFiltro(f.id).length;
-          const ativo = filtro === f.id;
-          const alerta = f.id === 'atrasadas' && n > 0;
-          return (
-            <button
-              key={f.id}
-              onClick={() => setFiltro(f.id)}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
-                ativo
-                  ? 'bg-white text-text-primary shadow-[0_1px_2px_rgba(16,24,40,0.08)]'
-                  : 'text-text-muted hover:text-text-primary'
-              }`}
-            >
-              {f.label}
-              <span
-                className={`rounded-full px-1.5 text-[10px] tabular-nums ${
-                  alerta ? 'bg-danger/12 font-semibold text-danger' : 'bg-black/[0.06] text-text-muted'
-                }`}
-              >
-                {n}
-              </span>
-            </button>
-          );
-        })}
-
-        {/* Cliente ou casa: as duas listas competem pelo mesmo dia de trabalho. */}
-        <div className="ml-auto flex items-center gap-1 rounded-md bg-black/[0.05] p-0.5">
-          {([['tudo', 'Tudo'], ['clientes', 'Clientes'], ['casa', 'Casa']] as const).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setSoCasa(id)}
-              className={`rounded-sm px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                soCasa === id ? 'bg-white text-text-primary shadow-[0_1px_1px_rgba(16,24,40,0.08)]' : 'text-text-muted hover:text-text-primary'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+    <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+      {cards.map((c) => (
+        <div key={c.label} className="rounded-md border border-black/[0.07] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+          <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">{c.label}</p>
+          <p className={`mt-0.5 text-xl font-semibold tabular-nums ${c.tom ?? 'text-text-primary'}`}>{c.valor}</p>
+          {c.nota && <p className="text-[10px] text-text-muted">{c.nota}</p>}
         </div>
-      </header>
-
-      {lista.length === 0 ? (
-        <p className="px-4 py-6 text-center text-[13px] text-text-muted">
-          {filtro === 'atrasadas' ? 'Nada atrasado. ' : ''}Nenhuma tarefa neste filtro.
-        </p>
-      ) : (
-        <ul className="divide-y divide-black/[0.05]">
-          {lista.map((t) => {
-            const atrasada = !!t.dueDate && t.dueDate < hj;
-            const ehHoje = t.dueDate === hj;
-            return (
-              <li key={t.id} className="group flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-black/[0.02]">
-                {/* Concluir na própria linha: é a ação mais frequente. */}
-                <button
-                  onClick={() => send(updateTask, { id: t.id, status: 'feito' })}
-                  disabled={pending}
-                  title="Marcar como concluída"
-                  aria-label="Marcar como concluída"
-                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border border-black/20 bg-white text-transparent transition-colors hover:border-success hover:text-success disabled:opacity-50"
-                >
-                  <Check className="h-3 w-3" strokeWidth={3} />
-                </button>
-
-                <span className={`h-3.5 w-1 shrink-0 rounded-full ${PRIORITY_TONE[t.priority]}`} title={`Prioridade ${t.priority}`} />
-
-                <button
-                  onClick={() => irPara(t.projetoId)}
-                  className="min-w-0 flex-1 truncate text-left text-[13px] text-text-primary"
-                  title={t.title}
-                >
-                  {t.title}
-                </button>
-
-                <button
-                  onClick={() => irPara(t.projetoId)}
-                  className="hidden shrink-0 max-w-[12rem] truncate text-[11px] text-text-muted transition-colors hover:text-primary sm:block"
-                >
-                  {t.projeto}
-                </button>
-
-                <span
-                  className={`w-16 shrink-0 text-right text-[11px] tabular-nums ${
-                    atrasada ? 'font-semibold text-danger' : ehHoje ? 'font-semibold text-primary' : 'text-text-muted'
-                  }`}
-                >
-                  {t.dueDate ? (ehHoje ? 'hoje' : fmtDate(t.dueDate)) : '—'}
-                </span>
-
-                <button
-                  onClick={() => { if (confirm(`Apagar a tarefa "${t.title}"? Ela sai também do SimbOS.`)) send(deleteTask, { id: t.id }); }}
-                  disabled={pending}
-                  title="Apagar tarefa"
-                  aria-label="Apagar tarefa"
-                  className="shrink-0 rounded p-1 text-text-muted/45 transition hover:bg-danger/10 hover:text-danger disabled:opacity-30"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
+      ))}
+    </div>
   );
 }
 
-function ProjectPanel({ project, aba, setAba, visao, setVisao }: {
+function ProjectPanel({
+  project, tarefas, tarefasDoEscopo, phasesDe, aba, setAba, visao, setVisao,
+  escopo, setEscopo, periodo, setPeriodo, pending, send,
+}: {
   project: ProjectView;
+  tarefas: TaskComProjeto[];
+  tarefasDoEscopo: TaskComProjeto[];
+  phasesDe: (id: string) => PhaseView[];
   aba: 'tasks' | 'cronograma';
   setAba: (v: 'tasks' | 'cronograma') => void;
   visao: 'kanban' | 'lista';
   setVisao: (v: 'kanban' | 'lista') => void;
+  escopo: 'projeto' | 'todos';
+  setEscopo: (v: 'projeto' | 'todos') => void;
+  periodo: Periodo;
+  setPeriodo: (v: Periodo) => void;
+  pending: boolean;
+  send: Send;
 }) {
-  const [pending, start] = useTransition();
   const [novaEtapa, setNovaEtapa] = useState(false);
-
-  const send: Send = (action, campos) => {
-    const fd = new FormData();
-    for (const [k, v] of Object.entries(campos)) fd.set(k, v);
-    start(() => action(fd));
-  };
+  const nome = project.orgName ?? project.title ?? 'Sem cliente';
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
           <button onClick={() => setAba('tasks')} className={tabCls(aba === 'tasks')}>Tasks</button>
           <button onClick={() => setAba('cronograma')} className={tabCls(aba === 'cronograma')}>Cronograma</button>
         </div>
 
-        {aba === 'tasks' && (
-          <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
-            <button onClick={() => setVisao('kanban')} className={tabCls(visao === 'kanban')}>
-              <LayoutGrid className="h-3.5 w-3.5" />Kanban
-            </button>
-            <button onClick={() => setVisao('lista')} className={tabCls(visao === 'lista')}>
-              <List className="h-3.5 w-3.5" />Lista
-            </button>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {aba === 'tasks' && (
+            <>
+              {/* Um projeto por vez, ou o dia inteiro de uma vez. */}
+              <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
+                <button onClick={() => setEscopo('projeto')} className={tabCls(escopo === 'projeto')} title={nome}>{nome}</button>
+                <button onClick={() => setEscopo('todos')} className={tabCls(escopo === 'todos')}>Todos</button>
+              </div>
+
+              <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
+                <button onClick={() => setVisao('kanban')} className={tabCls(visao === 'kanban')}>
+                  <LayoutGrid className="h-3.5 w-3.5" />Kanban
+                </button>
+                <button onClick={() => setVisao('lista')} className={tabCls(visao === 'lista')}>
+                  <List className="h-3.5 w-3.5" />Lista
+                </button>
+              </div>
+            </>
+          )}
+
+          <ArquivarProjeto project={project} pending={pending} send={send} />
+        </div>
       </div>
 
+      {project.archivedAt && (
+        <p className="mb-3 rounded-md border border-black/[0.07] bg-neutral-50 px-3 py-2 text-[12px] text-text-muted">
+          Projeto arquivado: fora da lista de ativos e da visão “Todos”, mas inteiro aqui.
+        </p>
+      )}
+
       {aba === 'tasks' ? (
-        visao === 'kanban' ? (
-          <KanbanView tasks={project.tasks} phases={project.phases} projectId={project.id} pending={pending} send={send} />
-        ) : (
-          <ListView tasks={project.tasks} phases={project.phases} projectId={project.id} pending={pending} send={send} />
-        )
+        <>
+          <Numeros tarefas={tarefasDoEscopo} />
+
+          <div className="mb-3 flex flex-wrap items-center gap-1 rounded-md border border-black/[0.07] bg-white px-2 py-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+            {PERIODOS.map((p) => {
+              const n = recortar(tarefasDoEscopo, p.id).filter((t) => !t.parentId).length;
+              const ativo = periodo === p.id;
+              const alerta = p.id === 'atrasadas' && n > 0;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setPeriodo(p.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                    ativo ? 'bg-black/[0.06] text-text-primary' : 'text-text-muted hover:text-text-primary'
+                  }`}
+                >
+                  {p.label}
+                  <span
+                    className={`rounded-full px-1.5 text-[10px] tabular-nums ${
+                      alerta ? 'bg-danger/12 font-semibold text-danger' : 'bg-black/[0.06] text-text-muted'
+                    }`}
+                  >
+                    {n}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {visao === 'kanban' ? (
+            <KanbanView
+              tasks={tarefas}
+              phasesDe={phasesDe}
+              projectId={project.id}
+              mostrarProjeto={escopo === 'todos'}
+              pending={pending}
+              send={send}
+            />
+          ) : (
+            <ListView
+              tasks={tarefas}
+              phasesDe={phasesDe}
+              projectId={project.id}
+              mostrarProjeto={escopo === 'todos'}
+              send={send}
+            />
+          )}
+        </>
       ) : (
         <div className="flex flex-col gap-5">
           <Gantt phases={project.phases} tasks={project.tasks} titulo="Linha do tempo" />
@@ -431,10 +462,17 @@ function ProjectPanel({ project, aba, setAba, visao, setVisao }: {
 
             {novaEtapa && (
               <form
-                action={(fd) => { start(async () => { await createPhase(fd); setNovaEtapa(false); }); }}
+                action={(fd) => {
+                  send(createPhase, {
+                    engagement_id: project.id,
+                    name: String(fd.get('name') ?? ''),
+                    start_date: String(fd.get('start_date') ?? ''),
+                    end_date: String(fd.get('end_date') ?? ''),
+                  });
+                  setNovaEtapa(false);
+                }}
                 className="mb-3 grid grid-cols-1 gap-2 rounded-md border border-primary/20 bg-primary/[0.03] p-3 sm:grid-cols-[1fr_auto_auto_auto]"
               >
-                <input type="hidden" name="engagement_id" value={project.id} />
                 <input name="name" required placeholder="Nome da etapa (ex: Descoberta)" className={inputCls} />
                 <input name="start_date" type="date" className={inputCls} title="Início" />
                 <input name="end_date" type="date" className={inputCls} title="Fim" />
@@ -467,6 +505,29 @@ function ProjectPanel({ project, aba, setAba, visao, setVisao }: {
         </div>
       )}
     </div>
+  );
+}
+
+/** Arquivar tira o projeto da frente aqui e no SimbOS, sem apagar nada. */
+function ArquivarProjeto({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
+  const arquivado = !!project.archivedAt;
+  const nome = project.orgName ?? project.title ?? 'este projeto';
+
+  return (
+    <button
+      onClick={() => {
+        if (arquivado) { send(setProjectArchived, { engagement_id: project.id, arquivar: 'off' }); return; }
+        if (confirm(`Arquivar "${nome}"? Ele sai da lista de projetos aqui e no SimbOS. Nada é apagado, e dá para desarquivar depois.`)) {
+          send(setProjectArchived, { engagement_id: project.id, arquivar: 'on' });
+        }
+      }}
+      disabled={pending}
+      title={arquivado ? 'Desarquivar projeto' : 'Arquivar projeto (aqui e no SimbOS)'}
+      className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-xs font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary disabled:opacity-60"
+    >
+      {arquivado ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+      {arquivado ? 'Desarquivar' : 'Arquivar'}
+    </button>
   );
 }
 

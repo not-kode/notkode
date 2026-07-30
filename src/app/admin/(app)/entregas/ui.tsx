@@ -6,7 +6,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, Check, ChevronDown } from 'lucide-react';
+import { Calendar, Check, ChevronDown, Pause, Play } from 'lucide-react';
 import { PRIORITIES, PRIORITY_LABELS, type Priority } from './status';
 
 export const inputCls =
@@ -292,6 +292,70 @@ export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto
     >
       <Calendar className="h-3 w-3" />
       {(curto ? fmtCurto(value) : fmtDate(value)) ?? placeholder}
+    </button>
+  );
+}
+
+// ── Cronômetro ───────────────────────────────────────────────────────────────
+
+/** "1h20", "45min", "—". Tempo de trabalho se lê arredondado, não em segundos. */
+export const fmtDuracao = (segundos: number): string => {
+  if (segundos < 60) return segundos > 0 ? 'menos de 1min' : '—';
+  const min = Math.round(segundos / 60);
+  if (min < 60) return `${min}min`;
+  const h = Math.floor(min / 60);
+  const resto = min % 60;
+  return resto ? `${h}h${String(resto).padStart(2, '0')}` : `${h}h`;
+};
+
+/** Enquanto corre, o relógio anda de verdade: 12:04, 1:12:04. */
+const fmtRelogio = (segundos: number): string => {
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+  const mm = String(m).padStart(h ? 2 : 1, '0');
+  return `${h ? `${h}:` : ''}${mm}:${String(s).padStart(2, '0')}`;
+};
+
+/**
+ * Play/pause do tempo gasto na tarefa. O acumulado vem do banco; o que está
+ * correndo é contado aqui na tela a partir do instante em que foi ligado, então
+ * fechar o navegador não perde nem inventa tempo.
+ */
+export function TimerChip({ segundos, rodandoDesde, onToggle, desabilitado }: {
+  segundos: number;
+  rodandoDesde: string | null;
+  onToggle: () => void;
+  desabilitado?: boolean;
+}) {
+  // Só depois de montar, senão o servidor renderiza um relógio diferente do cliente.
+  const [agora, setAgora] = useState<number | null>(null);
+  useEffect(() => {
+    if (!rodandoDesde) { setAgora(null); return; }
+    setAgora(Date.now());
+    const i = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(i);
+  }, [rodandoDesde]);
+
+  const correndo = !!rodandoDesde;
+  const emCurso = correndo && agora ? Math.max(0, Math.round((agora - Date.parse(rodandoDesde!)) / 1000)) : 0;
+  const total = segundos + emCurso;
+
+  return (
+    <button
+      onClick={onToggle}
+      disabled={desabilitado}
+      title={correndo ? 'Pausar o cronômetro' : total > 0 ? `Retomar (${fmtDuracao(total)} até agora)` : 'Começar a contar o tempo'}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors disabled:opacity-40 ${
+        correndo
+          ? 'bg-primary/12 text-primary'
+          : total > 0
+            ? 'bg-black/[0.04] text-text-secondary hover:bg-black/[0.07]'
+            : 'text-text-muted hover:bg-black/[0.04]'
+      }`}
+    >
+      {correndo ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+      {correndo ? fmtRelogio(total) : total > 0 ? fmtDuracao(total) : 'tempo'}
     </button>
   );
 }

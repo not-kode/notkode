@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Logo } from '@/components/brand/logo';
-import { AdminNav } from './admin-nav';
+import { AdminNav, Tooltip } from './admin-nav';
 import { logoutAction } from '../actions';
 
 const PREF_COMPACTO = 'notkode.admin.menu-compacto';
@@ -70,24 +70,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           onClick={alternar}
           title={compacto ? 'Expandir menu' : 'Encolher menu'}
           aria-label={compacto ? 'Expandir menu' : 'Encolher menu'}
-          className={`mt-auto hidden items-center gap-2.5 rounded-md py-2 text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-text-primary md:flex ${
+          className={`group relative mt-auto hidden items-center gap-2.5 rounded-md py-2 text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-text-primary md:flex ${
             compacto ? 'justify-center px-2' : 'px-3'
           }`}
         >
           {compacto ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           {!compacto && 'Encolher menu'}
+          {compacto && <Tooltip>Expandir menu</Tooltip>}
         </button>
 
         <form action={logoutAction} className={`border-t border-black/[0.07] pt-3 md:mt-2 ${compacto ? '' : 'mt-auto md:mt-2'}`}>
           <button
             type="submit"
             title="Sair"
-            className={`flex w-full items-center rounded-md py-2 text-left text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger ${
+            className={`group relative flex w-full items-center rounded-md py-2 text-left text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger ${
               compacto ? 'justify-center px-2' : 'gap-2.5 px-3'
             }`}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-text-muted/30" />
             {!compacto && 'Sair'}
+            {compacto && <Tooltip>Sair</Tooltip>}
           </button>
         </form>
       </aside>
