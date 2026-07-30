@@ -17,6 +17,7 @@ type TarefaLocal = {
   priority: string;
   due_date: string | null;
   simbos_task_id: string | null;
+  parent_task_id: string | null;
 };
 
 const agora = () => new Date().toISOString();
@@ -34,7 +35,7 @@ async function projetoSimbos(engagementId: string): Promise<string | null> {
 async function tarefa(id: string): Promise<TarefaLocal | null> {
   const { data } = await getSupabaseAdmin()
     .from('project_tasks')
-    .select('id, engagement_id, title, notes, status, priority, due_date, simbos_task_id')
+    .select('id, engagement_id, title, notes, status, priority, due_date, simbos_task_id, parent_task_id')
     .eq('id', id)
     .maybeSingle();
   return (data as TarefaLocal | null) ?? null;
@@ -52,9 +53,15 @@ export async function espelharCriacao(id: string): Promise<void> {
   const projectId = await projetoSimbos(t.engagement_id);
   if (!projectId) return;
 
+  // Subtarefa nasce pendurada na tarefa-mãe também do lado do SimbOS, se a mãe
+  // já tiver par lá. Sem par, sobe como tarefa solta em vez de não subir.
+  let parentSimbos: string | null = null;
+  if (t.parent_task_id) parentSimbos = await idSimbosDa(t.parent_task_id);
+
   const criada = await simbosCall('create_task', {
     workspaceSlug: SIMBOS_WORKSPACE,
     projectId,
+    parentTaskId: parentSimbos ?? undefined,
     title: t.title,
     description: t.notes ?? undefined,
     status: STATUS_PARA_SIMBOS[t.status] ?? 'todo',

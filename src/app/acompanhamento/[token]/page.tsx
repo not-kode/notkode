@@ -115,7 +115,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
           tasks={tasks.map((t) => ({
             id: t.id, phaseId: t.phase_id, title: t.title, notes: null, status: t.status,
             priority: 'media' as const, startDate: t.start_date, dueDate: t.due_date,
-            assignee: null, clientVisible: true, sort: 0,
+            assignee: null, clientVisible: true, parentId: null, sort: 0,
           }))}
         />
       )}

@@ -30,6 +30,7 @@ type TaskRow = {
   notes: string | null; status: TaskStatus; priority: Priority | null;
   start_date: string | null; due_date: string | null;
   assignee: string | null; client_visible: boolean; sort: number | null;
+  parent_task_id: string | null;
 };
 
 export default async function EntregasPage() {
@@ -73,6 +74,7 @@ export default async function EntregasPage() {
         id: t.id, phaseId: t.phase_id, title: t.title, notes: t.notes, status: t.status,
         priority: t.priority ?? 'media', startDate: t.start_date, dueDate: t.due_date,
         assignee: t.assignee, clientVisible: t.client_visible, sort: t.sort ?? 0,
+        parentId: t.parent_task_id,
       })),
   }));
 

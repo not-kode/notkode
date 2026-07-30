@@ -11,6 +11,8 @@ export type TaskView = {
   id: string; phaseId: string | null; title: string; notes: string | null;
   status: TaskStatus; priority: Priority; startDate: string | null; dueDate: string | null;
   assignee: string | null; clientVisible: boolean; sort: number;
+  /** Quando preenchido, a tarefa é subtarefa desta outra. */
+  parentId: string | null;
 };
 
 export type ProjectView = {

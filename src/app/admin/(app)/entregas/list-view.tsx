@@ -9,6 +9,7 @@ import { createTask, deleteTask, updateTask } from './actions';
 import { PRIORITY_ORDER, TASK_LABELS, TASK_ORDER, TASK_STATUSES } from './status';
 import type { PhaseView, Send, TaskView } from './types';
 import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, hoje } from './ui';
+import { TaskDrawer } from './task-drawer';
 
 type Coluna = 'titulo' | 'etapa' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'status';
 
@@ -47,6 +48,11 @@ export function ListView({ tasks, phases, projectId, send }: {
 }) {
   const [ordem, setOrdem] = useState<{ col: Coluna; asc: boolean }>({ col: 'status', asc: true });
   const [criando, setCriando] = useState(false);
+  const [abertaId, setAberta] = useState<string | null>(null);
+  const subs = (id: string) => tasks.filter((t) => t.parentId === id);
+  const contaSub = (id: string) => subs(id).length;
+  const feitasSub = (id: string) => subs(id).filter((s) => s.status === 'feito').length;
+  const aberta = tasks.find((t) => t.id === abertaId) ?? null;
   const nomeEtapa = (id: string | null) => phases.find((p) => p.id === id)?.name ?? '';
 
   const chave = (t: TaskView): string | number => {
@@ -61,7 +67,8 @@ export function ListView({ tasks, phases, projectId, send }: {
     }
   };
 
-  const ordenadas = [...tasks].sort((a, b) => {
+  const raizes = tasks.filter((t) => !t.parentId);
+  const ordenadas = [...raizes].sort((a, b) => {
     const va = chave(a), vb = chave(b);
     const cmp = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb));
     // Empate cai no prazo: entre duas tarefas iguais, vale a que vence antes.
@@ -115,11 +122,20 @@ export function ListView({ tasks, phases, projectId, send }: {
                     </button>
                   </td>
                   <td className="px-3 py-2">
-                    <InlineText
-                      value={t.title}
-                      onSave={(v) => send(updateTask, { id: t.id, title: v })}
-                      className={`text-[13px] ${t.status === 'feito' ? 'text-text-muted line-through' : 'text-text-primary'}`}
-                    />
+                    <button
+                      onClick={() => setAberta(t.id)}
+                      className={`flex w-full items-center gap-2 text-left text-[13px] transition-colors hover:text-primary ${
+                        t.status === 'feito' ? 'text-text-muted line-through' : 'text-text-primary'
+                      }`}
+                      title="Abrir tarefa"
+                    >
+                      <span className="min-w-0 truncate">{t.title}</span>
+                      {contaSub(t.id) > 0 && (
+                        <span className="shrink-0 rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
+                          {feitasSub(t.id)}/{contaSub(t.id)}
+                        </span>
+                      )}
+                    </button>
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1.5">
@@ -186,6 +202,17 @@ export function ListView({ tasks, phases, projectId, send }: {
           </tbody>
         </table>
       </div>
+
+      {aberta && (
+        <TaskDrawer
+          task={aberta}
+          subtarefas={subs(aberta.id)}
+          phases={phases}
+          projectId={projectId}
+          send={send}
+          onFechar={() => setAberta(null)}
+        />
+      )}
 
       <div className="border-t border-black/[0.05] px-3 py-2">
         {criando ? (

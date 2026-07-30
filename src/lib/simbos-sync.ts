@@ -19,6 +19,7 @@ import {
 type TaskSimbos = {
   id: string;
   projectId: string | null;
+  parentTaskId: string | null;
   title: string;
   description: string | null;
   status: string;
@@ -31,6 +32,7 @@ type TaskLocal = {
   id: string;
   engagement_id: string;
   simbos_task_id: string | null;
+  parent_task_id: string | null;
   title: string;
   status: string;
   priority: string;
@@ -46,6 +48,7 @@ export type ResultadoSync = {
   criadas?: number;
   atualizadas?: number;
   apagadas?: number;
+  hierarquia?: number;
   ignoradas?: number;
   sem_projeto_mapeado?: number;
 };
@@ -87,7 +90,7 @@ export async function sincronizarComSimbos(): Promise<ResultadoSync> {
     simbosCall('list_tasks', { workspaceSlug: SIMBOS_WORKSPACE }) as Promise<TaskSimbos[] | null>,
     supabase
       .from('project_tasks')
-      .select('id, engagement_id, simbos_task_id, title, status, priority, due_date, updated_at'),
+      .select('id, engagement_id, simbos_task_id, parent_task_id, title, status, priority, due_date, updated_at'),
     supabase.from('engagements').select('id, simbos_project_id').not('simbos_project_id', 'is', null),
     supabase.from('simbos_ignored').select('simbos_id'),
   ]);
@@ -159,6 +162,26 @@ export async function sincronizarComSimbos(): Promise<ResultadoSync> {
     atualizadas.push(r.id);
   }
 
+  // Hierarquia numa passada própria: a subtarefa pode ter sido criada antes da
+  // mãe neste mesmo ciclo, e aí o id local dela ainda não existia.
+  const { data: depoisData } = await supabase
+    .from('project_tasks')
+    .select('id, simbos_task_id, parent_task_id')
+    .not('simbos_task_id', 'is', null);
+  const localPorSimbos = new Map(
+    ((depoisData ?? []) as { id: string; simbos_task_id: string; parent_task_id: string | null }[])
+      .map((t) => [t.simbos_task_id, t]),
+  );
+  let hierarquia = 0;
+  for (const r of remotas) {
+    const local = localPorSimbos.get(r.id);
+    if (!local) continue;
+    const paiLocal = r.parentTaskId ? localPorSimbos.get(r.parentTaskId)?.id ?? null : null;
+    if ((local.parent_task_id ?? null) === paiLocal) continue;
+    await supabase.from('project_tasks').update({ parent_task_id: paiLocal }).eq('id', local.id);
+    hierarquia += 1;
+  }
+
   // Apagou lá, sai daqui. Só vale para tarefa que veio do SimbOS: o que nasceu
   // aqui e ainda não foi espelhado não tem par para comparar.
   const idsRemotos = new Set(remotas.map((r) => r.id));
@@ -175,6 +198,7 @@ export async function sincronizarComSimbos(): Promise<ResultadoSync> {
     criadas: criadas.length,
     atualizadas: atualizadas.length,
     apagadas: apagadas.length,
+    hierarquia,
     ignoradas: ignorados.size,
     sem_projeto_mapeado: semProjeto.length,
   };

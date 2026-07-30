@@ -130,6 +130,7 @@ export async function createTask(formData: FormData): Promise<void> {
   const { data: criada } = await supabase.from('project_tasks').insert({
     engagement_id,
     phase_id: str(formData, 'phase_id', 64),
+    parent_task_id: str(formData, 'parent_task_id', 64),
     title,
     start_date: date(formData, 'start_date'),
     due_date: date(formData, 'due_date'),

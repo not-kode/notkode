@@ -10,6 +10,7 @@ import { createTask, deleteTask, moveTask, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
 import type { PhaseView, Send, TaskView } from './types';
 import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, hoje } from './ui';
+import { TaskDrawer } from './task-drawer';
 
 /** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
 const COLUNA_TOM: Record<TaskStatus, string> = {
@@ -30,11 +31,14 @@ export function KanbanView({ tasks, phases, projectId, pending, send }: {
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [alvo, setAlvo] = useState<TaskStatus | null>(null);
   const [criandoEm, setCriandoEm] = useState<TaskStatus | null>(null);
+  const [abertaId, setAberta] = useState<string | null>(null);
+  const subs = (id: string) => tasks.filter((t) => t.parentId === id);
+  const aberta = tasks.find((t) => t.id === abertaId) ?? null;
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {TASK_STATUSES.map((status) => {
-        const daColuna = tasks.filter((t) => t.status === status).sort((a, b) => a.sort - b.sort);
+        const daColuna = tasks.filter((t) => t.status === status && !t.parentId).sort((a, b) => a.sort - b.sort);
         const destacada = alvo === status && arrastando;
 
         return (
@@ -82,6 +86,8 @@ export function KanbanView({ tasks, phases, projectId, pending, send }: {
                   onDragEnd={() => { setArrastando(null); setAlvo(null); }}
                   onDropBefore={(id) => send(moveTask, { id, status, before: t.id })}
                   arrastando={arrastando}
+                  onAbrir={() => setAberta(t.id)}
+                  subtarefas={subs(t.id)}
                 />
               ))}
 
@@ -106,11 +112,22 @@ export function KanbanView({ tasks, phases, projectId, pending, send }: {
           </section>
         );
       })}
+
+      {aberta && (
+        <TaskDrawer
+          task={aberta}
+          subtarefas={subs(aberta.id)}
+          phases={phases}
+          projectId={projectId}
+          send={send}
+          onFechar={() => setAberta(null)}
+        />
+      )}
     </div>
   );
 }
 
-function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, arrastando }: {
+function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
   task: TaskView;
   phases: PhaseView[];
   send: Send;
@@ -118,6 +135,8 @@ function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, ar
   onDragEnd: () => void;
   onDropBefore: (id: string) => void;
   arrastando: string | null;
+  onAbrir: () => void;
+  subtarefas: TaskView[];
 }) {
   const [editandoQuem, setEditandoQuem] = useState(false);
   const atrasada = !!task.dueDate && task.dueDate < hoje() && task.status !== 'feito';
@@ -154,11 +173,15 @@ function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, ar
           <Check className="h-3 w-3" strokeWidth={3} />
         </button>
 
-        <InlineText
-          value={task.title}
-          onSave={(v) => send(updateTask, { id: task.id, title: v })}
-          className={`flex-1 text-[13px] leading-snug ${task.status === 'feito' ? 'text-text-muted line-through' : 'text-text-primary'}`}
-        />
+        <button
+          onClick={onAbrir}
+          title="Abrir tarefa"
+          className={`flex-1 text-left text-[13px] leading-snug transition-colors hover:text-primary ${
+            task.status === 'feito' ? 'text-text-muted line-through' : 'text-text-primary'
+          }`}
+        >
+          {task.title}
+        </button>
 
         {/* Sempre visível: ação escondida no hover ninguém acha. */}
         <button
@@ -171,8 +194,15 @@ function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, ar
         </button>
       </div>
 
-      {etapa && (
-        <p className="mt-1.5 truncate text-[11px] text-text-muted" title={etapa.name}>{etapa.name}</p>
+      {(etapa || subtarefas.length > 0) && (
+        <p className="mt-1.5 flex items-center gap-2 text-[11px] text-text-muted">
+          {etapa && <span className="min-w-0 truncate" title={etapa.name}>{etapa.name}</span>}
+          {subtarefas.length > 0 && (
+            <span className="shrink-0 tabular-nums" title="Subtarefas concluídas">
+              ☑ {subtarefas.filter((s) => s.status === 'feito').length}/{subtarefas.length}
+            </span>
+          )}
+        </p>
       )}
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
