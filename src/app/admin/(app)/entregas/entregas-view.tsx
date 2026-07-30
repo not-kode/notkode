@@ -7,15 +7,16 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import {
   createPhase, updatePhase, deletePhase, movePhase,
+  updateTask, deleteTask,
   generateClientToken, revokeClientToken,
 } from './actions';
-import { CalendarClock, ChevronDown, ChevronUp, Circle, Clock, Eye, EyeOff, Flag, LayoutGrid, Link2, List, Plus, Trash2 } from 'lucide-react';
-import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
+import { Check, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid, Link2, List, Plus, Trash2 } from 'lucide-react';
+import { PHASE_LABELS, PHASE_STATUSES, PRIORITY_TONE, type PhaseStatus } from './status';
 import type { PhaseView, ProjectView, Send, TaskView } from './types';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
-import { ChipSelect, DateChip, InlineText, fmtDate, fmtDia, hoje, inputCls } from './ui';
+import { ChipSelect, DateChip, InlineText, fmtDate, hoje, inputCls } from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
 
@@ -42,6 +43,13 @@ const PHASE_STATUS_TOM: Record<PhaseStatus, string> = {
 
 export function EntregasView({ projects }: { projects: ProjectView[] }) {
   const [abertoId, setAbertoId] = useState<string | null>(projects[0]?.id ?? null);
+  // A fila do topo edita tarefa de qualquer projeto, então tem transição própria.
+  const [filaPending, startFila] = useTransition();
+  const filaSend: Send = (action, campos) => {
+    const fd = new FormData();
+    for (const [k, v] of Object.entries(campos)) fd.set(k, v);
+    startFila(() => action(fd));
+  };
   const [aba, setAba] = useState<'tasks' | 'cronograma'>('tasks');
   const [visao, setVisao] = useState<'kanban' | 'lista'>('kanban');
   const aberto = projects.find((p) => p.id === abertoId) ?? null;
@@ -57,16 +65,20 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
     localStorage.setItem(PREF_VISAO, v);
   };
 
-  // Tudo que tem prazo e não está feito, de todos os projetos: a pergunta "o que
-  // eu tenho que entregar" não pode exigir abrir projeto por projeto.
-  const comPrazo = useMemo(
+  // Tudo que está aberto, de todos os projetos: a pergunta "o que eu tenho que
+  // fazer" não pode exigir abrir projeto por projeto.
+  const abertas = useMemo(
     () =>
-      projects
-        .flatMap((p) =>
-          p.tasks.map((t) => ({ ...t, projeto: p.orgName ?? p.title ?? 'Sem nome', projetoId: p.id })),
-        )
-        .filter((t) => t.status !== 'feito' && !!t.dueDate)
-        .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? '')),
+      projects.flatMap((p) =>
+        p.tasks
+          .filter((t) => t.status !== 'feito')
+          .map((t) => ({
+            ...t,
+            projeto: p.orgName ?? p.title ?? 'Sem nome',
+            projetoId: p.id,
+            interno: p.isInternal,
+          })),
+      ),
     [projects],
   );
 
@@ -97,7 +109,7 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
       </header>
 
-      <Agenda tarefas={comPrazo} irPara={setAbertoId} />
+      <Fila tarefas={abertas} irPara={setAbertoId} pending={filaPending} send={filaSend} />
 
       <div className="flex flex-col gap-5 lg:flex-row">
         {/* Lista de projetos em vez de dropdown: com vinte contratos, um campo
@@ -160,121 +172,159 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
   );
 }
 
-type TarefaComProjeto = TaskView & { projeto: string; projetoId: string };
+type TarefaComProjeto = TaskView & { projeto: string; projetoId: string; interno: boolean };
 
-/** Quantos dias a agenda mostra antes de precisar do "ver tudo". */
-const DIAS_VISIVEIS = 6;
+const FILTROS = [
+  { id: 'atrasadas', label: 'Atrasadas' },
+  { id: 'hoje',      label: 'Hoje' },
+  { id: 'semana',    label: 'Esta semana' },
+  { id: 'sem_prazo', label: 'Sem prazo' },
+  { id: 'todas',     label: 'Todas abertas' },
+] as const;
+type Filtro = (typeof FILTROS)[number]['id'];
 
 /**
- * Agenda por dia. Ordem cronológica, do prazo mais velho ao mais novo, com o
- * dia de hoje marcado no meio: é a leitura que mostra acúmulo, e não só total.
- * Os atrasados estão espalhados em muitos dias com uma ou duas tarefas cada,
- * então a agenda começa curta e abre sob demanda.
+ * Fila de trabalho de todos os projetos junto. Um filtro por vez, lista inteira
+ * à vista (nada de recorte de seis dias: atrasado precisa ser visto por completo)
+ * e as duas ações que resolvem a linha ali mesmo, concluir e apagar.
  */
-function Agenda({ tarefas, irPara }: {
+function Fila({ tarefas, irPara, pending, send }: {
   tarefas: TarefaComProjeto[];
   irPara: (id: string) => void;
+  pending: boolean;
+  send: Send;
 }) {
-  const [tudo, setTudo] = useState(false);
+  const [filtro, setFiltro] = useState<Filtro>('atrasadas');
+  const [soCasa, setSoCasa] = useState<'tudo' | 'clientes' | 'casa'>('tudo');
   const hj = hoje();
 
-  const dias = useMemo(() => {
-    const mapa = new Map<string, TarefaComProjeto[]>();
-    for (const t of tarefas) {
-      const d = t.dueDate!;
-      const lista = mapa.get(d);
-      if (lista) lista.push(t);
-      else mapa.set(d, [t]);
-    }
-    return [...mapa.entries()]
-      .map(([data, itens]) => ({ data, itens }))
-      .sort((a, b) => a.data.localeCompare(b.data));
-  }, [tarefas]);
+  const fimDaSemana = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0, 10);
+  }, []);
 
-  if (dias.length === 0) return null;
+  const porFiltro = (f: Filtro) =>
+    tarefas.filter((t) => {
+      if (soCasa === 'clientes' && t.interno) return false;
+      if (soCasa === 'casa' && !t.interno) return false;
+      switch (f) {
+        case 'atrasadas': return !!t.dueDate && t.dueDate < hj;
+        case 'hoje':      return t.dueDate === hj;
+        case 'semana':    return !!t.dueDate && t.dueDate > hj && t.dueDate <= fimDaSemana;
+        case 'sem_prazo': return !t.dueDate;
+        case 'todas':     return true;
+      }
+    });
 
-  const mostrados = tudo ? dias : dias.slice(0, DIAS_VISIVEIS);
-  const escondidos = dias.length - mostrados.length;
-  const totalEscondido = dias.slice(mostrados.length).reduce((s, d) => s + d.itens.length, 0);
-  const atrasadas = tarefas.filter((t) => t.dueDate! < hj).length;
+  const lista = porFiltro(filtro).sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999'));
 
   return (
     <section className="mb-5 overflow-hidden rounded-md border border-black/[0.07] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
-      <header className="flex items-center gap-2 border-b border-black/[0.06] bg-neutral-50 px-4 py-2.5">
-        <CalendarClock className="h-3.5 w-3.5 text-text-muted" />
-        <h2 className="text-[13px] font-semibold text-text-primary">Agenda</h2>
-        {atrasadas > 0 && (
-          <span className="rounded-full bg-danger/12 px-2 py-0.5 text-[11px] font-semibold text-danger">
-            {atrasadas} atrasada{atrasadas === 1 ? '' : 's'}
-          </span>
-        )}
-      </header>
-
-      <div className="flex flex-col gap-3 px-4 py-3">
-        {mostrados.map(({ data, itens }) => {
-          const atrasado = data < hj;
-          const ehHoje = data === hj;
+      <header className="flex flex-wrap items-center gap-2 border-b border-black/[0.06] bg-neutral-50 px-3 py-2">
+        {FILTROS.map((f) => {
+          const n = porFiltro(f.id).length;
+          const ativo = filtro === f.id;
+          const alerta = f.id === 'atrasadas' && n > 0;
           return (
-            <div key={data}>
-              {/* Cabeçalho do dia: rótulo, filete que ocupa a sobra, contagem. */}
-              <div className="flex items-center gap-2">
-                <span
-                  className={`shrink-0 font-label text-[10px] uppercase tracking-wider ${
-                    ehHoje ? 'font-semibold text-primary' : atrasado ? 'text-danger' : 'text-text-muted'
-                  }`}
-                >
-                  {ehHoje ? `hoje ${fmtDia(data).split(' ')[1]}` : fmtDia(data)}
-                </span>
-                <span className={`h-px flex-1 ${ehHoje ? 'bg-primary/25' : 'bg-black/[0.07]'}`} />
-                <span className="shrink-0 text-[10px] tabular-nums text-text-muted">
-                  {itens.length} tarefa{itens.length === 1 ? '' : 's'}
-                  {atrasado ? ' atrasada' + (itens.length === 1 ? '' : 's') : ''}
-                </span>
-              </div>
-
-              <ul className="mt-1 flex flex-col">
-                {itens.map((t) => (
-                  <li key={t.id}>
-                    <button
-                      onClick={() => irPara(t.projetoId)}
-                      className="group flex w-full items-center gap-2 rounded px-1.5 py-1 text-left transition-colors hover:bg-black/[0.03]"
-                    >
-                      {atrasado ? (
-                        <Flag className="h-3 w-3 shrink-0 text-danger" />
-                      ) : ehHoje ? (
-                        <Clock className="h-3 w-3 shrink-0 text-primary" />
-                      ) : (
-                        <Circle className="h-3 w-3 shrink-0 text-text-muted/50" />
-                      )}
-                      <span className="min-w-0 flex-1 truncate text-[13px] text-text-primary">{t.title}</span>
-                      <span className="shrink-0 text-[11px] text-text-muted group-hover:text-text-secondary">
-                        {t.projeto}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <button
+              key={f.id}
+              onClick={() => setFiltro(f.id)}
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                ativo
+                  ? 'bg-white text-text-primary shadow-[0_1px_2px_rgba(16,24,40,0.08)]'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              {f.label}
+              <span
+                className={`rounded-full px-1.5 text-[10px] tabular-nums ${
+                  alerta ? 'bg-danger/12 font-semibold text-danger' : 'bg-black/[0.06] text-text-muted'
+                }`}
+              >
+                {n}
+              </span>
+            </button>
           );
         })}
 
-        {escondidos > 0 && (
-          <button
-            onClick={() => setTudo(true)}
-            className="self-start text-[11px] font-medium text-primary transition-colors hover:text-primary/80"
-          >
-            ver mais {escondidos} dia{escondidos === 1 ? '' : 's'} ({totalEscondido} tarefa{totalEscondido === 1 ? '' : 's'})
-          </button>
-        )}
-        {tudo && dias.length > DIAS_VISIVEIS && (
-          <button
-            onClick={() => setTudo(false)}
-            className="self-start text-[11px] font-medium text-text-muted transition-colors hover:text-text-primary"
-          >
-            recolher
-          </button>
-        )}
-      </div>
+        {/* Cliente ou casa: as duas listas competem pelo mesmo dia de trabalho. */}
+        <div className="ml-auto flex items-center gap-1 rounded-md bg-black/[0.05] p-0.5">
+          {([['tudo', 'Tudo'], ['clientes', 'Clientes'], ['casa', 'Casa']] as const).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setSoCasa(id)}
+              className={`rounded-sm px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                soCasa === id ? 'bg-white text-text-primary shadow-[0_1px_1px_rgba(16,24,40,0.08)]' : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {lista.length === 0 ? (
+        <p className="px-4 py-6 text-center text-[13px] text-text-muted">
+          {filtro === 'atrasadas' ? 'Nada atrasado. ' : ''}Nenhuma tarefa neste filtro.
+        </p>
+      ) : (
+        <ul className="divide-y divide-black/[0.05]">
+          {lista.map((t) => {
+            const atrasada = !!t.dueDate && t.dueDate < hj;
+            const ehHoje = t.dueDate === hj;
+            return (
+              <li key={t.id} className="group flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-black/[0.02]">
+                {/* Concluir na própria linha: é a ação mais frequente. */}
+                <button
+                  onClick={() => send(updateTask, { id: t.id, status: 'feito' })}
+                  disabled={pending}
+                  title="Marcar como concluída"
+                  aria-label="Marcar como concluída"
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border border-black/20 bg-white text-transparent transition-colors hover:border-success hover:text-success disabled:opacity-50"
+                >
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                </button>
+
+                <span className={`h-3.5 w-1 shrink-0 rounded-full ${PRIORITY_TONE[t.priority]}`} title={`Prioridade ${t.priority}`} />
+
+                <button
+                  onClick={() => irPara(t.projetoId)}
+                  className="min-w-0 flex-1 truncate text-left text-[13px] text-text-primary"
+                  title={t.title}
+                >
+                  {t.title}
+                </button>
+
+                <button
+                  onClick={() => irPara(t.projetoId)}
+                  className="hidden shrink-0 max-w-[12rem] truncate text-[11px] text-text-muted transition-colors hover:text-primary sm:block"
+                >
+                  {t.projeto}
+                </button>
+
+                <span
+                  className={`w-16 shrink-0 text-right text-[11px] tabular-nums ${
+                    atrasada ? 'font-semibold text-danger' : ehHoje ? 'font-semibold text-primary' : 'text-text-muted'
+                  }`}
+                >
+                  {t.dueDate ? (ehHoje ? 'hoje' : fmtDate(t.dueDate)) : '—'}
+                </span>
+
+                <button
+                  onClick={() => { if (confirm(`Apagar a tarefa "${t.title}"?`)) send(deleteTask, { id: t.id }); }}
+                  disabled={pending}
+                  title="Apagar tarefa"
+                  aria-label="Apagar tarefa"
+                  className="shrink-0 rounded p-1 text-text-muted/50 opacity-0 transition hover:bg-danger/10 hover:text-danger group-hover:opacity-100 disabled:opacity-30"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }

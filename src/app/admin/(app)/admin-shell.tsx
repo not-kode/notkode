@@ -1,14 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Logo } from '@/components/brand/logo';
 import { AdminNav } from './admin-nav';
 import { logoutAction } from '../actions';
 
+const PREF_COMPACTO = 'notkode.admin.menu-compacto';
+
 // Shell do /admin com sidebar responsiva: fixa no desktop, off-canvas no mobile
-// (abre por um botão hambúrguer na barra superior).
+// (abre por um botão hambúrguer na barra superior). No desktop ela encolhe para
+// uma faixa de ícones: telas largas como o quadro de tarefas precisam da largura
+// inteira, e obrigar a rolar para o lado para ver as colunas é o pior dos mundos.
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [compacto, setCompacto] = useState(false);
+
+  // Preferência de trabalho, não do dado: fica no navegador.
+  useEffect(() => {
+    setCompacto(localStorage.getItem(PREF_COMPACTO) === '1');
+  }, []);
+  const alternar = () => {
+    setCompacto((c) => {
+      localStorage.setItem(PREF_COMPACTO, c ? '0' : '1');
+      return !c;
+    });
+  };
 
   return (
     <div className="flex min-h-screen bg-white text-text-primary">
@@ -23,31 +40,54 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-screen w-60 shrink-0 flex-col border-r border-black/[0.07] bg-[#F4F5F7] px-4 py-6 transition-transform duration-200 md:sticky md:top-0 md:z-auto md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex h-screen w-60 shrink-0 flex-col border-r border-black/[0.07] bg-[#F4F5F7] py-6 transition-[transform,width] duration-200 md:sticky md:top-0 md:z-auto md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } ${compacto ? 'px-2 md:w-16' : 'px-4'}`}
       >
-        <div className="px-2">
-          <Logo variant="horizontal-dark" width={118} />
-          <p className="eyebrow mt-3">
-            <span className="status-dot" />
-            CRM interno
-          </p>
+        <div className={compacto ? 'flex justify-center' : 'px-2'}>
+          {compacto ? (
+            <Logo variant="vertical-dark" width={34} />
+          ) : (
+            <>
+              <Logo variant="horizontal-dark" width={118} />
+              <p className="eyebrow mt-3">
+                <span className="status-dot" />
+                CRM interno
+              </p>
+            </>
+          )}
         </div>
 
-        <p className="eyebrow mt-8 mb-2 px-3 text-[10px]">Navegação</p>
+        {!compacto && <p className="eyebrow mt-8 mb-2 px-3 text-[10px]">Navegação</p>}
         {/* Fecha o menu ao navegar (mobile) */}
-        <div onClick={() => setOpen(false)}>
-          <AdminNav />
+        <div onClick={() => setOpen(false)} className={compacto ? 'mt-6' : ''}>
+          <AdminNav compacto={compacto} />
         </div>
 
-        <form action={logoutAction} className="mt-auto border-t border-black/[0.07] pt-3">
+        {/* Encolher/expandir: só faz sentido no desktop, onde a sidebar é fixa. */}
+        <button
+          type="button"
+          onClick={alternar}
+          title={compacto ? 'Expandir menu' : 'Encolher menu'}
+          aria-label={compacto ? 'Expandir menu' : 'Encolher menu'}
+          className={`mt-auto hidden items-center gap-2.5 rounded-md py-2 text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-text-primary md:flex ${
+            compacto ? 'justify-center px-2' : 'px-3'
+          }`}
+        >
+          {compacto ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          {!compacto && 'Encolher menu'}
+        </button>
+
+        <form action={logoutAction} className={`border-t border-black/[0.07] pt-3 md:mt-2 ${compacto ? '' : 'mt-auto md:mt-2'}`}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger"
+            title="Sair"
+            className={`flex w-full items-center rounded-md py-2 text-left text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger ${
+              compacto ? 'justify-center px-2' : 'gap-2.5 px-3'
+            }`}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-text-muted/30" />
-            Sair
+            {!compacto && 'Sair'}
           </button>
         </form>
       </aside>
