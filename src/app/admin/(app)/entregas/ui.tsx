@@ -4,7 +4,8 @@
 // (cartão com sombra, avatar, chip de prioridade, prazo com calendário), e não a
 // do site: o que ajuda a bater o olho e entender é cor e forma, não sobriedade.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, Check, ChevronDown } from 'lucide-react';
 import { PRIORITIES, PRIORITY_LABELS, type Priority } from './status';
 
@@ -72,19 +73,65 @@ export function Avatar({ nome, onClick }: { nome: string | null; onClick?: () =>
 
 // ── Menu suspenso ────────────────────────────────────────────────────────────
 
-function useForaDoElemento(aberto: boolean, fechar: () => void) {
+/**
+ * Fecha ao clicar fora ou apertar Esc. `extra` existe para o menu que sai em
+ * portal: ele fica fora da árvore do gatilho, e sem isso o mousedown no item
+ * seria lido como clique fora e fecharia antes do clique chegar.
+ */
+function useForaDoElemento(aberto: boolean, fechar: () => void, extra?: React.RefObject<HTMLElement | null>) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!aberto) return;
     const fora = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) fechar();
+      const alvo = e.target as Node;
+      if (extra?.current?.contains(alvo)) return;
+      if (ref.current && !ref.current.contains(alvo)) fechar();
     };
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') fechar(); };
     document.addEventListener('mousedown', fora);
     document.addEventListener('keydown', esc);
     return () => { document.removeEventListener('mousedown', fora); document.removeEventListener('keydown', esc); };
-  }, [aberto, fechar]);
+  }, [aberto, fechar, extra]);
   return ref;
+}
+
+/**
+ * Onde desenhar um menu suspenso que precisa escapar da tabela. Devolve
+ * coordenadas de tela (o menu vai em portal, com position fixed) e vira o menu
+ * para cima ou para a esquerda quando encostaria na borda da janela.
+ *
+ * Existe porque a visão Lista rola na horizontal, e qualquer overflow recorta
+ * elementos filhos: menu preso na célula aparecia cortado.
+ */
+function usePosicaoMenu(aberto: boolean, botaoRef: React.RefObject<HTMLButtonElement | null>, largura: number, altura: number) {
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!aberto) { setPos(null); return; }
+    const b = botaoRef.current?.getBoundingClientRect();
+    if (!b) return;
+    const abaixo = b.bottom + altura < window.innerHeight;
+    setPos({
+      left: Math.max(8, Math.min(b.left, window.innerWidth - largura - 8)),
+      top: abaixo ? b.bottom + 4 : Math.max(8, b.top - altura - 4),
+    });
+  }, [aberto, botaoRef, largura, altura]);
+
+  // Rolar com o menu aberto deixaria a lista longe do chip: fecha.
+  return pos;
+}
+
+/** Fecha o menu quando a página rola ou a janela muda de tamanho. */
+function useFechaAoRolar(aberto: boolean, fechar: () => void) {
+  useEffect(() => {
+    if (!aberto) return;
+    window.addEventListener('scroll', fechar, true);
+    window.addEventListener('resize', fechar);
+    return () => {
+      window.removeEventListener('scroll', fechar, true);
+      window.removeEventListener('resize', fechar);
+    };
+  }, [aberto, fechar]);
 }
 
 const PRIORITY_DOT: Record<Priority, string> = {
@@ -108,11 +155,16 @@ export function PriorityChip({ value, onChange, compacto }: {
   compacto?: boolean;
 }) {
   const [aberto, setAberto] = useState(false);
-  const ref = useForaDoElemento(aberto, () => setAberto(false));
+  const menuRef = useRef<HTMLDivElement>(null);
+  const botaoRef = useRef<HTMLButtonElement>(null);
+  const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 128, 150);
+  useFechaAoRolar(aberto, () => setAberto(false));
 
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={botaoRef}
         onClick={() => setAberto((v) => !v)}
         className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-80 ${PRIORITY_CHIP[value]}`}
         title="Prioridade"
@@ -121,8 +173,12 @@ export function PriorityChip({ value, onChange, compacto }: {
         {!compacto && PRIORITY_LABELS[value]}
       </button>
 
-      {aberto && (
-        <div className="absolute left-0 top-full z-40 mt-1 w-32 overflow-hidden rounded-md border border-black/[0.08] bg-white py-1 shadow-lg">
+      {aberto && pos && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-50 w-32 overflow-hidden rounded-md border border-black/[0.08] bg-white py-1 shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
+          style={{ left: pos.left, top: pos.top }}
+        >
           {PRIORITIES.map((p) => (
             <button
               key={p}
@@ -134,7 +190,8 @@ export function PriorityChip({ value, onChange, compacto }: {
               {p === value && <Check className="ml-auto h-3 w-3 text-primary" />}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
@@ -150,12 +207,17 @@ export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] t
   placeholder?: string;
 }) {
   const [aberto, setAberto] = useState(false);
-  const ref = useForaDoElemento(aberto, () => setAberto(false));
+  const menuRef = useRef<HTMLDivElement>(null);
+  const botaoRef = useRef<HTMLButtonElement>(null);
+  const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 176, 224);
+  useFechaAoRolar(aberto, () => setAberto(false));
   const atual = options.find((o) => o.value === value);
 
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={botaoRef}
         onClick={() => setAberto((v) => !v)}
         title={titulo}
         className={`inline-flex max-w-[9rem] items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity hover:opacity-80 ${tone}`}
@@ -165,8 +227,12 @@ export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] t
         <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
       </button>
 
-      {aberto && (
-        <div className="absolute left-0 top-full z-40 mt-1 max-h-56 w-44 overflow-y-auto rounded-md border border-black/[0.08] bg-white py-1 shadow-lg">
+      {aberto && pos && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-50 max-h-56 w-44 overflow-y-auto rounded-md border border-black/[0.08] bg-white py-1 shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
+          style={{ left: pos.left, top: pos.top }}
+        >
           {options.map((o) => (
             <button
               key={o.value}
@@ -178,7 +244,8 @@ export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] t
               {o.value === value && <Check className="ml-auto h-3 w-3 shrink-0 text-primary" />}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
