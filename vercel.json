@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/sync/simbos",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }

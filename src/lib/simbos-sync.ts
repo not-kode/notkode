@@ -50,6 +50,33 @@ export type ResultadoSync = {
   sem_projeto_mapeado?: number;
 };
 
+/**
+ * Sincroniza no máximo uma vez por janela. Chamada quando a tela de Tasks abre,
+ * depois de a resposta já ter sido enviada (next/after), então quem navega não
+ * paga a espera do SimbOS.
+ *
+ * É esse gatilho, e não o cron, que faz o sistema parecer ligado ao SimbOS: o
+ * plano Hobby da Vercel só permite cron uma vez ao dia, que fica como rede de
+ * segurança para quando ninguém abre a tela.
+ */
+export async function sincronizarSeVencido(janelaSegundos = 120): Promise<void> {
+  if (!simbosAtivo()) return;
+  const supabase = getSupabaseAdmin();
+
+  const { data } = await supabase
+    .from('sync_state')
+    .select('ran_at')
+    .eq('chave', 'simbos')
+    .maybeSingle();
+
+  const ultima = data?.ran_at ? Date.parse(data.ran_at as string) : 0;
+  if (Date.now() - ultima < janelaSegundos * 1000) return;
+
+  // Marca antes de rodar: duas abas abrindo junto não disparam duas varreduras.
+  await supabase.from('sync_state').upsert({ chave: 'simbos', ran_at: new Date().toISOString() });
+  await sincronizarComSimbos();
+}
+
 /** Reconcilia as tarefas dos dois lados. Chamada pelo cron e pelo botão da tela. */
 export async function sincronizarComSimbos(): Promise<ResultadoSync> {
   if (!simbosAtivo()) return { ok: false, motivo: 'SimbOS não configurado' };

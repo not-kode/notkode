@@ -1,4 +1,6 @@
+import { after } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { sincronizarSeVencido } from '@/lib/simbos-sync';
 import { EntregasView } from './entregas-view';
 import type { ProjectView } from './types';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
@@ -31,6 +33,10 @@ type TaskRow = {
 };
 
 export default async function EntregasPage() {
+  // Depois de responder: abrir a tela puxa o que mudou no SimbOS, sem atrasar
+  // o carregamento. A varredura tem janela mínima, então navegar não martela.
+  after(async () => { await sincronizarSeVencido(); });
+
   const supabase = getSupabaseAdmin();
 
   const [{ data: engData }, { data: phaseData }, { data: taskData }] = await Promise.all([
