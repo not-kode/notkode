@@ -5,7 +5,7 @@
 // para não trazer dependência nova só por causa disso.
 
 import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Check, Plus, Trash2 } from 'lucide-react';
 import { createTask, deleteTask, moveTask, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
 import type { PhaseView, Send, TaskView } from './types';
@@ -139,16 +139,33 @@ function TaskCard({ task, phases, send, onDragStart, onDragEnd, onDropBefore, ar
         arrastando === task.id ? 'opacity-40' : ''
       }`}
     >
-      <div className="flex items-start gap-1">
+      <div className="flex items-start gap-1.5">
+        {/* Concluir direto no card, sem precisar arrastar até a coluna Feito. */}
+        <button
+          onClick={() => send(updateTask, { id: task.id, status: task.status === 'feito' ? 'a_fazer' : 'feito' })}
+          title={task.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
+          aria-label={task.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
+          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
+            task.status === 'feito'
+              ? 'border-success bg-success text-white'
+              : 'border-black/25 bg-white text-transparent hover:border-success hover:text-success/40'
+          }`}
+        >
+          <Check className="h-3 w-3" strokeWidth={3} />
+        </button>
+
         <InlineText
           value={task.title}
           onSave={(v) => send(updateTask, { id: task.id, title: v })}
           className={`flex-1 text-[13px] leading-snug ${task.status === 'feito' ? 'text-text-muted line-through' : 'text-text-primary'}`}
         />
+
+        {/* Sempre visível: ação escondida no hover ninguém acha. */}
         <button
-          onClick={() => send(deleteTask, { id: task.id })}
-          className="shrink-0 rounded p-0.5 text-text-muted/50 opacity-0 transition group-hover:opacity-100 hover:bg-danger/10 hover:text-danger"
+          onClick={() => { if (confirm(`Apagar a tarefa "${task.title}"? Ela sai também do SimbOS.`)) send(deleteTask, { id: task.id }); }}
+          className="shrink-0 rounded p-0.5 text-text-muted/45 transition hover:bg-danger/10 hover:text-danger"
           aria-label="Apagar tarefa"
+          title="Apagar tarefa"
         >
           <Trash2 className="h-3 w-3" />
         </button>

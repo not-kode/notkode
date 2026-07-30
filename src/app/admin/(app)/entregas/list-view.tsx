@@ -4,7 +4,7 @@
 // todas as tarefas de uma vez, e ordenar pela coluna que interessa no momento.
 
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Plus, Trash2 } from 'lucide-react';
 import { createTask, deleteTask, updateTask } from './actions';
 import { PRIORITY_ORDER, TASK_LABELS, TASK_ORDER, TASK_STATUSES } from './status';
 import type { PhaseView, Send, TaskView } from './types';
@@ -23,6 +23,7 @@ const cabecalhos: { id: Coluna; label: string; cls: string }[] = [
 ];
 
 const STATUS_DOT: Record<string, string> = {
+  backlog: 'bg-neutral-200',
   a_fazer: 'bg-neutral-300',
   fazendo: 'bg-primary',
   revisao: 'bg-warning',
@@ -30,6 +31,7 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 const STATUS_TOM: Record<string, string> = {
+  backlog: 'bg-black/[0.03] text-text-muted',
   a_fazer: 'bg-black/[0.04] text-text-secondary',
   fazendo: 'bg-primary/10 text-primary',
   revisao: 'bg-warning/15 text-[#B45309]',
@@ -72,6 +74,7 @@ export function ListView({ tasks, phases, projectId, send }: {
         <table className="w-full min-w-[52rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-black/[0.07] bg-neutral-50">
+              <th className="w-9" />
               {cabecalhos.map((c) => {
                 const ativa = ordem.col === c.id;
                 return (
@@ -96,6 +99,21 @@ export function ListView({ tasks, phases, projectId, send }: {
               const atrasada = !!t.dueDate && t.dueDate < hoje() && t.status !== 'feito';
               return (
                 <tr key={t.id} className="group border-b border-black/[0.04] transition-colors last:border-0 hover:bg-neutral-50/70">
+                  {/* Concluir sem abrir menu: é a ação de todo dia. */}
+                  <td className="pl-3 pr-0 py-2">
+                    <button
+                      onClick={() => send(updateTask, { id: t.id, status: t.status === 'feito' ? 'a_fazer' : 'feito' })}
+                      title={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
+                      aria-label={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
+                      className={`flex h-4 w-4 items-center justify-center rounded-[4px] border transition-colors ${
+                        t.status === 'feito'
+                          ? 'border-success bg-success text-white'
+                          : 'border-black/25 bg-white text-transparent hover:border-success hover:text-success/40'
+                      }`}
+                    >
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    </button>
+                  </td>
                   <td className="px-3 py-2">
                     <InlineText
                       value={t.title}
@@ -141,11 +159,15 @@ export function ListView({ tasks, phases, projectId, send }: {
                       options={[{ value: '', label: 'sem etapa' }, ...phases.map((p) => ({ value: p.id, label: p.name }))]}
                     />
                   </td>
+                  {/* Sempre visível, de propósito: escondido no hover, ninguém
+                      descobre que existe. Confirma antes, porque apagar aqui
+                      apaga também no SimbOS. */}
                   <td className="px-2 py-2 text-right">
                     <button
-                      onClick={() => send(deleteTask, { id: t.id })}
-                      className="rounded p-1 text-text-muted/50 opacity-0 transition group-hover:opacity-100 hover:bg-danger/10 hover:text-danger"
+                      onClick={() => { if (confirm(`Apagar a tarefa "${t.title}"? Ela sai também do SimbOS.`)) send(deleteTask, { id: t.id }); }}
+                      className="rounded p-1 text-text-muted/45 transition hover:bg-danger/10 hover:text-danger"
                       aria-label="Apagar tarefa"
+                      title="Apagar tarefa"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -156,7 +178,7 @@ export function ListView({ tasks, phases, projectId, send }: {
 
             {ordenadas.length === 0 && !criando && (
               <tr>
-                <td colSpan={8} className="px-3 py-10 text-center text-sm text-text-muted">
+                <td colSpan={9} className="px-3 py-10 text-center text-sm text-text-muted">
                   Nenhuma tarefa ainda.
                 </td>
               </tr>

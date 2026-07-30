@@ -177,8 +177,8 @@ export function EntregasView({ projects }: { projects: ProjectView[] }) {
 
 /**
  * O SimbOS e o sistema andam juntos: o que muda aqui vai para lá na hora, e o
- * que muda lá chega aqui de dez em dez minutos pelo cron. Este botão é para não
- * ter que esperar o ciclo.
+ * que muda lá é buscado quando esta tela abre. Este botão força a busca sem
+ * precisar recarregar.
  */
 function SyncSimbos() {
   const [rodando, setRodando] = useState(false);
@@ -353,11 +353,11 @@ function Fila({ tarefas, irPara, pending, send }: {
                 </span>
 
                 <button
-                  onClick={() => { if (confirm(`Apagar a tarefa "${t.title}"?`)) send(deleteTask, { id: t.id }); }}
+                  onClick={() => { if (confirm(`Apagar a tarefa "${t.title}"? Ela sai também do SimbOS.`)) send(deleteTask, { id: t.id }); }}
                   disabled={pending}
                   title="Apagar tarefa"
                   aria-label="Apagar tarefa"
-                  className="shrink-0 rounded p-1 text-text-muted/50 opacity-0 transition hover:bg-danger/10 hover:text-danger group-hover:opacity-100 disabled:opacity-30"
+                  className="shrink-0 rounded p-1 text-text-muted/45 transition hover:bg-danger/10 hover:text-danger disabled:opacity-30"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -566,7 +566,8 @@ function PhaseRow({ phase, tarefas, primeira, ultima, pending, send }: {
         {phase.clientVisible ? 'cliente vê' : 'interna'}
       </button>
 
-      <span className="flex items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
+      {/* Mesma regra das tarefas: ação visível, não escondida atrás do mouse. */}
+      <span className="flex items-center gap-0.5">
         <button onClick={() => send(movePhase, { id: phase.id, dir: 'up' })} disabled={pending || primeira} className="rounded p-1 text-text-muted transition hover:bg-black/[0.04] hover:text-text-primary disabled:opacity-25" aria-label="Subir">
           <ChevronUp className="h-3.5 w-3.5" />
         </button>
