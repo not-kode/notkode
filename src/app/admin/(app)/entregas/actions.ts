@@ -202,50 +202,71 @@ export async function updateTask(formData: FormData): Promise<void> {
 }
 
 /**
- * Arrastar no Kanban: muda o status e recoloca a tarefa na ordem da coluna de
- * destino. `before` é o id da tarefa sobre a qual ela foi solta (vazio = fim da
- * coluna). A reordenação é feita reescrevendo o sort da coluna inteira, que é
- * barato no volume de tarefas de um projeto e evita brigas de índice.
+ * Arrastar no quadro ou na lista: muda o status e recoloca as tarefas na ordem
+ * da coluna de destino. `before` é o id da tarefa sobre a qual foram soltas
+ * (vazio = fim da coluna), e `ids` aceita mais de uma, porque arrastar um lote
+ * selecionado tem que mover o lote inteiro de uma vez.
+ *
+ * A reordenação reescreve o sort da coluna toda, que é barato no volume de
+ * tarefas de um projeto e evita brigas de índice.
  */
 export async function moveTask(formData: FormData): Promise<void> {
-  const id = str(formData, 'id', 64);
+  const pedidos = (str(formData, 'ids', 8000) ?? str(formData, 'id', 64) ?? '')
+    .split(',')
+    .filter(Boolean)
+    .slice(0, 200);
   const status = str(formData, 'status', 32);
   const before = str(formData, 'before', 64);
-  if (!id || !status || !TASK_STATUSES.includes(status as TaskStatus)) return;
+  if (!pedidos.length || !status || !TASK_STATUSES.includes(status as TaskStatus)) return;
 
   const supabase = getSupabaseAdmin();
-  const { data: atual } = await supabase
+  const { data } = await supabase
     .from('project_tasks')
     .select('id, engagement_id, status')
-    .eq('id', id)
-    .single();
-  if (!atual) return;
+    .in('id', pedidos);
 
-  await supabase
-    .from('project_tasks')
-    .update({
-      status,
-      // Mesma regra do updateTask: a data de conclusão não pode mentir depois.
-      done_at: status === 'feito' ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString(),
-      ...(status === 'feito' ? await fecharRelogio(id) : {}),
-    })
-    .eq('id', id);
+  const atuais = (data ?? []) as { id: string; engagement_id: string; status: string }[];
+  if (!atuais.length) return;
 
-  const { data: coluna } = await supabase
-    .from('project_tasks')
-    .select('id, sort')
-    .eq('engagement_id', atual.engagement_id)
-    .eq('status', status)
-    .order('sort');
+  const agora = new Date().toISOString();
+  for (const t of atuais) {
+    await supabase
+      .from('project_tasks')
+      .update({
+        status,
+        // Mesma regra do updateTask: a data de conclusão não pode mentir depois.
+        done_at: status === 'feito' ? agora : null,
+        updated_at: agora,
+        ...(status === 'feito' ? await fecharRelogio(t.id) : {}),
+      })
+      .eq('id', t.id);
+  }
 
-  const ids = (coluna ?? []).map((t) => t.id as string).filter((t) => t !== id);
-  const alvo = before ? ids.indexOf(before) : -1;
-  ids.splice(alvo >= 0 ? alvo : ids.length, 0, id);
+  // A ordem pedida é a que aparece na tela; o lote entra junto, na sequência.
+  const porProjeto = new Map<string, string[]>();
+  for (const id of pedidos) {
+    const t = atuais.find((x) => x.id === id);
+    if (!t) continue;
+    porProjeto.set(t.engagement_id, [...(porProjeto.get(t.engagement_id) ?? []), id]);
+  }
 
-  await Promise.all(ids.map((taskId, i) => supabase.from('project_tasks').update({ sort: i }).eq('id', taskId)));
+  for (const [engagementId, movidas] of porProjeto) {
+    const { data: coluna } = await supabase
+      .from('project_tasks')
+      .select('id, sort')
+      .eq('engagement_id', engagementId)
+      .eq('status', status)
+      .order('sort');
+
+    const ids = (coluna ?? []).map((t) => t.id as string).filter((t) => !movidas.includes(t));
+    const alvo = before ? ids.indexOf(before) : -1;
+    ids.splice(alvo >= 0 ? alvo : ids.length, 0, ...movidas);
+
+    await Promise.all(ids.map((taskId, i) => supabase.from('project_tasks').update({ sort: i }).eq('id', taskId)));
+  }
+
   // Arrastar entre colunas é mudança de status: o SimbOS tem que saber.
-  if (atual.status !== status) await espelharAtualizacao(id);
+  for (const t of atuais) if (t.status !== status) await espelharAtualizacao(t.id);
   revalidar();
 }
 

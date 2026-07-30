@@ -6,6 +6,7 @@
 // mexer nela abre a tarefa.
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowDown, ArrowUp, Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import {
@@ -96,17 +97,26 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
     setSelecao([]);
   };
 
+  /** As selecionadas na ordem em que aparecem na tela, bloco a bloco. */
+  const selecaoEmOrdem = () =>
+    BLOCOS.flatMap((s) => ordenar(raizes.filter((t) => t.status === s)))
+      .map((t) => t.id)
+      .filter((id) => selecao.includes(id));
+
   /**
-   * Soltou: a tarefa vai para o status do bloco de destino, na posição em que
-   * foi solta (`before` vazio = fim do bloco). Como a posição só existe na ordem
-   * manual, arrastar devolve a lista para ela.
+   * Soltou: as tarefas vão para o status do bloco de destino, na posição em que
+   * foram soltas (`before` vazio = fim do bloco). Arrastar uma linha que está
+   * marcada leva o lote inteiro junto — foi para isso que ele foi selecionado.
+   * Como a posição só existe na ordem manual, arrastar devolve a lista para ela.
    */
   const soltar = (id: string, status: TaskStatus, before: string) => {
     setArrastando(null);
     setAlvo(null);
     if (!id || id === before) return;
+    const ids = marcada(id) && selecao.length > 1 ? selecaoEmOrdem() : [id];
+    if (ids.includes(before)) return;
     setOrdem({ col: 'manual', asc: true });
-    send(moveTask, { id, status, before });
+    send(moveTask, { ids: ids.join(','), status, before });
   };
 
   return (
@@ -231,7 +241,8 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
                             soltar(e.dataTransfer.getData('text/plain'), status, t.id);
                           }}
                           className={`group border-b border-black/[0.04] transition-colors last:border-0 ${
-                            arrastando === t.id ? 'opacity-40' : ''
+                            // O lote inteiro esmaece: dá para ver o que vai junto.
+                            arrastando && (arrastando === t.id || (marcada(arrastando) && marcada(t.id))) ? 'opacity-40' : ''
                           } ${alvo === t.id && arrastando && arrastando !== t.id ? 'border-t-2 border-t-primary' : ''} ${
                             marcada(t.id) ? 'bg-primary/[0.05]' : 'hover:bg-neutral-50/70'
                           }`}
@@ -407,8 +418,10 @@ function BarraSelecao({ quantas, etapas, editar, apagar, limpar }: {
 }) {
   const [quem, setQuem] = useState('');
 
-  return (
-    <div className="sticky bottom-4 z-30 mx-auto flex flex-wrap items-center justify-center gap-2 rounded-full border border-black/[0.08] bg-white px-3 py-2 shadow-[0_8px_24px_rgba(16,24,40,0.16)]">
+  // Em portal e fixa na janela: dentro da tabela ela ficava presa no fim da
+  // página (o conteúdo do admin rola na horizontal, e isso mata o sticky).
+  return createPortal(
+    <div className="fixed bottom-5 left-1/2 z-50 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-full border border-black/[0.08] bg-white px-3 py-2 shadow-[0_8px_24px_rgba(16,24,40,0.16)]">
       <span className="px-1 text-[12px] font-medium tabular-nums text-text-primary">
         {quantas} selecionada{quantas === 1 ? '' : 's'}
       </span>
@@ -484,7 +497,8 @@ function BarraSelecao({ quantas, etapas, editar, apagar, limpar }: {
       >
         Limpar
       </button>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
