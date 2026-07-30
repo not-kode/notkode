@@ -266,7 +266,7 @@ export async function moveTask(formData: FormData): Promise<void> {
   }
 
   // Arrastar entre colunas é mudança de status: o SimbOS tem que saber.
-  for (const t of atuais) if (t.status !== status) await espelharAtualizacao(t.id);
+  await espelharVarias(atuais.filter((t) => t.status !== status).map((t) => t.id));
   revalidar();
 }
 
@@ -308,15 +308,34 @@ export async function bulkTasks(formData: FormData): Promise<void> {
   if (formData.has('phase_id')) patch.phase_id = str(formData, 'phase_id', 64);
   if (Object.keys(patch).length === 1) return;
 
-  for (const id of ids) {
-    await supabase
+  // Um update para o lote inteiro: em massa, uma consulta por tarefa estoura o
+  // tempo da função antes de terminar.
+  await supabase.from('project_tasks').update(patch).in('id', ids);
+
+  // O relógio só precisa ser fechado em quem estava contando.
+  if (patch.status === 'feito') {
+    const { data: correndo } = await supabase
       .from('project_tasks')
-      .update({ ...patch, ...(patch.status === 'feito' ? await fecharRelogio(id) : {}) })
-      .eq('id', id);
-    await espelharAtualizacao(id);
+      .select('id')
+      .in('id', ids)
+      .not('timer_started_at', 'is', null);
+    for (const t of (correndo ?? []) as { id: string }[]) {
+      await supabase.from('project_tasks').update(await fecharRelogio(t.id)).eq('id', t.id);
+    }
   }
 
+  // O SimbOS não conhece responsável nem etapa: mudar só isso não precisa de
+  // espelho nenhum. O que ele conhece vai em paralelo, em blocos.
+  if (['status', 'priority', 'due_date'].some((k) => k in patch)) await espelharVarias(ids);
+
   revalidar();
+}
+
+/** Espelha um monte de tarefas sem serializar uma atrás da outra. */
+async function espelharVarias(ids: string[], porVez = 8): Promise<void> {
+  for (let i = 0; i < ids.length; i += porVez) {
+    await Promise.all(ids.slice(i, i + porVez).map((id) => espelharAtualizacao(id)));
+  }
 }
 
 /**

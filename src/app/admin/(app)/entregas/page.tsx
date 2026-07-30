@@ -6,6 +6,9 @@ import type { ProjectView } from './types';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
 
 export const dynamic = 'force-dynamic';
+// Ações em lote (responsável de duzentas tarefas, mover uma leva inteira) falam
+// com o SimbOS tarefa a tarefa; com o teto padrão de 10s elas morriam no meio.
+export const maxDuration = 60;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
 
