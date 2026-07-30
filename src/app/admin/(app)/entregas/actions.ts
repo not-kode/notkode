@@ -250,9 +250,9 @@ export async function moveTask(formData: FormData): Promise<void> {
 }
 
 /**
- * Mesma ação em várias tarefas de uma vez: é o que a seleção da lista manda.
- * Vale para concluir, reabrir e apagar — o resto continua tarefa a tarefa,
- * porque é edição de conteúdo, não de fila.
+ * Mesma mudança em várias tarefas de uma vez: é o que a seleção da lista manda.
+ * `acao` é 'apagar' ou 'editar'; editar aplica só os campos que vierem no
+ * formulário (status, prioridade, responsável, prazo, etapa).
  */
 export async function bulkTasks(formData: FormData): Promise<void> {
   const acao = str(formData, 'acao', 16);
@@ -271,18 +271,26 @@ export async function bulkTasks(formData: FormData): Promise<void> {
     return;
   }
 
-  if (acao !== 'concluir' && acao !== 'reabrir') return;
-  const feito = acao === 'concluir';
+  if (acao !== 'editar') return;
+
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const status = str(formData, 'status', 32);
+  if (status && TASK_STATUSES.includes(status as TaskStatus)) {
+    patch.status = status;
+    patch.done_at = status === 'feito' ? new Date().toISOString() : null;
+  }
+  const priority = str(formData, 'priority', 16);
+  if (priority && PRIORITIES.includes(priority as Priority)) patch.priority = priority;
+  // Campo presente e vazio quer dizer "limpar": é assim que se tira um prazo.
+  if (formData.has('assignee')) patch.assignee = str(formData, 'assignee', 120);
+  if (formData.has('due_date')) patch.due_date = date(formData, 'due_date');
+  if (formData.has('phase_id')) patch.phase_id = str(formData, 'phase_id', 64);
+  if (Object.keys(patch).length === 1) return;
 
   for (const id of ids) {
     await supabase
       .from('project_tasks')
-      .update({
-        status: feito ? 'feito' : 'a_fazer',
-        done_at: feito ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString(),
-        ...(feito ? await fecharRelogio(id) : {}),
-      })
+      .update({ ...patch, ...(patch.status === 'feito' ? await fecharRelogio(id) : {}) })
       .eq('id', id);
     await espelharAtualizacao(id);
   }

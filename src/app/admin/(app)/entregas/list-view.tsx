@@ -8,9 +8,11 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
-import { PRIORITY_ORDER, TASK_DOT, TASK_LABELS, type TaskStatus } from './status';
+import {
+  PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS, TASK_STATUSES, type TaskStatus,
+} from './status';
 import type { PhaseView, Send, TaskComProjeto } from './types';
-import { Avatar, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
+import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
 // 'manual' é a ordem do quadro, a que você monta arrastando. Clicar num
@@ -86,8 +88,11 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
   const marcada = (id: string) => selecao.includes(id);
   const alternar = (id: string) =>
     setSelecao((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-  const emLote = (acao: 'concluir' | 'reabrir' | 'apagar') => {
-    send(bulkTasks, { acao, ids: selecao.join(',') });
+  /** Aplica os campos informados em todas as selecionadas; a seleção continua. */
+  const editarLote = (campos: Record<string, string>) =>
+    send(bulkTasks, { acao: 'editar', ids: selecao.join(','), ...campos });
+  const apagarLote = () => {
+    send(bulkTasks, { acao: 'apagar', ids: selecao.join(',') });
     setSelecao([]);
   };
 
@@ -361,41 +366,14 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
         );
       })}
 
-      {/* Barra da seleção: acompanha a rolagem, some quando nada está marcado. */}
       {selecao.length > 0 && (
-        <div className="sticky bottom-4 z-30 mx-auto flex flex-wrap items-center gap-2 rounded-full border border-black/[0.08] bg-white px-3 py-2 shadow-[0_8px_24px_rgba(16,24,40,0.16)]">
-          <span className="px-1 text-[12px] font-medium text-text-primary tabular-nums">
-            {selecao.length} selecionada{selecao.length === 1 ? '' : 's'}
-          </span>
-          <button
-            onClick={() => emLote('concluir')}
-            className="inline-flex items-center gap-1.5 rounded-full bg-success px-3 py-1 text-[12px] font-semibold text-white transition hover:opacity-90"
-          >
-            <Check className="h-3.5 w-3.5" strokeWidth={3} />
-            Concluir
-          </button>
-          <button
-            onClick={() => emLote('reabrir')}
-            className="rounded-full border border-black/[0.1] px-3 py-1 text-[12px] font-medium text-text-secondary transition hover:border-primary/40 hover:text-primary"
-          >
-            Reabrir
-          </button>
-          <button
-            onClick={() => {
-              if (confirm(`Apagar ${selecao.length} tarefa(s)? Elas saem também do SimbOS.`)) emLote('apagar');
-            }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.1] px-3 py-1 text-[12px] font-medium text-text-secondary transition hover:border-danger/40 hover:text-danger"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Apagar
-          </button>
-          <button
-            onClick={() => setSelecao([])}
-            className="rounded-full px-2 py-1 text-[12px] text-text-muted transition hover:text-text-primary"
-          >
-            Limpar
-          </button>
-        </div>
+        <BarraSelecao
+          quantas={selecao.length}
+          etapas={mostrarProjeto ? null : phasesDe(projectId)}
+          editar={editarLote}
+          apagar={apagarLote}
+          limpar={() => setSelecao([])}
+        />
       )}
 
       {aberta && (
@@ -408,6 +386,104 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
           onFechar={() => setAberta(null)}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * Barra do que fazer com as selecionadas. Acompanha a rolagem e some quando nada
+ * está marcado. Depois de uma mudança a seleção continua de pé: mudar o
+ * responsável e o prazo do mesmo lote é a sequência normal, não duas tarefas.
+ *
+ * A etapa só entra quando a lista é de um projeto só: em "Todos", cada tarefa
+ * pertence a um cronograma diferente e não existe etapa comum para aplicar.
+ */
+function BarraSelecao({ quantas, etapas, editar, apagar, limpar }: {
+  quantas: number;
+  etapas: PhaseView[] | null;
+  editar: (campos: Record<string, string>) => void;
+  apagar: () => void;
+  limpar: () => void;
+}) {
+  const [quem, setQuem] = useState('');
+
+  return (
+    <div className="sticky bottom-4 z-30 mx-auto flex flex-wrap items-center justify-center gap-2 rounded-full border border-black/[0.08] bg-white px-3 py-2 shadow-[0_8px_24px_rgba(16,24,40,0.16)]">
+      <span className="px-1 text-[12px] font-medium tabular-nums text-text-primary">
+        {quantas} selecionada{quantas === 1 ? '' : 's'}
+      </span>
+
+      <button
+        onClick={() => editar({ status: 'feito' })}
+        className="inline-flex items-center gap-1.5 rounded-full bg-success px-3 py-1 text-[12px] font-semibold text-white transition hover:opacity-90"
+      >
+        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+        Concluir
+      </button>
+
+      <span className="h-4 w-px bg-black/[0.08]" />
+
+      <ChipSelect
+        value=""
+        placeholder="Mover para"
+        titulo="Mover as selecionadas para outro bloco"
+        onChange={(v) => editar({ status: v })}
+        options={TASK_STATUSES.map((s) => ({ value: s, label: TASK_LABELS[s], dot: TASK_DOT[s] }))}
+      />
+
+      <ChipSelect
+        value=""
+        placeholder="Prioridade"
+        titulo="Prioridade das selecionadas"
+        onChange={(v) => editar({ priority: v })}
+        options={PRIORITIES.map((p) => ({ value: p, label: PRIORITY_LABELS[p] }))}
+      />
+
+      {etapas && etapas.length > 0 && (
+        <ChipSelect
+          // Nenhuma opção casa com este valor, então o chip mostra o rótulo em
+          // vez de fingir que as selecionadas já estão numa etapa.
+          value="—"
+          placeholder="Etapa"
+          titulo="Etapa do cronograma"
+          onChange={(v) => editar({ phase_id: v })}
+          options={[{ value: '', label: 'sem etapa' }, ...etapas.map((e) => ({ value: e.id, label: e.name }))]}
+        />
+      )}
+
+      {/* Enter aplica; vazio limpa o responsável de todas. */}
+      <input
+        value={quem}
+        onChange={(e) => setQuem(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { editar({ assignee: quem }); setQuem(''); } }}
+        placeholder="Responsável"
+        title="Digite o nome e aperte Enter"
+        className="w-28 rounded-full border border-black/[0.1] px-2.5 py-1 text-[12px] text-text-primary outline-none transition-colors focus:border-primary/40"
+      />
+
+      <input
+        type="date"
+        onChange={(e) => editar({ due_date: e.target.value })}
+        title="Prazo das selecionadas"
+        className="rounded-full border border-black/[0.1] px-2.5 py-1 text-[12px] text-text-secondary outline-none transition-colors focus:border-primary/40"
+      />
+
+      <span className="h-4 w-px bg-black/[0.08]" />
+
+      <button
+        onClick={() => { if (confirm(`Apagar ${quantas} tarefa(s)? Elas saem também do SimbOS.`)) apagar(); }}
+        className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.1] px-3 py-1 text-[12px] font-medium text-text-secondary transition hover:border-danger/40 hover:text-danger"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        Apagar
+      </button>
+
+      <button
+        onClick={limpar}
+        className="rounded-full px-2 py-1 text-[12px] text-text-muted transition hover:text-text-primary"
+      >
+        Limpar
+      </button>
     </div>
   );
 }
