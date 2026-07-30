@@ -1,8 +1,12 @@
 'use client';
 
-// Cronograma em linha do tempo. É a visão que o cliente enxerga pelo link de
-// acompanhamento, então ela é puro dado de prazo: nada de status interno,
-// responsável ou prioridade.
+// Cronograma em linha do tempo, sempre de um projeto só. É a visão que o cliente
+// enxerga pelo link de acompanhamento: etapas, as tarefas de cada etapa, quem
+// responde por elas e as datas. Nada de status interno nem prioridade.
+//
+// Tarefa sem etapa não vira barra: cronograma é a sequência de etapas combinada
+// com o cliente, e tarefa solta ali dentro aparece como item aleatório. Ela é
+// listada à parte, e só do lado de dentro, para ganhar uma etapa.
 
 import type { PhaseView, TaskView } from './types';
 import { PHASE_LABELS } from './status';
@@ -18,6 +22,7 @@ type Barra = {
   atrasada: boolean;
   cor: number;
   sub?: string;
+  quem?: string | null;
 };
 
 /** Uma cor por etapa, para a barra da tarefa herdar a cor da etapa dela. */
@@ -74,9 +79,12 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
 
   const barras: Barra[] = [];
   const semData: { id: string; titulo: string; etapa: string | null }[] = [];
+  // Tarefas do projeto que ainda não pertencem a nenhuma etapa.
+  const semEtapa = tasks.filter((t) => !t.phaseId && !t.parentId);
 
   phases.forEach((p, i) => {
-    const tarefas = tasks.filter((t) => t.phaseId === p.id);
+    // Subtarefa não vira linha própria: ela é detalhe de dentro da tarefa.
+    const tarefas = tasks.filter((t) => t.phaseId === p.id && !t.parentId);
     // A etapa sem data própria assume o intervalo das tarefas dela: melhor uma
     // barra deduzida do que uma faixa vazia no cronograma do cliente.
     const inicios = [p.startDate, ...tarefas.map((t) => t.startDate ?? t.dueDate)].filter(Boolean) as string[];
@@ -110,32 +118,18 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
         concluida: t.status === 'feito',
         atrasada: fim < hj && t.status !== 'feito',
         cor: i % CORES.length,
+        quem: t.assignee,
       });
     }
   });
 
-  for (const t of tasks.filter((x) => !x.phaseId)) {
-    const inicio = t.startDate ?? t.dueDate;
-    const fim = t.dueDate ?? t.startDate;
-    if (!inicio || !fim) { semData.push({ id: t.id, titulo: t.title, etapa: null }); continue; }
-    barras.push({
-      id: t.id,
-      titulo: t.title,
-      inicio,
-      fim: fim < inicio ? inicio : fim,
-      tipo: 'tarefa',
-      concluida: t.status === 'feito',
-      atrasada: fim < hj && t.status !== 'feito',
-      cor: phases.length % CORES.length,
-    });
-  }
-
   if (barras.length === 0) {
     return (
       <div className="rounded-md border border-black/[0.07] bg-white px-4 py-12 text-center shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
-        <p className="text-sm text-text-secondary">Nenhuma tarefa com data ainda.</p>
+        <p className="text-sm text-text-secondary">Nenhuma etapa com data ainda.</p>
         <p className="mt-1 text-[13px] text-text-muted">
-          Coloque começo e prazo nas tarefas e o cronograma se desenha sozinho.
+          Crie as etapas do projeto, coloque as tarefas dentro delas com começo e prazo, e o cronograma se desenha
+          sozinho.
         </p>
       </div>
     );
@@ -163,6 +157,7 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
           {/* Régua */}
           <div className="flex gap-3 pb-2">
             <div className="w-52 shrink-0" />
+            <div className="w-28 shrink-0" />
             <div className="relative h-4 flex-1">
               {marcas(de, dias).map((m) => (
                 <span
@@ -193,6 +188,15 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
                 >
                   {b.tipo === 'tarefa' && <span className="mr-1.5 text-text-muted">└</span>}
                   {b.titulo}
+                </div>
+              ))}
+            </div>
+
+            {/* Quem responde: é o que o cliente pergunta depois de "para quando". */}
+            <div className="flex w-28 shrink-0 flex-col gap-1">
+              {barras.map((b) => (
+                <div key={b.id} className="flex h-7 items-center truncate text-[11px] text-text-muted" title={b.quem ?? ''}>
+                  {b.tipo === 'tarefa' ? b.quem ?? '' : ''}
                 </div>
               ))}
             </div>
@@ -247,6 +251,24 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
           </div>
         </div>
       </div>
+
+      {/* Só do lado de dentro: para o cliente, tarefa sem etapa simplesmente não
+          existe no cronograma; para você, é uma pendência de organização. */}
+      {!modoCliente && semEtapa.length > 0 && (
+        <div className="border-t border-black/[0.06] bg-warning/[0.06] px-4 py-2.5">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-[#B45309]">
+            Fora do cronograma ({semEtapa.length}) — sem etapa
+          </p>
+          <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+            {semEtapa.map((t) => (
+              <li key={t.id} className="text-[12px] text-text-secondary">{t.title}</li>
+            ))}
+          </ul>
+          <p className="mt-1 text-[11px] text-text-muted">
+            Coloque cada uma numa etapa para que entrem no cronograma que o cliente vê.
+          </p>
+        </div>
+      )}
 
       {semData.length > 0 && (
         <div className="border-t border-black/[0.06] bg-neutral-50 px-4 py-2.5">

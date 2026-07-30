@@ -250,6 +250,47 @@ export async function moveTask(formData: FormData): Promise<void> {
 }
 
 /**
+ * Mesma ação em várias tarefas de uma vez: é o que a seleção da lista manda.
+ * Vale para concluir, reabrir e apagar — o resto continua tarefa a tarefa,
+ * porque é edição de conteúdo, não de fila.
+ */
+export async function bulkTasks(formData: FormData): Promise<void> {
+  const acao = str(formData, 'acao', 16);
+  const ids = (str(formData, 'ids', 8000) ?? '').split(',').filter(Boolean).slice(0, 200);
+  if (!ids.length || !acao) return;
+
+  const supabase = getSupabaseAdmin();
+
+  if (acao === 'apagar') {
+    for (const id of ids) {
+      const simbosId = await idSimbosDa(id);
+      await supabase.from('project_tasks').delete().eq('id', id);
+      await espelharExclusao(simbosId);
+    }
+    revalidar();
+    return;
+  }
+
+  if (acao !== 'concluir' && acao !== 'reabrir') return;
+  const feito = acao === 'concluir';
+
+  for (const id of ids) {
+    await supabase
+      .from('project_tasks')
+      .update({
+        status: feito ? 'feito' : 'a_fazer',
+        done_at: feito ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+        ...(feito ? await fecharRelogio(id) : {}),
+      })
+      .eq('id', id);
+    await espelharAtualizacao(id);
+  }
+
+  revalidar();
+}
+
+/**
  * Liga ou desliga o cronômetro da tarefa. Só um relógio corre por vez: ligar um
  * pausa o que estiver correndo, porque ninguém faz duas coisas ao mesmo tempo e
  * relógio esquecido ligado estraga a média.

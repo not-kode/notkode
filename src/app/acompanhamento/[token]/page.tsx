@@ -22,7 +22,8 @@ type PhaseRow = {
 };
 type TaskRow = {
   id: string; phase_id: string | null; title: string; status: TaskStatus;
-  start_date: string | null; due_date: string | null;
+  start_date: string | null; due_date: string | null; assignee: string | null;
+  parent_task_id: string | null;
 };
 
 export default async function AcompanhamentoPage({ params }: { params: Promise<{ token: string }> }) {
@@ -52,7 +53,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
       .order('sort'),
     supabase
       .from('project_tasks')
-      .select('id, phase_id, title, status, start_date, due_date')
+      .select('id, phase_id, title, status, start_date, due_date, assignee, parent_task_id')
       .eq('engagement_id', eng.id)
       .eq('client_visible', true)
       .order('sort'),
@@ -115,7 +116,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
           tasks={tasks.map((t) => ({
             id: t.id, phaseId: t.phase_id, title: t.title, notes: null, status: t.status,
             priority: 'media' as const, startDate: t.start_date, dueDate: t.due_date,
-            assignee: null, clientVisible: true, parentId: null, sort: 0,
+            assignee: t.assignee, clientVisible: true, parentId: t.parent_task_id, sort: 0,
             tempoSegundos: 0, timerDesde: null,
           }))}
         />

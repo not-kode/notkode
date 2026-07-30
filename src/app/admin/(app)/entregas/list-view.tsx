@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Check, ChevronRight, Plus, Trash2 } from 'lucide-react';
-import { createTask, deleteTask, toggleTimer, updateTask } from './actions';
+import { bulkTasks, createTask, deleteTask, toggleTimer, updateTask } from './actions';
 import { PRIORITY_ORDER, TASK_DOT, TASK_LABELS, type TaskStatus } from './status';
 import type { PhaseView, Send, TaskComProjeto } from './types';
 import { Avatar, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
@@ -38,6 +38,8 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
   // Feito nasce fechado: é histórico, não fila.
   const [fechados, setFechados] = useState<TaskStatus[]>(['feito']);
   const [abertaId, setAberta] = useState<string | null>(null);
+  // Seleção para agir em lote: concluir dez tarefas uma a uma é trabalho à toa.
+  const [selecao, setSelecao] = useState<string[]>([]);
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
@@ -51,7 +53,7 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
     { id: 'prioridade', label: 'Prioridade', cls: 'w-28' },
     { id: 'tempo', label: 'Tempo', cls: 'w-28' },
   ];
-  const colspan = colunas.length + 2;
+  const colspan = colunas.length + 3;
 
   const chave = (t: TaskComProjeto): string | number => {
     switch (ordem.col) {
@@ -74,12 +76,20 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
     });
 
   const raizes = tasks.filter((t) => !t.parentId);
+  const marcada = (id: string) => selecao.includes(id);
+  const alternar = (id: string) =>
+    setSelecao((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  const emLote = (acao: 'concluir' | 'reabrir' | 'apagar') => {
+    send(bulkTasks, { acao, ids: selecao.join(',') });
+    setSelecao([]);
+  };
 
   return (
     <div className="flex flex-col gap-3">
       {BLOCOS.map((status) => {
         const doBloco = ordenar(raizes.filter((t) => t.status === status));
         const fechado = fechados.includes(status);
+        const blocoTodo = doBloco.length > 0 && doBloco.every((t) => marcada(t.id));
 
         return (
           <section
@@ -87,6 +97,20 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
             className="overflow-hidden rounded-md border border-black/[0.07] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)]"
           >
             <header className="flex items-center gap-2 border-b border-black/[0.06] bg-neutral-50 px-3 py-2">
+              <input
+                type="checkbox"
+                checked={blocoTodo}
+                disabled={doBloco.length === 0}
+                onChange={() =>
+                  setSelecao((s) => {
+                    const ids = doBloco.map((t) => t.id);
+                    return blocoTodo ? s.filter((x) => !ids.includes(x)) : [...new Set([...s, ...ids])];
+                  })
+                }
+                title="Selecionar todas deste bloco"
+                aria-label="Selecionar todas deste bloco"
+                className="h-3.5 w-3.5 accent-primary disabled:opacity-30"
+              />
               <button
                 onClick={() => setFechados((f) => (fechado ? f.filter((s) => s !== status) : [...f, status]))}
                 aria-label={fechado ? 'Abrir bloco' : 'Fechar bloco'}
@@ -115,6 +139,7 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
                 <table className="w-full min-w-[48rem] border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-black/[0.05]">
+                      <th className="w-8" />
                       <th className="w-9" />
                       {colunas.map((c) => {
                         const ativa = ordem.col === c.id;
@@ -140,9 +165,24 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
                       const atrasada = !!t.dueDate && t.dueDate < hoje() && t.status !== 'feito';
                       const filhas = subs(t.id);
                       return (
-                        <tr key={t.id} className="group border-b border-black/[0.04] transition-colors last:border-0 hover:bg-neutral-50/70">
-                          {/* Concluir sem abrir menu: é a ação de todo dia. */}
+                        <tr
+                          key={t.id}
+                          className={`group border-b border-black/[0.04] transition-colors last:border-0 ${
+                            marcada(t.id) ? 'bg-primary/[0.05]' : 'hover:bg-neutral-50/70'
+                          }`}
+                        >
                           <td className="py-2 pl-3 pr-0">
+                            <input
+                              type="checkbox"
+                              checked={marcada(t.id)}
+                              onChange={() => alternar(t.id)}
+                              aria-label={`Selecionar ${t.title}`}
+                              className="h-3.5 w-3.5 accent-primary"
+                            />
+                          </td>
+
+                          {/* Concluir sem abrir menu: é a ação de todo dia. */}
+                          <td className="py-2 pl-2 pr-0">
                             <button
                               onClick={() => send(updateTask, { id: t.id, status: t.status === 'feito' ? 'a_fazer' : 'feito' })}
                               title={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
@@ -251,6 +291,43 @@ export function ListView({ tasks, phasesDe, projectId, mostrarProjeto, send }: {
           </section>
         );
       })}
+
+      {/* Barra da seleção: acompanha a rolagem, some quando nada está marcado. */}
+      {selecao.length > 0 && (
+        <div className="sticky bottom-4 z-30 mx-auto flex flex-wrap items-center gap-2 rounded-full border border-black/[0.08] bg-white px-3 py-2 shadow-[0_8px_24px_rgba(16,24,40,0.16)]">
+          <span className="px-1 text-[12px] font-medium text-text-primary tabular-nums">
+            {selecao.length} selecionada{selecao.length === 1 ? '' : 's'}
+          </span>
+          <button
+            onClick={() => emLote('concluir')}
+            className="inline-flex items-center gap-1.5 rounded-full bg-success px-3 py-1 text-[12px] font-semibold text-white transition hover:opacity-90"
+          >
+            <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            Concluir
+          </button>
+          <button
+            onClick={() => emLote('reabrir')}
+            className="rounded-full border border-black/[0.1] px-3 py-1 text-[12px] font-medium text-text-secondary transition hover:border-primary/40 hover:text-primary"
+          >
+            Reabrir
+          </button>
+          <button
+            onClick={() => {
+              if (confirm(`Apagar ${selecao.length} tarefa(s)? Elas saem também do SimbOS.`)) emLote('apagar');
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.1] px-3 py-1 text-[12px] font-medium text-text-secondary transition hover:border-danger/40 hover:text-danger"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Apagar
+          </button>
+          <button
+            onClick={() => setSelecao([])}
+            className="rounded-full px-2 py-1 text-[12px] text-text-muted transition hover:text-text-primary"
+          >
+            Limpar
+          </button>
+        </div>
+      )}
 
       {aberta && (
         <TaskDrawer

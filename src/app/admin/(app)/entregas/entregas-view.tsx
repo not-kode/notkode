@@ -445,7 +445,9 @@ function ProjectPanel({
         </>
       ) : (
         <div className="flex flex-col gap-5">
-          <Gantt phases={project.phases} tasks={project.tasks} titulo="Linha do tempo" />
+          {/* O cronograma é sempre de um cliente só, mesmo com a lista em "Todos":
+              é ele que vira o link de acompanhamento. */}
+          <Gantt phases={project.phases} tasks={project.tasks} titulo={`Cronograma · ${nome}`} />
 
           <ClientLink project={project} pending={pending} send={send} />
 
