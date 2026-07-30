@@ -16,13 +16,16 @@ import type { ComentarioView, PhaseView, Send, TaskComProjeto } from './types';
 import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
-// 'manual' é a ordem do quadro, a que você monta arrastando. Clicar num
-// cabeçalho troca para aquela coluna; arrastar de volta devolve para a manual,
-// senão a lista mostraria uma ordem e o banco guardaria outra.
-type Coluna = 'manual' | 'criada' | 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
+// 'urgencia' é a ordem padrão: o que vence antes em cima e, dentro do mesmo dia,
+// o mais urgente primeiro. 'manual' é a ordem do quadro, a que você monta
+// arrastando. Clicar num cabeçalho troca para aquela coluna; arrastar devolve
+// para a manual, senão a lista mostraria uma ordem e o banco guardaria outra.
+type Coluna =
+  | 'urgencia' | 'manual' | 'criada' | 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
 
 /** Ordens prontas do seletor do topo, sem precisar caçar o cabeçalho certo. */
 const ORDENS: { id: string; label: string; col: Coluna; asc: boolean }[] = [
+  { id: 'urgencia',      label: 'Prazo e urgência',   col: 'urgencia',   asc: true },
   { id: 'manual',        label: 'Ordem do quadro',    col: 'manual',     asc: true },
   { id: 'recentes',      label: 'Mais recentes',      col: 'criada',     asc: false },
   { id: 'antigas',       label: 'Mais antigas',       col: 'criada',     asc: true },
@@ -30,6 +33,9 @@ const ORDENS: { id: string; label: string; col: Coluna; asc: boolean }[] = [
   { id: 'prazo_longe',   label: 'Prazo mais distante', col: 'prazo',     asc: false },
   { id: 'prioridade',    label: 'Prioridade',         col: 'prioridade', asc: true },
 ];
+
+/** A escolha de ordem é jeito de trabalhar, não dado: fica no navegador. */
+const PREF_ORDEM = 'notkode.entregas.ordem';
 
 /** A ordem dos blocos: o que está em jogo primeiro, feito no fim. */
 const BLOCOS: TaskStatus[] = ['a_fazer', 'fazendo', 'revisao', 'backlog', 'feito'];
@@ -50,7 +56,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
   mostrarProjeto: boolean;
   send: Send;
 }) {
-  const [ordem, setOrdem] = useState<{ col: Coluna; asc: boolean }>({ col: 'manual', asc: true });
+  const [ordem, setOrdem] = useState<{ col: Coluna; asc: boolean }>({ col: 'urgencia', asc: true });
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [alvo, setAlvo] = useState<string | null>(null);
   const [punho, setPunho] = useState<string | null>(null);
@@ -63,6 +69,20 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
+
+  // A ordem escolhida volta na próxima visita: trocar toda vez cansa.
+  useEffect(() => {
+    const salva = localStorage.getItem(PREF_ORDEM);
+    const achada = ORDENS.find((o) => o.id === salva);
+    if (achada) setOrdem({ col: achada.col, asc: achada.asc });
+  }, []);
+
+  const guardarOrdem = (col: Coluna, asc: boolean) => {
+    setOrdem({ col, asc });
+    const achada = ORDENS.find((o) => o.col === col && o.asc === asc);
+    if (achada) localStorage.setItem(PREF_ORDEM, achada.id);
+    else localStorage.removeItem(PREF_ORDEM);
+  };
 
   // Esc larga a seleção: é a saída sem risco de esbarrar num botão da barra.
   useEffect(() => {
@@ -92,7 +112,10 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
       case 'tempo': return -t.tempoSegundos;
       case 'criada': return t.createdAt;
       case 'prazo': return t.dueDate ?? '9999';
-      default: return t.sort;
+      case 'manual': return t.sort;
+      // Prazo manda; empate no mesmo dia (e o monte sem prazo) vai pela
+      // prioridade. Sem prazo fica no fim, que é onde ele não atrapalha.
+      default: return `${t.dueDate ?? '9999-99-99'}#${PRIORITY_ORDER[t.priority]}`;
     }
   };
 
@@ -143,7 +166,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
     const lote = marcada(id) && selecao.length > 1;
     const ids = lote ? selecaoEmOrdem() : [id];
     if (ids.includes(before)) return;
-    setOrdem({ col: 'manual', asc: true });
+    guardarOrdem('manual', true);
     send(moveTask, { ids: ids.join(','), status, before });
     if (lote) setSelecao([]);
   };
@@ -162,7 +185,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
           titulo="Ordenar a lista"
           onChange={(v) => {
             const o = ORDENS.find((x) => x.id === v);
-            if (o) setOrdem({ col: o.col, asc: o.asc });
+            if (o) guardarOrdem(o.col, o.asc);
           }}
           options={ORDENS.map((o) => ({ value: o.id, label: o.label }))}
         />
@@ -220,7 +243,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
                     este atalho devolve a lista para a ordem que você monta. */}
                 {ordem.col !== 'manual' && (
                   <button
-                    onClick={() => setOrdem({ col: 'manual', asc: true })}
+                    onClick={() => guardarOrdem('manual', true)}
                     className="text-[11px] text-text-muted underline decoration-dotted transition-colors hover:text-primary"
                   >
                     voltar à ordem manual
@@ -249,7 +272,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
                         return (
                           <th key={c.id} className={`${c.cls} px-3 py-1.5 text-left`}>
                             <button
-                              onClick={() => setOrdem((o) => ({ col: c.id, asc: o.col === c.id ? !o.asc : true }))}
+                              onClick={() => guardarOrdem(c.id, ordem.col === c.id ? !ordem.asc : true)}
                               className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
                                 ativa ? 'text-text-primary' : 'text-text-muted hover:text-text-secondary'
                               }`}
