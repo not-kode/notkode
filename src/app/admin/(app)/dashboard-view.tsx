@@ -1,4 +1,4 @@
-// Visão geral do /admin — NEGÓCIO (faturamento/CRM) primeiro, SITE (tracking) depois.
+// Dashboard do /admin — NEGÓCIO (faturamento/CRM) primeiro, SITE (tracking) depois.
 // Tudo obedece ao filtro de período no topo. Componente de apresentação (server).
 // Identidade Notkode: creme quente + tinta (#191918/navy), azul só como acento.
 import { Suspense } from 'react';
@@ -16,9 +16,25 @@ const fmtDur = (secs: number) => {
   return s ? `${m}min ${s}s` : `${m}min`;
 };
 
-export type FunnelStep = { label: string; count: number; origins?: { label: string; count: number }[] };
-/** mixedVersions: o período pega antes e depois de uma mudança na ordem do formulário. */
-export type FormFunnel = { form: string; formType?: string | null; steps: FunnelStep[]; mixedVersions?: boolean };
+/** kind 'view' = a etapa de quem só chegou a ver o formulário, sem tocar em nada. */
+export type FunnelStep = {
+  label: string;
+  count: number;
+  origins?: { label: string; count: number }[];
+  kind?: 'view';
+};
+/**
+ * mixedVersions: o período pega antes e depois de uma mudança na ordem do formulário.
+ * versaoAntiga: no período não há nenhuma medição da versão que está no ar hoje —
+ * o que se vê é a sequência anterior, e não a de agora.
+ */
+export type FormFunnel = {
+  form: string;
+  formType?: string | null;
+  steps: FunnelStep[];
+  mixedVersions?: boolean;
+  versaoAntiga?: boolean;
+};
 export type ServiceCount = { tag: string; label: string; count: number };
 export type CtaCount = { label: string; count: number };
 export type DayCount = { day: string; count: number };
@@ -161,7 +177,12 @@ function FunnelRow({ step, prev, top, isDrop, isLast }: {
 
 function FormFunnelCard({ funnel }: { funnel: FormFunnel }) {
   const steps = funnel.steps;
-  const started = steps[0]?.count ?? 0;
+  // Quem viu o formulário é o topo do desenho; quem começou a preencher é a régua
+  // da conversão. Sem essa separação, 0 lead lia igual em dois casos bem
+  // diferentes: ninguém chegou ao formulário, ou chegou e não digitou nada.
+  const viram = steps.find((s) => s.kind === 'view')?.count ?? 0;
+  const started = steps.find((s) => s.kind !== 'view')?.count ?? 0;
+  const topo = steps[0]?.count ?? 0;
   const sent = steps[steps.length - 1]?.count ?? 0;
   const drop = biggestDropIndex(steps);
   const converteu = sent > 0;
@@ -178,7 +199,8 @@ function FormFunnelCard({ funnel }: { funnel: FormFunnel }) {
         </p>
       </div>
       <p className="mb-3 text-[11px] text-text-muted">
-        {nf(started)} mexeram no formulário · {nf(sent)} enviaram
+        {viram > 0 && <>{nf(viram)} viram o formulário · </>}
+        {nf(started)} mexeram · {nf(sent)} enviaram
       </p>
 
       <div className="flex flex-col gap-2.5">
@@ -187,7 +209,7 @@ function FormFunnelCard({ funnel }: { funnel: FormFunnel }) {
             key={`${step.label}-${i}`}
             step={step}
             prev={i === 0 ? null : steps[i - 1].count}
-            top={started || 1}
+            top={topo || 1}
             isDrop={i === drop}
             isLast={i === steps.length - 1}
           />
@@ -201,12 +223,17 @@ function FormFunnelCard({ funnel }: { funnel: FormFunnel }) {
         </p>
       )}
 
-      {funnel.mixedVersions && (
+      {funnel.versaoAntiga ? (
+        <p className="mt-2 text-[11px] text-warning">
+          Estas etapas são da <strong className="font-medium">versão anterior</strong> do formulário. Ninguém mexeu na
+          versão que está no ar hoje dentro deste período.
+        </p>
+      ) : funnel.mixedVersions ? (
         <p className="mt-2 text-[11px] text-warning">
           O formulário mudou de ordem dentro deste período. As etapas mostram a versão atual; o que foi medido antes da
           mudança ficou de fora.
         </p>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -220,7 +247,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
     <div className="-mx-4 -my-6 min-h-full bg-surface-elevated px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
       <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-mono text-xl font-medium tracking-tight text-text-primary">Visão geral</h1>
+          <h1 className="font-mono text-xl font-medium tracking-tight text-text-primary">Dashboard</h1>
           <p className="mt-1 text-sm text-text-muted">Negócio e site num lugar só.</p>
         </div>
         <Suspense fallback={null}><PeriodFilter /></Suspense>
@@ -286,9 +313,11 @@ export function DashboardView({ data }: { data: DashboardData }) {
           ) : (
             (() => {
               // Formulário com pouquíssima gente não merece o mesmo espaço: vai para um
-              // bloco fechado, senão a tela dá o mesmo peso a 9 sessões e a 3.
-              const relevantes = s.formFunnels.filter((f) => (f.steps[0]?.count ?? 0) >= 5);
-              const poucos = s.formFunnels.filter((f) => (f.steps[0]?.count ?? 0) < 5);
+              // bloco fechado, senão a tela dá o mesmo peso a 9 sessões e a 3. A régua
+              // é quem mexeu de verdade, não quem só passou os olhos.
+              const mexeram = (f: FormFunnel) => f.steps.find((st) => st.kind !== 'view')?.count ?? 0;
+              const relevantes = s.formFunnels.filter((f) => mexeram(f) >= 5);
+              const poucos = s.formFunnels.filter((f) => mexeram(f) < 5);
               return (
                 <>
                   <div className="flex flex-col gap-4">
@@ -308,7 +337,8 @@ export function DashboardView({ data }: { data: DashboardData }) {
 
                   <p className="mt-4 text-[11px] text-text-muted">
                     Cada linha mostra quantos chegaram até ali e, ao lado, quantos se perderam desde a etapa anterior.
-                    &quot;Mexeram&quot; conta quem interagiu de verdade, não quem só viu a página.
+                    &quot;Viu o formulário&quot; é quem rolou até ele; &quot;mexeram&quot; é quem digitou ou escolheu
+                    alguma coisa. A conversão compara envio com quem mexeu.
                   </p>
                 </>
               );

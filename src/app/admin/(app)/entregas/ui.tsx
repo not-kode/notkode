@@ -46,6 +46,25 @@ const CORES_AVATAR = [
 const iniciais = (nome: string) =>
   nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('') || '?';
 
+const corDoNome = (nome: string) =>
+  CORES_AVATAR[[...nome].reduce((a, c) => a + c.charCodeAt(0), 0) % CORES_AVATAR.length];
+
+/**
+ * Mesma bolinha do avatar, mas sem clique: serve para marcar a empresa dona da
+ * tarefa. Fica dentro de um botão (o nome da empresa), e botão dentro de botão
+ * não é HTML válido.
+ */
+export function Sigla({ nome }: { nome: string }) {
+  return (
+    <span
+      title={nome}
+      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${corDoNome(nome)}`}
+    >
+      {iniciais(nome)}
+    </span>
+  );
+}
+
 /** Círculo com as iniciais de quem toca a tarefa; a cor é estável por nome. */
 export function Avatar({ nome, onClick }: { nome: string | null; onClick?: () => void }) {
   if (!nome?.trim()) {
@@ -59,12 +78,11 @@ export function Avatar({ nome, onClick }: { nome: string | null; onClick?: () =>
       </button>
     );
   }
-  const hash = [...nome].reduce((a, c) => a + c.charCodeAt(0), 0);
   return (
     <button
       onClick={onClick}
       title={nome}
-      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${CORES_AVATAR[hash % CORES_AVATAR.length]}`}
+      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${corDoNome(nome)}`}
     >
       {iniciais(nome)}
     </button>
@@ -276,6 +294,8 @@ export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto
     );
   }
 
+  // whitespace-nowrap no chip: "12 mai" quebrando em duas linhas empilhava a data
+  // e esticava a altura da linha inteira da tabela.
   const tom = atrasada
     ? 'bg-danger/12 text-danger'
     : proxima
@@ -287,7 +307,7 @@ export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto
   return (
     <button
       onClick={() => setEditando(true)}
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors ${tom}`}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors ${tom}`}
       title={value ? `Prazo: ${fmtDate(value)}` : 'Definir prazo'}
     >
       <Calendar className="h-3 w-3" />
@@ -346,7 +366,7 @@ export function TimerChip({ segundos, rodandoDesde, onToggle, desabilitado }: {
       onClick={onToggle}
       disabled={desabilitado}
       title={correndo ? 'Pausar o cronômetro' : total > 0 ? `Retomar (${fmtDuracao(total)} até agora)` : 'Começar a contar o tempo'}
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors disabled:opacity-40 ${
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors disabled:opacity-40 ${
         correndo
           ? 'bg-primary/12 text-primary'
           : total > 0

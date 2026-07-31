@@ -13,7 +13,7 @@ import {
   PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS, TASK_STATUSES, type TaskStatus,
 } from './status';
 import type { ComentarioView, PhaseView, Send, TaskComProjeto } from './types';
-import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
+import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, Sigla, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
 // 'urgencia' é a ordem padrão: o que vence antes em cima e, dentro do mesmo dia,
@@ -48,12 +48,14 @@ const BLOCO_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success/12 text-[#15803D]',
 };
 
-export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProjeto, send }: {
+export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProjeto, onAbrirProjeto, send }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
   mostrarProjeto: boolean;
+  /** Clique no nome da empresa: fecha a visão "Todos" e abre só aquele projeto. */
+  onAbrirProjeto: (id: string) => void;
   send: Send;
 }) {
   const [ordem, setOrdem] = useState<{ col: Coluna; asc: boolean }>({ col: 'urgencia', asc: true });
@@ -91,14 +93,18 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
     return () => document.removeEventListener('keydown', esc);
   }, []);
 
+  // Com vários projetos juntos, a coluna que identifica a tarefa é a EMPRESA, não
+  // o responsável (que hoje é sempre a mesma pessoa). O responsável continua
+  // editável dentro da tarefa, na gaveta. Num projeto só, vale o contrário.
   const colunas: { id: Coluna; label: string; cls: string }[] = [
     { id: 'titulo', label: 'Tarefa', cls: 'min-w-[14rem]' },
-    ...(mostrarProjeto ? [{ id: 'projeto' as Coluna, label: 'Projeto', cls: 'w-36' }] : []),
-    { id: 'quem', label: 'Quem', cls: 'w-32' },
-    { id: 'inicio', label: 'Início', cls: 'w-24' },
-    { id: 'prazo', label: 'Prazo', cls: 'w-24' },
+    mostrarProjeto
+      ? { id: 'projeto', label: 'Empresa', cls: 'w-44' }
+      : { id: 'quem', label: 'Quem', cls: 'w-32' },
+    { id: 'inicio', label: 'Início', cls: 'w-28' },
+    { id: 'prazo', label: 'Prazo', cls: 'w-28' },
     { id: 'prioridade', label: 'Prioridade', cls: 'w-28' },
-    { id: 'tempo', label: 'Tempo', cls: 'w-28' },
+    { id: 'tempo', label: 'Tempo', cls: 'w-32' },
   ];
   const colspan = colunas.length + 4;
 
@@ -369,25 +375,33 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
                             </button>
                           </td>
 
-                          {mostrarProjeto && (
+                          {mostrarProjeto ? (
                             <td className="px-3 py-2">
-                              <span className="block truncate text-[11px] text-text-muted" title={t.projetoNome}>
-                                {t.projetoNome}
-                              </span>
+                              {/* Clicar na empresa sai de "Todos" e abre só as tarefas dela. */}
+                              <button
+                                onClick={() => onAbrirProjeto(t.projetoId)}
+                                title={`Ver só as tarefas de ${t.projetoNome}`}
+                                className="flex w-full min-w-0 items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors hover:bg-black/[0.04]"
+                              >
+                                <Sigla nome={t.projetoNome} />
+                                <span className="min-w-0 truncate text-[12px] font-medium text-text-secondary">
+                                  {t.projetoNome}
+                                </span>
+                              </button>
+                            </td>
+                          ) : (
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-1.5">
+                                <Avatar nome={t.assignee} />
+                                <InlineText
+                                  value={t.assignee ?? ''}
+                                  onSave={(v) => send(updateTask, { id: t.id, assignee: v })}
+                                  placeholder="quem"
+                                  className="text-[12px] text-text-secondary"
+                                />
+                              </div>
                             </td>
                           )}
-
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-1.5">
-                              <Avatar nome={t.assignee} />
-                              <InlineText
-                                value={t.assignee ?? ''}
-                                onSave={(v) => send(updateTask, { id: t.id, assignee: v })}
-                                placeholder="quem"
-                                className="text-[12px] text-text-secondary"
-                              />
-                            </div>
-                          </td>
 
                           <td className="px-3 py-2">
                             <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} placeholder="início" />

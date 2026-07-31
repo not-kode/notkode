@@ -37,7 +37,7 @@ export default async function ComportamentoPage({
     <div>
       <header className="mb-4">
         <p className="eyebrow mb-1"><span className="status-dot" />Comportamento no site</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Comportamento</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <p className="mt-1 text-sm text-text-muted">
           {gravacoes.sessions.length} gravaç{gravacoes.sessions.length === 1 ? 'ão' : 'ões'}
           {naoVistas > 0 && (

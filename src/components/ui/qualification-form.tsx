@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle } from 'lucide-rea
 import { useTranslations } from 'next-intl';
 import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analytics';
 import { WhatsAppFallback } from '@/components/ui/whatsapp-fallback';
+import { useFormView } from '@/components/ui/use-form-view';
 import { stepEventLabel, stepLabel } from '@/lib/form-steps';
 
 export type QualificationOption = { id: string; label: string };
@@ -78,6 +79,9 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   // algo). Antes isto disparava no mount, então bastava a página carregar para inflar
   // o topo do funil com gente que nem chegou a rolar até o formulário.
   const formStarted = useRef(false);
+  // Antes da interação vem o simples "apareceu na tela": é o que diz se o
+  // problema é ninguém chegar ao formulário ou ninguém começar a preencher.
+  const formRef = useFormView(schema.serviceTag, FORM_NAME);
 
   const trackStep = (s: number) =>
     track({ type: 'form_step', service_tag: schema.serviceTag, label: stepEventLabel(FORM_NAME, s + 1, STEP_IDS[s] ?? String(s + 1)) });
@@ -243,6 +247,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   return (
     <>
     <div
+      ref={formRef}
       className="rounded-2xl border border-black/[0.08] overflow-hidden"
       style={{ background: 'hsl(55 100% 97%)' }}
     >

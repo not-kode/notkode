@@ -16,7 +16,7 @@ import {
 } from './actions';
 import {
   Archive, ArchiveRestore, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid,
-  Link2, List, Plus, Trash2,
+  Link2, List, PanelLeftClose, PanelLeftOpen, Plus, Trash2,
 } from 'lucide-react';
 import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
 import type { ComentarioView, NotaView, PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
@@ -30,6 +30,7 @@ export type { PhaseView, ProjectView, TaskView } from './types';
 
 const PREF_VISAO = 'notkode.entregas.visao';
 const PREF_PROJETO = 'notkode.entregas.projeto';
+const PREF_LISTA_PROJETOS = 'notkode.entregas.lista-projetos';
 
 const tabCls = (ativo: boolean) =>
   `inline-flex max-w-[12rem] items-center gap-1.5 truncate rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
@@ -78,6 +79,9 @@ export function EntregasView({ projects, comentarios, notas }: {
   const [escopo, setEscopo] = useState<'projeto' | 'todos'>('projeto');
   const [periodo, setPeriodo] = useState<Periodo>('tudo');
   const [verArquivados, setVerArquivados] = useState(false);
+  // A lista de projetos come 15rem da largura; em "Todos" a tabela é que precisa
+  // do espaço. Recolher fica guardado, como as outras preferências de trabalho.
+  const [listaProjetos, setListaProjetos] = useState(true);
   const [pending, start] = useTransition();
 
   const router = useRouter();
@@ -116,6 +120,8 @@ export function EntregasView({ projects, comentarios, notas }: {
 
     const projeto = localStorage.getItem(PREF_PROJETO);
     if (projeto && projects.some((p) => p.id === projeto)) setAbertoId(projeto);
+
+    if (localStorage.getItem(PREF_LISTA_PROJETOS) === 'fechada') setListaProjetos(false);
     // Só na montagem: depois disso quem manda é o clique.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -123,6 +129,18 @@ export function EntregasView({ projects, comentarios, notas }: {
   const abrirProjeto = (id: string) => {
     setAbertoId(id);
     localStorage.setItem(PREF_PROJETO, id);
+  };
+  const alternarLista = () => {
+    setListaProjetos((v) => {
+      localStorage.setItem(PREF_LISTA_PROJETOS, v ? 'fechada' : 'aberta');
+      return !v;
+    });
+  };
+  // Clique no nome da empresa dentro da lista/quadro: sai de "Todos" e mergulha
+  // naquele projeto, que é o que se quer quando um nome chama a atenção.
+  const abrirSoDoProjeto = (id: string) => {
+    abrirProjeto(id);
+    setEscopo('projeto');
   };
   const trocarVisao = (v: 'kanban' | 'lista') => {
     setVisao(v);
@@ -172,47 +190,70 @@ export function EntregasView({ projects, comentarios, notas }: {
 
       <div className="flex flex-col gap-5 lg:flex-row">
         {/* Lista de projetos em vez de dropdown: com vinte contratos, um campo
-            fechado esconde justamente o que precisa estar à vista. */}
-        <aside className="lg:w-60 lg:shrink-0">
-          <nav className="flex flex-col gap-4">
-            {grupos.map((g) => (
-              <div key={g.titulo}>
-                <p className="mb-1.5 px-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
-                  {g.titulo}
-                </p>
-                <ul className="flex flex-col gap-0.5">
-                  {g.itens.map((p) => (
-                    <li key={p.id}>
-                      <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => abrirProjeto(p.id)} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            {arquivados.length > 0 && (
-              <div>
-                <button
-                  onClick={() => setVerArquivados((v) => !v)}
-                  className="flex w-full items-center gap-1.5 px-2 py-1 font-label text-[10px] uppercase tracking-wider text-text-muted transition-colors hover:text-text-secondary"
-                >
-                  <Archive className="h-3 w-3" />
-                  Arquivados ({arquivados.length})
-                  {verArquivados ? <ChevronUp className="ml-auto h-3 w-3" /> : <ChevronDown className="ml-auto h-3 w-3" />}
-                </button>
-                {verArquivados && (
-                  <ul className="mt-1 flex flex-col gap-0.5">
-                    {arquivados.map((p) => (
+            fechado esconde justamente o que precisa estar à vista. Recolhida,
+            devolve a largura inteira para a tabela de tarefas. */}
+        {!listaProjetos ? (
+          <button
+            onClick={alternarLista}
+            title="Mostrar a lista de projetos"
+            className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-md border border-black/[0.08] bg-white px-2 py-1.5 text-[12px] font-medium text-text-muted shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition-colors hover:border-primary/40 hover:text-primary"
+          >
+            <PanelLeftOpen className="h-4 w-4" />
+            <span className="lg:sr-only">Projetos</span>
+          </button>
+        ) : (
+          <aside className="lg:w-60 lg:shrink-0">
+            <div className="mb-2 flex items-center justify-between gap-2 px-2">
+              <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Projetos</p>
+              <button
+                onClick={alternarLista}
+                title="Recolher a lista de projetos"
+                aria-label="Recolher a lista de projetos"
+                className="rounded p-1 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
+              >
+                <PanelLeftClose className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <nav className="flex flex-col gap-4">
+              {grupos.map((g) => (
+                <div key={g.titulo}>
+                  <p className="mb-1.5 px-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
+                    {g.titulo}
+                  </p>
+                  <ul className="flex flex-col gap-0.5">
+                    {g.itens.map((p) => (
                       <li key={p.id}>
                         <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => abrirProjeto(p.id)} />
                       </li>
                     ))}
                   </ul>
-                )}
-              </div>
-            )}
-          </nav>
-        </aside>
+                </div>
+              ))}
+
+              {arquivados.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setVerArquivados((v) => !v)}
+                    className="flex w-full items-center gap-1.5 px-2 py-1 font-label text-[10px] uppercase tracking-wider text-text-muted transition-colors hover:text-text-secondary"
+                  >
+                    <Archive className="h-3 w-3" />
+                    Arquivados ({arquivados.length})
+                    {verArquivados ? <ChevronUp className="ml-auto h-3 w-3" /> : <ChevronDown className="ml-auto h-3 w-3" />}
+                  </button>
+                  {verArquivados && (
+                    <ul className="mt-1 flex flex-col gap-0.5">
+                      {arquivados.map((p) => (
+                        <li key={p.id}>
+                          <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => abrirProjeto(p.id)} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </nav>
+          </aside>
+        )}
 
         <div className="min-w-0 flex-1">
           {aberto && (
@@ -230,6 +271,7 @@ export function EntregasView({ projects, comentarios, notas }: {
               setVisao={trocarVisao}
               escopo={escopo}
               setEscopo={setEscopo}
+              onAbrirProjeto={abrirSoDoProjeto}
               periodo={periodo}
               setPeriodo={setPeriodo}
               pending={pending}
@@ -338,7 +380,7 @@ function Numeros({ tarefas }: { tarefas: TaskComProjeto[] }) {
 
 function ProjectPanel({
   project, comentarios, notas, tarefas, tarefasDoEscopo, phasesDe, aba, setAba, visao, setVisao,
-  escopo, setEscopo, periodo, setPeriodo, pending, send,
+  escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo, pending, send,
 }: {
   project: ProjectView;
   comentarios: ComentarioView[];
@@ -352,6 +394,7 @@ function ProjectPanel({
   setVisao: (v: 'kanban' | 'lista') => void;
   escopo: 'projeto' | 'todos';
   setEscopo: (v: 'projeto' | 'todos') => void;
+  onAbrirProjeto: (id: string) => void;
   periodo: Periodo;
   setPeriodo: (v: Periodo) => void;
   pending: boolean;
@@ -446,6 +489,7 @@ function ProjectPanel({
               phasesDe={phasesDe}
               projectId={project.id}
               mostrarProjeto={escopo === 'todos'}
+              onAbrirProjeto={onAbrirProjeto}
               pending={pending}
               send={send}
             />
@@ -456,6 +500,7 @@ function ProjectPanel({
               phasesDe={phasesDe}
               projectId={project.id}
               mostrarProjeto={escopo === 'todos'}
+              onAbrirProjeto={onAbrirProjeto}
               send={send}
             />
           )}

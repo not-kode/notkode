@@ -7,14 +7,16 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+// Rótulos em inglês: são nomes curtos de ferramenta, iguais aos que a gente já
+// usa falando ("o pipeline", "os leads"). O conteúdo das telas segue em português.
 const NAV: { href: string; label: string; icon: LucideIcon; exact?: boolean }[] = [
-  { href: '/admin',            label: 'Visão geral',   icon: LayoutDashboard, exact: true },
-  { href: '/admin/pipeline',   label: 'Pipeline',      icon: GitBranch },
-  { href: '/admin/leads',      label: 'Leads',         icon: Inbox },
-  { href: '/admin/financeiro', label: 'Financeiro',    icon: Wallet },
-  { href: '/admin/clientes',   label: 'Clientes',      icon: Building2 },
-  { href: '/admin/entregas',   label: 'Tasks',         icon: CheckSquare },
-  { href: '/admin/sessoes',    label: 'Comportamento', icon: Activity },
+  { href: '/admin',            label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/admin/pipeline',   label: 'Pipeline',  icon: GitBranch },
+  { href: '/admin/leads',      label: 'Leads',     icon: Inbox },
+  { href: '/admin/financeiro', label: 'Finance',   icon: Wallet },
+  { href: '/admin/clientes',   label: 'Clients',   icon: Building2 },
+  { href: '/admin/entregas',   label: 'Tasks',     icon: CheckSquare },
+  { href: '/admin/sessoes',    label: 'Analytics', icon: Activity },
 ];
 
 /**

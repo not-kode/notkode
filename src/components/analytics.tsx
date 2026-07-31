@@ -108,7 +108,7 @@ function entryReferrer(): string {
 }
 
 /** Dispara um evento de tracking. Exportado para os formulários marcarem form_submit. */
-export function track(payload: { type: 'page_view' | 'cta_click' | 'form_start' | 'form_step' | 'form_submit'; page?: string; label?: string | null; service_tag?: string | null; locale?: string | null }) {
+export function track(payload: { type: 'page_view' | 'cta_click' | 'form_view' | 'form_start' | 'form_step' | 'form_submit'; page?: string; label?: string | null; service_tag?: string | null; locale?: string | null }) {
   try {
     // Browser automatizado (crawler executando JS) não vira métrica.
     if (navigator.webdriver) return;

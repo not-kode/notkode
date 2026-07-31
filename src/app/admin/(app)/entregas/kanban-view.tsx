@@ -21,12 +21,14 @@ const COLUNA_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success',
 };
 
-export function KanbanView({ tasks, comentarios, phasesDe, projectId, mostrarProjeto, pending, send }: {
+export function KanbanView({ tasks, comentarios, phasesDe, projectId, mostrarProjeto, onAbrirProjeto, pending, send }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
   mostrarProjeto: boolean;
+  /** Clique no nome da empresa no card: abre só as tarefas daquele projeto. */
+  onAbrirProjeto: (id: string) => void;
   pending: boolean;
   send: Send;
 }) {
@@ -84,6 +86,7 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, mostrarPro
                   task={t}
                   phases={phasesDe(t.projetoId)}
                   projeto={mostrarProjeto ? t.projetoNome : null}
+                  onAbrirProjeto={() => onAbrirProjeto(t.projetoId)}
                   send={send}
                   onDragStart={() => setArrastando(t.id)}
                   onDragEnd={() => { setArrastando(null); setAlvo(null); }}
@@ -131,11 +134,12 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, mostrarPro
   );
 }
 
-function TaskCard({ task, phases, projeto, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
+function TaskCard({ task, phases, projeto, onAbrirProjeto, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
   task: TaskView;
   phases: PhaseView[];
   /** Nome do projeto, só quando o quadro mostra vários juntos. */
   projeto: string | null;
+  onAbrirProjeto: () => void;
   send: Send;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -202,7 +206,15 @@ function TaskCard({ task, phases, projeto, send, onDragStart, onDragEnd, onDropB
 
       {(etapa || projeto || subtarefas.length > 0) && (
         <p className="mt-1.5 flex items-center gap-2 text-[11px] text-text-muted">
-          {projeto && <span className="min-w-0 truncate font-medium text-text-secondary" title={projeto}>{projeto}</span>}
+          {projeto && (
+            <button
+              onClick={onAbrirProjeto}
+              title={`Ver só as tarefas de ${projeto}`}
+              className="min-w-0 truncate rounded-sm px-1 py-0.5 font-medium text-text-secondary transition-colors hover:bg-black/[0.04] hover:text-primary"
+            >
+              {projeto}
+            </button>
+          )}
           {etapa && <span className="min-w-0 truncate" title={etapa.name}>{etapa.name}</span>}
           {subtarefas.length > 0 && (
             <span className="shrink-0 tabular-nums" title="Subtarefas concluídas">

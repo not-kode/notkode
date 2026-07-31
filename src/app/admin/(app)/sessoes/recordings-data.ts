@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin, lerTudo } from '@/lib/supabase-admin';
 
 export type SessionSummary = {
   session_id: string;
@@ -49,13 +49,16 @@ function deviceLabel(ua: string | null): string {
 export async function carregarGravacoes(): Promise<{ sessions: SessionSummary[]; erro: string | null }> {
   const supabase = getSupabaseAdmin();
 
-  // Só metadados dos chunks (não os eventos, que são pesados).
-  const { data: recData, error } = await supabase
-    .from('session_recordings')
-    .select('session_id, page, created_at, ua')
-    .order('created_at', { ascending: true });
-
-  const chunks = (recData ?? []) as Chunk[];
+  // Só metadados dos chunks (não os eventos, que são pesados) — e em páginas: uma
+  // sessão longa sozinha passa de mil pedaços, e sem paginar o PostgREST devolvia
+  // só os mil mais antigos, congelando a lista num dia do passado.
+  const { data: chunks, error } = await lerTudo<Chunk>((de, ate) =>
+    supabase
+      .from('session_recordings')
+      .select('session_id, page, created_at, ua')
+      .order('created_at', { ascending: true })
+      .range(de, ate),
+  );
 
   // Agrega por sessão.
   const bySession = new Map<string, SessionSummary>();
@@ -83,13 +86,17 @@ export async function carregarGravacoes(): Promise<{ sessions: SessionSummary[];
   const ids = [...bySession.keys()];
   if (ids.length > 0) {
     // Origem: cruza com os page_views da mesma sessão.
-    const { data: evData } = await supabase
-      .from('events')
-      .select('session_id, referrer, utm_source')
-      .eq('type', 'page_view')
-      .in('session_id', ids);
+    const { data: evData } = await lerTudo<EventRow>((de, ate) =>
+      supabase
+        .from('events')
+        .select('session_id, referrer, utm_source')
+        .eq('type', 'page_view')
+        .in('session_id', ids)
+        .order('created_at', { ascending: true })
+        .range(de, ate),
+    );
     const seen = new Set<string>();
-    for (const e of (evData ?? []) as EventRow[]) {
+    for (const e of evData) {
       if (seen.has(e.session_id)) continue; // 1º page_view basta
       seen.add(e.session_id);
       const s = bySession.get(e.session_id);
@@ -109,6 +116,6 @@ export async function carregarGravacoes(): Promise<{ sessions: SessionSummary[];
 
   return {
     sessions: [...bySession.values()].sort((a, b) => b.last.localeCompare(a.last)),
-    erro: error?.message ?? null,
+    erro: error,
   };
 }

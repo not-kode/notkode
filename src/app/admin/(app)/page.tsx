@@ -1,8 +1,8 @@
-import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin, lerTudo } from '@/lib/supabase-admin';
 import { DashboardView, type DashboardData, type DayCount, type FunnelStep, type FormFunnel, type MonthProjection } from './dashboard-view';
 import { resolveRange } from './period';
 import { pendingMonthly } from './financeiro/recurring';
-import { parseStepEventLabel } from '@/lib/form-steps';
+import { FORM_VERSION, parseStepEventLabel } from '@/lib/form-steps';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +20,12 @@ const CTA_LABELS: Record<string, string> = {
 };
 const prettyCta = (raw: string) =>
   CTA_LABELS[raw] ?? raw.replace(/^servico-card\//, 'Card serviço — ').replace(/^mobile-(nav|servico)\//, 'Mobile — ').replace(/-/g, ' ');
+
+/** Eventos do funil de formulário, do "viu o formulário" ao envio. */
+const FORM_EVENT_TYPES = ['form_view', 'form_start', 'form_step', 'form_submit'];
+/** Quantos começaram a preencher (ignora quem só viu o formulário na tela). */
+const mexeramEm = (f: FormFunnel) => f.steps.find((s) => s.kind !== 'view')?.count ?? 0;
+type FormEv = { type: string; label: string | null; session_id: string | null; service_tag: string | null };
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -71,12 +77,17 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const toStr = ymd(toDate);
   const countHead = { count: 'exact' as const, head: true };
 
-  const [pv, ctaRows, pvRows, srcRows, formRows, leadRows, wonDeals, engRows, recRows, dealRows, dealInstRows] = await Promise.all([
+  // As leituras de `events` vão paginadas (lerTudo): o PostgREST corta em 1000
+  // linhas sem avisar, e um período com muita visita passaria a mostrar métrica
+  // pela metade — errada, mas com cara de certa.
+  const [pv, ctaRows, pvRows, formRows, leadRows, wonDeals, engRows, recRows, dealRows, dealInstRows] = await Promise.all([
     supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO),
-    supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', siteToISO),
-    supabase.from('events').select('created_at, session_id, referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO),
-    supabase.from('events').select('referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO),
-    supabase.from('events').select('type, label, session_id, service_tag').in('type', ['form_start', 'form_step', 'form_submit']).gte('created_at', fromISO).lte('created_at', siteToISO),
+    lerTudo<{ label: string | null }>((de, ate) =>
+      supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
+    lerTudo<{ created_at: string; session_id: string | null; referrer: string | null; utm_source: string | null }>((de, ate) =>
+      supabase.from('events').select('created_at, session_id, referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
+    lerTudo<FormEv>((de, ate) =>
+      supabase.from('events').select('type, label, session_id, service_tag').in('type', FORM_EVENT_TYPES).gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', siteToISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
     supabase.from('engagements').select('id, organization_id, lifecycle, type, mrr, start_date, end_date'),
@@ -85,9 +96,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     supabase.from('deal_installments').select('deal_id, amount, due_date'),
   ]);
 
-  const ctas = (ctaRows.data ?? []) as { label: string | null }[];
-  type FormEv = { type: string; label: string | null; session_id: string | null; service_tag: string | null };
-  const formEvents = (formRows.data ?? []) as FormEv[];
+  const ctas = ctaRows.data;
+  const formEvents = formRows.data;
   const leads = (leadRows.data ?? []) as { service_tag: string | null }[];
   const engs = (engRows.data ?? []) as {
     id: string; organization_id: string | null; lifecycle: string; type: string;
@@ -115,7 +125,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   // Origem de ENTRADA por sessão (a 1ª visualização de página): usada no tooltip do
   // funil pra mostrar de onde vieram as pessoas que chegaram a cada etapa.
   const sessOrigin = new Map<string, { t: number; origin: string }>();
-  for (const r of (pvRows.data ?? []) as { created_at: string; session_id: string | null; referrer: string | null; utm_source: string | null }[]) {
+  for (const r of pvRows.data) {
     if (!r.session_id) continue;
     const t = new Date(r.created_at).getTime();
     const cur = sessOrigin.get(r.session_id);
@@ -140,42 +150,64 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       // Nome do formulário daquela página (Qualificação, Orçamento…), pra legenda.
       const formType =
         formEvents.filter(inSvc).map((e) => (e.type === 'form_start' ? e.label : parseStep(e.label)?.form)).find((f): f is string => !!f) ?? null;
-      // O formulário muda de ordem de tempos em tempos. Somar medição velha e nova na
-      // mesma posição faria o painel mostrar uma sequência que não é a de hoje, então
-      // desenhamos só a versão mais recente e avisamos quando o período pega as duas.
+      // O formulário muda de ordem de tempos em tempos, e cada mudança sobe a
+      // versão da sequência. Somar medição velha e nova na mesma posição mostraria
+      // uma ordem que não é a de hoje, então desenhamos UMA versão por vez.
+      //
+      // A referência é a versão do formulário que está no ar (FORM_VERSION). Se o
+      // período não tem nenhuma medição dela, caímos na versão mais recente que
+      // existe nos dados e dizemos que aquilo é medição da versão anterior — antes
+      // isso acontecia calado, e um painel parado parecia painel quebrado.
       const versoes = new Set<number>();
       for (const e of formEvents) {
         if (!inSvc(e) || e.type !== 'form_step') continue;
         const p = parseStep(e.label);
         if (p) versoes.add(p.version);
       }
-      const versaoAtual = versoes.size ? Math.max(...versoes) : 1;
+      const versaoDesenhada = versoes.has(FORM_VERSION)
+        ? FORM_VERSION
+        : versoes.size ? Math.max(...versoes) : FORM_VERSION;
 
       const stepsMeta = new Map<number, string>();
       for (const e of formEvents) {
         if (!inSvc(e) || e.type !== 'form_step') continue;
         const p = parseStep(e.label);
-        if (p && p.version === versaoAtual) stepsMeta.set(p.pos, p.name);
+        if (p && p.version === versaoDesenhada) stepsMeta.set(p.pos, p.name);
       }
       const ordered = [...stepsMeta.entries()].sort((a, b) => a[0] - b[0]);
       const mkStep = (label: string, pred: (e: FormEv) => boolean): FunnelStep => {
         const sess = sessionsOf(pred);
         return { label, count: sess.size, origins: originsOf(sess) };
       };
+      // "Viu o formulário" é o topo real: quem rolou até ele, mesmo sem digitar
+      // nada. É o que separa "ninguém chegou no formulário" de "chegou e desistiu
+      // antes da primeira letra". Só aparece quando existe medição disso.
+      const viram: FunnelStep = {
+        ...mkStep('Viu o formulário', (e) => inSvc(e) && e.type === 'form_view'),
+        kind: 'view',
+      };
       const steps: FunnelStep[] = [
+        ...(viram.count > 0 ? [viram] : []),
         ...ordered.map(([pos, name]) =>
           mkStep(name, (e) => {
             if (!inSvc(e) || e.type !== 'form_step') return false;
             const p = parseStep(e.label);
-            return !!p && p.version === versaoAtual && p.pos === pos;
+            return !!p && p.version === versaoDesenhada && p.pos === pos;
           }),
         ),
         mkStep('Enviou', (e) => inSvc(e) && e.type === 'form_submit'),
       ];
-      return { form: prettyService(svc), formType, steps, mixedVersions: versoes.size > 1 };
+      return {
+        form: prettyService(svc),
+        formType,
+        steps,
+        mixedVersions: versoes.size > 1,
+        versaoAntiga: versaoDesenhada !== FORM_VERSION,
+      };
     })
     .filter((f) => f.steps.some((s) => s.count > 0))
-    .sort((a, b) => (b.steps[0]?.count ?? 0) - (a.steps[0]?.count ?? 0));
+    // Na frente, o formulário em que mais gente começou a preencher.
+    .sort((a, b) => mexeramEm(b) - mexeramEm(a));
 
   // ── Site: visitas por dia (bucket adapta ao tamanho do intervalo) ──
   const bucketDays = days <= 45 ? 1 : days <= 180 ? 7 : 30;
@@ -187,7 +219,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     starts.push(d);
     buckets.set(ymd(d), 0);
   }
-  for (const row of (pvRows.data ?? []) as { created_at: string }[]) {
+  for (const row of pvRows.data) {
     const idx = Math.floor((new Date(row.created_at).getTime() - fromDate.getTime()) / stepMs);
     const start = starts[idx];
     if (start) buckets.set(ymd(start), (buckets.get(ymd(start)) ?? 0) + 1);
@@ -195,7 +227,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const visitasPorDia: DayCount[] = starts.map((d) => ({ day: ymd(d), count: buckets.get(ymd(d)) ?? 0 }));
 
   // ── Site: origem, CTA, leads por serviço ──
-  const srcData = (srcRows.data ?? []) as { referrer: string | null; utm_source: string | null }[];
+  // A origem sai dos mesmos page_views já carregados: buscar a tabela de novo só
+  // para reler referrer/utm era uma consulta a mais pela mesma coisa.
+  const srcData = pvRows.data;
   const sourceMap = new Map<string, number>();
   for (const r of srcData) sourceMap.set(classifySource(r.referrer, r.utm_source), (sourceMap.get(classifySource(r.referrer, r.utm_source)) ?? 0) + 1);
   const porOrigem = [...sourceMap.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count).slice(0, 8);
@@ -272,7 +306,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
   // Sessões únicas + tempo médio de sessão (da 1ª à última visualização de página).
   const sessMap = new Map<string, { min: number; max: number }>();
-  for (const r of (pvRows.data ?? []) as { created_at: string; session_id: string | null }[]) {
+  for (const r of pvRows.data) {
     if (!r.session_id) continue;
     const t = new Date(r.created_at).getTime();
     const cur = sessMap.get(r.session_id);
