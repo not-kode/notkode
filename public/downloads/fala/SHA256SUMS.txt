@@ -1,0 +1,5 @@
+4776f151d1b07ad7aa04bbc78013aba8645ea46f8ce3d2647553af987eb40e1c  ./fala-aarch64-apple-darwin.dmg
+75e933732743b8dc9f0dc8bdf782dfa62a717a48dc626880d1ded19d6894aed0  ./fala-x86_64-apple-darwin.dmg
+21388579e68987fb55b1618078c58097bbc1b58a7b2eddd4ce5feede1cdeaa87  ./fala-aarch64-apple-darwin.app.zip
+486e289c68972b14f3f0f1f9f33c913cab807a48ad60664eb572144bb36069cb  ./fala-x86_64-apple-darwin.app.zip
+a7292266c00d196cc27bf5cef8238a6e077ee3ad13e5094fb6e4f189639825d9  ./fala-x86_64-pc-windows-msvc.zip

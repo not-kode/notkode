@@ -150,6 +150,7 @@ type WaCopy = {
   greetingNoName: (tag: string) => string;
   scopeLabel: string;
   rangeLabel: string;
+  rangeSeparator: string;
   closeQuestion: string;
 };
 
@@ -167,7 +168,7 @@ function buildWhatsAppMessage(
     : wa.greetingNoName(schema.serviceTag);
   const priceLine = isFrom
     ? `${wa.rangeLabel} a partir de ${fmt(min)}`
-    : `${wa.rangeLabel} ${fmt(min)} – ${fmt(max)}`;
+    : `${wa.rangeLabel} ${fmt(min)} ${wa.rangeSeparator} ${fmt(max)}`;
   const lines = [
     greeting,
     '',
@@ -351,6 +352,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       greetingNoName: (tag) => t('waGreetingNoName', { tag }),
       scopeLabel: t('waScopeLabel'),
       rangeLabel: t('waRangeLabel'),
+      rangeSeparator: t('waRangeSeparator'),
       closeQuestion: t('waCloseQuestion'),
     }, isFrom);
     const waUrl = `https://wa.me/5511951381254?text=${encodeURIComponent(waMessage)}`;
@@ -383,7 +385,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
               {isFrom ? 'A partir de' : t('investmentLabel')}
             </p>
             <p className="font-bricolage text-[1.75rem] md:text-[2.25rem] font-bold text-text-primary leading-tight tracking-tight">
-              {isFrom ? fmt(min) : <>{fmt(min)} <span className="text-text-muted font-normal">–</span> {fmt(max)}</>}
+              {isFrom ? fmt(min) : <>{fmt(min)} <span className="text-text-muted font-normal">{t('rangeSeparator')}</span> {fmt(max)}</>}
             </p>
           </div>
         </div>
@@ -670,6 +672,7 @@ function FieldStep({
 }
 
 function LiveEstimatePill({ min, max, from, visible }: { min: number; max: number; from?: boolean; visible: boolean }) {
+  const t = useTranslations('PricingForm');
   const prevRef = useRef<string>('');
   const current = `${min}-${max}`;
   const [pulse, setPulse] = useState(false);
@@ -700,7 +703,7 @@ function LiveEstimatePill({ min, max, from, visible }: { min: number; max: numbe
         {from ? 'a partir de' : 'estimativa'}
       </span>
       <span className="font-mono text-[11px] text-text-primary font-semibold">
-        {from ? fmt(min) : <>{fmt(min)} – {fmt(max)}</>}
+        {from ? fmt(min) : <>{fmt(min)} {t('rangeSeparator')} {fmt(max)}</>}
       </span>
     </span>
   );
@@ -835,7 +838,7 @@ function RevealStep({
         </div>
         {!isFrom && (
           <p className="font-mono text-[11px] text-text-muted mt-3">
-            {t('rangeLabel')} {fmt(min)} – {fmt(max)}
+            {t('rangeLabel')} {fmt(min)} {t('rangeSeparator')} {fmt(max)}
           </p>
         )}
         <p className="text-[12px] text-text-muted mt-4 max-w-md mx-auto leading-relaxed">

@@ -7,8 +7,14 @@ export type AppPlatform = 'ios' | 'android' | 'mac' | 'windows' | 'web';
 export type NotkodeApp = {
   /** Casa com a chave em `Apps.items.<id>` nas mensagens. */
   id: string;
-  /** Link principal do card. */
-  href: string;
+  /** Link principal do card. Ignorado quando o app tem `page` própria. */
+  href?: string;
+  /**
+   * Rota da página do produto dentro do site. Quem a tem não manda ninguém pra
+   * fora: os apps que a gente distribui direto precisam de uma página que explique
+   * e entregue o instalador, em vez de despejar o visitante num domínio estranho.
+   */
+  page?: '/apps/simbos' | '/apps/fala-que-eu-te-escuto';
   platforms: AppPlatform[];
   /** Ícone real do app, em `public/images/apps/`. Baixado da loja ou do site do produto. */
   icon: string;
@@ -26,14 +32,14 @@ export const APPS: NotkodeApp[] = [
   },
   {
     id: 'fala',
-    href: 'https://fala.up.railway.app/',
+    page: '/apps/fala-que-eu-te-escuto',
     platforms: ['mac', 'windows'],
     icon: '/images/apps/fala.png',
   },
   {
     id: 'simbos',
-    href: 'https://simbos.vercel.app/',
-    platforms: ['web'],
+    page: '/apps/simbos',
+    platforms: ['mac', 'windows'],
     icon: '/images/apps/simbos.png',
   },
   {

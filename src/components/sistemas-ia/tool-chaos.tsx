@@ -5,10 +5,10 @@ import { SectionMarker } from '@/components/ui/section-marker';
 const TOOLS = [
   { name: 'Z-API / Twilio (WhatsApp)',   cost: '~ R$ 121/mês'       },
   { name: 'RD Station CRM / Pipedrive',  cost: '~ R$ 127/usuário'   },
-  { name: 'Omie / Conta Azul',           cost: 'R$ 299–310/mês'     },
+  { name: 'Omie / Conta Azul',           cost: 'R$ 299 a 310/mês'     },
   { name: 'Notion / Monday.com',         cost: '~ R$ 110/usuário'   },
-  { name: 'RD Station Mkt / Mailchimp',  cost: 'R$ 85–529/mês'      },
-  { name: 'Metabase / Power BI Pro',     cost: 'R$ 80–570/mês'      },
+  { name: 'RD Station Mkt / Mailchimp',  cost: 'R$ 85 a 529/mês'      },
+  { name: 'Metabase / Power BI Pro',     cost: 'R$ 80 a 570/mês'      },
   { name: 'Zendesk / Freshdesk',         cost: '~ R$ 337/agente'    },
 ];
 

@@ -22,6 +22,10 @@ export const routing = defineRouting({
     '/ecommerce': '/ecommerce',
     '/brandbook': '/brandbook',
     '/apps': '/apps',
+    // Os dois produtos que a gente distribui direto, sem loja no meio. O slug é o
+    // nome do app nos dois idiomas — é assim que as pessoas procuram por eles.
+    '/apps/simbos': '/apps/simbos',
+    '/apps/fala-que-eu-te-escuto': '/apps/fala-que-eu-te-escuto',
     '/parcerias': {
       pt: '/parcerias',
       en: '/partners',

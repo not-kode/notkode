@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { ArrowUpRight, Star } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Star } from 'lucide-react';
+import { Link } from '@/i18n/routing';
 import type { NotkodeApp } from '@/data/apps';
 
 export type AppCardProps = {
@@ -23,19 +24,23 @@ export function AppCard({
   ctaLabel,
   ratingSuffix,
 }: AppCardProps) {
-  return (
-    <a
-      href={app.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      data-cta={`app-card/${app.id}`}
-      className="group flex flex-col h-full rounded-2xl p-6 lg:p-7 transition-all duration-300 hover:-translate-y-1"
-      style={{
-        background: 'hsl(55 100% 97%)',
-        border: '1px solid rgba(25,25,24,0.08)',
-        boxShadow: '0 6px 20px -10px rgba(0,0,0,0.06)',
-      }}
-    >
+  // Apps com página própria no site ficam em rota interna; o resto continua
+  // saindo para a loja ou para o domínio do produto.
+  const shell = {
+    'data-cta': `app-card/${app.id}`,
+    className:
+      'group flex flex-col h-full rounded-2xl p-6 lg:p-7 transition-all duration-300 hover:-translate-y-1',
+    style: {
+      background: 'hsl(55 100% 97%)',
+      border: '1px solid rgba(25,25,24,0.08)',
+      boxShadow: '0 6px 20px -10px rgba(0,0,0,0.06)',
+    },
+  };
+
+  const Arrow = app.page ? ArrowRight : ArrowUpRight;
+
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-4 mb-5">
         {/* Ícone real do app. Fundo neutro só aparece nos ícones com transparência;
             os quadrados das lojas preenchem o container inteiro. */}
@@ -91,9 +96,23 @@ export function AppCard({
 
         <span className="font-bricolage inline-flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-primary shrink-0">
           {ctaLabel}
-          <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          <Arrow className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>
       </div>
+    </>
+  );
+
+  if (app.page) {
+    return (
+      <Link href={app.page} {...shell}>
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <a href={app.href} target="_blank" rel="noopener noreferrer" {...shell}>
+      {body}
     </a>
   );
 }

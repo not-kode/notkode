@@ -350,7 +350,9 @@
     "reportPrefix": "proposta-preliminar.",
     "consentBefore": "Ao enviar, você concorda que a gente entre em contato e processe seus dados conforme a ",
     "consentLink": "política de privacidade",
-    "consentAfter": "."
+    "consentAfter": ".",
+    "rangeSeparator": "a",
+    "waRangeSeparator": "a"
   },
   "QualificationForm": {
     "stepLabel": "Etapa {step} de {total}",
@@ -362,9 +364,9 @@
     "fieldCompanyPlaceholder": "Nome da empresa",
     "fieldSize": "Tamanho",
     "fieldSizeSelect": "Selecione",
-    "sizeOption1": "1–10 pessoas",
-    "sizeOption2": "11–50 pessoas",
-    "sizeOption3": "51–200 pessoas",
+    "sizeOption1": "1 a 10 pessoas",
+    "sizeOption2": "11 a 50 pessoas",
+    "sizeOption3": "51 a 200 pessoas",
     "sizeOption4": "200+ pessoas",
     "fieldEmail": "E-mail",
     "fieldEmailPlaceholder": "seu@email.com",
@@ -495,15 +497,15 @@
       },
       "fala": {
         "name": "Fala que eu te escuto",
-        "tagline": "programa para computador",
+        "tagline": "roda no seu computador",
         "description": "Segure uma tecla, fale, e o texto aparece onde o cursor estiver. Funciona em qualquer programa, roda offline no seu computador e é de graça.",
-        "cta": "Baixar grátis"
+        "cta": "Conhecer e baixar"
       },
       "simbos": {
         "name": "SimbOS",
-        "tagline": "aplicação web",
-        "description": "Um só lugar onde você e suas IAs compartilham arquivos, tarefas e anotações. A IA lembra do contexto entre conversas, sem você repetir tudo de novo.",
-        "cta": "Conhecer"
+        "tagline": "roda no seu computador",
+        "description": "Vários agentes de IA na mesma tela. Abra a pasta do projeto e espalhe terminais e arquivos num canvas infinito, acompanhando quatro de uma vez sem trocar de aba.",
+        "cta": "Conhecer e baixar"
       },
       "easycoexistence": {
         "name": "EasyCoexistence",
@@ -537,6 +539,321 @@
     "qualTimingFuturo": "Mais pra frente",
     "qualTimingPesquisa": "Apenas pesquisando"
   },
+  "Downloads": {
+    "chooseYours": "Escolha a versão do seu computador.",
+    "detected": {
+      "mac-arm": "Detectamos que o seu Mac é Apple Silicon. Já deixamos a opção certa destacada.",
+      "mac-intel": "Detectamos que o seu Mac é Intel. Já deixamos a opção certa destacada.",
+      "windows": "Detectamos que você está no Windows."
+    },
+    "targets": {
+      "mac-arm": "Mac com Apple Silicon",
+      "mac-intel": "Mac com Intel",
+      "windows": "Windows"
+    },
+    "recommendedForYou": "recomendado pra você",
+    "beta": "beta",
+    "cta": "Baixar",
+    "ctaBeta": "Baixar beta"
+  },
+  "AppFala": {
+    "metaTitle": "Fala que eu te escuto | Ditado por voz grátis e offline",
+    "metaDesc": "Segure uma tecla, fale, e o texto aparece onde o cursor estiver. Funciona em qualquer programa, roda dentro do seu computador e não custa nada. Alternativa gratuita ao Wispr Flow, feita pela Notkode.",
+    "eyebrow": "grátis · mac e windows",
+    "heroTitlePre": "A IA responde melhor quando você",
+    "heroTitleAccent": "explica mais.",
+    "heroDesc": "Só que ninguém tem paciência de digitar três parágrafos de contexto. Falando, você explica em 20 segundos o que levaria dois minutos digitando, e o texto aparece pronto no Claude Code, no Cursor, no ChatGPT ou em qualquer outro programa.",
+    "heroCtaPrimary": "Baixar grátis",
+    "heroCtaSecondary": "Como funciona",
+    "trust": {
+      "free": "Grátis para sempre",
+      "offline": "Funciona sem internet",
+      "private": "Sua voz não sai do computador"
+    },
+    "mockWindow": "Claude Code",
+    "mockLabel": "seu prompt",
+    "mockPrompt": "Refatore a tela de checkout pra usar o novo hook de pagamento. Mantém os testes que já existem, e quando o cartão for recusado mostra uma mensagem clara em vez do erro genérico.",
+    "mockRecording": "gravando",
+    "mockCaption": "Você segura a tecla 🌐 Fn, fala o que quiser, e solta.",
+    "whyEyebrow": "por que isso importa",
+    "whyTitle": "Prompt curto, resposta genérica.",
+    "whyDesc": "Modelos de IA acertam muito mais quando você dá contexto: o que já tentou, qual o objetivo, o que não pode quebrar. Digitando tudo isso dá preguiça. Falando, sai natural.",
+    "compare": {
+      "unit": "palavras por minuto",
+      "typing": {
+        "label": "digitando",
+        "desc": "Você resume, corta detalhes e manda o prompt pela metade. A IA responde no chute e você reescreve tudo de novo."
+      },
+      "speaking": {
+        "label": "falando",
+        "desc": "Você explica o contexto inteiro sem pensar no esforço. A IA entende de primeira, e você economiza as idas e vindas."
+      }
+    },
+    "howEyebrow": "como funciona",
+    "howTitle": "Três passos. Só isso.",
+    "stepLabel": "passo {n}",
+    "steps": {
+      "hold": {
+        "title": "Segure a tecla",
+        "desc": "A tecla 🌐 (Fn) no Mac, ou o Ctrl direito no Windows. Um balão aparece avisando que está ouvindo."
+      },
+      "speak": {
+        "title": "Fale à vontade",
+        "desc": "Explique tudo que importa, do jeito que você falaria com uma pessoa. Sem limite de tempo."
+      },
+      "release": {
+        "title": "Solte",
+        "desc": "Em um ou dois segundos o texto aparece escrito, com acentuação certa, no lugar do cursor."
+      }
+    },
+    "featuresEyebrow": "por que este e não outro",
+    "featuresTitle": "Rápido, privado e sem assinatura.",
+    "featuresDesc": "Existem ótimas ferramentas pagas de ditado por voz, como o Wispr Flow. Esta faz o mesmo trabalho sem cobrar nada, e sem mandar a sua voz para a nuvem.",
+    "features": {
+      "local": {
+        "title": "Roda no seu computador",
+        "desc": "A transcrição acontece na sua máquina. Sem nuvem, sem servidor, sem ninguém escutando."
+      },
+      "portuguese": {
+        "title": "Português de verdade",
+        "desc": "Pensado para o português do Brasil. Entende inglês e espanhol também, trocando sozinho a cada frase."
+      },
+      "offline": {
+        "title": "Funciona sem internet",
+        "desc": "Depois de instalado funciona no avião, no sítio, em qualquer lugar sem sinal."
+      },
+      "quiet": {
+        "title": "Fica fora do caminho",
+        "desc": "Um iconezinho na barra do topo e mais nada. Sem janela, sem terminal, sem incomodar."
+      },
+      "updates": {
+        "title": "Se atualiza sozinho",
+        "desc": "As melhorias chegam automaticamente. Você não precisa baixar nem instalar de novo."
+      },
+      "nothingSent": {
+        "title": "Nada é enviado",
+        "desc": "Sem conta, sem cadastro, sem coleta de dados. O programa não manda nada para lugar nenhum."
+      }
+    },
+    "priceValue": "R$ 0",
+    "priceSuffix": "para sempre",
+    "priceDesc": "Nenhuma assinatura, nenhum limite de minutos, nenhum plano premium escondido. É software livre e vai continuar assim.",
+    "priceFine": "Sem cadastro, sem período de teste, sem cartão de crédito.",
+    "downloadEyebrow": "download",
+    "downloadTitle": "Baixe e comece a usar.",
+    "downloadNotes": {
+      "mac-arm": "Chip M1, M2, M3 ou M4, praticamente todo Mac de 2020 pra cá. Abra o arquivo e arraste o app para Aplicativos.",
+      "mac-intel": "Modelos mais antigos, em geral anteriores a 2020, com processador Intel.",
+      "windows": "Recém-liberado e ainda pouco testado. A tecla de ativação é o Ctrl direito, porque a tecla Fn do PC não chega ao sistema."
+    },
+    "permissionsTitle": "as permissões que ele vai pedir",
+    "permissionsIntro": "No Mac são três, e o próprio app avisa qual está faltando:",
+    "permissions": {
+      "input": {
+        "name": "Monitoramento de Entrada",
+        "why": "para perceber quando você segura a tecla."
+      },
+      "accessibility": {
+        "name": "Acessibilidade",
+        "why": "para digitar o texto por você."
+      },
+      "mic": {
+        "name": "Microfone",
+        "why": "para ouvir a sua voz."
+      }
+    },
+    "permissionsNote": "Configure também Ajustes do Sistema → Teclado → \"Pressionar a tecla 🌐 para\" → Nenhuma Ação. Sem isso o Mac abre o seletor de emoji ao pressionar a tecla. O app é assinado com certificado da Apple e passou pela notarização, então abre com um duplo clique, sem aviso de segurança.",
+    "versionLabel": "versão {version}",
+    "faqEyebrow": "dúvidas",
+    "faqTitle": "Perguntas frequentes",
+    "faq": {
+      "free": {
+        "q": "É realmente grátis? Qual é a pegadinha?",
+        "a": "Não tem pegadinha. Não existe versão paga, cadastro nem coleta de dados. O programa é software livre e continua assim."
+      },
+      "privacy": {
+        "q": "Minha voz é enviada para algum lugar?",
+        "a": "Não. A transcrição acontece dentro do seu computador. Nenhum áudio é enviado pela internet, dá para usar até com o wi-fi desligado."
+      },
+      "anywhere": {
+        "q": "Funciona mesmo em qualquer programa?",
+        "a": "Sim. Ele escreve onde estiver o cursor, então vale para Claude Code, Cursor, ChatGPT, terminal, WhatsApp, e-mail, Word, Google Docs, campo de busca, qualquer lugar onde você consiga digitar."
+      },
+      "wispr": {
+        "q": "Qual a diferença para o Wispr Flow?",
+        "a": "A ideia é a mesma: segurar uma tecla e falar. As diferenças são que este é gratuito e faz a transcrição dentro da sua máquina, em vez de enviar o áudio para servidores. Em troca, é um projeto mais simples e sem os recursos extras de uma ferramenta comercial."
+      },
+      "terminal": {
+        "q": "Preciso saber usar terminal?",
+        "a": "Não. Baixe, arraste para a pasta Aplicativos e abra. Ele fica só como um iconezinho na barra do topo."
+      },
+      "firstRun": {
+        "q": "O que acontece na primeira abertura?",
+        "a": "O programa em si é pequeno. Na primeira vez que você abre, ele baixa o reconhecimento de voz (cerca de 574 MB), mostrando uma barra de progresso na tela. É o que permite funcionar sem internet depois, e acontece uma única vez."
+      }
+    },
+    "ctaTitlePre": "Quer um programa assim",
+    "ctaTitleAccent": "para a sua empresa?",
+    "ctaDesc": "Este app é nosso: a gente projetou, construiu, assinou, publicou e mantém no ar. É o mesmo time e o mesmo processo que atendem os projetos de cliente. Conta o que você tem em mente."
+  },
+  "AppSimbos": {
+    "metaTitle": "SimbOS | Vários agentes de IA na mesma tela",
+    "metaDesc": "Um canvas onde você abre a pasta do projeto e espalha terminais e arquivos do jeito que quiser. Acompanhe quatro agentes de IA trabalhando ao mesmo tempo, sem trocar de aba. Roda no seu computador, sem conta e sem servidor.",
+    "eyebrow": "roda no seu computador · mac e windows",
+    "heroTitlePre": "Quatro agentes trabalhando.",
+    "heroTitleAccent": "Uma tela só.",
+    "heroDesc": "Abra a pasta do projeto e espalhe terminais e arquivos numa tela infinita. Cada agente fica no seu canto, ao lado dos arquivos que está mexendo, e você acompanha os quatro de uma vez, orquestrando em vez de caçar qual aba era qual.",
+    "heroCtaPrimary": "Baixar grátis",
+    "heroCtaSecondary": "Como funciona",
+    "heroFootnote": "Sem servidor, sem banco de dados, sem conta. Tudo acontece na sua máquina.",
+    "mock": {
+      "agentA": {
+        "title": "api · claude",
+        "line0": "> corrigir o timeout do webhook",
+        "line1": "  lendo routes/webhook.ts",
+        "line2": "  editado · 2 arquivos"
+      },
+      "files": {
+        "title": "src/components",
+        "line0": "checkout-form.tsx",
+        "line1": "payment-hook.ts",
+        "line2": "pricing-table.tsx"
+      },
+      "agentB": {
+        "title": "web · codex",
+        "line0": "> subir cobertura de teste",
+        "line1": "  rodando a suíte…",
+        "line2": "  38 passaram · 2 falharam"
+      },
+      "agentC": {
+        "title": "infra · claude",
+        "line0": "> revisar o deploy",
+        "line1": "  comparando com produção",
+        "line2": "  aguardando você"
+      }
+    },
+    "mockCaption": "Cada card é um terminal ou um navegador de arquivos, onde você quiser na tela.",
+    "stanceEyebrow": "a ideia",
+    "stanceTitle": "Quem corre é a bola.",
+    "stanceDesc": "O SimbOS não é onde você escreve o código, é de onde você comanda quem escreve. Os agentes fazem o trabalho; você abre as frentes, acompanha as quatro ao mesmo tempo e decide o que entra. Um ajuste rápido dá para fazer ali mesmo, sem sair da tela. Passar a tarde digitando código na mão não é o problema que ele veio resolver.",
+    "whyEyebrow": "por que um canvas",
+    "whyTitle": "Aba é fila: você só vê uma coisa por vez.",
+    "whyDesc": "Quando um agente só é fácil. Com três ou quatro rodando ao mesmo tempo, o trabalho vira gerenciar abas, e você perde justamente o que precisava ver: quem travou, quem terminou, quem está esperando resposta.",
+    "compare": {
+      "tabs": {
+        "label": "abas e painéis divididos",
+        "title": "Você escolhe o que olhar",
+        "desc": "Cada agente fica escondido atrás de uma aba. Para saber como está o segundo, você precisa abandonar o primeiro. E quando volta, já perdeu o que aconteceu."
+      },
+      "canvas": {
+        "label": "canvas",
+        "title": "Você olha tudo",
+        "desc": "Os quatro ficam visíveis lado a lado, cada um perto dos arquivos que está tocando. Dá para ver quem terminou e quem travou sem clicar em nada."
+      }
+    },
+    "howEyebrow": "como funciona",
+    "howTitle": "Não tem nada pra aprender.",
+    "howDesc": "Não existe projeto, workspace, conta nem configuração. Você abre uma pasta, como faria num editor de código, e a pasta é o contexto: os terminais nascem dentro dela e o navegador de arquivos começa na raiz dela.",
+    "stepLabel": "passo {n}",
+    "steps": {
+      "open": {
+        "title": "Abra a pasta",
+        "desc": "A pasta do repositório que você vai mexer. Pode abrir várias, cada uma vira um quadro na tela."
+      },
+      "arrange": {
+        "title": "Espalhe os cards",
+        "desc": "Um terminal para cada agente, um navegador de arquivos ao lado. Arraste e redimensione até ficar do jeito que você pensa."
+      },
+      "watch": {
+        "title": "Acompanhe",
+        "desc": "Todos rodando à vista. Quando fechar e abrir de novo, o arranjo daquela pasta continua onde estava."
+      }
+    },
+    "featuresEyebrow": "o que tem dentro",
+    "featuresTitle": "Um terminal de verdade em cada card.",
+    "features": {
+      "terminals": {
+        "title": "Terminais completos",
+        "desc": "Não é um visualizador de saída: é um terminal real, com aceleração por GPU, que aguenta um agente cuspindo milhares de linhas por segundo."
+      },
+      "files": {
+        "title": "Arquivos do lado",
+        "desc": "Navegador e leitor de arquivos com destaque de sintaxe e markdown renderizado, para conferir o que o agente mexeu sem sair da tela. Ajuste rápido você faz ali mesmo; o resto é trabalho dele."
+      },
+      "layout": {
+        "title": "Lembra o arranjo",
+        "desc": "A posição e o tamanho de cada card ficam salvos por pasta. Nada é escrito dentro do seu repositório."
+      },
+      "contained": {
+        "title": "Preso na pasta aberta",
+        "desc": "A leitura de arquivos é confinada à pasta que você abriu. Nenhum caminho escapa dali, nem por bug, e isso é coberto por teste."
+      },
+      "local": {
+        "title": "Nada sai da máquina",
+        "desc": "Sem servidor, sem banco de dados, sem login. O programa não manda o seu código para lugar nenhum."
+      },
+      "updates": {
+        "title": "Atualiza sem atrapalhar",
+        "desc": "Ele baixa a nova versão de fundo e espera. Nunca reinicia sozinho, porque isso mataria as sessões de agente rodando na sua frente."
+      }
+    },
+    "shortcutsEyebrow": "atalhos",
+    "shortcutsTitle": "O que você vai usar toda hora.",
+    "shortcuts": {
+      "0": "Abrir uma pasta e trazer pra tela",
+      "1": "Novo terminal na última pasta aberta",
+      "2": "Novo navegador de arquivos",
+      "3": "Salvar o arquivo que está editando",
+      "4": "Enquadrar tudo na tela, sem mexer no arranjo",
+      "5": "Reorganizar os cards da pasta em grade"
+    },
+    "priceValue": "R$ 0",
+    "priceSuffix": "para sempre",
+    "priceDesc": "Nenhuma assinatura, nenhum limite de agentes, nenhum plano premium escondido. Você já paga a sua IA; o SimbOS é só a mesa onde ela trabalha.",
+    "priceFine": "Sem cadastro, sem período de teste, sem cartão de crédito.",
+    "downloadEyebrow": "download",
+    "downloadTitle": "Baixe e abra a sua primeira pasta.",
+    "downloadNotes": {
+      "mac-arm": "Chip M1, M2, M3 ou M4, praticamente todo Mac de 2020 pra cá. Abra o arquivo e arraste o SimbOS para Aplicativos.",
+      "mac-intel": "Modelos mais antigos, em geral anteriores a 2020, com processador Intel.",
+      "windows": "Instalador para Windows 64 bits. Ainda pouco testado fora do Mac, então avise se algo estranho acontecer."
+    },
+    "installTitle": "na primeira abertura",
+    "installMac": "No Mac, o app é assinado com certificado da Apple e passou pela notarização, então abre com um duplo clique, sem aviso de \"desenvolvedor não identificado\".",
+    "installWin": "No Windows, o instalador ainda não é assinado, então o SmartScreen avisa na primeira vez: clique em \"Mais informações\" e depois em \"Executar assim mesmo\".",
+    "versionLabel": "versão {version}",
+    "faqEyebrow": "dúvidas",
+    "faqTitle": "Perguntas frequentes",
+    "faq": {
+      "whatIsIt": {
+        "q": "É um editor de código? Substitui o VS Code?",
+        "a": "Não, e não tenta ser. Ele parte do princípio de que quem escreve o código são os agentes e você orquestra: abre as frentes, acompanha e decide o que entra. Dá para abrir um arquivo e fazer um ajuste rápido sem sair da tela, mas se o seu dia é escrever código na mão, o SimbOS não é a ferramenta, o seu editor continua sendo."
+      },
+      "account": {
+        "q": "Preciso criar conta?",
+        "a": "Não existe conta, nem login, nem assinatura. Você baixa, abre uma pasta e usa. Nada é sincronizado com servidor nenhum."
+      },
+      "terminal": {
+        "q": "Os terminais são de verdade?",
+        "a": "São. Cada card roda um terminal completo, com o seu shell e as suas configurações, dentro da pasta que você abriu. É onde você chama o Claude Code, o Codex ou o que preferir."
+      },
+      "privacy": {
+        "q": "O meu código vai para algum lugar?",
+        "a": "Não. O programa não tem servidor. A leitura de arquivos é limitada à pasta que você abriu, e as posições dos cards ficam guardadas na pasta de dados do app, no seu computador."
+      },
+      "updates": {
+        "q": "Como chegam as atualizações?",
+        "a": "O app verifica sozinho e baixa a nova versão de fundo, mas nunca reinicia por conta própria: aparece um aviso e você reinicia quando quiser. Se ele fechasse sozinho, mataria as sessões de agente que estivessem rodando."
+      },
+      "windows": {
+        "q": "Funciona no Windows?",
+        "a": "Funciona, na versão 64 bits. A construção do dia a dia acontece no Mac, então o Windows é o lado menos rodado dos dois. Se algo parecer errado ali, é bom avisar."
+      }
+    },
+    "ctaTitlePre": "Quer uma ferramenta assim",
+    "ctaTitleAccent": "para o seu time?",
+    "ctaDesc": "O SimbOS nasceu de um problema nosso: acompanhar vários agentes sem perder o fio. Foi projetado, construído, assinado e publicado pela mesma equipe que atende os projetos de cliente. Conta o seu problema."
+  },
   "Privacy": {
     "metaTitle": "Política de privacidade · Notkode",
     "metaDesc": "Como a Notkode coleta, armazena e usa seus dados nos formulários do site."
@@ -564,23 +881,23 @@
     "painTitleAccent": "Frankenstein de assinaturas.",
     "painIntro": "Plataforma, app de cupom, app de frete, gateway, ERP, plugin disso, plugin daquilo. Cada um cobra. Cada um cresce com o faturamento. Cada um tira um pedaço da margem antes de você ver o lucro.",
     "painLine1Text": "Plataforma de loja (Shopify, Yampi, Loja Integrada…)",
-    "painLine1Metric": "R$ 600–1.200/mês",
+    "painLine1Metric": "R$ 600 a 1.200/mês",
     "painLine2Text": "App de cupom + recuperação de carrinho",
-    "painLine2Metric": "R$ 200–350/mês",
+    "painLine2Metric": "R$ 200 a 350/mês",
     "painLine3Text": "App de frete inteligente",
-    "painLine3Metric": "R$ 150–300/mês",
+    "painLine3Metric": "R$ 150 a 300/mês",
     "painLine4Text": "Gateway de pagamento",
     "painLine4Metric": "3,4% por transação",
     "painLine5Text": "ERP + integrador",
-    "painLine5Metric": "R$ 350–600/mês",
+    "painLine5Metric": "R$ 350 a 600/mês",
     "painLine6Text": "Plugins avulsos (review, pop-up, SEO, fiscal…)",
-    "painLine6Metric": "R$ 150–250/mês",
+    "painLine6Metric": "R$ 150 a 250/mês",
     "painFooterLabel": "Conta típica de uma loja com bom volume",
     "painFooterBold1": "R$ 1.500 a R$ 3.000/mês fixos",
     "painFooterMid": ", mais ",
     "painFooterBold2": "3,4% sobre tudo que vende",
     "painFooterEnd": ". Numa loja com sistema próprio, isso vira investimento único, sem teto de crescimento e sem alugar pedaços da sua operação.",
-    "result1Value": "4–8 sem",
+    "result1Value": "4 a 8 sem",
     "result1Label": "do briefing à loja no ar",
     "result2Value": "100%",
     "result2Label": "do código é seu · sem fidelidade",
@@ -639,7 +956,7 @@
     "heroTitleAccent": "sem precisar de você.",
     "heroDesc": "A gente automatiza o atendimento no WhatsApp, a organização dos pedidos, a cobrança e as tarefas repetitivas que comem o dia da sua equipe. Você ganha horas de volta e o cliente é respondido na hora, inclusive de madrugada.",
     "heroCta": "Montar meu projeto",
-    "result1Value": "10–40h",
+    "result1Value": "10 a 40h",
     "result1Label": "liberadas por semana na operação",
     "result2Value": "~2 sem",
     "result2Label": "do briefing ao agente em produção",
@@ -703,7 +1020,7 @@
     "heroTitleAccent": "semanas.",
     "heroDesc": "LP pra campanha que começa segunda, ou institucional que vai com a marca nova. A gente desenha pelo objetivo do seu cliente, não pelo template que dá menos trabalho.",
     "heroCta": "Montar meu site",
-    "stat1Value": "2–4 sem",
+    "stat1Value": "2 a 4 sem",
     "stat1Label": "do briefing ao site no ar",
     "stat2Value": "60+",
     "stat2Label": "sites entregues",
@@ -788,7 +1105,7 @@
     "heroDesc": "Você fecha o projeto. A gente constrói nos bastidores. Seu cliente recebe um produto sob medida com sua marca, e você multiplica o ticket sem mudar a estrutura.",
     "heroCtaPrimary": "Tornar-se parceiro",
     "heroCtaSecondary": "Ver como funciona",
-    "highlight1Value": "+R$ 30–100k",
+    "highlight1Value": "+R$ 30 a 100k",
     "highlight1Label": "Ticket adicional",
     "highlight1Desc": "por projeto que você antes recusaria por falta de tech.",
     "highlight2Value": "100%",

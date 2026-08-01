@@ -350,7 +350,9 @@
     "reportPrefix": "preliminary-proposal.",
     "consentBefore": "By submitting, you agree that we may reach out and process your data according to our ",
     "consentLink": "privacy policy",
-    "consentAfter": "."
+    "consentAfter": ".",
+    "rangeSeparator": "to",
+    "waRangeSeparator": "to"
   },
   "QualificationForm": {
     "stepLabel": "Step {step} of {total}",
@@ -362,9 +364,9 @@
     "fieldCompanyPlaceholder": "Company name",
     "fieldSize": "Size",
     "fieldSizeSelect": "Select",
-    "sizeOption1": "1–10 people",
-    "sizeOption2": "11–50 people",
-    "sizeOption3": "51–200 people",
+    "sizeOption1": "1 to 10 people",
+    "sizeOption2": "11 to 50 people",
+    "sizeOption3": "51 to 200 people",
     "sizeOption4": "200+ people",
     "fieldEmail": "Email",
     "fieldEmailPlaceholder": "you@email.com",
@@ -495,15 +497,15 @@
       },
       "fala": {
         "name": "Fala que eu te escuto",
-        "tagline": "desktop program",
+        "tagline": "runs on your computer",
         "description": "Hold a key, speak, and the text lands wherever your cursor is. Works in any program, runs offline on your computer, and it's free.",
-        "cta": "Download free"
+        "cta": "See it and download"
       },
       "simbos": {
         "name": "SimbOS",
-        "tagline": "web app",
-        "description": "One place where you and your AI tools share files, tasks and notes. The AI remembers context between conversations, so you don't repeat yourself.",
-        "cta": "Explore"
+        "tagline": "runs on your computer",
+        "description": "Several AI agents on one screen. Open your project folder and spread terminals and files across an infinite canvas, watching four at once without switching tabs.",
+        "cta": "See it and download"
       },
       "easycoexistence": {
         "name": "EasyCoexistence",
@@ -537,6 +539,321 @@
     "qualTimingFuturo": "Further ahead",
     "qualTimingPesquisa": "Just researching"
   },
+  "Downloads": {
+    "chooseYours": "Pick the version for your computer.",
+    "detected": {
+      "mac-arm": "Looks like your Mac is Apple Silicon. We highlighted the right one for you.",
+      "mac-intel": "Looks like your Mac is Intel. We highlighted the right one for you.",
+      "windows": "Looks like you are on Windows."
+    },
+    "targets": {
+      "mac-arm": "Mac with Apple Silicon",
+      "mac-intel": "Mac with Intel",
+      "windows": "Windows"
+    },
+    "recommendedForYou": "recommended for you",
+    "beta": "beta",
+    "cta": "Download",
+    "ctaBeta": "Download beta"
+  },
+  "AppFala": {
+    "metaTitle": "Fala que eu te escuto | Free, offline voice dictation",
+    "metaDesc": "Hold a key, speak, and the text lands wherever your cursor is. Works in any app, runs entirely on your computer and costs nothing. A free alternative to Wispr Flow, built by Notkode.",
+    "eyebrow": "free · mac and windows",
+    "heroTitlePre": "AI answers better when you",
+    "heroTitleAccent": "explain more.",
+    "heroDesc": "Except nobody has the patience to type three paragraphs of context. Speaking, you explain in 20 seconds what would take two minutes to type, and the text shows up ready in Claude Code, Cursor, ChatGPT or any other app.",
+    "heroCtaPrimary": "Download free",
+    "heroCtaSecondary": "How it works",
+    "trust": {
+      "free": "Free forever",
+      "offline": "Works without internet",
+      "private": "Your voice never leaves the machine"
+    },
+    "mockWindow": "Claude Code",
+    "mockLabel": "your prompt",
+    "mockPrompt": "Refactor the checkout screen to use the new payment hook. Keep the tests that already exist, and when the card is declined show a clear message instead of the generic error.",
+    "mockRecording": "recording",
+    "mockCaption": "Hold the 🌐 Fn key, say whatever you want, and let go.",
+    "whyEyebrow": "why it matters",
+    "whyTitle": "Short prompt, generic answer.",
+    "whyDesc": "AI models get it right far more often when you give context: what you already tried, what the goal is, what must not break. Typing all that is a chore. Speaking, it comes out naturally.",
+    "compare": {
+      "unit": "words per minute",
+      "typing": {
+        "label": "typing",
+        "desc": "You summarize, cut details and send half a prompt. The AI guesses, and you rewrite everything again."
+      },
+      "speaking": {
+        "label": "speaking",
+        "desc": "You explain the whole context without thinking about the effort. The AI gets it the first time, and you skip the back and forth."
+      }
+    },
+    "howEyebrow": "how it works",
+    "howTitle": "Three steps. That's it.",
+    "stepLabel": "step {n}",
+    "steps": {
+      "hold": {
+        "title": "Hold the key",
+        "desc": "The 🌐 (Fn) key on a Mac, or right Ctrl on Windows. A small pill shows up telling you it is listening."
+      },
+      "speak": {
+        "title": "Talk freely",
+        "desc": "Explain everything that matters, the way you would to a person. No time limit."
+      },
+      "release": {
+        "title": "Let go",
+        "desc": "A second or two later the text is written out, properly punctuated, right where your cursor was."
+      }
+    },
+    "featuresEyebrow": "why this one",
+    "featuresTitle": "Fast, private and no subscription.",
+    "featuresDesc": "There are great paid dictation tools out there, like Wispr Flow. This one does the same job without charging anything, and without sending your voice to the cloud.",
+    "features": {
+      "local": {
+        "title": "Runs on your computer",
+        "desc": "Transcription happens on your machine. No cloud, no server, nobody listening in."
+      },
+      "portuguese": {
+        "title": "Real Brazilian Portuguese",
+        "desc": "Built for Brazilian Portuguese first. It handles English and Spanish too, switching on its own sentence by sentence."
+      },
+      "offline": {
+        "title": "Works without internet",
+        "desc": "Once installed it works on a plane, in the countryside, anywhere with no signal."
+      },
+      "quiet": {
+        "title": "Stays out of the way",
+        "desc": "A small icon in the menu bar and nothing else. No window, no terminal, no nagging."
+      },
+      "updates": {
+        "title": "Updates itself",
+        "desc": "Improvements arrive automatically. You never have to download and install again."
+      },
+      "nothingSent": {
+        "title": "Nothing is sent",
+        "desc": "No account, no signup, no data collection. The app does not phone home."
+      }
+    },
+    "priceValue": "$0",
+    "priceSuffix": "forever",
+    "priceDesc": "No subscription, no minute limits, no hidden premium tier. It is free software and it stays that way.",
+    "priceFine": "No signup, no trial period, no credit card.",
+    "downloadEyebrow": "download",
+    "downloadTitle": "Download it and get going.",
+    "downloadNotes": {
+      "mac-arm": "M1, M2, M3 or M4 chip, basically every Mac from 2020 onwards. Open the file and drag the app into Applications.",
+      "mac-intel": "Older models, generally pre-2020, with an Intel processor.",
+      "windows": "Just released and still lightly tested. The trigger is right Ctrl, because a PC's Fn key never reaches the system."
+    },
+    "permissionsTitle": "the permissions it will ask for",
+    "permissionsIntro": "On a Mac there are three, and the app itself tells you which one is missing:",
+    "permissions": {
+      "input": {
+        "name": "Input Monitoring",
+        "why": "to notice that you are holding the key."
+      },
+      "accessibility": {
+        "name": "Accessibility",
+        "why": "to type the text for you."
+      },
+      "mic": {
+        "name": "Microphone",
+        "why": "to hear your voice."
+      }
+    },
+    "permissionsNote": "Also set System Settings → Keyboard → \"Press 🌐 key to\" → Do Nothing. Without it, macOS opens the emoji picker when you press the key. The app is signed with an Apple Developer ID and notarized, so it opens on a double click with no security warning.",
+    "versionLabel": "version {version}",
+    "faqEyebrow": "questions",
+    "faqTitle": "Frequently asked",
+    "faq": {
+      "free": {
+        "q": "Is it really free? What's the catch?",
+        "a": "There is no catch. There is no paid tier, no signup and no data collection. The app is free software and stays that way."
+      },
+      "privacy": {
+        "q": "Is my voice sent anywhere?",
+        "a": "No. Transcription happens inside your computer. No audio travels over the internet, so you can use it with wi-fi turned off."
+      },
+      "anywhere": {
+        "q": "Does it really work in any app?",
+        "a": "Yes. It writes wherever your cursor is, so that covers Claude Code, Cursor, ChatGPT, the terminal, WhatsApp, email, Word, Google Docs, a search box, anywhere you can type."
+      },
+      "wispr": {
+        "q": "How is it different from Wispr Flow?",
+        "a": "The idea is the same: hold a key and talk. The differences are that this one is free and transcribes on your own machine instead of sending audio to servers. In exchange, it is a simpler project without the extras of a commercial tool."
+      },
+      "terminal": {
+        "q": "Do I need to know my way around a terminal?",
+        "a": "No. Download it, drag it into Applications and open it. It lives as a small icon in the menu bar."
+      },
+      "firstRun": {
+        "q": "What happens the first time I open it?",
+        "a": "The app itself is small. The first time you open it, it downloads the speech model (about 574 MB) with a progress bar on screen. That is what lets it work offline afterwards, and it happens only once."
+      }
+    },
+    "ctaTitlePre": "Want an app like this",
+    "ctaTitleAccent": "for your company?",
+    "ctaDesc": "This app is ours: we designed, built, signed, shipped and maintain it. Same team and same process that handle client projects. Tell us what you have in mind."
+  },
+  "AppSimbos": {
+    "metaTitle": "SimbOS | Several AI agents on one screen",
+    "metaDesc": "A canvas where you open your project folder and spread terminals and files however you like. Watch four AI agents work at the same time, without switching tabs. Runs on your computer, no account and no server.",
+    "eyebrow": "runs on your computer · mac and windows",
+    "heroTitlePre": "Four agents working.",
+    "heroTitleAccent": "One screen.",
+    "heroDesc": "Open your project folder and spread terminals and files across an infinite canvas. Each agent sits in its own corner, next to the files it is touching, and you watch all four at once, orchestrating instead of hunting for which tab was which.",
+    "heroCtaPrimary": "Download free",
+    "heroCtaSecondary": "How it works",
+    "heroFootnote": "No server, no database, no account. Everything happens on your machine.",
+    "mock": {
+      "agentA": {
+        "title": "api · claude",
+        "line0": "> fix the webhook timeout",
+        "line1": "  reading routes/webhook.ts",
+        "line2": "  edited · 2 files"
+      },
+      "files": {
+        "title": "src/components",
+        "line0": "checkout-form.tsx",
+        "line1": "payment-hook.ts",
+        "line2": "pricing-table.tsx"
+      },
+      "agentB": {
+        "title": "web · codex",
+        "line0": "> raise test coverage",
+        "line1": "  running the suite…",
+        "line2": "  38 passed · 2 failed"
+      },
+      "agentC": {
+        "title": "infra · claude",
+        "line0": "> review the deploy",
+        "line1": "  diffing against production",
+        "line2": "  waiting on you"
+      }
+    },
+    "mockCaption": "Every card is a terminal or a file browser, wherever you want it on screen.",
+    "stanceEyebrow": "the idea",
+    "stanceTitle": "Let the ball do the running.",
+    "stanceDesc": "SimbOS is not where you write the code, it is where you direct whoever writes it. The agents do the work; you open the fronts, watch all four at once and decide what ships. A quick tweak you can make right there, without leaving the canvas. Spending the afternoon typing code by hand is not the problem it set out to solve.",
+    "whyEyebrow": "why a canvas",
+    "whyTitle": "Tabs are a queue: you only see one thing at a time.",
+    "whyDesc": "One agent is easy. With three or four running at once, the work becomes managing tabs, and you lose exactly what you needed to see: who is stuck, who finished, who is waiting on an answer.",
+    "compare": {
+      "tabs": {
+        "label": "tabs and split panes",
+        "title": "You choose what to look at",
+        "desc": "Each agent hides behind a tab. To check on the second one you have to abandon the first. And by the time you come back, you already missed what happened."
+      },
+      "canvas": {
+        "label": "canvas",
+        "title": "You look at everything",
+        "desc": "All four stay visible side by side, each next to the files it is touching. You can see who finished and who got stuck without clicking anything."
+      }
+    },
+    "howEyebrow": "how it works",
+    "howTitle": "There is nothing to learn.",
+    "howDesc": "There is no project, no workspace, no account, no setup. You open a folder, the way you would in a code editor, and the folder is the context: terminals spawn inside it and the file browser is rooted at it.",
+    "stepLabel": "step {n}",
+    "steps": {
+      "open": {
+        "title": "Open the folder",
+        "desc": "The repository you are about to work on. You can open several, and each one becomes its own frame on the canvas."
+      },
+      "arrange": {
+        "title": "Spread the cards",
+        "desc": "A terminal for each agent, a file browser next to it. Drag and resize until it matches how you think."
+      },
+      "watch": {
+        "title": "Watch",
+        "desc": "All of them running in plain sight. Close it and open it again, and that folder's arrangement is right where you left it."
+      }
+    },
+    "featuresEyebrow": "what's inside",
+    "featuresTitle": "A real terminal in every card.",
+    "features": {
+      "terminals": {
+        "title": "Full terminals",
+        "desc": "Not an output viewer: a real terminal, GPU-accelerated, that keeps up with an agent spitting out thousands of lines per second."
+      },
+      "files": {
+        "title": "Files right there",
+        "desc": "A file browser and viewer with syntax highlighting and rendered markdown, so you can check what the agent touched without leaving the canvas. Quick tweaks you make right there; the rest is its job."
+      },
+      "layout": {
+        "title": "Remembers your layout",
+        "desc": "The position and size of every card is saved per folder. Nothing is ever written inside your repository."
+      },
+      "contained": {
+        "title": "Confined to the open folder",
+        "desc": "File reads are restricted to the folder you opened. No path escapes it, not even through a bug, and that is covered by tests."
+      },
+      "local": {
+        "title": "Nothing leaves the machine",
+        "desc": "No server, no database, no login. The app does not send your code anywhere."
+      },
+      "updates": {
+        "title": "Updates without interrupting",
+        "desc": "It downloads the new version in the background and waits. It never restarts on its own, because that would kill the agent sessions running in front of you."
+      }
+    },
+    "shortcutsEyebrow": "shortcuts",
+    "shortcutsTitle": "The ones you'll use constantly.",
+    "shortcuts": {
+      "0": "Open a folder and bring it onto the canvas",
+      "1": "New terminal in the folder you opened last",
+      "2": "New file browser",
+      "3": "Save the file you are editing",
+      "4": "Fit everything on screen, without touching the layout",
+      "5": "Re-grid that folder's cards"
+    },
+    "priceValue": "$0",
+    "priceSuffix": "forever",
+    "priceDesc": "No subscription, no agent limits, no hidden premium tier. You already pay for your AI; SimbOS is just the desk it works on.",
+    "priceFine": "No signup, no trial period, no credit card.",
+    "downloadEyebrow": "download",
+    "downloadTitle": "Download it and open your first folder.",
+    "downloadNotes": {
+      "mac-arm": "M1, M2, M3 or M4 chip, basically every Mac from 2020 onwards. Open the file and drag SimbOS into Applications.",
+      "mac-intel": "Older models, generally pre-2020, with an Intel processor.",
+      "windows": "Installer for 64-bit Windows. Still lightly tested outside the Mac, so tell us if anything looks off."
+    },
+    "installTitle": "the first time you open it",
+    "installMac": "On a Mac, the app is signed with an Apple Developer ID and notarized, so it opens on a double click, with no \"unidentified developer\" warning.",
+    "installWin": "On Windows the installer is not signed yet, so SmartScreen warns you the first time: click \"More info\" and then \"Run anyway\".",
+    "versionLabel": "version {version}",
+    "faqEyebrow": "questions",
+    "faqTitle": "Frequently asked",
+    "faq": {
+      "whatIsIt": {
+        "q": "Is it a code editor? Does it replace VS Code?",
+        "a": "No, and it is not trying to be. It assumes the agents write the code and you orchestrate: you open the fronts, watch, and decide what ships. You can open a file and make a quick tweak without leaving the canvas, but if your day is typing code by hand, SimbOS is not the tool, your editor still is."
+      },
+      "account": {
+        "q": "Do I need an account?",
+        "a": "There is no account, no login and no subscription. You download it, open a folder and use it. Nothing syncs to any server."
+      },
+      "terminal": {
+        "q": "Are the terminals real?",
+        "a": "They are. Each card runs a full terminal, with your shell and your settings, inside the folder you opened. That is where you call Claude Code, Codex or whatever you prefer."
+      },
+      "privacy": {
+        "q": "Does my code go anywhere?",
+        "a": "No. The app has no server. File reads are limited to the folder you opened, and card positions live in the app's data folder, on your computer."
+      },
+      "updates": {
+        "q": "How do updates arrive?",
+        "a": "The app checks on its own and downloads the new version in the background, but it never restarts by itself: a notice appears and you restart whenever you want. If it closed on its own, it would kill any agent sessions still running."
+      },
+      "windows": {
+        "q": "Does it work on Windows?",
+        "a": "It does, on 64-bit. Day-to-day development happens on the Mac, so Windows is the less-travelled of the two. If something looks wrong there, let us know."
+      }
+    },
+    "ctaTitlePre": "Want a tool like this",
+    "ctaTitleAccent": "for your team?",
+    "ctaDesc": "SimbOS came out of a problem of our own: keeping track of several agents without losing the thread. It was designed, built, signed and shipped by the same team that handles client projects. Tell us about your problem."
+  },
   "Privacy": {
     "metaTitle": "Privacy policy · Notkode",
     "metaDesc": "How Notkode collects, stores, and uses your data from the forms on this site."
@@ -564,23 +881,23 @@
     "painTitleAccent": "Frankenstein of subscriptions.",
     "painIntro": "Platform, coupon app, shipping app, gateway, ERP, plugin for this, plugin for that. Each one bills you. Each one grows with your revenue. Each one takes a slice of margin before you see profit.",
     "painLine1Text": "Store platform (Shopify, Yampi, Loja Integrada…)",
-    "painLine1Metric": "$120–250/mo",
+    "painLine1Metric": "$120 to 250/mo",
     "painLine2Text": "Coupon + cart recovery app",
-    "painLine2Metric": "$40–70/mo",
+    "painLine2Metric": "$40 to 70/mo",
     "painLine3Text": "Smart shipping app",
-    "painLine3Metric": "$30–60/mo",
+    "painLine3Metric": "$30 to 60/mo",
     "painLine4Text": "Payment gateway",
     "painLine4Metric": "3.4% per transaction",
     "painLine5Text": "ERP + integrator",
-    "painLine5Metric": "$70–120/mo",
+    "painLine5Metric": "$70 to 120/mo",
     "painLine6Text": "Misc plugins (reviews, pop-ups, SEO, tax…)",
-    "painLine6Metric": "$30–50/mo",
+    "painLine6Metric": "$30 to 50/mo",
     "painFooterLabel": "Typical bill for a store with decent volume",
     "painFooterBold1": "$300 to $600/mo fixed",
     "painFooterMid": ", plus ",
     "painFooterBold2": "3.4% on everything you sell",
     "painFooterEnd": ". With your own system, that becomes a one-time investment, no growth ceiling and no renting pieces of your own operation.",
-    "result1Value": "4–8 wks",
+    "result1Value": "4 to 8 wks",
     "result1Label": "from briefing to live store",
     "result2Value": "100%",
     "result2Label": "of the code is yours · no lock-in",
@@ -639,7 +956,7 @@
     "heroTitleAccent": "without you in the loop.",
     "heroDesc": "We automate WhatsApp customer support, order organization, billing, and the repetitive tasks that eat your team's day. You get hours back and your customer is answered immediately, even at 3am.",
     "heroCta": "Build my project",
-    "result1Value": "10–40h",
+    "result1Value": "10 to 40h",
     "result1Label": "freed per week in operations",
     "result2Value": "~2 wks",
     "result2Label": "from briefing to agent in production",
@@ -703,7 +1020,7 @@
     "heroTitleAccent": "weeks.",
     "heroDesc": "An LP for the campaign launching Monday, or a brand-new institutional site. We design around your goal, not around the template that's easiest for us.",
     "heroCta": "Build my site",
-    "stat1Value": "2–4 wks",
+    "stat1Value": "2 to 4 wks",
     "stat1Label": "from briefing to live",
     "stat2Value": "60+",
     "stat2Label": "sites delivered",
@@ -788,7 +1105,7 @@
     "heroDesc": "You close the deal. We build it behind the scenes. Your client gets a custom product with your brand, and you multiply ticket size without changing your team.",
     "heroCtaPrimary": "Become a partner",
     "heroCtaSecondary": "See how it works",
-    "highlight1Value": "+$5–20k",
+    "highlight1Value": "+$5 to 20k",
     "highlight1Label": "Extra ticket",
     "highlight1Desc": "per project you used to turn down for lack of tech.",
     "highlight2Value": "100%",

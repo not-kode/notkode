@@ -2,6 +2,16 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+// Onde os instaladores do SimbOS estão realmente hospedados: um bucket do
+// Railway (projeto simbOS), servido pelo serviço `simbos-downloads`, porque
+// bucket de lá é privado e não entrega arquivo direto ao público.
+//
+// Fica em variável porque este destino pode mudar sem que a URL pública mude, e
+// ela não pode mudar nunca: é o endereço que cada cópia instalada do app
+// consulta para saber se saiu versão nova.
+const SIMBOS_DOWNLOADS_ORIGIN =
+  process.env.SIMBOS_DOWNLOADS_ORIGIN ?? 'https://simbos-downloads-production.up.railway.app';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -15,6 +25,23 @@ const nextConfig = {
   },
   // O mapa de calor virou sub-aba de Comportamento; a rota antiga não fica 404
   // para quem tiver a aba aberta.
+  // Instaladores do SimbOS: o arquivo é buscado e devolvido por aqui, então quem
+  // baixa nunca sai de notkode.com.br. Rewrite e não redirect de propósito — o
+  // redirect jogava a pessoa num endereço `up.railway.app`, que é onde os
+  // arquivos moram mas não é a cara que o download deve ter.
+  //
+  // O caminho público não pode mudar nunca: o electron-builder assa
+  // `notkode.com.br/downloads/simbos` dentro do app, e cada cópia instalada lê
+  // latest-mac.yml / latest.yml daqui para saber se saiu versão nova. Só a
+  // origem é trocável, pela env, sem mexer no app de ninguém.
+  async rewrites() {
+    return [
+      {
+        source: '/downloads/simbos/:file*',
+        destination: `${SIMBOS_DOWNLOADS_ORIGIN}/:file*`,
+      },
+    ];
+  },
   async redirects() {
     return [
       { source: '/admin/mapa-de-calor', destination: '/admin/sessoes?ver=calor', permanent: false },
