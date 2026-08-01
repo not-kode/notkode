@@ -34,6 +34,12 @@ const nextConfig = {
   // `notkode.com.br/downloads/simbos` dentro do app, e cada cópia instalada lê
   // latest-mac.yml / latest.yml daqui para saber se saiu versão nova. Só a
   // origem é trocável, pela env, sem mexer no app de ninguém.
+  //
+  // Cuidado ao mexer na origem: ela precisa responder `Cache-Control: no-store`
+  // nas respostas parciais (206). Quando servia as parciais com o mesmo cache
+  // do arquivo inteiro, a CDN guardou um pedaço de 1 KB como se fosse o
+  // recurso completo e passou a entregar aquilo para todo mundo, com status
+  // 200. O instalador baixava truncado e nada no site indicava o problema.
   async rewrites() {
     return [
       {
