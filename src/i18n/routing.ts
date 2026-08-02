@@ -26,6 +26,9 @@ export const routing = defineRouting({
     // nome do app nos dois idiomas — é assim que as pessoas procuram por eles.
     '/apps/simbos': '/apps/simbos',
     '/apps/fala-que-eu-te-escuto': '/apps/fala-que-eu-te-escuto',
+    // Exigida pelas lojas para publicar o app, e o endereço vai dentro da ficha
+    // dele na App Store e no Google Play. Mesmo caminho nos dois idiomas.
+    '/apps/ubt/privacy': '/apps/ubt/privacy',
     '/parcerias': {
       pt: '/parcerias',
       en: '/partners',
