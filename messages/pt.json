@@ -556,16 +556,28 @@
     "cta": "Baixar",
     "ctaBeta": "Baixar beta",
     "windowsWarning": {
-      "title": "Antes de baixar: o Windows vai bloquear a primeira execução",
+      "eyebrow": "antes de baixar",
+      "title": "O Windows vai bloquear a primeira execução",
       "experimental": "A versão para Windows ainda é experimental. Ela roda bem menos que a do Mac, então pode ter problemas que lá não aparecem.",
-      "intro": "O instalador ainda não é assinado, então o Defender SmartScreen mostra a tela azul \"O Windows protegeu o seu PC\" e não deixa o programa abrir. O arquivo é nosso e está tudo certo com ele, mas você precisa liberar na mão para conseguir instalar.",
+      "intro": "O instalador ainda não é assinado, então o Windows desconfia dele e não deixa abrir na primeira vez. O arquivo é nosso e está tudo certo com ele, mas você precisa liberar na mão.",
+      "stepsTitle": "na maioria dos casos, é só isso",
       "steps": {
         "open": "Abra o arquivo que você acabou de baixar.",
         "unzip": "Extraia o .zip que você acabou de baixar e abra o programa que está dentro.",
-        "moreInfo": "Quando a tela azul aparecer, clique em \"Mais informações\".",
+        "moreInfo": "Vai aparecer uma tela azul, \"O Windows protegeu o seu PC\". Clique em \"Mais informações\".",
         "runAnyway": "Clique em \"Executar assim mesmo\" e siga a instalação normalmente."
       },
-      "note": "Isso acontece uma única vez, na primeira execução. Se o seu antivírus também reclamar, libere o arquivo por lá antes de tentar de novo.",
+      "fallbackToggle": "E se não aparecer \"Executar assim mesmo\"?",
+      "fallbackIntro": "Então o seu Windows 11 está com o Controle Inteligente de Aplicativos ligado. Ele é mais rígido que o aviso comum: bloqueia de uma vez, sem oferecer saída. Para instalar qualquer programa sem assinatura, ele precisa ser desligado.",
+      "fallbackPathLabel": "o caminho",
+      "fallbackSteps": {
+        "security": "Abra o menu Iniciar e procure por \"Segurança do Windows\".",
+        "appControl": "Na coluna da esquerda, clique em \"Controle de aplicativos e do navegador\".",
+        "settings": "Em \"Controle inteligente de aplicativos\", clique em \"Configurações do controle inteligente de aplicativos\".",
+        "turnOff": "Marque a opção \"Desativado\". Depois é só abrir o instalador de novo."
+      },
+      "fallbackWarning": "Pense bem antes: o próprio Windows avisa que, uma vez desligado, o Controle Inteligente só volta reinstalando o sistema. E ele deixa de proteger todos os programas, não só o nosso. Se você não quiser fazer isso, use a versão para Mac ou espere a gente assinar o instalador.",
+      "note": "Se o seu antivírus também reclamar, libere o arquivo por lá antes de tentar de novo.",
       "confirm": "Entendi, baixar agora",
       "cancel": "Agora não",
       "close": "Fechar aviso"
