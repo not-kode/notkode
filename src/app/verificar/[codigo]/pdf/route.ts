@@ -4,6 +4,9 @@ import { acharPorCodigo } from '@/lib/assinatura/servico';
 import { BUCKET } from '@/lib/assinatura/nucleo';
 import { documentoEmPdf, nomeDoArquivo } from '@/lib/assinatura/pdf';
 
+// Baixar e abrir o Chromium não cabe nos 10s padrão da função.
+export const maxDuration = 60;
+
 // O PDF do documento assinado. Normalmente já foi gerado na conclusão; se
 // aquela geração falhou (Chrome fora do ar, por exemplo), gera agora a partir
 // do mesmo HTML, para o link nunca ficar quebrado.

@@ -16,15 +16,26 @@ const CHROME_LOCAL = [
   '/usr/bin/chromium',
 ];
 
+/**
+ * O Chromium de serverless vem de um pacote remoto, e não de dentro do projeto.
+ *
+ * A versão que trazia o binário junto não funcionou na Vercel: os arquivos .br
+ * não são importados por módulo nenhum, então o tracing do Next não os levava
+ * para a função e ela subia sem a pasta bin. Baixar sob demanda contorna isso
+ * de vez. Precisa casar com a versão do @sparticuz/chromium-min.
+ */
+const PACK_CHROMIUM = process.env.CHROMIUM_PACK_URL
+  ?? 'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar';
+
 async function abrirNavegador(): Promise<Browser | null> {
-  // Em serverless o binário vem do @sparticuz/chromium; ele é pesado e só é
-  // carregado aqui dentro, para não entrar no bundle de quem não gera PDF.
+  // Em serverless o binário vem do pacote remoto; o import fica aqui dentro
+  // para não entrar no bundle de quem não gera PDF.
   if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
-    const chromium = (await import('@sparticuz/chromium')).default;
+    const chromium = (await import('@sparticuz/chromium-min')).default;
     return puppeteer.launch({
       args: chromium.args,
       defaultViewport: { width: 1240, height: 1754 },
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(PACK_CHROMIUM),
       headless: true,
     });
   }

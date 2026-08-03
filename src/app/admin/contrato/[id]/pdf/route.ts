@@ -4,6 +4,9 @@ import { CONTRATO_CSS, contratoHtml } from '../../documento';
 import { gerarPdf, nomeDoArquivo } from '@/lib/assinatura/pdf';
 import { paginaHtml } from '@/lib/assinatura/nucleo';
 
+// Baixar e abrir o Chromium não cabe nos 10s padrão da função.
+export const maxDuration = 60;
+
 // PDF do contrato como ele está agora, para anexar em e-mail ou guardar.
 // Protegida pelo middleware do /admin. É o mesmo documento da tela: não
 // substitui o congelado da assinatura, que é o único que o hash protege.
