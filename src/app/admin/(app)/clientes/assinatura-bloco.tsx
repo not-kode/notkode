@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { cancelarAssinatura, enviarParaAssinatura, reenviarConvite } from './assinatura-actions';
+import { cancelarAssinatura, enviarParaAssinatura, excluirAssinatura, reenviarConvite } from './assinatura-actions';
 
 export type AssinaturaResumo = {
   id: string;
@@ -39,6 +39,7 @@ export function AssinaturaBloco({
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [copiado, setCopiado] = useState<string | null>(null);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [pendente, iniciar] = useTransition();
 
   // O link individual serve para mandar por WhatsApp quando o e-mail não chega.
@@ -66,6 +67,18 @@ export function AssinaturaBloco({
       fd.set('request_id', requestId);
       const r = await cancelarAssinatura(fd);
       if (!r.ok) setErro(r.erro ?? 'Não deu para cancelar.');
+    });
+  }
+
+  function apagar(requestId: string) {
+    setErro(null); setAviso(null);
+    iniciar(async () => {
+      const fd = new FormData();
+      fd.set('request_id', requestId);
+      const r = await excluirAssinatura(fd);
+      if (!r.ok) return setErro(r.erro ?? 'Não deu para apagar.');
+      setConfirmandoExclusao(false);
+      setAviso('Pedido apagado.');
     });
   }
 
@@ -120,9 +133,33 @@ export function AssinaturaBloco({
                 cancelar
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setConfirmandoExclusao((v) => !v)}
+              className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger"
+            >
+              {confirmandoExclusao ? 'voltar' : 'apagar'}
+            </button>
           </div>
         )}
       </div>
+
+      {assinatura && confirmandoExclusao && (
+        <div className="mt-2 rounded-md border border-danger/30 bg-danger/[0.04] p-2.5">
+          <p className="text-[11px] text-danger">
+            Apagar o pedido some com o documento, com a trilha de quem assinou e com a página de verificação
+            {assinado ? '. Este já foi assinado: só faça isso se for teste.' : '.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => apagar(assinatura.id)}
+            disabled={pendente}
+            className="mt-2 rounded bg-danger px-2.5 py-1 text-[11px] font-medium text-white disabled:opacity-60"
+          >
+            Apagar mesmo assim
+          </button>
+        </div>
+      )}
 
       {assinatura && (
         <ul className="mt-2 space-y-1">

@@ -50,6 +50,37 @@ export async function cancelarAssinatura(formData: FormData): Promise<EnvioResul
   return { ok: true };
 }
 
+/**
+ * Apaga o pedido e tudo dele: signatários, trilha de auditoria e os arquivos
+ * (documento congelado, versão assinada, PDF e carimbo).
+ *
+ * Existe para limpar teste. Em documento assinado de verdade isso destrói a
+ * prova e derruba a página de verificação, por isso a tela pede confirmação.
+ */
+export async function excluirAssinatura(formData: FormData): Promise<EnvioResultado> {
+  const requestId = String(formData.get('request_id') ?? '');
+  if (!requestId) return { ok: false, erro: 'Pedido não informado.' };
+
+  const db = getSupabaseAdmin();
+  const { data: pedido } = await db
+    .from('signature_requests')
+    .select('documento_path, assinado_path, assinado_pdf_path, carimbo_path')
+    .eq('id', requestId)
+    .maybeSingle();
+
+  const caminhos = [
+    pedido?.documento_path, pedido?.assinado_path, pedido?.assinado_pdf_path, pedido?.carimbo_path,
+  ].filter((c): c is string => !!c);
+  if (caminhos.length) await db.storage.from('assinaturas').remove(caminhos);
+
+  // Signatários e eventos caem em cascata pela FK.
+  const { error } = await db.from('signature_requests').delete().eq('id', requestId);
+  if (error) return { ok: false, erro: `Não deu para apagar: ${error.message}` };
+
+  revalidatePath('/admin/clientes');
+  return { ok: true };
+}
+
 /** Reenvia o convite para quem ainda não assinou. */
 export async function reenviarConvite(formData: FormData): Promise<EnvioResultado> {
   const signerId = String(formData.get('signer_id') ?? '');

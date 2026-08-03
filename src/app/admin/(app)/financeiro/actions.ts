@@ -99,6 +99,13 @@ export async function deleteEngagement(formData: FormData): Promise<void> {
   const { data: eng } = await supabase.from('engagements').select('proposal_path').eq('id', id).single();
   if (eng?.proposal_path) await supabase.storage.from('propostas').remove([eng.proposal_path]);
 
+  // Os pedidos de assinatura caem em cascata no banco, mas os arquivos deles
+  // não: documento congelado, versão assinada, PDF e carimbo ficariam órfãos.
+  const { data: arquivos } = await supabase.storage.from('assinaturas').list(id);
+  if (arquivos?.length) {
+    await supabase.storage.from('assinaturas').remove(arquivos.map((a) => `${id}/${a.name}`));
+  }
+
   // Apaga as parcelas vinculadas antes do contrato (evita órfãos / FK).
   await supabase.from('receivables').delete().eq('engagement_id', id);
   await supabase.from('engagements').delete().eq('id', id);
