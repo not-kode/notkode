@@ -23,6 +23,10 @@ const nextConfig = {
     // Uploads de proposta (HTML/PDF) via server action — libera acima do 1MB padrão.
     serverActions: { bodySizeLimit: '10mb' },
   },
+  // O PDF do documento assinado sai de um Chrome headless. O binário do
+  // Chromium não pode passar pelo bundler: fica como dependência externa da
+  // função, carregada do node_modules em tempo de execução.
+  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium'],
   // O mapa de calor virou sub-aba de Comportamento; a rota antiga não fica 404
   // para quem tiver a aba aberta.
   // Instaladores do SimbOS: o arquivo é buscado e devolvido por aqui, então quem

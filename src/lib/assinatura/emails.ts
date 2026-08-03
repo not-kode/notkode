@@ -19,7 +19,13 @@ const BOTAO = (href: string, texto: string) => `
   <a href="${escapeHtml(href)}" style="display:inline-block;background:#3B82F6;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 20px;border-radius:8px">${escapeHtml(texto)}</a>
 </p>`;
 
-async function enviar(para: string, assunto: string, html: string, texto: string): Promise<string | null> {
+async function enviar(
+  para: string,
+  assunto: string,
+  html: string,
+  texto: string,
+  anexos?: { filename: string; content: Buffer }[],
+): Promise<string | null> {
   const chave = process.env.RESEND_API_KEY;
   if (!chave) {
     console.warn('[assinatura] RESEND_API_KEY ausente, e-mail não enviado');
@@ -28,6 +34,7 @@ async function enviar(para: string, assunto: string, html: string, texto: string
   try {
     const { error } = await new Resend(chave).emails.send({
       from: REMETENTE, to: para, subject: assunto, html: MOLDURA(html), text: texto,
+      ...(anexos?.length ? { attachments: anexos } : {}),
     });
     if (error) {
       console.error('[assinatura] falha no envio:', error.message);
@@ -111,9 +118,11 @@ ${BOTAO(link, 'Acompanhar o documento')}
   return enviar(opcoes.para, `Assinatura registrada: ${opcoes.titulo}`, html, texto);
 }
 
-/** Cópia do documento assinado, com o hash, os dados de cada assinatura e o link. */
+/** Cópia do documento assinado: PDF em anexo, hash, carimbo e quem assinou quando. */
 export function enviarCopiaFinal(opcoes: {
   para: string; nome: string; titulo: string; codigo: string; hash: string; atos: DadosDoAto[];
+  carimboEm?: string | null;
+  anexo?: { nome: string; conteudo: Uint8Array } | null;
 }): Promise<string | null> {
   const link = linkDeVerificacao(opcoes.codigo);
   const linhas = opcoes.atos.map((a) => `
@@ -130,17 +139,27 @@ export function enviarCopiaFinal(opcoes: {
 
   const html = `
 <p style="font-size:15px">Olá, ${escapeHtml(opcoes.nome)}.</p>
-<p style="font-size:15px">O documento <strong>${escapeHtml(opcoes.titulo)}</strong> foi assinado por todas as partes.</p>
+<p style="font-size:15px">O documento <strong>${escapeHtml(opcoes.titulo)}</strong> foi assinado por todas as partes.${opcoes.anexo ? ' O PDF vai em anexo.' : ''}</p>
 <table style="font-size:13px;width:100%;border-collapse:collapse;margin:18px 0">${linhas}</table>
 ${BOTAO(link, 'Ver documento assinado')}
 <p style="font-size:12.5px;color:#6b6b68">Código de verificação: <strong>${escapeHtml(opcoes.codigo)}</strong></p>
 <p style="font-size:12.5px;color:#6b6b68;word-break:break-all">Documento (SHA-256): ${escapeHtml(hashLegivel(opcoes.hash))}</p>
+${opcoes.carimboEm ? `<p style="font-size:12.5px;color:#6b6b68">Carimbo de tempo externo em ${escapeHtml(carimbo(opcoes.carimboEm))}, emitido por autoridade independente da Notkode.</p>` : ''}
 <p style="font-size:12.5px;color:#6b6b68">Guarde este e-mail: o código acima identifica o documento assinado e permite conferir, a qualquer momento, que ele não foi alterado.</p>`;
 
   const texto = `O documento "${opcoes.titulo}" foi assinado por todas as partes.\n\n`
     + opcoes.atos.map((a) => `${a.nome} (${a.email}) — ${carimbo(a.quando)} — IP ${a.ip ?? '—'}`).join('\n')
-    + `\n\nVerificação: ${link}\nCódigo: ${opcoes.codigo}\nSHA-256: ${opcoes.hash}\n\nGuarde este e-mail.`;
-  return enviar(opcoes.para, `Assinado: ${opcoes.titulo}`, html, texto);
+    + `\n\nVerificação: ${link}\nCódigo: ${opcoes.codigo}\nSHA-256: ${opcoes.hash}`
+    + (opcoes.carimboEm ? `\nCarimbo de tempo: ${carimbo(opcoes.carimboEm)}` : '')
+    + '\n\nGuarde este e-mail.';
+
+  return enviar(
+    opcoes.para,
+    `Assinado: ${opcoes.titulo}`,
+    html,
+    texto,
+    opcoes.anexo ? [{ filename: opcoes.anexo.nome, content: Buffer.from(opcoes.anexo.conteudo) }] : undefined,
+  );
 }
 
 /** Aviso interno de que alguém assinou. Só sai se houver caixa configurada. */

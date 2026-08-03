@@ -66,15 +66,41 @@ export default async function VerificarPage({ params }: { params: Promise<{ codi
         <p className="mt-2 break-all font-mono text-xs text-neutral-700">SHA-256: {hashLegivel(request.documento_hash)}</p>
         <p className="mt-2 text-sm text-neutral-600">Enviado para assinatura em {carimbo(request.created_at)}.</p>
         {request.completed_at && <p className="text-sm text-neutral-600">Concluído em {carimbo(request.completed_at)}.</p>}
+        {request.carimbo_em && (
+          <p className="mt-3 text-sm text-neutral-700">
+            <strong>Carimbo de tempo:</strong> {carimbo(request.carimbo_em)}, emitido por autoridade externa
+            {request.carimbo_autoridade ? ` (${new URL(request.carimbo_autoridade).hostname})` : ''}.
+            É o que prova a data sem depender do relógio da Notkode.
+          </p>
+        )}
+
         {assinado && (
-          <a
-            href={`/verificar/${request.codigo}/documento`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-block rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
-          >
-            Abrir documento assinado
-          </a>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <a
+              href={`/verificar/${request.codigo}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+            >
+              Baixar PDF assinado
+            </a>
+            <a
+              href={`/verificar/${request.codigo}/documento`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-label text-[10px] uppercase tracking-wider text-neutral-500 underline decoration-dotted hover:text-primary"
+            >
+              Abrir no navegador
+            </a>
+            {request.carimbo_path && (
+              <a
+                href={`/verificar/${request.codigo}/carimbo`}
+                className="font-label text-[10px] uppercase tracking-wider text-neutral-500 underline decoration-dotted hover:text-primary"
+              >
+                Baixar carimbo (.tsr)
+              </a>
+            )}
+          </div>
         )}
       </section>
 

@@ -8,6 +8,8 @@ import {
 } from './nucleo';
 import { FOLHA_CSS, folhaDeAssinaturasHtml, type SignerAssinado } from './folha';
 import { enviarCodigo, enviarConvite, enviarCopiaFinal, enviarReciboDeAssinatura, avisarInterno } from './emails';
+import { documentoEmPdf, nomeDoArquivo } from './pdf';
+import { carimbarHash } from './carimbo';
 
 const OTP_VALIDADE_MIN = 15;
 const OTP_MAX_TENTATIVAS = 5;
@@ -17,6 +19,8 @@ export type Request = {
   titulo: string | null; documento_path: string; documento_hash: string; codigo: string;
   status: string; expires_at: string | null; completed_at: string | null;
   assinado_path: string | null; assinado_hash: string | null;
+  assinado_pdf_path: string | null; carimbo_path: string | null;
+  carimbo_em: string | null; carimbo_autoridade: string | null;
 };
 export type Signer = {
   id: string; request_id: string; nome: string; email: string; documento: string | null;
@@ -308,21 +312,68 @@ async function concluir(request: Request, signatarios: Signer[]): Promise<void> 
   const finalHtml = paginaHtml(`${request.titulo ?? 'Documento'} (assinado)`, corpo + folha, FOLHA_CSS);
 
   const assinadoPath = request.documento_path.replace(/-documento\.html$/, '-assinado.html');
+  const assinadoHash = await sha256(finalHtml);
   await db.storage.from(BUCKET).upload(
     assinadoPath,
     new Blob([finalHtml], { type: 'text/html; charset=utf-8' }),
     { contentType: 'text/html; charset=utf-8', upsert: true },
   );
 
+  // PDF e carimbo são camadas extras: se qualquer um falhar, a assinatura já
+  // está registrada e o documento já existe. Por isso nenhum deles interrompe.
+  const titulo = request.titulo ?? 'Documento';
+  const [pdf, carimbo] = await Promise.all([
+    documentoEmPdf(finalHtml),
+    carimbarHash(assinadoHash),
+  ]);
+
+  let pdfPath: string | null = null;
+  if (pdf) {
+    pdfPath = request.documento_path.replace(/-documento\.html$/, '-assinado.pdf');
+    const { error } = await db.storage.from(BUCKET).upload(
+      pdfPath,
+      new Blob([pdf as BlobPart], { type: 'application/pdf' }),
+      { contentType: 'application/pdf', upsert: true },
+    );
+    if (error) {
+      console.error('[assinatura] PDF não guardado:', error.message);
+      pdfPath = null;
+    }
+  }
+
+  let carimboPath: string | null = null;
+  if (carimbo) {
+    carimboPath = request.documento_path.replace(/-documento\.html$/, '-carimbo.tsr');
+    const { error } = await db.storage.from(BUCKET).upload(
+      carimboPath,
+      new Blob([carimbo.token as BlobPart], { type: 'application/timestamp-reply' }),
+      { contentType: 'application/timestamp-reply', upsert: true },
+    );
+    if (error) {
+      console.error('[assinatura] carimbo não guardado:', error.message);
+      carimboPath = null;
+    }
+  }
+
   await db.from('signature_requests').update({
     status: 'assinado',
     completed_at: agora,
     assinado_path: assinadoPath,
-    assinado_hash: await sha256(finalHtml),
+    assinado_hash: assinadoHash,
+    assinado_pdf_path: pdfPath,
+    carimbo_path: carimboPath,
+    carimbo_em: carimboPath ? carimbo?.emitidoEm ?? null : null,
+    carimbo_autoridade: carimboPath ? carimbo?.autoridade ?? null : null,
     updated_at: agora,
   }).eq('id', request.id);
 
-  await registrarEvento(request.id, 'concluido', { detalhe: { signatarios: signatarios.length } });
+  await registrarEvento(request.id, 'concluido', {
+    detalhe: {
+      signatarios: signatarios.length,
+      pdf: !!pdfPath,
+      carimbo: carimboPath ? { em: carimbo?.emitidoEm, autoridade: carimbo?.autoridade } : null,
+    },
+  });
 
   const atos = signatarios.map((s) => ({
     nome: s.nome, email: s.email, quando: s.assinado_em, ip: s.assinado_ip, dispositivo: s.assinado_user_agent,
@@ -330,10 +381,12 @@ async function concluir(request: Request, signatarios: Signer[]): Promise<void> 
   for (const s of signatarios) {
     await enviarCopiaFinal({
       para: s.email, nome: s.nome,
-      titulo: request.titulo ?? 'Documento',
+      titulo,
       codigo: request.codigo,
       hash: request.documento_hash,
       atos,
+      carimboEm: carimbo?.emitidoEm ?? null,
+      anexo: pdf ? { nome: nomeDoArquivo(titulo), conteudo: pdf } : null,
     });
   }
   await avisarInterno(
