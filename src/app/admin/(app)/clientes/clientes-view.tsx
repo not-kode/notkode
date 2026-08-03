@@ -177,9 +177,11 @@ export function ClientesView({ clients, productLabels = {}, templates = [], mode
   modelos?: ModeloRow[];
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [excluindoId, setExcluindoId] = useState<string | null>(null);
   const [novoCliente, setNovoCliente] = useState(false);
   const [vista, setVista] = useState<'clientes' | 'modelos'>('clientes');
   const selected = clients.find((c) => c.id === selectedId) ?? null;
+  const excluindo = clients.find((c) => c.id === excluindoId) ?? null;
 
   // MRR conta só contratos ativos (pausado não fatura; churn/encerrado saíram).
   const mrrOf = (c: ClientView) => c.contratos.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
@@ -226,6 +228,7 @@ export function ClientesView({ clients, productLabels = {}, templates = [], mode
                 <th className="px-4 py-3 font-medium">Contratos</th>
                 <th className="px-4 py-3 font-medium">Vigência</th>
                 <th className="px-4 py-3 text-right font-medium">MRR</th>
+                <th className="w-10 px-2 py-3"><span className="sr-only">Excluir</span></th>
               </tr>
             </thead>
             <tbody>
@@ -248,6 +251,17 @@ export function ClientesView({ clients, productLabels = {}, templates = [], mode
                       {renewal ? <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${renewal.cls}`}>{renewal.label}</span> : <span className="text-text-muted">—</span>}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">{mrr > 0 ? <span className="font-medium text-primary">{brl(mrr)}<span className="text-text-muted">/mês</span></span> : '—'}</td>
+                    <td className="w-10 whitespace-nowrap px-2 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => setExcluindoId(c.id)}
+                        title={`Excluir ${c.name ?? 'cliente'}`}
+                        aria-label={`Excluir ${c.name ?? 'cliente'}`}
+                        className="rounded-md p-1.5 text-text-muted/60 transition-colors hover:bg-danger/[0.08] hover:text-danger"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -257,6 +271,13 @@ export function ClientesView({ clients, productLabels = {}, templates = [], mode
       )}
 
       {novoCliente && <NovoClienteDrawer onClose={() => setNovoCliente(false)} />}
+      {excluindo && (
+        <ExcluirClienteDialog
+          client={excluindo}
+          onClose={() => setExcluindoId(null)}
+          onExcluido={() => setSelectedId(null)}
+        />
+      )}
       </>)}
 
       {selected && (
@@ -329,6 +350,7 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
   onClose: () => void;
 }) {
   const [pending, start] = useTransition();
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [newContract, setNewContract] = useState(false);
   const [tab, setTab] = useState<'contratos' | 'cadastro' | 'onboarding'>(client.contratos.length > 0 ? 'contratos' : 'cadastro');
 
@@ -416,7 +438,18 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
             </div>
           )}
 
-          <ExcluirCliente client={client} onDone={onClose} />
+          <div className="border-t border-black/[0.06] pt-4">
+            <button
+              type="button"
+              onClick={() => setConfirmandoExclusao(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-danger/25 px-2.5 py-1.5 font-label text-[10px] uppercase tracking-wider text-danger transition hover:bg-danger/[0.06]"
+            >
+              <TrashIcon /> Excluir cliente
+            </button>
+          </div>
+          {confirmandoExclusao && (
+            <ExcluirClienteDialog client={client} onClose={() => setConfirmandoExclusao(false)} onExcluido={onClose} />
+          )}
         </>
       )}
 
@@ -480,13 +513,25 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
   );
 }
 
+/** Ícone de lixeira da ação de excluir cliente na lista. */
+function TrashIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
 /**
- * Excluir cliente. Some tudo: contratos, parcelas, briefings e negócios do
- * funil. Por isso pede o nome digitado, e não um "tem certeza?" — o clique
- * distraído não passa, e a tela diz de antemão o que vai embora junto.
+ * Confirmação de exclusão de cliente. Some tudo: contratos, parcelas, briefings
+ * e negócios do funil. Por isso pede o nome digitado, e não um "tem certeza?" —
+ * o clique distraído não passa, e a tela diz de antemão o que vai embora junto.
+ *
+ * É um diálogo em vez de um bloco na página porque a exclusão é chamada de dois
+ * lugares (a lixeira da lista e a ficha do cliente) e deve se comportar igual
+ * nos dois.
  */
-function ExcluirCliente({ client, onDone }: { client: ClientView; onDone: () => void }) {
-  const [aberto, setAberto] = useState(false);
+function ExcluirClienteDialog({ client, onClose, onExcluido }: { client: ClientView; onClose: () => void; onExcluido?: () => void }) {
   const [nome, setNome] = useState('');
   const [pending, start] = useTransition();
 
@@ -508,32 +553,33 @@ function ExcluirCliente({ client, onDone }: { client: ClientView; onDone: () => 
   const excluir = () => {
     const fd = new FormData();
     fd.set('id', client.id);
-    start(async () => { await deleteOrganization(fd); onDone(); });
+    start(async () => { await deleteOrganization(fd); onExcluido?.(); onClose(); });
   };
 
   return (
-    <div className="border-t border-black/[0.06] pt-4">
-      {!aberto ? (
-        <button type="button" onClick={() => setAberto(true)} className="font-label text-[10px] uppercase tracking-wider text-text-muted underline decoration-dotted transition hover:text-danger">Excluir cliente</button>
-      ) : (
-        <div className="flex flex-col gap-2 rounded-md border border-danger/30 bg-danger/[0.04] p-3">
-          <p className="text-xs font-medium text-danger">Excluir {alvo || 'este cliente'} e tudo que está pendurado nele?</p>
-          <p className="font-label text-[10px] text-text-muted">Vai junto: {itens}.{recebido > 0 && ` Inclui ${brl(recebido)} já registrados como recebidos, que somem do faturamento.`} Não dá pra desfazer.</p>
-          <input
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            className={inputCls}
-            placeholder={`Digite ${alvo} para confirmar`}
-            aria-label="Nome do cliente para confirmar a exclusão"
-          />
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={excluir} disabled={!confere || pending} className="rounded-md bg-danger px-3 py-1.5 font-label text-[10px] uppercase tracking-wider text-white transition hover:bg-danger/90 disabled:opacity-40">
-              {pending ? 'Excluindo…' : 'Excluir cliente'}
-            </button>
-            <button type="button" onClick={() => { setAberto(false); setNome(''); }} className="font-label text-[10px] text-text-muted hover:text-text-secondary">cancelar</button>
-          </div>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <button aria-label="Fechar" onClick={onClose} className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
+      <div role="dialog" aria-modal className="relative w-full max-w-[26rem] rounded-lg border border-black/[0.08] bg-white p-5 shadow-xl">
+        <h2 className="text-base font-semibold text-text-primary">Excluir {alvo || 'cliente'}?</h2>
+        <p className="mt-2 text-xs text-text-secondary">
+          Vai junto: {itens}.{recebido > 0 && ` Inclui ${brl(recebido)} já registrados como recebidos, que somem do faturamento.`} Não dá pra desfazer.
+        </p>
+        <input
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && confere && !pending) excluir(); }}
+          autoFocus
+          className={`${inputCls} mt-3`}
+          placeholder={`Digite ${alvo} para confirmar`}
+          aria-label="Nome do cliente para confirmar a exclusão"
+        />
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-md border border-black/[0.1] px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:border-black/20">Cancelar</button>
+          <button type="button" onClick={excluir} disabled={!confere || pending} className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-danger/90 disabled:opacity-40">
+            {pending ? 'Excluindo…' : 'Excluir cliente'}
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
