@@ -33,6 +33,14 @@ type BriefRow = {
   template_key: string | null; respostas: Record<string, string | string[]> | null;
 };
 type DealRow = { id: string; organization_id: string | null };
+type SigRow = {
+  id: string; engagement_id: string; codigo: string; status: string;
+  created_at: string; completed_at: string | null;
+};
+type SignerRow = {
+  id: string; request_id: string; nome: string; email: string; papel: string;
+  status: string; assinado_em: string | null;
+};
 type LeadRow = {
   deal_id: string | null; service_tag: string | null; page_origin: string | null;
   estimated_min: number | null; estimated_max: number | null; created_at: string;
@@ -76,6 +84,22 @@ export default async function ClientesPage() {
       .not('deal_id', 'is', null)
       .order('created_at', { ascending: false }),
   ]);
+
+  // Assinaturas em aberto ou concluídas, para o card do contrato mostrar em que
+  // pé está o documento. Pedido cancelado não interessa aqui.
+  const [{ data: sigData }, { data: signerData }] = await Promise.all([
+    supabase
+      .from('signature_requests')
+      .select('id, engagement_id, codigo, status, created_at, completed_at')
+      .in('status', ['enviado', 'assinado'])
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('signature_signers')
+      .select('id, request_id, nome, email, papel, status, assinado_em')
+      .order('ordem', { ascending: true }),
+  ]);
+  const sigs = (sigData ?? []) as SigRow[];
+  const signers = (signerData ?? []) as SignerRow[];
 
   const orgs = (orgData ?? []) as OrgRow[];
   const engs = (engData ?? []) as EngRow[];
@@ -154,6 +178,20 @@ export default async function ClientesPage() {
         valor: e.valor, mrr: e.mrr, start_date: e.start_date, end_date: e.end_date, notes: e.notes,
         scope: e.scope, renewal_note: e.renewal_note, client_obligations: e.client_obligations, provider_obligations: e.provider_obligations,
         proposal_path: e.proposal_path, proposal_name: e.proposal_name,
+        assinatura: (() => {
+          const s = sigs.find((x) => x.engagement_id === e.id);
+          if (!s) return null;
+          return {
+            id: s.id, codigo: s.codigo, status: s.status,
+            created_at: s.created_at, completed_at: s.completed_at,
+            signatarios: signers
+              .filter((g) => g.request_id === s.id)
+              .map((g) => ({
+                id: g.id, nome: g.nome, email: g.email, papel: g.papel,
+                status: g.status, assinado_em: g.assinado_em,
+              })),
+          };
+        })(),
         parcelas: recs
           .filter((r) => r.engagement_id === e.id)
           .map((r) => ({

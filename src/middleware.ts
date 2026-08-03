@@ -8,9 +8,12 @@ const intlMiddleware = createMiddleware(routing);
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // /onboarding e /acompanhamento são públicos (link com token) e ficam fora do
+  // Páginas abertas por link (token ou código de verificação) ficam fora do
   // esquema de locale: o next-intl redirecionaria para /pt/... e quebraria o link.
-  if (pathname.startsWith('/onboarding') || pathname.startsWith('/acompanhamento')) {
+  if (
+    pathname.startsWith('/onboarding') || pathname.startsWith('/acompanhamento')
+    || pathname.startsWith('/assinar') || pathname.startsWith('/verificar')
+  ) {
     return NextResponse.next();
   }
 

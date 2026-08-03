@@ -6,6 +6,7 @@ import { updateOrganization, updateEngagementContract, uploadProposal, removePro
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
 import { AutoSaveForm } from '../_shared/auto-save-form';
+import { AssinaturaBloco, type AssinaturaResumo } from './assinatura-bloco';
 import { NewBriefing } from '../onboarding/new-briefing';
 import { CopyLink } from '../onboarding/copy-link';
 import {
@@ -20,6 +21,7 @@ export type Contrato = {
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
   scope: string | null; renewal_note: string | null; client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
+  assinatura: AssinaturaResumo | null;
   parcelas: Parcela[];
 };
 export type ClientView = {
@@ -70,6 +72,17 @@ const SERVICE_LABELS: Record<string, string> = {
 
 // Contrato "vivo" = ainda em jogo (ativo ou pausado). Churn/encerrado saem do grupo de ativos.
 const isLive = (e: Contrato) => e.lifecycle === 'ativo' || e.lifecycle === 'pausado';
+
+// O que falta no cadastro para o contrato sair sem lacuna. Mesma régua do
+// documento em /admin/contrato/[id], avisada antes de mandar para assinatura.
+function faltamNoCadastro(c: ClientView): string[] {
+  const falta: string[] = [];
+  if (!c.legal_name) falta.push('razão social');
+  if (!c.tax_id) falta.push('CNPJ/CPF');
+  if (!c.address_street || !c.address_city) falta.push('endereço');
+  if (!c.legal_rep) falta.push('representante legal');
+  return falta;
+}
 
 // Saúde financeira do cliente a partir das parcelas de todos os contratos.
 function financeHealth(contratos: Contrato[], todayStr: string) {
@@ -364,7 +377,7 @@ function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
                   <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-primary">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Ativos ({ativos.length})
                   </p>
-                  {ativos.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
+                  {ativos.map((e) => <ContractCard key={e.id} eng={e} cliente={client} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
                 </div>
               )}
               {encerrados.length > 0 && (
@@ -372,7 +385,7 @@ function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
                   <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">
                     <span className="h-1.5 w-1.5 rounded-full bg-text-muted/50" /> Encerrados / inativos ({encerrados.length})
                   </p>
-                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
+                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} cliente={client} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
                 </div>
               )}
             </div>
@@ -383,7 +396,7 @@ function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
   );
 }
 
-function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onSaveParcela, onDeleteParcela, onChangeLifecycle, onDelete, pending }: { eng: Contrato; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onSaveParcela: (fd: FormData) => void; onDeleteParcela: (id: string) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
+function ContractCard({ eng, cliente, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onSaveParcela, onDeleteParcela, onChangeLifecycle, onDelete, pending }: { eng: Contrato; cliente: ClientView; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onSaveParcela: (fd: FormData) => void; onDeleteParcela: (id: string) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
   const isConcluded = eng.lifecycle === 'encerrado' || eng.lifecycle === 'churn';
   const isActive = eng.lifecycle === 'ativo';
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -559,6 +572,17 @@ function ContractCard({ eng, onMarkPaid, onUnmark, onConclude, onSaveDetails, on
           </form>
         )}
       </div>
+
+      <AssinaturaBloco
+        engagementId={eng.id}
+        assinatura={eng.assinatura}
+        sugestao={{
+          nome: cliente.legal_rep,
+          email: cliente.contacts.find((c) => c.email)?.email ?? null,
+          documento: cliente.legal_rep_cpf,
+        }}
+        faltamDados={faltamNoCadastro(cliente)}
+      />
 
       <div className="mt-3 border-t border-black/[0.06] pt-2.5">
         <div className="flex items-center justify-between gap-2">
