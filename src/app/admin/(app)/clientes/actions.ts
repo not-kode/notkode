@@ -82,6 +82,140 @@ export async function updateOrganization(formData: FormData): Promise<void> {
   revalidatePath('/admin/pipeline');
 }
 
+/**
+ * Cadastra um cliente na mão: empresa + contrato inicial (+ contato, se vier).
+ *
+ * O contrato não é opcional de propósito: a lista de Clientes mostra quem tem
+ * contrato, então uma empresa solta seria cadastrada e sumiria da tela. Quem só
+ * está negociando entra pelo funil, não por aqui.
+ */
+export async function createClient(formData: FormData): Promise<void> {
+  const name = String(formData.get('name') ?? '').trim();
+  if (!name) return;
+
+  const supabase = getSupabaseAdmin();
+
+  // Não duplica empresa já cadastrada (o funil pode ter criado antes).
+  const { data: existing } = await supabase
+    .from('organizations')
+    .select('id')
+    .ilike('name', name)
+    .limit(1)
+    .maybeSingle();
+
+  let orgId = existing?.id ?? null;
+  if (!orgId) {
+    const patch: Record<string, unknown> = { name };
+    for (const f of ORG_FIELDS) {
+      if (f === 'name') continue;
+      const v = formData.get(f);
+      if (v != null && String(v).trim()) patch[f] = String(v).trim();
+    }
+    const { data: org, error } = await supabase.from('organizations').insert(patch).select('id').single();
+    if (error || !org) throw new Error(`Falha ao criar cliente: ${error?.message}`);
+    orgId = org.id;
+  }
+
+  // Contato: reaproveita o fluxo de contato manual (contato + canais + vínculo).
+  const contactName = String(formData.get('contact_name') ?? '').trim();
+  const email = String(formData.get('contact_email') ?? '').trim();
+  const whatsapp = String(formData.get('contact_whatsapp') ?? '').trim();
+  if (contactName) {
+    const { data: contact } = await supabase
+      .from('contacts')
+      .insert({ name: contactName, source: 'manual', locale: 'pt' })
+      .select('id')
+      .single();
+    if (contact) {
+      const channels: { contact_id: string; kind: string; value: string; is_primary: boolean }[] = [];
+      if (email) channels.push({ contact_id: contact.id, kind: 'email', value: email, is_primary: true });
+      if (whatsapp) channels.push({ contact_id: contact.id, kind: 'whatsapp', value: whatsapp, is_primary: false });
+      if (channels.length) await supabase.from('contact_channels').insert(channels);
+      await supabase
+        .from('contact_organizations')
+        .insert({ contact_id: contact.id, organization_id: orgId, is_primary: true });
+    }
+  }
+
+  const typeRaw = String(formData.get('type') ?? 'recorrente');
+  const numero = (v: FormDataEntryValue | null) => {
+    if (v == null || v === '') return null;
+    const n = Number(String(v).replace(/\./g, '').replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  };
+
+  await supabase.from('engagements').insert({
+    organization_id: orgId,
+    title: String(formData.get('title') ?? '').trim() || 'Contrato',
+    type: typeRaw === 'pontual' ? 'pontual' : 'recorrente',
+    status: 'aguardando',
+    lifecycle: 'ativo',
+    mrr: numero(formData.get('mrr')),
+    valor: numero(formData.get('valor')),
+    start_date: String(formData.get('start_date') ?? '') || null,
+    end_date: String(formData.get('end_date') ?? '') || null,
+  });
+
+  revalidatePath('/admin/clientes');
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin');
+}
+
+/**
+ * Exclui um cliente e tudo que está pendurado nele: contratos (com parcelas,
+ * assinaturas, propostas e tarefas de projeto, que caem em cascata), briefings
+ * com seus anexos, negócios do funil e os vínculos de contato.
+ *
+ * A limpeza é explícita porque no banco quase toda FK para organizations é
+ * "on delete set null": apagar só a empresa deixaria contrato e parcela órfãos,
+ * ainda contando no financeiro sem dono nenhum. Os contatos ficam no banco (o
+ * mesmo contato pode ser lead de outra coisa); só o vínculo com a empresa cai.
+ */
+export async function deleteOrganization(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  const supabase = getSupabaseAdmin();
+
+  // Contratos: tira a proposta do storage e as parcelas antes (FK set null).
+  const { data: engs } = await supabase
+    .from('engagements')
+    .select('id, proposal_path')
+    .eq('organization_id', id);
+  const engIds = (engs ?? []).map((e) => e.id);
+  const propostas = (engs ?? []).map((e) => e.proposal_path).filter((p): p is string => !!p);
+  if (propostas.length) await supabase.storage.from('propostas').remove(propostas);
+  if (engIds.length) await supabase.from('receivables').delete().in('engagement_id', engIds);
+  if (engIds.length) await supabase.from('engagements').delete().in('id', engIds);
+
+  // Parcelas avulsas da empresa, sem contrato ligado.
+  await supabase.from('receivables').delete().eq('organization_id', id);
+
+  // Briefings: apaga os arquivos enviados e depois os registros.
+  const { data: briefs } = await supabase
+    .from('onboarding_briefings')
+    .select('id, token')
+    .eq('organization_id', id);
+  for (const b of briefs ?? []) {
+    const { data: list } = await supabase.storage.from('onboarding').list(b.token);
+    const paths = (list ?? []).filter((f) => f.name).map((f) => `${b.token}/${f.name}`);
+    if (paths.length) await supabase.storage.from('onboarding').remove(paths);
+  }
+  await supabase.from('onboarding_briefings').delete().eq('organization_id', id);
+
+  // Negócios do funil (parcelas e itens do negócio caem em cascata) e notas.
+  await supabase.from('deals').delete().eq('organization_id', id);
+  await supabase.from('notes').delete().eq('organization_id', id);
+
+  // A empresa por último: contact_organizations cai em cascata com ela.
+  await supabase.from('organizations').delete().eq('id', id);
+
+  revalidatePath('/admin/clientes');
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/pipeline');
+  revalidatePath('/admin');
+}
+
 /** Cria um contato manualmente (+ canais e vínculo de empresa, se informados). */
 export async function createContact(formData: FormData): Promise<void> {
   const name = String(formData.get('name') ?? '').trim();

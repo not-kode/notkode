@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState, useTransition, type ReactNode } from 'react';
-import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement, updateReceivable, deleteReceivable } from '../financeiro/actions';
-import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal } from './actions';
+import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement, updateReceivable, deleteReceivable, backfillMonthlyReceivables } from '../financeiro/actions';
+import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal, createClient, deleteOrganization } from './actions';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
 import { AutoSaveForm } from '../_shared/auto-save-form';
@@ -172,6 +172,7 @@ export function ClientesView({ clients, productLabels = {}, templates = [] }: {
   templates?: { key: string; label: string }[];
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [novoCliente, setNovoCliente] = useState(false);
   const selected = clients.find((c) => c.id === selectedId) ?? null;
 
   // MRR conta só contratos ativos (pausado não fatura; churn/encerrado saíram).
@@ -180,13 +181,16 @@ export function ClientesView({ clients, productLabels = {}, templates = [] }: {
 
   return (
     <div className="w-full">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Clientes</h1>
-        <p className="mt-1 text-sm text-text-muted">{clients.length} cliente{clients.length === 1 ? '' : 's'} · dados cadastrais, contratos e contatos.</p>
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Clientes</h1>
+          <p className="mt-1 text-sm text-text-muted">{clients.length} cliente{clients.length === 1 ? '' : 's'} · dados cadastrais, contratos e contatos.</p>
+        </div>
+        <button onClick={() => setNovoCliente(true)} className="rounded-md border border-black/[0.1] bg-white px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:border-primary/40 hover:text-primary">+ Cliente</button>
       </header>
 
       {clients.length === 0 ? (
-        <p className="rounded-md border border-black/[0.06] bg-white px-4 py-8 text-center text-sm text-text-muted">Nenhum cliente ainda. Ganhe um negócio no pipeline para criar um.</p>
+        <p className="rounded-md border border-black/[0.06] bg-white px-4 py-8 text-center text-sm text-text-muted">Nenhum cliente ainda. Ganhe um negócio no pipeline ou use <strong className="font-medium text-text-secondary">+ Cliente</strong> para cadastrar na mão.</p>
       ) : (
         <div className="overflow-x-auto rounded-md border border-black/[0.06] bg-white">
           <table className="w-full min-w-[640px] text-sm">
@@ -228,6 +232,8 @@ export function ClientesView({ clients, productLabels = {}, templates = [] }: {
         </div>
       )}
 
+      {novoCliente && <NovoClienteDrawer onClose={() => setNovoCliente(false)} />}
+
       {selected && (
         <ClientDrawer
           client={selected}
@@ -237,6 +243,55 @@ export function ClientesView({ clients, productLabels = {}, templates = [] }: {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Cadastro manual de cliente. O contrato inicial vem junto porque a lista de
+ * Clientes é a lista de quem tem contrato: empresa sem contrato seria cadastrada
+ * e sumiria da tela. Tudo aqui dá para ajustar depois na ficha.
+ */
+function NovoClienteDrawer({ onClose }: { onClose: () => void }) {
+  const [pending, start] = useTransition();
+
+  return (
+    <Drawer title="Novo cliente" eyebrow="Cadastro manual" onClose={onClose}>
+      <form action={(fd) => start(async () => { await createClient(fd); onClose(); })} className="flex flex-col gap-4">
+        <div>
+          <label className={labelCls}>Nome do cliente</label>
+          <input name="name" required className={inputCls} placeholder="Ex: Rede Papa" />
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-black/[0.06] pt-4">
+          <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Contato principal (opcional)</p>
+          <Field label="Nome" name="contact_name" placeholder="Ex: Vânia" />
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>E-mail</label><input name="contact_email" type="email" className={inputCls} placeholder="nome@empresa.com" /></div>
+            <div><label className={labelCls}>WhatsApp</label><input name="contact_whatsapp" className={inputCls} placeholder="(11) 99999-9999" /></div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-black/[0.06] pt-4">
+          <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Contrato inicial</p>
+          <Field label="Título" name="title" placeholder="Ex: Plano de manutenção" />
+          <div><label className={labelCls}>Tipo</label>
+            <select name="type" className={inputCls} defaultValue="recorrente"><option value="recorrente">Recorrente</option><option value="pontual">Pontual</option></select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>Mensal / MRR (R$)</label><input name="mrr" inputMode="decimal" className={inputCls} placeholder="2500" /></div>
+            <div><label className={labelCls}>Valor avulso (R$)</label><input name="valor" inputMode="decimal" className={inputCls} placeholder="650" /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>Início</label><input name="start_date" type="date" className={inputCls} /></div>
+            <div><label className={labelCls}>Fim</label><input name="end_date" type="date" className={inputCls} /></div>
+          </div>
+        </div>
+
+        <button type="submit" disabled={pending} className="self-start rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-60">
+          {pending ? 'Criando…' : 'Criar cliente'}
+        </button>
+      </form>
+    </Drawer>
   );
 }
 
@@ -333,6 +388,8 @@ function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
               </ul>
             </div>
           )}
+
+          <ExcluirCliente client={client} onDone={onClose} />
         </>
       )}
 
@@ -396,6 +453,64 @@ function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
   );
 }
 
+/**
+ * Excluir cliente. Some tudo: contratos, parcelas, briefings e negócios do
+ * funil. Por isso pede o nome digitado, e não um "tem certeza?" — o clique
+ * distraído não passa, e a tela diz de antemão o que vai embora junto.
+ */
+function ExcluirCliente({ client, onDone }: { client: ClientView; onDone: () => void }) {
+  const [aberto, setAberto] = useState(false);
+  const [nome, setNome] = useState('');
+  const [pending, start] = useTransition();
+
+  const parcelas = client.contratos.reduce((s, e) => s + e.parcelas.length, 0);
+  const recebido = client.contratos
+    .flatMap((e) => e.parcelas)
+    .filter((r) => r.status === 'recebido')
+    .reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
+  const alvo = (client.name ?? '').trim();
+  const confere = nome.trim().toLocaleLowerCase('pt-BR') === alvo.toLocaleLowerCase('pt-BR');
+
+  const itens = [
+    `${client.contratos.length} contrato${client.contratos.length === 1 ? '' : 's'}`,
+    `${parcelas} parcela${parcelas === 1 ? '' : 's'}`,
+    client.briefings.length ? `${client.briefings.length} briefing${client.briefings.length === 1 ? '' : 's'}` : null,
+    client.contacts.length ? `${client.contacts.length} vínculo${client.contacts.length === 1 ? '' : 's'} de contato` : null,
+  ].filter(Boolean).join(' · ');
+
+  const excluir = () => {
+    const fd = new FormData();
+    fd.set('id', client.id);
+    start(async () => { await deleteOrganization(fd); onDone(); });
+  };
+
+  return (
+    <div className="border-t border-black/[0.06] pt-4">
+      {!aberto ? (
+        <button type="button" onClick={() => setAberto(true)} className="font-label text-[10px] uppercase tracking-wider text-text-muted underline decoration-dotted transition hover:text-danger">Excluir cliente</button>
+      ) : (
+        <div className="flex flex-col gap-2 rounded-md border border-danger/30 bg-danger/[0.04] p-3">
+          <p className="text-xs font-medium text-danger">Excluir {alvo || 'este cliente'} e tudo que está pendurado nele?</p>
+          <p className="font-label text-[10px] text-text-muted">Vai junto: {itens}.{recebido > 0 && ` Inclui ${brl(recebido)} já registrados como recebidos, que somem do faturamento.`} Não dá pra desfazer.</p>
+          <input
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className={inputCls}
+            placeholder={`Digite ${alvo} para confirmar`}
+            aria-label="Nome do cliente para confirmar a exclusão"
+          />
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={excluir} disabled={!confere || pending} className="rounded-md bg-danger px-3 py-1.5 font-label text-[10px] uppercase tracking-wider text-white transition hover:bg-danger/90 disabled:opacity-40">
+              {pending ? 'Excluindo…' : 'Excluir cliente'}
+            </button>
+            <button type="button" onClick={() => { setAberto(false); setNome(''); }} className="font-label text-[10px] text-text-muted hover:text-text-secondary">cancelar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ContractCard({ eng, cliente, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onSaveParcela, onDeleteParcela, onChangeLifecycle, onDelete, pending }: { eng: Contrato; cliente: ClientView; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onSaveParcela: (fd: FormData) => void; onDeleteParcela: (id: string) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
   const isConcluded = eng.lifecycle === 'encerrado' || eng.lifecycle === 'churn';
   const isActive = eng.lifecycle === 'ativo';
@@ -408,6 +523,7 @@ function ContractCard({ eng, cliente, onMarkPaid, onUnmark, onConclude, onSaveDe
   const [parcelasOpen, setParcelasOpen] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [historico, setHistorico] = useState(false);
   const menuItem = 'flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-text-secondary transition-colors hover:bg-black/[0.04] hover:text-text-primary';
   const total = eng.parcelas.reduce((s, r) => s + r.amount, 0);
   const recebido = eng.parcelas.filter((r) => r.status === 'recebido').reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
@@ -449,6 +565,9 @@ function ContractCard({ eng, cliente, onMarkPaid, onUnmark, onConclude, onSaveDe
                 <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-lg border border-black/[0.08] bg-white py-1 shadow-lg">
                   <button type="button" onClick={() => { setEditingDetails(true); setEditing(false); setMenuOpen(false); }} className={menuItem}>Valores &amp; vigência</button>
                   <button type="button" onClick={() => { setEditing(true); setEditingDetails(false); setMenuOpen(false); }} className={menuItem}>Escopo &amp; cláusulas</button>
+                  {eng.type === 'recorrente' && (
+                    <button type="button" onClick={() => { setHistorico(true); setMenuOpen(false); }} className={menuItem}>Lançar histórico</button>
+                  )}
                   {!isConcluded && (
                     <form action={onConclude}>
                       <input type="hidden" name="id" value={eng.id} />
@@ -473,6 +592,8 @@ function ContractCard({ eng, cliente, onMarkPaid, onUnmark, onConclude, onSaveDe
           </span>
         </div>
       )}
+
+      {historico && <HistoricoForm eng={eng} onClose={() => setHistorico(false)} />}
 
       {/* Meta em grid com rótulos, respirando */}
       <dl className="mt-3 grid grid-cols-3 gap-3">
@@ -623,6 +744,53 @@ function ContractCard({ eng, cliente, onMarkPaid, onUnmark, onConclude, onSaveDe
         )}
       </div>
     </div>
+  );
+}
+
+/** Mês anterior a um YYYY-MM. */
+function mesAnterior(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+}
+
+/**
+ * Lança de uma vez as mensalidades de antes de o sistema entrar em uso, já
+ * baixadas. A sugestão de período vai de janeiro até o mês anterior à primeira
+ * parcela que já existe — que é exatamente o buraco no gráfico de receita.
+ */
+function HistoricoForm({ eng, onClose }: { eng: Contrato; onClose: () => void }) {
+  const [pending, start] = useTransition();
+  const primeira = eng.parcelas.map((p) => p.due_date).sort()[0] ?? null;
+  const ate = mesAnterior((primeira ?? new Date().toISOString().slice(0, 10)).slice(0, 7));
+  const de = `${ate.slice(0, 4)}-01`;
+
+  return (
+    <form
+      action={(fd) => start(async () => { await backfillMonthlyReceivables(fd); onClose(); })}
+      className="mt-3 flex flex-col gap-3 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3"
+    >
+      <input type="hidden" name="engagement_id" value={eng.id} />
+      <div>
+        <p className="text-xs font-medium text-text-primary">Lançar histórico de mensalidades</p>
+        <p className="mt-0.5 font-label text-[10px] text-text-muted">Para o que o cliente já pagava antes do sistema. Mês que já tem parcela é pulado, e a vigência recua se o histórico começar antes dela.</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><label className={labelCls}>De</label><input name="from_month" type="month" required defaultValue={de} className={inputCls} /></div>
+        <div><label className={labelCls}>Até</label><input name="to_month" type="month" required defaultValue={ate} className={inputCls} /></div>
+      </div>
+      <div>
+        <label className={labelCls}>Valor da mensalidade (R$)</label>
+        <input name="amount" inputMode="decimal" defaultValue={eng.mrr != null ? String(eng.mrr) : ''} className={inputCls} placeholder="Em branco usa o MRR do contrato" />
+      </div>
+      <label className="flex items-center gap-2 text-xs text-text-secondary">
+        <input type="checkbox" name="pago" defaultChecked className="h-3.5 w-3.5 accent-[#2F6BEA]" />
+        Já foram pagas (baixa na data do vencimento)
+      </label>
+      <div className="flex items-center gap-2">
+        <button type="submit" disabled={pending} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60">{pending ? 'Lançando…' : 'Lançar'}</button>
+        <button type="button" onClick={onClose} className="font-label text-[10px] text-text-muted hover:text-text-secondary">cancelar</button>
+      </div>
+    </form>
   );
 }
 

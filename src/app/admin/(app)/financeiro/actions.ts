@@ -301,6 +301,94 @@ export async function generateMonthlyReceivables(formData: FormData): Promise<vo
   revalidateFinance();
 }
 
+/**
+ * Lança de uma vez o histórico de mensalidades de um contrato, de um mês a
+ * outro, já com a baixa na data do próprio vencimento.
+ *
+ * Existe porque o sistema entrou em uso depois de o cliente já estar pagando: o
+ * mês a mês da Visão geral só conhece o que virou parcela, então tudo que veio
+ * antes aparecia como zero. Diferente do lançamento normal, aqui o início da
+ * vigência não barra nada — é justamente o passado que ele não cobre; se o
+ * histórico começa antes do que está cadastrado, a vigência recua junto.
+ *
+ * Mês que já tem parcela do contrato é pulado, então rodar de novo não duplica.
+ */
+export async function backfillMonthlyReceivables(formData: FormData): Promise<void> {
+  const id = String(formData.get('engagement_id') ?? '');
+  const from = String(formData.get('from_month') ?? '');
+  const to = String(formData.get('to_month') ?? '');
+  if (!id || !/^\d{4}-\d{2}$/.test(from) || !/^\d{4}-\d{2}$/.test(to) || from > to) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data: eng } = await supabase
+    .from('engagements')
+    .select('id, mrr, start_date, organization_id')
+    .eq('id', id)
+    .single();
+  if (!eng) return;
+
+  const amount = num(formData.get('amount')) ?? eng.mrr;
+  if (amount == null || amount <= 0) return;
+  const darBaixa = String(formData.get('pago') ?? '') === 'on';
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  const { data: recData } = await supabase
+    .from('receivables')
+    .select('due_date')
+    .eq('engagement_id', id);
+  const dues = (recData ?? []).map((r) => r.due_date as string);
+  const jaTem = new Set(dues.map((d) => d.slice(0, 7)));
+
+  // Dia da cobrança: o mesmo das parcelas que já existem; sem histórico, o dia
+  // do início da vigência; sem nada disso, dia 10 (o padrão da casa).
+  const diaRef = Number((dues.slice().sort()[0] ?? eng.start_date ?? '')?.slice(8, 10));
+  const dia = diaRef >= 1 && diaRef <= 31 ? diaRef : 10;
+
+  const meses: string[] = [];
+  for (let m = from; m <= to && meses.length <= 60; m = proximoMes(m)) meses.push(m);
+
+  const novas = meses
+    .filter((m) => !jaTem.has(m))
+    .map((m) => {
+      const [y, mm] = m.split('-').map(Number);
+      const ultimoDia = new Date(Date.UTC(y, mm, 0)).getUTCDate();
+      const due_date = `${m}-${String(Math.min(dia, ultimoDia)).padStart(2, '0')}`;
+      // Baixa só no que já venceu: parcela do mês que vem não pode nascer paga.
+      const pago = darBaixa && due_date <= hoje;
+      return {
+        description: monthlyDescription(m),
+        amount,
+        due_date,
+        engagement_id: id,
+        organization_id: eng.organization_id,
+        status: pago ? 'recebido' : 'pendente',
+        paid_at: pago ? due_date : null,
+        paid_amount: pago ? amount : null,
+      };
+    });
+  if (novas.length === 0) return;
+
+  await supabase.from('receivables').insert(novas);
+
+  // A vigência acompanha o histórico: sem isso o contrato diria que começou
+  // depois de parcelas que ele mesmo acabou de gerar.
+  const primeiro = novas[0].due_date;
+  if (!eng.start_date || primeiro < eng.start_date) {
+    await supabase
+      .from('engagements')
+      .update({ start_date: primeiro, updated_at: new Date().toISOString() })
+      .eq('id', id);
+  }
+
+  revalidateFinance();
+}
+
+/** Mês seguinte de um YYYY-MM. */
+function proximoMes(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+}
+
 /** Exclui uma parcela. */
 export async function deleteReceivable(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
