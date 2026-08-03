@@ -554,7 +554,22 @@
     "recommendedForYou": "recomendado pra você",
     "beta": "beta",
     "cta": "Baixar",
-    "ctaBeta": "Baixar beta"
+    "ctaBeta": "Baixar beta",
+    "windowsWarning": {
+      "title": "Antes de baixar: o Windows vai bloquear a primeira execução",
+      "experimental": "A versão para Windows ainda é experimental. Ela roda bem menos que a do Mac, então pode ter problemas que lá não aparecem.",
+      "intro": "O instalador ainda não é assinado, então o Defender SmartScreen mostra a tela azul \"O Windows protegeu o seu PC\" e não deixa o programa abrir. O arquivo é nosso e está tudo certo com ele, mas você precisa liberar na mão para conseguir instalar.",
+      "steps": {
+        "open": "Abra o arquivo que você acabou de baixar.",
+        "unzip": "Extraia o .zip que você acabou de baixar e abra o programa que está dentro.",
+        "moreInfo": "Quando a tela azul aparecer, clique em \"Mais informações\".",
+        "runAnyway": "Clique em \"Executar assim mesmo\" e siga a instalação normalmente."
+      },
+      "note": "Isso acontece uma única vez, na primeira execução. Se o seu antivírus também reclamar, libere o arquivo por lá antes de tentar de novo.",
+      "confirm": "Entendi, baixar agora",
+      "cancel": "Agora não",
+      "close": "Fechar aviso"
+    }
   },
   "AppFala": {
     "metaTitle": "Fala que eu te escuto | Ditado por voz grátis e offline",

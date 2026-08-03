@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Download, Apple, Monitor } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
+import { WindowsSecurityDialog } from '@/components/apps/windows-security-dialog';
 import type { AppDownload, DownloadTarget } from '@/data/downloads';
 
 /**
@@ -48,6 +49,7 @@ export function DownloadPicker({ downloads, namespace }: DownloadPickerProps) {
   const t = useTranslations(namespace);
   const tc = useTranslations('Downloads');
   const [detected, setDetected] = useState<DownloadTarget | null>(null);
+  const [warning, setWarning] = useState<AppDownload | null>(null);
 
   // Só depois da montagem: no servidor não existe navigator, e adivinhar no HTML
   // inicial faria o destaque piscar no lugar errado até a hidratação.
@@ -65,6 +67,21 @@ export function DownloadPicker({ downloads, namespace }: DownloadPickerProps) {
         {downloads.map((d, i) => {
           const Icon = ICON[d.target];
           const isPick = detected === d.target;
+          // No Windows o clique não baixa: abre o aviso do SmartScreen, e o
+          // download sai de lá. Ver windows-security-dialog.tsx.
+          const isWindows = d.target === 'windows';
+          const ctaLabel = `download/${namespace}/${d.target}`;
+          const btnClass =
+            'inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-bricolage text-[13px] font-bold uppercase tracking-wide transition-all duration-200 hover:-translate-y-0.5';
+          const btnStyle = isPick
+            ? { background: '#3B82F6', color: '#fff' }
+            : { background: 'rgba(25,25,24,0.05)', color: 'hsl(60 2% 10%)' };
+          const btnContent = (
+            <>
+              <Download className="w-4 h-4" strokeWidth={2} />
+              {d.beta ? tc('ctaBeta') : tc('cta')}
+            </>
+          );
 
           return (
             <Reveal key={d.target} delay={i * 90}>
@@ -104,19 +121,21 @@ export function DownloadPicker({ downloads, namespace }: DownloadPickerProps) {
                   {t(`downloadNotes.${d.target}`)}
                 </p>
 
-                <a
-                  href={d.url}
-                  data-cta={`download/${namespace}/${d.target}`}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-bricolage text-[13px] font-bold uppercase tracking-wide transition-all duration-200 hover:-translate-y-0.5"
-                  style={
-                    isPick
-                      ? { background: '#3B82F6', color: '#fff' }
-                      : { background: 'rgba(25,25,24,0.05)', color: 'hsl(60 2% 10%)' }
-                  }
-                >
-                  <Download className="w-4 h-4" strokeWidth={2} />
-                  {d.beta ? tc('ctaBeta') : tc('cta')}
-                </a>
+                {isWindows ? (
+                  <button
+                    type="button"
+                    onClick={() => setWarning(d)}
+                    data-cta={ctaLabel}
+                    className={btnClass}
+                    style={btnStyle}
+                  >
+                    {btnContent}
+                  </button>
+                ) : (
+                  <a href={d.url} data-cta={ctaLabel} className={btnClass} style={btnStyle}>
+                    {btnContent}
+                  </a>
+                )}
 
                 <span className="font-mono text-[11px] text-text-secondary mt-3">
                   {d.format} · {d.size} · {d.requirement}
@@ -126,6 +145,14 @@ export function DownloadPicker({ downloads, namespace }: DownloadPickerProps) {
           );
         })}
       </div>
+
+      <WindowsSecurityDialog
+        open={warning !== null}
+        onClose={() => setWarning(null)}
+        href={warning?.url ?? ''}
+        cta={`download/${namespace}/windows/confirm`}
+        zipped={warning?.format === '.zip'}
+      />
     </>
   );
 }

@@ -554,7 +554,22 @@
     "recommendedForYou": "recommended for you",
     "beta": "beta",
     "cta": "Download",
-    "ctaBeta": "Download beta"
+    "ctaBeta": "Download beta",
+    "windowsWarning": {
+      "title": "Before you download: Windows will block the first run",
+      "experimental": "The Windows version is still experimental. It gets far less use than the Mac one, so it may have problems that never show up there.",
+      "intro": "The installer is not signed yet, so Defender SmartScreen shows the blue \"Windows protected your PC\" screen and refuses to open the program. The file is ours and there is nothing wrong with it, but you do have to let it through by hand to install.",
+      "steps": {
+        "open": "Open the file you just downloaded.",
+        "unzip": "Unzip the file you just downloaded and open the program inside.",
+        "moreInfo": "When the blue screen shows up, click \"More info\".",
+        "runAnyway": "Click \"Run anyway\" and go through the installer as usual."
+      },
+      "note": "This happens only once, on the first run. If your antivirus complains too, allow the file there before trying again.",
+      "confirm": "Got it, download now",
+      "cancel": "Not now",
+      "close": "Close warning"
+    }
   },
   "AppFala": {
     "metaTitle": "Fala que eu te escuto | Free, offline voice dictation",
