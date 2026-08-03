@@ -10,9 +10,9 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   const dados = await carregarContrato(id);
   if (!dados) notFound();
 
-  const { eng, parcelas } = dados;
+  const { eng, parcelas, modelo } = dados;
   const missing = dadosQueFaltam(eng.organizations);
-  const html = contratoHtml({ eng, parcelas, dataDoDocumento: dataPorExtenso() });
+  const html = contratoHtml({ eng, parcelas, modelo, dataDoDocumento: dataPorExtenso() });
 
   return (
     <div className="doc">

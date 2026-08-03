@@ -8,6 +8,7 @@
 // divergir do que a gente vê, então o custo do template cru compensa.
 
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS, obligationLines } from './defaults';
+import { MODELO_DE_FABRICA, type Bloco, type Modelo } from './modelo';
 
 // CONTRATADA — dados fixos da Notkode.
 export const CONTRATADA = {
@@ -85,64 +86,164 @@ export function dadosQueFaltam(org: Eng['organizations']): string[] {
   return missing;
 }
 
-const clausula = (titulo: string, corpo: string) =>
-  `<section class="clausula"><h2>${esc(titulo)}</h2>${corpo}</section>`;
+const ORDINAIS = [
+  '', 'Primeira', 'Segunda', 'Terceira', 'Quarta', 'Quinta', 'Sexta', 'Sétima', 'Oitava', 'Nona',
+  'Décima', 'Décima Primeira', 'Décima Segunda', 'Décima Terceira', 'Décima Quarta', 'Décima Quinta',
+  'Décima Sexta', 'Décima Sétima', 'Décima Oitava', 'Décima Nona', 'Vigésima',
+];
+
+const clausula = (numero: number, titulo: string, itens: string[]) => {
+  const ordinal = ORDINAIS[numero] ? `Cláusula ${ORDINAIS[numero]} – ` : `Cláusula ${numero} – `;
+  const corpo = itens.map((t, i) => `<div class="item">${numero}.${i + 1}. ${t}</div>`).join('');
+  return `<section class="clausula"><h2>${esc(ordinal)}${esc(titulo)}</h2>${corpo}</section>`;
+};
+
+/**
+ * Marcadores que o texto livre do modelo pode usar. O que não for reconhecido
+ * fica como está, para o erro aparecer no documento em vez de sumir calado.
+ */
+export function marcadores(eng: Eng, parcelas: Rec[]): Record<string, string> {
+  const org = eng.organizations;
+  const meses = monthsBetween(eng.start_date, eng.end_date);
+  const total = parcelas.reduce((s, r) => s + r.amount, 0);
+  return {
+    cliente: org?.legal_name ?? org?.name ?? '[RAZÃO SOCIAL]',
+    cliente_cnpj: org?.tax_id ?? '[CNPJ]',
+    cliente_endereco: (org && enderecoOrg(org)) || '[ENDEREÇO]',
+    cliente_representante: org?.legal_rep ?? '[REPRESENTANTE]',
+    contratada: CONTRATADA.razao,
+    contratada_cnpj: CONTRATADA.cnpj,
+    contrato: eng.title ?? '',
+    escopo: eng.scope ?? '',
+    valor_mensal: eng.mrr ? brl(eng.mrr) : '',
+    valor_avulso: eng.valor ? brl(eng.valor) : '',
+    valor_total: total ? brl(total) : '',
+    vigencia_meses: meses ? String(meses) : '',
+    inicio: fmtDate(eng.start_date),
+    fim: fmtDate(eng.end_date),
+  };
+}
+
+/** Troca {{marcador}} pelo valor e escapa o resto. */
+function aplicarMarcadores(texto: string, valores: Record<string, string>): string {
+  return esc(texto).replace(/\{\{\s*([a-z_]+)\s*\}\}/gi, (inteiro, chave: string) => {
+    const valor = valores[chave.toLowerCase()];
+    return valor === undefined ? inteiro : esc(valor);
+  });
+}
+
+/** Cada linha não vazia do texto livre vira um item numerado da cláusula. */
+const linhasDoTexto = (texto: string, valores: Record<string, string>): string[] =>
+  texto.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => aplicarMarcadores(l, valores));
 
 /**
  * O miolo do contrato (o que vai dentro de `<div class="doc">`).
- * `dataDoDocumento` é a data por extenso do fecho; `assinaturaEletronica`
- * acrescenta a cláusula em que as partes aceitam assinar pelo sistema.
+ *
+ * As cláusulas vêm do modelo; sem modelo, cai no de fábrica. `dataDoDocumento`
+ * é a data por extenso do fecho, e `assinaturaEletronica` liga o bloco de
+ * assinatura pelo sistema (que fica de fora do contrato impresso).
  */
 export function contratoHtml({
   eng,
   parcelas,
   dataDoDocumento,
   assinaturaEletronica = false,
+  modelo = MODELO_DE_FABRICA,
 }: {
   eng: Eng;
   parcelas: Rec[];
   dataDoDocumento: string;
   assinaturaEletronica?: boolean;
+  modelo?: Modelo;
 }): string {
   const org = eng.organizations;
   const meses = monthsBetween(eng.start_date, eng.end_date);
   const totalParcelas = parcelas.reduce((s, r) => s + r.amount, 0);
   const hasMrr = (eng.mrr ?? 0) > 0;
+  const valores = marcadores(eng, parcelas);
 
-  const obrigContratante = obligationLines(eng.client_obligations, DEFAULT_CLIENT_OBLIGATIONS);
-  const obrigContratada = obligationLines(eng.provider_obligations, DEFAULT_PROVIDER_OBLIGATIONS);
+  // ── Blocos automáticos ────────────────────────────────────────────────
+  const objeto = (): string[] => {
+    const itens = [aplicarMarcadores(eng.scope ?? modelo.escopo_padrao ?? 'O presente contrato tem por objeto a prestação dos serviços descritos abaixo, conforme escopo acordado entre as partes.', valores)];
+    if (eng.proposal_path) {
+      itens.push('O escopo detalhado dos serviços consta na Proposta Comercial anexa, que integra este contrato como <strong>Anexo I</strong>.');
+    }
+    return itens;
+  };
 
-  // Cláusula de pagamento montada por blocos: recorrente (MRR) e pontual (valor
-  // avulso) aparecem separados; depois o cronograma das parcelas reais.
-  const valorPontual = eng.valor ?? 0;
-  const diaVenc = diaDoVencimento(parcelas, eng.start_date);
-  const pgto: string[] = [];
-  if (hasMrr) {
-    pgto.push(
-      `Pela prestação dos <strong>serviços recorrentes</strong>, a CONTRATANTE pagará o valor mensal de <strong>${esc(brl(eng.mrr!))}</strong>`
-      + (diaVenc ? `, vencível todo dia ${esc(diaVenc)} de cada mês` : '')
-      + (meses ? `, totalizando <strong>${esc(brl(eng.mrr! * meses))}</strong> ao longo dos ${meses} meses de vigência` : '')
-      + '.',
-    );
-  }
-  if (valorPontual > 0) {
-    pgto.push(
-      `Pela prestação dos <strong>serviços pontuais</strong>, a CONTRATANTE pagará o valor de <strong>${esc(brl(valorPontual))}</strong>`
-      + (hasMrr ? ', em parcela única devida junto da primeira mensalidade' : '') + '.',
-    );
-  }
-  if (!hasMrr && valorPontual === 0 && parcelas.length > 0) {
-    pgto.push(`O valor total dos serviços é de <strong>${esc(brl(totalParcelas))}</strong>.`);
-  }
-  if (parcelas.length > 0) {
-    const itens = parcelas
-      .map((r, i) => `<li>${esc(r.description ?? `Parcela ${i + 1}`)} — <strong>${esc(brl(r.amount))}</strong>, com vencimento em ${esc(fmtDate(r.due_date))}.</li>`)
-      .join('');
-    pgto.push(`O pagamento observará o seguinte cronograma:<ul class="parcelas">${itens}</ul>`);
-  }
-  pgto.push('Os pagamentos serão realizados via PIX, para a chave a ser informada pela CONTRATADA.');
-  pgto.push('Em caso de atraso no pagamento, será cobrada multa de 10% (dez por cento) sobre o valor devido, acrescida de juros de mora de 1% (um por cento) ao mês.');
-  pgto.push('<strong>Custos de terceiros:</strong> eventuais custos de uso de APIs, integrações e modelos de IA de provedores terceiros, quando aplicáveis ao escopo contratado, são de responsabilidade da CONTRATANTE, cobrados diretamente pelos respectivos provedores, e não estão inclusos no valor deste contrato.');
+  const pagamento = (): string[] => {
+    const valorPontual = eng.valor ?? 0;
+    const diaVenc = diaDoVencimento(parcelas, eng.start_date);
+    const itens: string[] = [];
+    if (hasMrr) {
+      itens.push(
+        `Pela prestação dos <strong>serviços recorrentes</strong>, a CONTRATANTE pagará o valor mensal de <strong>${esc(brl(eng.mrr!))}</strong>`
+        + (diaVenc ? `, vencível todo dia ${esc(diaVenc)} de cada mês` : '')
+        + (meses ? `, totalizando <strong>${esc(brl(eng.mrr! * meses))}</strong> ao longo dos ${meses} meses de vigência` : '')
+        + '.',
+      );
+    }
+    if (valorPontual > 0) {
+      itens.push(
+        `Pela prestação dos <strong>serviços pontuais</strong>, a CONTRATANTE pagará o valor de <strong>${esc(brl(valorPontual))}</strong>`
+        + (hasMrr ? ', em parcela única devida junto da primeira mensalidade' : '') + '.',
+      );
+    }
+    if (!hasMrr && valorPontual === 0 && parcelas.length > 0) {
+      itens.push(`O valor total dos serviços é de <strong>${esc(brl(totalParcelas))}</strong>.`);
+    }
+    if (parcelas.length > 0) {
+      const linhas = parcelas
+        .map((r, i) => `<li>${esc(r.description ?? `Parcela ${i + 1}`)} — <strong>${esc(brl(r.amount))}</strong>, com vencimento em ${esc(fmtDate(r.due_date))}.</li>`)
+        .join('');
+      itens.push(`O pagamento observará o seguinte cronograma:<ul class="parcelas">${linhas}</ul>`);
+    }
+    itens.push('Os pagamentos serão realizados via PIX, para a chave a ser informada pela CONTRATADA.');
+    itens.push('Em caso de atraso no pagamento, será cobrada multa de 10% (dez por cento) sobre o valor devido, acrescida de juros de mora de 1% (um por cento) ao mês.');
+    itens.push('<strong>Custos de terceiros:</strong> eventuais custos de uso de APIs, integrações e modelos de IA de provedores terceiros, quando aplicáveis ao escopo contratado, são de responsabilidade da CONTRATANTE, cobrados diretamente pelos respectivos provedores, e não estão inclusos no valor deste contrato.');
+    return itens;
+  };
+
+  const vigencia = (): string[] => {
+    const itens = [
+      `Este contrato tem vigência ${meses ? `de <strong>${meses} meses</strong>` : 'conforme acordado entre as partes'}`
+      + `${eng.start_date ? `, com início em ${esc(fmtDate(eng.start_date))}` : ', com início na data de sua assinatura'}`
+      + `${eng.end_date ? ` e término em ${esc(fmtDate(eng.end_date))}` : ''}.`,
+    ];
+    if (eng.renewal_note) itens.push(esc(eng.renewal_note));
+    itens.push('Os prazos e entregas previstos poderão ser prorrogados por acordo mútuo, mediante formalização de Termo Aditivo, especialmente em caso de atraso no fornecimento de acessos ou materiais pela CONTRATANTE.');
+    return itens;
+  };
+
+  const assinaturaEletronicaItens = (): string[] => [
+    'As partes declaram aceitar a assinatura deste contrato por meio eletrônico, nos termos do art. 10, § 2º, da Medida Provisória nº 2.200-2/2001 e da Lei nº 14.063/2020, reconhecendo sua validade e eficácia entre si, ainda que não utilizado certificado digital emitido no âmbito da ICP-Brasil.',
+    'A autoria da assinatura é comprovada pelo envio de código de verificação ao endereço eletrônico de cada signatário e pelo registro, na plataforma da CONTRATADA, da data, da hora, do endereço IP e do dispositivo utilizados no ato.',
+    'A integridade do documento é assegurada por código de resumo criptográfico (SHA-256) calculado no momento do envio para assinatura, disponível, junto da relação de signatários, na página pública de verificação indicada na página de assinaturas deste instrumento.',
+  ];
+
+  const itensDoBloco = (b: Bloco): string[] => {
+    switch (b.tipo) {
+      case 'objeto': return objeto();
+      case 'obrigacoes_cliente': return obligationLines(eng.client_obligations, DEFAULT_CLIENT_OBLIGATIONS).map(esc);
+      case 'obrigacoes_contratada': return obligationLines(eng.provider_obligations, DEFAULT_PROVIDER_OBLIGATIONS).map(esc);
+      case 'pagamento': return pagamento();
+      case 'vigencia': return vigencia();
+      case 'assinatura_eletronica': return assinaturaEletronicaItens();
+      case 'foro': return ['As partes elegem o foro da Comarca de São Paulo – SP para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.'];
+      case 'texto': return linhasDoTexto(b.texto ?? '', valores);
+    }
+  };
+
+  const blocos = (modelo.clausulas.length ? modelo.clausulas : MODELO_DE_FABRICA.clausulas)
+    // A cláusula de assinatura eletrônica só faz sentido no documento que vai
+    // ser assinado pelo sistema; no impresso ela sairia mentindo.
+    .filter((b) => b.tipo !== 'assinatura_eletronica' || assinaturaEletronica);
+
+  const clausulas = blocos
+    .map((b) => ({ bloco: b, itens: itensDoBloco(b) }))
+    .filter((c) => c.itens.length > 0)
+    .map((c, i) => clausula(i + 1, c.bloco.titulo, c.itens))
+    .join('\n  ');
 
   const cabecalho = `
   <header class="head">
@@ -157,51 +258,6 @@ export function contratoHtml({
     <p><strong>CONTRATADA:</strong> ${esc(CONTRATADA.razao)} (Nome Fantasia: ${esc(CONTRATADA.fantasia)}), pessoa jurídica de direito privado, inscrita no CNPJ sob nº ${esc(CONTRATADA.cnpj)}, estabelecida na ${esc(CONTRATADA.endereco)}, neste ato representada por seu representante legal infra assinado.</p>
     <p class="lead">As partes, de comum acordo, celebram o presente <strong>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</strong>, conforme as cláusulas e condições a seguir estipuladas:</p>
   </section>`;
-
-  const objeto = clausula('Cláusula Primeira – Do Objeto',
-    `<p>${esc(eng.scope ?? 'O presente contrato tem por objeto a prestação dos serviços descritos abaixo, conforme escopo acordado entre as partes.')}</p>`
-    + (eng.proposal_path ? '<p>O escopo detalhado dos serviços consta na Proposta Comercial anexa, que integra este contrato como <strong>Anexo I</strong>.</p>' : ''),
-  );
-
-  const obrigacoes = (numero: number, titulo: string, linhas: string[]) =>
-    clausula(titulo, linhas.map((l, i) => `<p>${numero}.${i + 1}. ${esc(l)}</p>`).join(''));
-
-  const pagamento = clausula('Cláusula Quarta – Do Valor e Condições de Pagamento',
-    pgto.map((n, i) => `<div class="item">4.${i + 1}. ${n}</div>`).join(''),
-  );
-
-  const prazo = clausula('Cláusula Quinta – Do Prazo Contratual e Renovação',
-    `<p>5.1. Este contrato tem vigência ${meses ? `de <strong>${meses} meses</strong>` : 'conforme acordado entre as partes'}`
-    + `${eng.start_date ? `, com início em ${esc(fmtDate(eng.start_date))}` : ', com início na data de sua assinatura'}`
-    + `${eng.end_date ? ` e término em ${esc(fmtDate(eng.end_date))}` : ''}.</p>`
-    + (eng.renewal_note ? `<p>5.2. ${esc(eng.renewal_note)}</p>` : '')
-    + `<p>${eng.renewal_note ? '5.3.' : '5.2.'} Os prazos e entregas previstos poderão ser prorrogados por acordo mútuo, mediante formalização de Termo Aditivo, especialmente em caso de atraso no fornecimento de acessos ou materiais pela CONTRATANTE.</p>`,
-  );
-
-  const rescisao = clausula('Cláusula Sexta – Da Rescisão e Multa',
-    '<p>6.1. Qualquer das partes poderá rescindir o presente contrato mediante notificação prévia por escrito com antecedência mínima de 30 (trinta) dias.</p>'
-    + (hasMrr
-      ? '<p>6.2. Em caso de rescisão antecipada por iniciativa da CONTRATANTE, antes do término da vigência, será devida multa compensatória equivalente a 3 (três) mensalidades do valor vigente, a título de ressarcimento pelos serviços prestados e investimentos realizados.</p>'
-      : '<p>6.2. Em caso de rescisão antecipada por iniciativa da CONTRATANTE, serão devidos os valores correspondentes aos serviços já executados até a data da rescisão, acrescidos das despesas comprovadamente incorridas pela CONTRATADA.</p>')
-    + '<p>6.3. Em caso de inadimplência superior a 30 (trinta) dias, a CONTRATADA poderá suspender a prestação dos serviços e o acesso aos entregáveis e rescindir o contrato, mantendo o direito ao recebimento dos valores em aberto acrescidos das penalidades previstas na Cláusula Quarta.</p>'
-    + '<p>6.4. Se a CONTRATANTE não fornecer os acessos e informações necessários em tempo hábil, os prazos serão ajustados proporcionalmente, sem penalidade para a CONTRATADA.</p>',
-  );
-
-  const propriedade = clausula('Cláusula Sétima – Da Propriedade Intelectual e Titularidade dos Dados',
-    '<p>7.1. Após o pagamento integral dos valores devidos, a CONTRATANTE terá propriedade exclusiva dos entregáveis produzidos no âmbito deste contrato, incluindo, quando aplicável, código-fonte, configurações e materiais desenvolvidos.</p>'
-    + '<p>7.2. Todos os dados, leads, históricos de atendimento e informações geradas no âmbito dos serviços são de propriedade exclusiva da CONTRATANTE, que poderá exportá-los a qualquer momento.</p>'
-    + '<p>7.3. A CONTRATADA se compromete a manter sigilo sobre todas as informações confidenciais da CONTRATANTE a que tiver acesso em razão deste contrato.</p>',
-  );
-
-  const eletronica = assinaturaEletronica ? clausula('Cláusula Oitava – Da Assinatura Eletrônica',
-    '<p>8.1. As partes declaram aceitar a assinatura deste contrato por meio eletrônico, nos termos do art. 10, § 2º, da Medida Provisória nº 2.200-2/2001 e da Lei nº 14.063/2020, reconhecendo sua validade e eficácia entre si, ainda que não utilizado certificado digital emitido no âmbito da ICP-Brasil.</p>'
-    + '<p>8.2. A autoria da assinatura é comprovada pelo envio de código de verificação ao endereço eletrônico de cada signatário e pelo registro, na plataforma da CONTRATADA, da data, da hora, do endereço IP e do dispositivo utilizados no ato.</p>'
-    + '<p>8.3. A integridade do documento é assegurada por código de resumo criptográfico (SHA-256) calculado no momento do envio para assinatura, disponível, junto da relação de signatários, na página pública de verificação indicada na página de assinaturas deste instrumento.</p>',
-  ) : '';
-
-  const foro = clausula(assinaturaEletronica ? 'Cláusula Nona – Do Foro' : 'Cláusula Oitava – Do Foro',
-    `<p>${assinaturaEletronica ? '9.1.' : '8.1.'} As partes elegem o foro da Comarca de São Paulo – SP para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.</p>`,
-  );
 
   const anexo = eng.proposal_path
     ? '<div class="anexo"><p><strong>Anexo I – Proposta Comercial.</strong> A Proposta Comercial anexa faz parte integrante deste contrato, detalhando o escopo dos serviços contratados.</p></div>'
@@ -228,15 +284,7 @@ export function contratoHtml({
   return `<main class="page">
   ${cabecalho}
   ${partes}
-  ${objeto}
-  ${obrigacoes(2, 'Cláusula Segunda – Das Obrigações da Contratante', obrigContratante)}
-  ${obrigacoes(3, 'Cláusula Terceira – Das Obrigações da Contratada', obrigContratada)}
-  ${pagamento}
-  ${prazo}
-  ${rescisao}
-  ${propriedade}
-  ${eletronica}
-  ${foro}
+  ${clausulas}
   ${anexo}
   <p class="close">E por estarem assim justos e contratados, as partes assinam o presente instrumento.</p>
   <p class="local">São Paulo, ${esc(dataDoDocumento)}.</p>
@@ -281,3 +329,4 @@ export const CONTRATO_CSS = `
     .no-print { display: none !important; }
   }
 `;
+

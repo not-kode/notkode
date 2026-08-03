@@ -7,7 +7,7 @@ import {
   registrarEvento, sha256, tokenSecreto, type Papel,
 } from './nucleo';
 import { FOLHA_CSS, folhaDeAssinaturasHtml, type SignerAssinado } from './folha';
-import { enviarCodigo, enviarConvite, enviarCopiaFinal, avisarInterno } from './emails';
+import { enviarCodigo, enviarConvite, enviarCopiaFinal, enviarReciboDeAssinatura, avisarInterno } from './emails';
 
 const OTP_VALIDADE_MIN = 15;
 const OTP_MAX_TENTATIVAS = 5;
@@ -256,6 +256,25 @@ export async function assinar(opcoes: {
     .from('signature_signers').select('*').eq('request_id', request.id).order('ordem');
   const pendentes = ((todos ?? []) as Signer[]).filter((s) => s.status !== 'assinado');
 
+  // Recibo na hora para quem assinou: entre a primeira assinatura e a última
+  // pode levar dias, e o registro do ato precisa chegar na mesma hora.
+  await enviarReciboDeAssinatura({
+    para: signer.email,
+    nome: signer.nome,
+    titulo: request.titulo ?? 'Documento',
+    codigo: request.codigo,
+    hash: request.documento_hash,
+    quando: agora,
+    ip: opcoes.ip ?? null,
+    dispositivo: opcoes.userAgent ?? null,
+    faltam: pendentes.length,
+  });
+  await avisarInterno(
+    `Assinou: ${signer.nome} · ${request.titulo ?? 'Documento'}`,
+    `${signer.nome} (${signer.email}) assinou em ${agora}, IP ${opcoes.ip ?? '—'}. `
+    + (pendentes.length ? `Faltam ${pendentes.length}.` : 'Era o último signatário.'),
+  );
+
   if (pendentes.length === 0) await concluir(request, (todos ?? []) as Signer[]);
 
   return { ok: true, codigoVerificacao: request.codigo };
@@ -305,12 +324,16 @@ async function concluir(request: Request, signatarios: Signer[]): Promise<void> 
 
   await registrarEvento(request.id, 'concluido', { detalhe: { signatarios: signatarios.length } });
 
+  const atos = signatarios.map((s) => ({
+    nome: s.nome, email: s.email, quando: s.assinado_em, ip: s.assinado_ip, dispositivo: s.assinado_user_agent,
+  }));
   for (const s of signatarios) {
     await enviarCopiaFinal({
       para: s.email, nome: s.nome,
       titulo: request.titulo ?? 'Documento',
       codigo: request.codigo,
       hash: request.documento_hash,
+      atos,
     });
   }
   await avisarInterno(

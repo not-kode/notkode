@@ -81,6 +81,7 @@ export async function congelarContrato(engagementId: string): Promise<{ html: st
   const corpo = contratoHtml({
     eng: dados.eng,
     parcelas: dados.parcelas,
+    modelo: dados.modelo,
     dataDoDocumento: dataPorExtenso(),
     assinaturaEletronica: true,
   });

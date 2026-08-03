@@ -1,6 +1,8 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { ONBOARDING_TEMPLATES } from '@/lib/onboarding-schema';
 import { ClientesView, type ClientView } from './clientes-view';
+import type { ModeloRow } from './modelos-view';
+import { lerClausulas } from '@/app/admin/contrato/modelo';
 import type { BriefingRow } from '../onboarding/onboarding-view';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +20,7 @@ type EngRow = {
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
   scope: string | null; renewal_note: string | null; client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
+  contract_template_id: string | null;
 };
 type RecRow = {
   id: string; engagement_id: string | null; description: string | null; amount: number;
@@ -41,6 +44,10 @@ type SignerRow = {
   id: string; request_id: string; nome: string; email: string; papel: string;
   status: string; assinado_em: string | null; token: string;
 };
+type ModeloTemplateRow = {
+  id: string; nome: string; descricao: string | null; escopo_padrao: string | null;
+  padrao: boolean; clausulas: unknown;
+};
 type LeadRow = {
   deal_id: string | null; service_tag: string | null; page_origin: string | null;
   estimated_min: number | null; estimated_max: number | null; created_at: string;
@@ -62,7 +69,7 @@ export default async function ClientesPage() {
       .order('name'),
     supabase
       .from('engagements')
-      .select('id, organization_id, title, type, status, lifecycle, valor, mrr, start_date, end_date, notes, scope, renewal_note, client_obligations, provider_obligations, proposal_path, proposal_name')
+      .select('id, organization_id, title, type, status, lifecycle, valor, mrr, start_date, end_date, notes, scope, renewal_note, client_obligations, provider_obligations, proposal_path, proposal_name, contract_template_id')
       .order('created_at', { ascending: true }),
     supabase
       .from('receivables')
@@ -178,6 +185,7 @@ export default async function ClientesPage() {
         valor: e.valor, mrr: e.mrr, start_date: e.start_date, end_date: e.end_date, notes: e.notes,
         scope: e.scope, renewal_note: e.renewal_note, client_obligations: e.client_obligations, provider_obligations: e.provider_obligations,
         proposal_path: e.proposal_path, proposal_name: e.proposal_name,
+        contract_template_id: e.contract_template_id,
         assinatura: (() => {
           const s = sigs.find((x) => x.engagement_id === e.id);
           if (!s) return null;
@@ -205,6 +213,24 @@ export default async function ClientesPage() {
     };
   });
 
+  // Modelos de contrato, com quantos contratos usam cada um.
+  const { data: modeloData } = await supabase
+    .from('contract_templates')
+    .select('id, nome, descricao, escopo_padrao, padrao, clausulas')
+    .order('padrao', { ascending: false })
+    .order('ordem', { ascending: true })
+    .order('nome', { ascending: true });
+
+  const modelos: ModeloRow[] = ((modeloData ?? []) as ModeloTemplateRow[]).map((m) => ({
+    id: m.id,
+    nome: m.nome,
+    descricao: m.descricao,
+    escopo_padrao: m.escopo_padrao,
+    padrao: m.padrao,
+    clausulas: lerClausulas(m.clausulas),
+    emUso: engs.filter((e) => e.contract_template_id === m.id).length,
+  }));
+
   // Rótulos de produto da tabela products (lista editável pelo sistema).
   const { data: prodRows } = await supabase.from('products').select('key, name');
   const productLabels: Record<string, string> = Object.fromEntries((prodRows ?? []).map((p) => [p.key, p.name]));
@@ -215,5 +241,5 @@ export default async function ClientesPage() {
 
   const templates = Object.entries(ONBOARDING_TEMPLATES).map(([key, t]) => ({ key, label: t.label }));
 
-  return <ClientesView clients={soClientes} productLabels={productLabels} templates={templates} />;
+  return <ClientesView clients={soClientes} productLabels={productLabels} templates={templates} modelos={modelos} />;
 }

@@ -7,6 +7,8 @@ import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../
 import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
 import { AutoSaveForm } from '../_shared/auto-save-form';
 import { AssinaturaBloco, type AssinaturaResumo } from './assinatura-bloco';
+import { ModelosView, type ModeloRow } from './modelos-view';
+import { definirModeloDoContrato } from './modelos-actions';
 import { NewBriefing } from '../onboarding/new-briefing';
 import { CopyLink } from '../onboarding/copy-link';
 import {
@@ -21,9 +23,11 @@ export type Contrato = {
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
   scope: string | null; renewal_note: string | null; client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
+  contract_template_id: string | null;
   assinatura: AssinaturaResumo | null;
   parcelas: Parcela[];
 };
+export type ModeloDisponivel = { id: string; nome: string };
 export type ClientView = {
   id: string; name: string | null; market: string | null;
   legal_name: string | null; tax_id: string | null; state_registration: string | null;
@@ -166,13 +170,15 @@ function Field({ label, name, defaultValue, placeholder, className = '' }: { lab
   );
 }
 
-export function ClientesView({ clients, productLabels = {}, templates = [] }: {
+export function ClientesView({ clients, productLabels = {}, templates = [], modelos = [] }: {
   clients: ClientView[];
   productLabels?: Record<string, string>;
   templates?: { key: string; label: string }[];
+  modelos?: ModeloRow[];
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [novoCliente, setNovoCliente] = useState(false);
+  const [vista, setVista] = useState<'clientes' | 'modelos'>('clientes');
   const selected = clients.find((c) => c.id === selectedId) ?? null;
 
   // MRR conta só contratos ativos (pausado não fatura; churn/encerrado saíram).
@@ -181,13 +187,31 @@ export function ClientesView({ clients, productLabels = {}, templates = [] }: {
 
   return (
     <div className="w-full">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+      <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Clientes</h1>
           <p className="mt-1 text-sm text-text-muted">{clients.length} cliente{clients.length === 1 ? '' : 's'} · dados cadastrais, contratos e contatos.</p>
         </div>
-        <button onClick={() => setNovoCliente(true)} className="rounded-md border border-black/[0.1] bg-white px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:border-primary/40 hover:text-primary">+ Cliente</button>
+        {vista === 'clientes' && (
+          <button onClick={() => setNovoCliente(true)} className="rounded-md border border-black/[0.1] bg-white px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:border-primary/40 hover:text-primary">+ Cliente</button>
+        )}
       </header>
+
+      {/* Modelo de contrato é assunto de cliente: entra como sub-aba daqui, não
+          como item novo de menu. */}
+      <div className="mb-5 flex gap-1 border-b border-black/[0.06]">
+        {([['clientes', 'Clientes'], ['modelos', `Modelos de contrato${modelos.length ? ` (${modelos.length})` : ''}`]] as const).map(([k, l]) => (
+          <button
+            key={k}
+            onClick={() => setVista(k)}
+            className={`-mb-px border-b-2 px-3 py-2 text-xs font-medium transition-colors ${vista === k ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-secondary'}`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {vista === 'modelos' ? <ModelosView modelos={modelos} /> : (<>
 
       {clients.length === 0 ? (
         <p className="rounded-md border border-black/[0.06] bg-white px-4 py-8 text-center text-sm text-text-muted">Nenhum cliente ainda. Ganhe um negócio no pipeline ou use <strong className="font-medium text-text-secondary">+ Cliente</strong> para cadastrar na mão.</p>
@@ -233,12 +257,14 @@ export function ClientesView({ clients, productLabels = {}, templates = [] }: {
       )}
 
       {novoCliente && <NovoClienteDrawer onClose={() => setNovoCliente(false)} />}
+      </>)}
 
       {selected && (
         <ClientDrawer
           client={selected}
           productLabels={productLabels}
           templates={templates}
+          modelos={modelos}
           onClose={() => setSelectedId(null)}
         />
       )}
@@ -295,10 +321,11 @@ function NovoClienteDrawer({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
+function ClientDrawer({ client, productLabels = {}, templates = [], modelos = [], onClose }: {
   client: ClientView;
   productLabels?: Record<string, string>;
   templates?: { key: string; label: string }[];
+  modelos?: ModeloRow[];
   onClose: () => void;
 }) {
   const [pending, start] = useTransition();
@@ -434,7 +461,7 @@ function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
                   <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-primary">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Ativos ({ativos.length})
                   </p>
-                  {ativos.map((e) => <ContractCard key={e.id} eng={e} cliente={client} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
+                  {ativos.map((e) => <ContractCard key={e.id} eng={e} cliente={client} modelos={modelos} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
                 </div>
               )}
               {encerrados.length > 0 && (
@@ -442,7 +469,7 @@ function ClientDrawer({ client, productLabels = {}, templates = [], onClose }: {
                   <p className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">
                     <span className="h-1.5 w-1.5 rounded-full bg-text-muted/50" /> Encerrados / inativos ({encerrados.length})
                   </p>
-                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} cliente={client} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
+                  {encerrados.map((e) => <ContractCard key={e.id} eng={e} cliente={client} modelos={modelos} onMarkPaid={markPaid} onUnmark={unmark} onConclude={(fd) => start(() => concludeEngagement(fd))} onSaveDetails={(fd) => start(() => updateEngagementDetails(fd))} onSaveContract={(fd) => start(() => updateEngagementContract(fd))} onAddParcela={(fd) => start(() => createReceivable(fd))} onSaveParcela={(fd) => start(() => updateReceivable(fd))} onDeleteParcela={removeParcela} onChangeLifecycle={changeLifecycle} onDelete={remove} pending={pending} />)}
                 </div>
               )}
             </div>
@@ -511,7 +538,7 @@ function ExcluirCliente({ client, onDone }: { client: ClientView; onDone: () => 
   );
 }
 
-function ContractCard({ eng, cliente, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onSaveParcela, onDeleteParcela, onChangeLifecycle, onDelete, pending }: { eng: Contrato; cliente: ClientView; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onSaveParcela: (fd: FormData) => void; onDeleteParcela: (id: string) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
+function ContractCard({ eng, cliente, modelos, onMarkPaid, onUnmark, onConclude, onSaveDetails, onSaveContract, onAddParcela, onSaveParcela, onDeleteParcela, onChangeLifecycle, onDelete, pending }: { eng: Contrato; cliente: ClientView; modelos: ModeloRow[]; onMarkPaid: (id: string, amount: number) => void; onUnmark: (id: string) => void; onConclude: (fd: FormData) => void; onSaveDetails: (fd: FormData) => void; onSaveContract: (fd: FormData) => void; onAddParcela: (fd: FormData) => void; onSaveParcela: (fd: FormData) => void; onDeleteParcela: (id: string) => void; onChangeLifecycle: (id: string, lifecycle: string) => void; onDelete: (id: string) => void; pending: boolean }) {
   const isConcluded = eng.lifecycle === 'encerrado' || eng.lifecycle === 'churn';
   const isActive = eng.lifecycle === 'ativo';
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -622,8 +649,27 @@ function ContractCard({ eng, cliente, onMarkPaid, onUnmark, onConclude, onSaveDe
       </dl>
 
       {/* Ação principal */}
-      <div className="mt-3 border-t border-black/[0.06] pt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-black/[0.06] pt-3">
         <a href={`/admin/contrato/${eng.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90">Ver contrato ↗</a>
+
+        {modelos.length > 0 && (
+          <label className="flex items-center gap-1.5 font-label text-[10px] uppercase tracking-wider text-text-muted">
+            Modelo
+            <select
+              defaultValue={eng.contract_template_id ?? ''}
+              onChange={(e) => {
+                const fd = new FormData();
+                fd.set('engagement_id', eng.id);
+                fd.set('template_id', e.target.value);
+                definirModeloDoContrato(fd);
+              }}
+              className="rounded-md border border-black/[0.1] bg-white px-2 py-1 text-xs normal-case tracking-normal text-text-primary outline-none transition focus:border-primary"
+            >
+              <option value="">Padrão</option>
+              {modelos.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+            </select>
+          </label>
+        )}
       </div>
 
       {editingDetails && (
