@@ -17,7 +17,7 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   return (
     <div className="doc">
       <style>{CONTRATO_CSS}</style>
-      <PrintButton />
+      <PrintButton contratoId={id} />
 
       {missing.length > 0 && (
         <div className="no-print alert" style={{ maxWidth: 780, margin: '0 auto' }}>
