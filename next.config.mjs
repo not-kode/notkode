@@ -27,6 +27,15 @@ const nextConfig = {
   // Chromium não pode passar pelo bundler: fica como dependência externa da
   // função, carregada do node_modules em tempo de execução.
   serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium'],
+  // Só declarar como externo não basta: os .br do Chromium não são "importados"
+  // por ninguém, então o tracing do Next não os enxerga e a função subia sem a
+  // pasta bin ("The input directory .../bin does not exist"). Aqui eles entram
+  // à força, e só nas rotas que geram PDF.
+  outputFileTracingIncludes: {
+    '/admin/contrato/[id]/pdf': ['./node_modules/.pnpm/@sparticuz+chromium*/node_modules/@sparticuz/chromium/bin/**'],
+    '/verificar/[codigo]/pdf': ['./node_modules/.pnpm/@sparticuz+chromium*/node_modules/@sparticuz/chromium/bin/**'],
+    '/assinar/[token]': ['./node_modules/.pnpm/@sparticuz+chromium*/node_modules/@sparticuz/chromium/bin/**'],
+  },
   // O mapa de calor virou sub-aba de Comportamento; a rota antiga não fica 404
   // para quem tiver a aba aberta.
   // Instaladores do SimbOS: o arquivo é buscado e devolvido por aqui, então quem
