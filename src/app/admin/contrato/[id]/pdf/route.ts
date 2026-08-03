@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { carregarContrato, dataPorExtenso } from '@/lib/contrato/dados';
-import { CONTRATO_CSS, contratoHtml } from '../../documento';
+import { contratoHtml } from '../../documento';
 import { gerarPdf, nomeDoArquivo } from '@/lib/assinatura/pdf';
 import { paginaHtml } from '@/lib/assinatura/nucleo';
 
@@ -16,6 +16,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!dados) return new NextResponse('Contrato não encontrado.', { status: 404 });
 
   const titulo = `Contrato ${dados.eng.title ?? ''}`.trim();
+  // paginaHtml já embute o CSS do contrato.
   const html = paginaHtml(
     titulo,
     contratoHtml({
@@ -24,7 +25,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       modelo: dados.modelo,
       dataDoDocumento: dataPorExtenso(),
     }),
-    CONTRATO_CSS,
   );
 
   const { pdf, erro } = await gerarPdf(html);
