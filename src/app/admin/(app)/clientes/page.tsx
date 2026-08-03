@@ -39,7 +39,7 @@ type SigRow = {
 };
 type SignerRow = {
   id: string; request_id: string; nome: string; email: string; papel: string;
-  status: string; assinado_em: string | null;
+  status: string; assinado_em: string | null; token: string;
 };
 type LeadRow = {
   deal_id: string | null; service_tag: string | null; page_origin: string | null;
@@ -95,7 +95,7 @@ export default async function ClientesPage() {
       .order('created_at', { ascending: false }),
     supabase
       .from('signature_signers')
-      .select('id, request_id, nome, email, papel, status, assinado_em')
+      .select('id, request_id, nome, email, papel, status, assinado_em, token')
       .order('ordem', { ascending: true }),
   ]);
   const sigs = (sigData ?? []) as SigRow[];
@@ -189,6 +189,9 @@ export default async function ClientesPage() {
               .map((g) => ({
                 id: g.id, nome: g.nome, email: g.email, papel: g.papel,
                 status: g.status, assinado_em: g.assinado_em,
+                // O link individual também serve para mandar por WhatsApp,
+                // quando o e-mail não chega ou o cliente prefere.
+                link: `${SITE_URL}/assinar/${g.token}`,
               })),
           };
         })(),

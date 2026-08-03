@@ -9,7 +9,7 @@ export type AssinaturaResumo = {
   status: string;
   created_at: string;
   completed_at: string | null;
-  signatarios: { id: string; nome: string; email: string; papel: string; status: string; assinado_em: string | null }[];
+  signatarios: { id: string; nome: string; email: string; papel: string; status: string; assinado_em: string | null; link: string }[];
 };
 
 const rotulo = 'font-label text-[10px] uppercase tracking-wider text-text-muted';
@@ -38,7 +38,16 @@ export function AssinaturaBloco({
   const [abrindo, setAbrindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
+
+  // O link individual serve para mandar por WhatsApp quando o e-mail não chega.
+  function copiarLink(signerId: string, link: string) {
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiado(signerId);
+      setTimeout(() => setCopiado(null), 2000);
+    });
+  }
 
   function enviar(fd: FormData) {
     setErro(null); setAviso(null);
@@ -137,6 +146,13 @@ export function AssinaturaBloco({
                       className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-primary disabled:opacity-50"
                     >
                       reenviar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => copiarLink(s.id, s.link)}
+                      className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-primary"
+                    >
+                      {copiado === s.id ? 'copiado!' : 'copiar link'}
                     </button>
                   </>
                 )}
