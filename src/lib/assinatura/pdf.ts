@@ -43,12 +43,20 @@ async function abrirNavegador(): Promise<Browser | null> {
  * para o domínio antes de renderizar.
  */
 export async function documentoEmPdf(html: string): Promise<Uint8Array | null> {
+  return (await gerarPdf(html)).pdf;
+}
+
+/**
+ * Igual à anterior, mas devolve também o motivo da falha. Só a tela do /admin
+ * usa: sem isso, "não foi possível gerar" não dá para diagnosticar em produção.
+ */
+export async function gerarPdf(html: string): Promise<{ pdf: Uint8Array | null; erro: string | null }> {
   let navegador: Browser | null = null;
   try {
     navegador = await abrirNavegador();
     if (!navegador) {
       console.warn('[assinatura] Chrome indisponível, PDF não gerado');
-      return null;
+      return { pdf: null, erro: 'Chrome indisponível neste ambiente.' };
     }
 
     const pagina = await navegador.newPage();
@@ -64,10 +72,10 @@ export async function documentoEmPdf(html: string): Promise<Uint8Array | null> {
       printBackground: true,
       margin: { top: '14mm', bottom: '14mm', left: '0', right: '0' },
     });
-    return pdf;
+    return { pdf, erro: null };
   } catch (e) {
     console.error('[assinatura] falha ao gerar PDF:', e);
-    return null;
+    return { pdf: null, erro: e instanceof Error ? `${e.name}: ${e.message}` : String(e) };
   } finally {
     await navegador?.close().catch(() => {});
   }

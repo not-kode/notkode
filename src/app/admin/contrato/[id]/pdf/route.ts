@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { carregarContrato, dataPorExtenso } from '@/lib/contrato/dados';
 import { CONTRATO_CSS, contratoHtml } from '../../documento';
-import { documentoEmPdf, nomeDoArquivo } from '@/lib/assinatura/pdf';
+import { gerarPdf, nomeDoArquivo } from '@/lib/assinatura/pdf';
 import { paginaHtml } from '@/lib/assinatura/nucleo';
 
 // PDF do contrato como ele está agora, para anexar em e-mail ou guardar.
@@ -24,8 +24,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     CONTRATO_CSS,
   );
 
-  const pdf = await documentoEmPdf(html);
-  if (!pdf) return new NextResponse('Não foi possível gerar o PDF agora.', { status: 503 });
+  const { pdf, erro } = await gerarPdf(html);
+  if (!pdf) return new NextResponse(`Não foi possível gerar o PDF agora.\n\n${erro ?? ''}`, { status: 503 });
 
   return new NextResponse(pdf as unknown as ArrayBuffer, {
     headers: {
