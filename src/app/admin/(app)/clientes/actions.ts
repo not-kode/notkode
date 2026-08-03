@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { mimeDaProposta } from '@/lib/proposta-mime';
 
 // Dados cadastrais da empresa (usados para gerar contratos).
 const ORG_FIELDS = [
@@ -22,7 +23,7 @@ export async function uploadProposal(formData: FormData): Promise<void> {
   const bytes = new Uint8Array(await file.arrayBuffer());
 
   const { error } = await supabase.storage.from('propostas').upload(path, bytes, {
-    contentType: file.type || 'application/octet-stream',
+    contentType: mimeDaProposta(file.name, file.type || 'application/octet-stream'),
     upsert: true,
   });
   if (error) throw new Error(`Falha no upload: ${error.message}`);
