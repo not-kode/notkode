@@ -34,6 +34,20 @@ const fmtDate = (d: string | null) => {
   const [y, m, day] = d.split('-');
   return `${day}/${m}/${y}`;
 };
+// O dia do vencimento das mensalidades sai das próprias parcelas (é o que foi
+// combinado com o cliente); sem parcelas, cai no dia do início da vigência.
+const DIA_EXTENSO = [
+  '', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez',
+  'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove', 'vinte',
+  'vinte e um', 'vinte e dois', 'vinte e três', 'vinte e quatro', 'vinte e cinco', 'vinte e seis',
+  'vinte e sete', 'vinte e oito', 'vinte e nove', 'trinta', 'trinta e um',
+];
+function diaDoVencimento(parcelas: { due_date: string }[], inicio: string | null): string | null {
+  const ref = parcelas[0]?.due_date ?? inicio;
+  const dia = ref ? Number(ref.split('-')[2]) : NaN;
+  if (!dia || dia < 1 || dia > 31) return null;
+  return `${String(dia).padStart(2, '0')} (${DIA_EXTENSO[dia]})`;
+}
 function monthsBetween(a: string | null, b: string | null): number | null {
   if (!a || !b) return null;
   const [ay, am] = a.split('-').map(Number);
@@ -82,10 +96,11 @@ export default async function ContratoPage({ params }: { params: Promise<{ id: s
   // Cláusula de pagamento montada por blocos: recorrente (MRR) e pontual (valor avulso)
   // aparecem separados; depois o cronograma das parcelas reais.
   const valorPontual = eng.valor ?? 0;
+  const diaVenc = diaDoVencimento(parcelas, eng.start_date);
   const pgto: React.ReactNode[] = [];
   if (hasMrr) {
     pgto.push(
-      <>Pela prestação dos <strong>serviços recorrentes</strong>, a CONTRATANTE pagará o valor mensal de <strong>{brl(eng.mrr!)}</strong>, vencível todo dia 10 (dez) de cada mês{meses ? <>, totalizando <strong>{brl(eng.mrr! * meses)}</strong> ao longo dos {meses} meses de vigência</> : null}.</>,
+      <>Pela prestação dos <strong>serviços recorrentes</strong>, a CONTRATANTE pagará o valor mensal de <strong>{brl(eng.mrr!)}</strong>{diaVenc ? `, vencível todo dia ${diaVenc} de cada mês` : ''}{meses ? <>, totalizando <strong>{brl(eng.mrr! * meses)}</strong> ao longo dos {meses} meses de vigência</> : null}.</>,
     );
   }
   if (valorPontual > 0) {
