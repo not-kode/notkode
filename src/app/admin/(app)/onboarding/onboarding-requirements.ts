@@ -143,29 +143,13 @@ function buildSocialMessage(r: BriefingRow): string {
   if (!read(r, 'social_anuncios_produtos')) faltando.push('os produtos dos criativos de anúncio, com preço e condição');
   if (!read(r, 'social_datas')) faltando.push('as datas do mês que valem aproveitar');
   if (faltando.length > 0) {
-    p.push(`1️⃣ *Oferta do mês* — ficou faltando ${humanList(faltando)}.`);
+    p.push(`Ficou faltando ${humanList(faltando)}.`);
   } else {
-    p.push('1️⃣ *Oferta do mês* — a parte comercial ficou completa, já consigo montar a grade em cima dela.');
+    p.push('A parte comercial ficou completa, já consigo montar a grade em cima dela.');
   }
 
-  const acessoMeta = read(r, 'social_acesso_meta');
-  if (acessoMeta !== 'Convite enviado') {
-    p.push(
-      `2️⃣ *Acesso* — me convide como administradora (${ACCESS_EMAIL}) no Meta Business, que é o que dá acesso ao Instagram e ao Facebook. ` +
-        'Se preferir, te mando o passo a passo em print.',
-    );
-  }
-
-  const fotos = read(r, 'social_fotos');
-  const responsavel = read(r, 'social_fotos_responsavel');
-  if (fotos === 'Não temos' || fotos === '') {
-    p.push('3️⃣ *Fotos* — como não temos material, vou usar foto de catálogo por enquanto. Qualquer foto da loja e dos produtos que vocês tirarem no celular já ajuda muito.');
-  } else if (!responsavel) {
-    p.push('3️⃣ *Fotos* — me diz quem da equipe fica responsável por mandar as fotos e as novidades da loja, e por qual número.');
-  }
-
-  if (read(r, 'social_transicao')) {
-    p.push('Sobre a agência atual, anotei até quando ela publica; vou emendar o calendário pra não ficar nenhum dia com o perfil parado.');
+  if (!read(r, 'social_anuncios_arte')) {
+    p.push('Se tiver alguma foto ou detalhe que precisa aparecer na arte dos anúncios, me manda junto.');
   }
 
   p.push(

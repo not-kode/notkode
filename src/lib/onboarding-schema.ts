@@ -468,24 +468,6 @@ const SOCIAL_SECTIONS: OnboardingSection[] = [
         label: 'Tem alguma foto ou detalhe que precisa aparecer na arte desses anúncios?' },
     ],
   },
-  {
-    id: 'social-operacao',
-    title: 'Material & aprovação',
-    lede: 'Como o material chega até nós e quem dá o ok antes de qualquer publicação.',
-    questions: [
-      { id: 'social_fotos_responsavel', type: 'text', ph: 'Nome e WhatsApp',
-        label: 'Quem fica responsável por mandar fotos e novidades da loja?' },
-      { id: 'social_video', type: 'chips', options: ['Sim, conseguimos', 'Talvez', 'Não'],
-        hint: 'A produção de vídeo não faz parte do pacote. Se alguém da equipe gravar por conta própria, a gente avalia encaixar no calendário.',
-        label: 'Alguém da equipe consegue gravar vídeos curtos no celular?' },
-      { id: 'social_aprovador', type: 'text', ph: 'Nome e WhatsApp',
-        label: 'Quem aprova o calendário antes de publicar?' },
-      { id: 'social_transicao', type: 'text', ph: 'Ex: publica até 08/08',
-        label: 'Se outra agência publica hoje, até quando ela segue?' },
-      { id: 'social_material', type: 'file',
-        label: 'Anexe logo, fotos e artes que já existem.' },
-    ],
-  },
 ];
 
 export type OnboardingTemplateKey = 'produto' | 'site' | 'sistema-ia' | 'agentes' | 'identidade' | 'social';
