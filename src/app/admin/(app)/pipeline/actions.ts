@@ -297,18 +297,18 @@ export async function updateDeal(formData: FormData): Promise<void> {
     patch.service_tag = services[0] ?? null;
   }
 
-  // A etapa só muda quando o formulário está em dia com o banco. O painel fica
-  // aberto enquanto o negócio pode mudar por fora (ganhar, arrastar no kanban),
-  // e o formulário salva sozinho: sem esta trava, o salvamento seguinte regravava
-  // a etapa velha e trazia de volta pro funil um negócio que já tinha sido ganho.
+  // Trocar a etapa na mão sempre vale. O que não vale é o formulário REPETIR a
+  // etapa que ele acha que é a atual (`stage_base`): o painel fica aberto e salva
+  // sozinho, então essa repetição chegava depois do negócio ter sido ganho e o
+  // trazia de volta pro funil.
   const stageRaw = String(formData.get('stage') ?? '').trim();
   if (DEAL_STAGES.includes(stageRaw as DealStage)) {
     const { data: atual } = await supabase.from('deals').select('stage').eq('id', id).single();
     const base = String(formData.get('stage_base') ?? '').trim();
-    const emDia = !base || !atual || atual.stage === base;
+    const pedidoNaMao = !base || stageRaw !== base;
     // Só reinicia o "parado há X dias" se a etapa realmente mudou: salvar o
     // negócio para corrigir um telefone não pode fazer ele parecer recém-movido.
-    if (emDia && atual && atual.stage !== stageRaw) {
+    if (atual && atual.stage !== stageRaw && (pedidoNaMao || atual.stage === base)) {
       patch.stage = stageRaw;
       patch.stage_changed_at = new Date().toISOString();
     }
