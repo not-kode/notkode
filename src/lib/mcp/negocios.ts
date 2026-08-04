@@ -8,7 +8,7 @@ import {
 } from './nucleo';
 import { DEAL_STAGES } from '@/app/admin/(app)/pipeline/stages';
 import {
-  ONBOARDING_TEMPLATES, PREFILL_KEY, getOnboardingTemplate, templateQuestionIds,
+  ONBOARDING_TEMPLATES, PREFILL_KEY, getOnboardingTemplate, prefilledIds, templateQuestionIds,
 } from '@/lib/onboarding-schema';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
@@ -368,7 +368,15 @@ export const ferramentasDeNegocio: Ferramenta[] = [
       // Pré-preenchimento: só entra o que é pergunta do template escolhido, e
       // a lista do que veio pronto vai junto para o formulário pedir conferência.
       const respostas: Record<string, string | string[]> = {};
-      const brutas = args.respostas;
+      // Alguns clientes MCP mandam o objeto já serializado; aceitar os dois.
+      let brutas: unknown = args.respostas;
+      if (typeof brutas === 'string' && brutas.trim()) {
+        try {
+          brutas = JSON.parse(brutas);
+        } catch {
+          throw new ErroDeUso('O campo "respostas" não é um JSON válido.');
+        }
+      }
       if (brutas && typeof brutas === 'object' && !Array.isArray(brutas)) {
         const validos = templateQuestionIds(getOnboardingTemplate(template_key));
         for (const [id, valor] of Object.entries(brutas as Record<string, unknown>)) {
@@ -400,6 +408,45 @@ export const ferramentasDeNegocio: Ferramenta[] = [
         link: `${SITE}/onboarding/${token}`,
         pre_preenchidas: preenchidos.length,
       };
+    },
+  },
+
+  {
+    nome: 'apagar_briefing',
+    descricao:
+      'Apaga um briefing de onboarding em rascunho e sem nenhuma resposta do cliente, para limpar link duplicado ou criado errado. ' +
+      'Briefing enviado, ou que o cliente já começou a responder, não é apagado.',
+    entrada: objeto({ briefing: texto('Id do briefing ou o token do link público.') }, ['briefing']),
+    async executar(args) {
+      const chave = obrigatorio(args, 'briefing');
+      if (!/^[0-9a-f-]{36}$/i.test(chave)) {
+        throw new ErroDeUso('Informe o id do briefing ou o token do link (o trecho depois de /onboarding/).');
+      }
+
+      const { data, error } = await supabase()
+        .from('onboarding_briefings')
+        .select('id, token, status, respostas, product_name')
+        .or(`id.eq.${chave},token.eq.${chave}`)
+        .maybeSingle();
+      if (error) throw new ErroDeUso(`Não deu para ler o briefing: ${error.message}`);
+      if (!data) throw new ErroDeUso('Nenhum briefing com esse id ou token.');
+
+      if (data.status !== 'rascunho') {
+        throw new ErroDeUso('Esse briefing já foi enviado pelo cliente; apagar teria que ser na mão, no banco.');
+      }
+      // O que nós mesmos pré-preenchemos não conta como resposta do cliente.
+      const guardadas = (data.respostas ?? {}) as Record<string, string | string[]>;
+      const nossas = new Set(prefilledIds(guardadas));
+      const respondidas = Object.keys(guardadas).filter((k) => k !== PREFILL_KEY && !nossas.has(k));
+      if (respondidas.length > 0) {
+        throw new ErroDeUso(
+          `O cliente já respondeu ${respondidas.length} ${respondidas.length === 1 ? 'pergunta' : 'perguntas'} nesse briefing. Não apaguei.`,
+        );
+      }
+
+      const { error: erroDel } = await supabase().from('onboarding_briefings').delete().eq('id', data.id);
+      if (erroDel) throw new ErroDeUso(`Não deu para apagar: ${erroDel.message}`);
+      return { apagado: true, produto: data.product_name };
     },
   },
 ];
