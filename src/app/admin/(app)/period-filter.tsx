@@ -3,13 +3,17 @@
 // Filtro de período — um dropdown único: mostra o período atual e, ao abrir,
 // lista os presets + o intervalo personalizado. Atualiza a URL (?range= ou
 // ?from=&to=) e o server component recarrega os dados. Padrão: "Este mês".
-import { useRouter, useSearchParams } from 'next/navigation';
+//
+// Serve qualquer tela do admin: escreve na rota atual e preserva os outros
+// parâmetros (a sub-aba do Analytics, por exemplo), trocando só os de período.
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { PRESETS } from './period';
 
 export function PeriodFilter() {
   const router = useRouter();
   const sp = useSearchParams();
+  const pathname = usePathname();
   const hasCustom = !!(sp.get('from') && sp.get('to'));
   const activeKey = hasCustom ? 'custom' : (sp.get('range') ?? 'month');
   const activeLabel = hasCustom
@@ -22,15 +26,24 @@ export function PeriodFilter() {
   const [to, setTo] = useState(sp.get('to') ?? '');
 
   const close = () => { setOpen(false); setCustom(false); };
+  // Reescreve só os parâmetros de período; o resto da URL (sub-aba etc.) fica.
+  const url = (novos: Record<string, string>) => {
+    const q = new URLSearchParams(sp.toString());
+    for (const k of ['range', 'from', 'to']) q.delete(k);
+    for (const [k, v] of Object.entries(novos)) q.set(k, v);
+    const s = q.toString();
+    return s ? `${pathname}?${s}` : pathname;
+  };
   const setPreset = (key: string) => {
     close();
-    router.push(key === 'month' ? '/admin' : `/admin?range=${key}`, { scroll: false });
+    // "Este mês" é o padrão: sai da URL em vez de virar ?range=month.
+    router.push(url(key === 'month' ? {} : { range: key }), { scroll: false });
   };
   const applyCustom = () => {
     if (!from || !to) return;
     const [a, b] = from <= to ? [from, to] : [to, from];
     close();
-    router.push(`/admin?from=${a}&to=${b}`, { scroll: false });
+    router.push(url({ from: a, to: b }), { scroll: false });
   };
 
   return (
