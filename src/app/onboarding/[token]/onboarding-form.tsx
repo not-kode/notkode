@@ -8,6 +8,8 @@ import {
   ONBOARDING_VERSION,
   ACCESS_EMAIL,
   isQuestionVisible,
+  prefilledIds,
+  PREFILL_KEY,
   type OnboardingQuestion,
   type OnboardingSection,
 } from '@/lib/onboarding-schema';
@@ -39,8 +41,17 @@ export function OnboardingForm({
   const [uploading, setUploading] = useState<string | null>(null);
   void initialStatus; // rascunho retomável; envio é idempotente
 
+  // Mexeu no campo, deixou de ser "confira isto": sai da lista de
+  // pré-preenchidas, o selo some e a resposta passa a ser do cliente. O que
+  // sobrar em __prefill no envio é o que ele leu e deixou como estava.
+  const conferir = useMemo(() => new Set(prefilledIds(answers)), [answers]);
+  const semPrefill = (a: Answers, id: string): Answers => {
+    const restantes = prefilledIds(a).filter((x) => x !== id);
+    return { ...a, [PREFILL_KEY]: restantes };
+  };
+
   const setText = (id: string, v: string) =>
-    setAnswers((a) => ({ ...a, [id]: v }));
+    setAnswers((a) => ({ ...semPrefill(a, id), [id]: v }));
 
   // Upload real do anexo → grava o path retornado em answers[id].
   const onFile = async (id: string, file: File | undefined) => {
@@ -63,14 +74,15 @@ export function OnboardingForm({
 
   const toggleChip = (q: OnboardingQuestion, opt: string) =>
     setAnswers((a) => {
+      const base = semPrefill(a, q.id);
       if (q.multi) {
         const cur = Array.isArray(a[q.id]) ? (a[q.id] as string[]) : [];
         return {
-          ...a,
+          ...base,
           [q.id]: cur.includes(opt) ? cur.filter((x) => x !== opt) : [...cur, opt],
         };
       }
-      return { ...a, [q.id]: a[q.id] === opt ? '' : opt };
+      return { ...base, [q.id]: a[q.id] === opt ? '' : opt };
     });
 
   const isChipOn = (q: OnboardingQuestion, opt: string) => {
@@ -141,6 +153,7 @@ export function OnboardingForm({
             welcome={tpl.welcome}
             headline={tpl.headline}
             sections={sections}
+            prefilled={conferir.size}
             onStart={() => go(1)}
           />
         )}
@@ -152,6 +165,7 @@ export function OnboardingForm({
             sections={sections}
             total={TOTAL}
             answers={answers}
+            conferir={conferir}
             setText={setText}
             toggleChip={toggleChip}
             isChipOn={isChipOn}
@@ -181,12 +195,14 @@ function Welcome({
   welcome,
   headline,
   sections,
+  prefilled,
   onStart,
 }: {
   context: Context;
   welcome: string;
   headline?: string;
   sections: OnboardingSection[];
+  prefilled: number;
   onStart: () => void;
 }) {
   return (
@@ -221,6 +237,15 @@ function Welcome({
           </div>
         )}
       </div>
+
+      {prefilled > 0 && (
+        <p className="mb-8 rounded-lg border border-cyan-700/25 bg-cyan-700/[0.06] px-[18px] py-3.5 text-[15px] leading-[1.6] text-text-secondary">
+          Já deixamos <b className="text-text-primary">{prefilled}</b>{' '}
+          {prefilled === 1 ? 'resposta preenchida' : 'respostas preenchidas'} com o que a gente já
+          sabe, marcadas com <span className="font-label text-[11px] uppercase tracking-[0.14em] text-cyan-700">confira</span>.
+          É só olhar se está certo e corrigir o que estiver diferente.
+        </p>
+      )}
 
       <span className="font-label text-[11px] uppercase tracking-[0.18em] text-text-muted">
         O que vamos percorrer
@@ -288,6 +313,7 @@ function Section({
   sections,
   total,
   answers,
+  conferir,
   setText,
   toggleChip,
   isChipOn,
@@ -302,6 +328,8 @@ function Section({
   sections: OnboardingSection[];
   total: number;
   answers: Answers;
+  /** Ids que chegaram pré-preenchidos e ainda não foram tocados. */
+  conferir: Set<string>;
   setText: (id: string, v: string) => void;
   toggleChip: (q: OnboardingQuestion, opt: string) => void;
   isChipOn: (q: OnboardingQuestion, opt: string) => boolean;
@@ -348,6 +376,11 @@ function Section({
               </span>
               <span className="text-[16.5px] font-medium leading-[1.4]">
                 {q.label}
+                {conferir.has(q.id) && (
+                  <span className="ml-2 inline-block translate-y-[-1px] rounded-sm border border-cyan-700/30 bg-cyan-700/[0.08] px-1.5 py-[1px] align-middle font-label text-[10px] uppercase tracking-[0.14em] text-cyan-700">
+                    Confira
+                  </span>
+                )}
                 {q.hint && (
                   <span className="mt-1 block text-[13.5px] font-normal text-text-muted">{q.hint}</span>
                 )}

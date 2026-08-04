@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { getOnboardingTemplate } from '@/lib/onboarding-schema';
+import { getOnboardingTemplate, prefilledIds, PREFILL_KEY } from '@/lib/onboarding-schema';
 import { CopyLink } from './copy-link';
 import { buildClientMessage, deadlineLabel } from './onboarding-requirements';
 
@@ -45,16 +45,19 @@ function answerText(v: string | string[] | undefined): string {
 
 /** Seções (do template do briefing) com pelo menos uma resposta, já formatadas. */
 function answeredSections(respostas: Record<string, string | string[]>, template: string) {
+  const nossas = new Set(prefilledIds(respostas));
   return getOnboardingTemplate(template).sections.map((section) => ({
     section,
     answered: section.questions
-      .map((q) => ({ q, val: answerText(respostas[q.id]) }))
+      .map((q) => ({ q, val: answerText(respostas[q.id]), nossa: nossas.has(q.id) }))
       .filter((x) => x.val !== ''),
   })).filter((s) => s.answered.length > 0);
 }
 
 function countAnswers(respostas: Record<string, string | string[]>): number {
-  return Object.values(respostas).filter((v) => answerText(v) !== '').length;
+  return Object.entries(respostas)
+    .filter(([id]) => id !== PREFILL_KEY)
+    .filter(([, v]) => answerText(v) !== '').length;
 }
 
 /** Monta o bloco de texto do briefing inteiro para copiar. */
@@ -317,9 +320,16 @@ export function BriefingConteudo({ row }: { row: BriefingRow }) {
                     {section.title}
                   </p>
                   <dl className="flex flex-col gap-3.5">
-                    {answered.map(({ q, val }) => (
+                    {answered.map(({ q, val, nossa }) => (
                       <div key={q.id} className="grid grid-cols-1 gap-0.5">
-                        <dt className="text-xs text-text-muted">{q.label}</dt>
+                        <dt className="text-xs text-text-muted">
+                          {q.label}
+                          {nossa && (
+                            <span className="ml-1.5 font-label text-[10px] uppercase tracking-[0.12em] text-text-muted/80">
+                              · preenchido por nós, cliente não mexeu
+                            </span>
+                          )}
+                        </dt>
                         <dd className="whitespace-pre-wrap text-sm text-text-primary">{val}</dd>
                       </div>
                     ))}

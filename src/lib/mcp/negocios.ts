@@ -7,7 +7,9 @@ import {
   obrigatorio, opcoes, reais, str, supabase, texto, type Ferramenta,
 } from './nucleo';
 import { DEAL_STAGES } from '@/app/admin/(app)/pipeline/stages';
-import { ONBOARDING_TEMPLATES } from '@/lib/onboarding-schema';
+import {
+  ONBOARDING_TEMPLATES, PREFILL_KEY, getOnboardingTemplate, templateQuestionIds,
+} from '@/lib/onboarding-schema';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
 const STATUS_RECEBIVEL = ['pendente', 'recebido', 'atrasado', 'cancelado'] as const;
@@ -345,27 +347,59 @@ export const ferramentasDeNegocio: Ferramenta[] = [
       {
         cliente: texto('Nome do cliente já cadastrado, ou id.'),
         produto: texto('O que está sendo contratado (ex: "Site institucional").'),
-        escopo: texto('Resumo do escopo, opcional.'),
+        escopo: texto('Resumo do escopo, opcional. Uma linha: aparece como rótulo na abertura.'),
         modelo: texto(`Template do formulário. Opções: ${Object.keys(ONBOARDING_TEMPLATES).join(', ')}. Padrão: produto.`),
+        respostas: {
+          type: 'object',
+          additionalProperties: true,
+          description:
+            'Respostas já preenchidas pela Notkode, no formato {id_da_pergunta: "valor"} (use lista de textos nas perguntas de múltipla escolha). ' +
+            'O cliente vê o campo preenchido, marcado para conferir, e só corrige o que estiver errado. Ids que não existem no template são ignorados.',
+        },
       },
       ['cliente', 'produto'],
     ),
     async executar(args) {
       const cliente = await acharCliente(obrigatorio(args, 'cliente'));
       const modelo = str(args, 'modelo') ?? 'produto';
+      const template_key = modelo in ONBOARDING_TEMPLATES ? modelo : 'produto';
       const token = randomUUID();
+
+      // Pré-preenchimento: só entra o que é pergunta do template escolhido, e
+      // a lista do que veio pronto vai junto para o formulário pedir conferência.
+      const respostas: Record<string, string | string[]> = {};
+      const brutas = args.respostas;
+      if (brutas && typeof brutas === 'object' && !Array.isArray(brutas)) {
+        const validos = templateQuestionIds(getOnboardingTemplate(template_key));
+        for (const [id, valor] of Object.entries(brutas as Record<string, unknown>)) {
+          if (!validos.has(id)) continue;
+          if (typeof valor === 'string' && valor.trim()) respostas[id] = valor.trim();
+          else if (Array.isArray(valor)) {
+            const itens = valor.filter((v): v is string => typeof v === 'string' && v.trim() !== '');
+            if (itens.length > 0) respostas[id] = itens;
+          }
+        }
+      }
+      const preenchidos = Object.keys(respostas);
+      if (preenchidos.length > 0) respostas[PREFILL_KEY] = preenchidos;
 
       const { error } = await supabase().from('onboarding_briefings').insert({
         organization_id: cliente.id,
         product_name: obrigatorio(args, 'produto'),
         scope: str(args, 'escopo'),
-        template_key: modelo in ONBOARDING_TEMPLATES ? modelo : 'produto',
+        template_key,
         token,
         status: 'rascunho',
+        respostas,
       });
 
       if (error) throw new ErroDeUso(`Não deu para criar o briefing: ${error.message}`);
-      return { criado: true, cliente: cliente.name, link: `${SITE}/onboarding/${token}` };
+      return {
+        criado: true,
+        cliente: cliente.name,
+        link: `${SITE}/onboarding/${token}`,
+        pre_preenchidas: preenchidos.length,
+      };
     },
   },
 ];

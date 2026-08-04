@@ -17,6 +17,25 @@
 
 export const ONBOARDING_VERSION = 'v1';
 
+/**
+ * Chave de controle dentro de `respostas`: lista dos ids que já chegaram
+ * preenchidos pela Notkode, para o cliente conferir em vez de digitar.
+ * Mora no mesmo jsonb (nenhuma coluna nova) e não é uma pergunta, então
+ * quem percorre o questionário por id nunca esbarra nela.
+ */
+export const PREFILL_KEY = '__prefill';
+
+/** Ids pré-preenchidos gravados no briefing. */
+export function prefilledIds(answers: Record<string, string | string[]>): string[] {
+  const v = answers[PREFILL_KEY];
+  return Array.isArray(v) ? v : [];
+}
+
+/** Todos os ids de pergunta de um template (valida o que o MCP manda pré-preencher). */
+export function templateQuestionIds(template: OnboardingTemplate): Set<string> {
+  return new Set(template.sections.flatMap((s) => s.questions.map((q) => q.id)));
+}
+
 export type QuestionType = 'text' | 'area' | 'chips' | 'file';
 
 /** Mostra a pergunta só quando a resposta de `q` estiver entre `in`. */
