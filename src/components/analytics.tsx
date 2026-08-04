@@ -11,7 +11,33 @@ import { useEffect, useRef } from 'react';
 const SID_KEY = 'nk_sid';
 const UTM_KEY = 'nk_utm';
 const REF_KEY = 'nk_ref';
+const INTERNAL_KEY = 'nk_internal';
 const UTM_FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
+
+// Modo interno POR APARELHO: abrir qualquer página com ?nk=interno marca este
+// navegador como da equipe, e ele para de gerar métrica (visita, clique em CTA,
+// etapas de formulário e gravação de sessão). ?nk=externo desfaz, para conferir o
+// site como um visitante qualquer.
+//
+// Existe porque filtrar por IP (INTERNAL_IPS, no servidor) não dá conta sozinho:
+// o IP da casa muda quando a operadora quer, a mesma máquina sai ora por IPv4 ora
+// por IPv6, e celular em rede móvel nunca bate com a lista. A marca fica no
+// localStorage, então sobrevive a fechar o navegador. NÃO usar sessionStorage:
+// duraria uma aba só e a marcação teria que ser refeita toda hora.
+let internalCache: boolean | null = null;
+export function isInternalDevice(): boolean {
+  if (internalCache !== null) return internalCache;
+  try {
+    const flag = new URLSearchParams(window.location.search).get('nk');
+    if (flag === 'interno') localStorage.setItem(INTERNAL_KEY, '1');
+    else if (flag === 'externo') localStorage.removeItem(INTERNAL_KEY);
+    internalCache = localStorage.getItem(INTERNAL_KEY) === '1';
+  } catch {
+    // localStorage bloqueado (aba anônima com restrição) → trata como visitante.
+    internalCache = false;
+  }
+  return internalCache;
+}
 
 function sessionId(): string {
   try {
@@ -74,6 +100,8 @@ export function saveLeadDraft(payload: {
   submitted?: boolean;
 }) {
   try {
+    // Teste nosso no formulário não pode virar "começou e não enviou" na tela de Leads.
+    if (navigator.webdriver || isInternalDevice()) return;
     const body = JSON.stringify({ ...payload, session_id: sessionId(), ...capturedUtm() });
     const blob = new Blob([body], { type: 'application/json' });
     if (navigator.sendBeacon?.('/api/lead/draft', blob)) return;
@@ -112,6 +140,8 @@ export function track(payload: { type: 'page_view' | 'cta_click' | 'form_view' |
   try {
     // Browser automatizado (crawler executando JS) não vira métrica.
     if (navigator.webdriver) return;
+    // Aparelho da equipe também não: a navegação da casa inflava visita e sessão.
+    if (isInternalDevice()) return;
     const body = JSON.stringify({ ...payload, session_id: sessionId(), referrer: entryReferrer(), ...capturedUtm() });
     const blob = new Blob([body], { type: 'application/json' });
     if (navigator.sendBeacon?.('/api/track', blob)) return;

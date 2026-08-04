@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getSessionId } from '@/components/analytics';
+import { getSessionId, isInternalDevice } from '@/components/analytics';
 
 // Gravação de sessão first-party com rrweb. Roda SÓ no site público (montado no
 // layout [locale]). Digitação: nome e opções ficam visíveis; e-mail, telefone e
@@ -28,6 +28,9 @@ export function SessionRecorder() {
   useEffect(() => {
     // Browser automatizado (crawler executando JS) não gera gravação.
     if (navigator.webdriver) return;
+    // Nem aparelho marcado como da equipe (ver isInternalDevice em analytics.tsx):
+    // gravação nossa mexendo no site não é comportamento de visitante.
+    if (isInternalDevice()) return;
 
     let cancelled = false;
     let stop: (() => void) | undefined;
