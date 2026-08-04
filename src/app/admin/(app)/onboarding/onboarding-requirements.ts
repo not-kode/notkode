@@ -38,8 +38,10 @@ export function deadlineLabel(days = REQUEST_DEADLINE_DAYS): string {
 
 /** Mensagem de WhatsApp pronta pra colar, na voz da Notkode. */
 export function buildClientMessage(r: BriefingRow): string {
-  // As cobranças de gateway/Bling/Ads são do briefing de PRODUTO; os demais
-  // templates (site, sistema, agentes, identidade) usam a mensagem genérica.
+  // As cobranças de gateway/Bling/Ads são do briefing de PRODUTO; social tem
+  // a sua (oferta e material da loja); os demais templates (site, sistema,
+  // agentes, identidade) usam a mensagem genérica.
+  if (r.template === 'social') return buildSocialMessage(r);
   if (r.template !== 'produto') return buildGenericMessage(r);
 
   const deadline = deadlineLabel();
@@ -114,6 +116,60 @@ export function buildClientMessage(r: BriefingRow): string {
 
   p.push(
     'Assim que isso chegar, eu já começo a produzir tudo. Qualquer dúvida em algum item, me chama por aqui! 🚀',
+  );
+
+  return p.join('\n\n');
+}
+
+/**
+ * Retorno do briefing de social media: cobra o que trava o calendário do mês
+ * (oferta com preço, restrição, produtos dos anúncios), o acesso ao Meta e o
+ * material da loja. Só pede o que ficou em branco.
+ */
+function buildSocialMessage(r: BriefingRow): string {
+  const deadline = deadlineLabel();
+  const p: string[] = [];
+
+  p.push(`Oi, ${r.orgName}! Tudo bem? 🙌`);
+  p.push(
+    'Recebi seu briefing, obrigada! Pra eu fechar o calendário do mês e começar a produzir, ' +
+      `me falta pouca coisa (se der, até ${deadline}):`,
+  );
+
+  const faltando: string[] = [];
+  if (!read(r, 'social_ofertas')) faltando.push('os produtos em promoção com preço e validade');
+  if (!read(r, 'social_destaques')) faltando.push('o que você quer girar neste mês');
+  if (!read(r, 'social_restricoes')) faltando.push('o que não pode ser anunciado');
+  if (!read(r, 'social_anuncios_produtos')) faltando.push('os produtos dos criativos de anúncio, com preço e condição');
+  if (!read(r, 'social_datas')) faltando.push('as datas do mês que valem aproveitar');
+  if (faltando.length > 0) {
+    p.push(`1️⃣ *Oferta do mês* — ficou faltando ${humanList(faltando)}.`);
+  } else {
+    p.push('1️⃣ *Oferta do mês* — a parte comercial ficou completa, já consigo montar a grade em cima dela.');
+  }
+
+  const acessoMeta = read(r, 'social_acesso_meta');
+  if (acessoMeta !== 'Convite enviado') {
+    p.push(
+      `2️⃣ *Acesso* — me convide como administradora (${ACCESS_EMAIL}) no Meta Business, que é o que dá acesso ao Instagram e ao Facebook. ` +
+        'Se preferir, te mando o passo a passo em print.',
+    );
+  }
+
+  const fotos = read(r, 'social_fotos');
+  const responsavel = read(r, 'social_fotos_responsavel');
+  if (fotos === 'Não temos' || fotos === '') {
+    p.push('3️⃣ *Fotos* — como não temos material, vou usar foto de catálogo por enquanto. Qualquer foto da loja e dos produtos que vocês tirarem no celular já ajuda muito.');
+  } else if (!responsavel) {
+    p.push('3️⃣ *Fotos* — me diz quem da equipe fica responsável por mandar as fotos e as novidades da loja, e por qual número.');
+  }
+
+  if (read(r, 'social_transicao')) {
+    p.push('Sobre a agência atual, anotei até quando ela publica; vou emendar o calendário pra não ficar nenhum dia com o perfil parado.');
+  }
+
+  p.push(
+    'Assim que isso chegar, eu monto o calendário completo e te mando pra aprovação antes de publicar qualquer coisa. Qualquer dúvida, me chama! 🚀',
   );
 
   return p.join('\n\n');

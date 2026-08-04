@@ -135,7 +135,15 @@ export function OnboardingForm({
       </div>
 
       <main className="mx-auto max-w-[680px] px-6 pb-32 pt-10">
-        {step === 0 && <Welcome context={context} welcome={tpl.welcome} sections={sections} onStart={() => go(1)} />}
+        {step === 0 && (
+          <Welcome
+            context={context}
+            welcome={tpl.welcome}
+            headline={tpl.headline}
+            sections={sections}
+            onStart={() => go(1)}
+          />
+        )}
 
         {step >= 1 && step <= TOTAL && (
           <Section
@@ -171,11 +179,13 @@ export function OnboardingForm({
 function Welcome({
   context,
   welcome,
+  headline,
   sections,
   onStart,
 }: {
   context: Context;
   welcome: string;
+  headline?: string;
   sections: OnboardingSection[];
   onStart: () => void;
 }) {
@@ -185,17 +195,31 @@ function Welcome({
         Notkode · Onboarding de cliente
       </span>
       <h1 className="mt-3.5 text-balance text-[clamp(30px,6vw,44px)] font-semibold leading-[1.05] tracking-[-0.025em]">
-        Vamos preparar o lançamento do <span className="text-cyan-700">{context.produto}</span>.
+        {headline ?? 'Vamos preparar o lançamento do'}{' '}
+        <span className="text-cyan-700">{context.produto}</span>.
       </h1>
       <p className="mt-3.5 max-w-[54ch] text-[16.5px] text-text-secondary">
         {welcome} Leva ~15 minutos e você pode parar e voltar quando quiser
         — salvamos cada resposta automaticamente.
       </p>
 
-      <div className="my-8 grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-border-subtle/40 bg-border-subtle/20 max-[560px]:grid-cols-1">
-        <Fact k="Cliente" v={context.cliente} />
-        <Fact k="Produto" v={context.produto} />
-        <Fact k="Escopo" v={context.escopo} />
+      {/* Cliente e produto são rótulos de uma linha; o escopo é texto corrido
+          e ocupa a largura toda, senão fica espremido em um terço da caixa. */}
+      <div className="my-8 overflow-hidden rounded-lg border border-border-subtle/40">
+        <div className="grid grid-cols-2 gap-px bg-border-subtle/20 max-[560px]:grid-cols-1">
+          <Fact k="Cliente" v={context.cliente} />
+          <Fact k="Produto" v={context.produto} />
+        </div>
+        {context.escopo.trim() && (
+          <div className="border-t border-border-subtle/40 bg-surface-base px-[18px] py-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
+              Escopo
+            </div>
+            <p className="mt-1.5 whitespace-pre-line text-[15px] leading-[1.62] text-text-secondary">
+              {context.escopo}
+            </p>
+          </div>
+        )}
       </div>
 
       <span className="font-label text-[11px] uppercase tracking-[0.18em] text-text-muted">

@@ -384,12 +384,109 @@ const IDENTIDADE_SECTIONS: OnboardingSection[] = [
   },
 ];
 
-export type OnboardingTemplateKey = 'produto' | 'site' | 'sistema-ia' | 'agentes' | 'identidade';
+// ── Social media ──────────────────────────────────────────────────────────
+// Coleta comercial de quem contrata conteúdo + criativo. A régua aqui é:
+// só perguntamos o que depende do cliente. Perfil, fotos e histórico de
+// campanha a gente já tem; oferta, preço e restrição só ele sabe.
+const SOCIAL_SECTIONS: OnboardingSection[] = [
+  {
+    id: 'social-marca',
+    title: 'Marca & público',
+    lede: 'Quem é a marca e com quem ela fala nas redes.',
+    questions: [
+      { id: 'social_perfis', type: 'text', ph: '@ do Instagram e link da página no Facebook',
+        label: 'Quais perfis vamos cuidar?' },
+      { id: 'social_negocio', type: 'area',
+        label: 'O que a marca vende e o que ela mais quer vender?' },
+      { id: 'social_publico', type: 'area', ph: 'Ex: dono de obra pequena, pedreiro, síndico...',
+        label: 'Quem é o cliente que você quer atrair?' },
+      { id: 'social_regiao', type: 'text', ph: 'Ex: São Bernardo e região do ABC',
+        label: 'Quais cidades ou bairros você atende?' },
+      { id: 'social_tom', type: 'chips', options: ['Descontraído', 'Neutro', 'Técnico', 'Formal'],
+        label: 'Qual o tom de voz da marca?' },
+      { id: 'social_diferenciais', type: 'area',
+        label: 'Por que o cliente compra de você e não do concorrente?' },
+      { id: 'social_concorrentes', type: 'area', ph: '@perfis + o que você gosta ou não gosta em cada um',
+        label: 'Quais perfis de concorrentes ou referências devemos acompanhar?' },
+    ],
+  },
+  {
+    id: 'social-oferta',
+    title: 'Oferta & conteúdo do mês',
+    lede: 'O conteúdo sai da sua oferta real, não do que a agência acha.',
+    questions: [
+      { id: 'social_ofertas', type: 'area', star: true,
+        ph: 'Ex: persiana tela solar R$ 149,90/m² até 31/08',
+        label: 'Quais produtos entram em promoção neste mês, com preço e validade?' },
+      { id: 'social_destaques', type: 'area', star: true,
+        ph: 'Estoque parado, mercadoria chegando, serviço que pouca gente sabe que existe...',
+        label: 'O que você quer girar neste mês?' },
+      { id: 'social_preco_publico', type: 'chips',
+        options: ['Sim, pode divulgar', 'Só de alguns produtos', 'Não divulgar preço'],
+        label: 'Podemos publicar preço nas artes?' },
+      { id: 'social_condicoes', type: 'text', ph: 'Ex: 6x sem juros, 5% à vista, frete grátis na região',
+        label: 'Quais condições de pagamento e frete podem aparecer nas artes?' },
+      { id: 'social_restricoes', type: 'area', star: true,
+        ph: 'Produto sem estoque, marca que proíbe divulgar preço, assunto que você não quer tocar...',
+        label: 'O que NÃO pode ser anunciado?' },
+      { id: 'social_datas', type: 'area',
+        ph: 'Datas comemorativas, aniversário da loja, feriado local, evento, chegada de carga...',
+        label: 'Quais datas deste mês devemos aproveitar?' },
+    ],
+  },
+  {
+    id: 'social-anuncios',
+    title: 'Anúncios',
+    lede: 'Os criativos de anúncio seguem fluxo próprio, separado do calendário de conteúdo.',
+    questions: [
+      { id: 'social_trafego', type: 'chips',
+        options: ['Vocês rodam', 'A Notkode roda', 'Ninguém roda hoje'],
+        label: 'Quem cuida do tráfego pago?' },
+      { id: 'social_anuncios_produtos', type: 'area', star: true,
+        ph: 'Produto, preço e condição de pagamento de cada anúncio',
+        label: 'Quais produtos você quer anunciar neste mês?' },
+      { id: 'social_destino', type: 'chips', multi: true,
+        options: ['WhatsApp', 'Direct', 'Site', 'Loja física', 'Telefone'],
+        label: 'Para onde o anúncio deve levar o cliente?' },
+      { id: 'social_whatsapp', type: 'text', ph: '(11) 9...',
+        showIf: { q: 'social_destino', in: ['WhatsApp'] },
+        label: 'Qual número recebe as mensagens?' },
+    ],
+  },
+  {
+    id: 'social-operacao',
+    title: 'Material & aprovação',
+    lede: 'Como o material chega até nós e quem dá o ok antes de qualquer publicação.',
+    access: true,
+    questions: [
+      { id: 'social_acesso_meta', type: 'chips',
+        options: ['Convite enviado', 'Preciso de ajuda pra fazer', 'Não sei quem tem o acesso'],
+        label: 'Você já nos convidou como administradores no Meta Business (Instagram e Facebook)?' },
+      { id: 'social_fotos', type: 'chips', options: ['Sim, temos', 'Temos poucas', 'Não temos'],
+        label: 'Você tem fotos dos produtos e da loja?' },
+      { id: 'social_fotos_responsavel', type: 'text', ph: 'Nome e WhatsApp',
+        label: 'Quem fica responsável por mandar fotos e novidades da loja?' },
+      { id: 'social_video', type: 'chips', options: ['Sim, conseguimos', 'Talvez', 'Não'],
+        hint: 'A produção de vídeo não faz parte do pacote. Se alguém da equipe gravar por conta própria, a gente avalia encaixar no calendário.',
+        label: 'Alguém da equipe consegue gravar vídeos curtos no celular?' },
+      { id: 'social_aprovador', type: 'text', ph: 'Nome e WhatsApp',
+        label: 'Quem aprova o calendário antes de publicar?' },
+      { id: 'social_transicao', type: 'text', ph: 'Ex: publica até 08/08',
+        label: 'Se outra agência publica hoje, até quando ela segue?' },
+      { id: 'social_material', type: 'file',
+        label: 'Anexe logo, fotos e artes que já existem.' },
+    ],
+  },
+];
+
+export type OnboardingTemplateKey = 'produto' | 'site' | 'sistema-ia' | 'agentes' | 'identidade' | 'social';
 
 export type OnboardingTemplate = {
   label: string;
   /** Parágrafo de boas-vindas do formulário público. */
   welcome: string;
+  /** Abertura do título, antes do nome do produto. Padrão: lançamento. */
+  headline?: string;
   sections: OnboardingSection[];
 };
 
@@ -421,6 +518,13 @@ export const ONBOARDING_TEMPLATES: Record<OnboardingTemplateKey, OnboardingTempl
     label: 'Identidade & Brandbook',
     welcome: 'Este briefing nos dá tudo que precisamos para criar uma identidade com a cara da sua marca.',
     sections: IDENTIDADE_SECTIONS,
+  },
+  social: {
+    label: 'Social Media & Criativo',
+    headline: 'Vamos preparar o conteúdo do',
+    welcome:
+      'Este briefing nos dá o que precisamos para montar o calendário do mês e os criativos de anúncio. Perfil, fotos e histórico de campanha a gente já acessa; aqui perguntamos só o que depende de você.',
+    sections: SOCIAL_SECTIONS,
   },
 };
 
