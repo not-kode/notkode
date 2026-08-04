@@ -456,33 +456,23 @@ const SOCIAL_SECTIONS: OnboardingSection[] = [
   {
     id: 'social-anuncios',
     title: 'Anúncios',
+    // Destino, número de atendimento e quem opera a mídia são configuração
+    // nossa, não pergunta de briefing. Aqui só o que a arte precisa dizer.
     lede: 'Os criativos de anúncio seguem fluxo próprio, separado do calendário de conteúdo.',
     questions: [
-      { id: 'social_trafego', type: 'chips',
-        options: ['Vocês rodam', 'A Notkode roda', 'Ninguém roda hoje'],
-        label: 'Quem cuida do tráfego pago?' },
       { id: 'social_anuncios_produtos', type: 'area', star: true,
         ph: 'Produto, preço e condição de pagamento de cada anúncio',
         label: 'Quais produtos você quer anunciar neste mês?' },
-      { id: 'social_destino', type: 'chips', multi: true,
-        options: ['WhatsApp', 'Direct', 'Site', 'Loja física', 'Telefone'],
-        label: 'Para onde o anúncio deve levar o cliente?' },
-      { id: 'social_whatsapp', type: 'text', ph: '(11) 9...',
-        showIf: { q: 'social_destino', in: ['WhatsApp'] },
-        label: 'Qual número recebe as mensagens?' },
+      { id: 'social_anuncios_arte', type: 'area',
+        ph: 'Ex: mostrar a persiana instalada, usar a foto do galpão, destacar o desconto à vista...',
+        label: 'Tem alguma foto ou detalhe que precisa aparecer na arte desses anúncios?' },
     ],
   },
   {
     id: 'social-operacao',
     title: 'Material & aprovação',
     lede: 'Como o material chega até nós e quem dá o ok antes de qualquer publicação.',
-    access: true,
     questions: [
-      { id: 'social_acesso_meta', type: 'chips',
-        options: ['Convite enviado', 'Preciso de ajuda pra fazer', 'Não sei quem tem o acesso'],
-        label: 'Você já nos convidou como administradores no Meta Business (Instagram e Facebook)?' },
-      { id: 'social_fotos', type: 'chips', options: ['Sim, temos', 'Temos poucas', 'Não temos'],
-        label: 'Você tem fotos dos produtos e da loja?' },
       { id: 'social_fotos_responsavel', type: 'text', ph: 'Nome e WhatsApp',
         label: 'Quem fica responsável por mandar fotos e novidades da loja?' },
       { id: 'social_video', type: 'chips', options: ['Sim, conseguimos', 'Talvez', 'Não'],
