@@ -6,10 +6,14 @@ import { PIPELINE_STAGES, STAGE_LABELS, SERVICE_LABELS, type DealStage } from '.
 import { DealDrawer } from './deal-drawer';
 import { type OrgOption, type Product } from './orgs';
 import { dealTotal, dealMonthlyNet } from './deal-value';
+import { siteHref, instagramHandle, instagramHref } from '../_shared/org-links';
 
 export type OrgInfo = {
   id: string;
   name: string | null;
+  /** Presença do cliente na web, guardada junto do telefone e do e-mail. */
+  site: string | null;
+  instagram: string | null;
   legal_name: string | null;
   tax_id: string | null;
   state_registration: string | null;
@@ -52,6 +56,8 @@ export type BoardDeal = {
   proposal_path: string | null;
   proposal_name: string | null;
   installments: DealInstallment[];
+  /** Já tem contrato no financeiro (gerado depois de ganhar). */
+  has_contract: boolean;
 };
 
 // Filete de acento no topo de cada coluna — segue a paleta da marca.
@@ -232,10 +238,38 @@ export function PipelineBoard({
                     </div>
                   )}
 
-                  {(deal.email || deal.whatsapp) && (
+                  {(deal.email || deal.whatsapp || deal.org?.site || deal.org?.instagram) && (
                     <div className="mt-2 space-y-0.5 border-t border-black/[0.06] pt-2">
                       {deal.email && <p className="truncate font-label text-[10px] text-text-muted">{deal.email}</p>}
                       {deal.whatsapp && <p className="font-label text-[10px] text-text-muted">{deal.whatsapp}</p>}
+                      {/* Site e Instagram abrem direto: no meio da conversa
+                          ninguém quer copiar o endereço na mão. */}
+                      {(deal.org?.site || deal.org?.instagram) && (
+                        <p className="flex flex-wrap items-center gap-x-2 font-label text-[10px] text-text-muted">
+                          {siteHref(deal.org?.site) && (
+                            <a
+                              href={siteHref(deal.org?.site)!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="truncate transition-colors hover:text-primary"
+                            >
+                              ↗ site
+                            </a>
+                          )}
+                          {instagramHandle(deal.org?.instagram) && (
+                            <a
+                              href={instagramHref(deal.org?.instagram)!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="truncate transition-colors hover:text-primary"
+                            >
+                              @{instagramHandle(deal.org?.instagram)}
+                            </a>
+                          )}
+                        </p>
+                      )}
                     </div>
                   )}
 

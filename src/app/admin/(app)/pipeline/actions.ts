@@ -119,14 +119,25 @@ export async function createDeal(formData: FormData): Promise<void> {
     const { data: existing } = await supabase.from('organizations').select('id, name');
     orgId = existing?.find((o) => normalizeOrgName(o.name ?? '') === normalizeOrgName(company))?.id ?? null;
   }
+  // Site/Instagram do cliente vêm do mesmo formulário, mas moram na empresa.
+  const site = String(formData.get('org_site') ?? '').trim();
+  const instagram = String(formData.get('org_instagram') ?? '').trim();
+
   if (!orgId) {
     const { data: org, error: orgErr } = await supabase
       .from('organizations')
-      .insert({ name: company })
+      .insert({ name: company, site: site || null, instagram: instagram || null })
       .select('id')
       .single();
     if (orgErr || !org) throw new Error(`Falha ao criar empresa: ${orgErr?.message}`);
     orgId = org.id;
+  } else if (site || instagram) {
+    // Empresa que já existia só recebe o que foi preenchido: campo em branco aqui
+    // não apaga o que já estava no cadastro dela.
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (site) patch.site = site;
+    if (instagram) patch.instagram = instagram;
+    await supabase.from('organizations').update(patch).eq('id', orgId);
   }
 
   // 2. Contato: reaproveita o contato do cliente vinculado (preenchido pelo
@@ -210,15 +221,25 @@ export async function updateDeal(formData: FormData): Promise<void> {
   const whatsapp = String(formData.get('whatsapp') ?? '').trim();
   const notes = formData.get('notes') != null ? String(formData.get('notes')) || null : undefined;
 
-  // 1. Empresa — atualiza o nome, ou vincula/cria a organização se o negócio ainda
-  //    não tiver (reaproveita empresa de nome igual para não duplicar cliente).
+  // 1. Empresa — atualiza o nome (e o site/Instagram, que são do cliente), ou
+  //    vincula/cria a organização se o negócio ainda não tiver (reaproveita
+  //    empresa de nome igual para não duplicar cliente).
+  const orgPatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (company) orgPatch.name = company;
+  if (formData.has('org_site')) orgPatch.site = String(formData.get('org_site')).trim() || null;
+  if (formData.has('org_instagram')) orgPatch.instagram = String(formData.get('org_instagram')).trim() || null;
+
   if (organizationId) {
-    if (company) await supabase.from('organizations').update({ name: company, updated_at: new Date().toISOString() }).eq('id', organizationId);
+    if (Object.keys(orgPatch).length > 1) {
+      await supabase.from('organizations').update(orgPatch).eq('id', organizationId);
+    }
   } else if (company) {
     const { data: existing } = await supabase.from('organizations').select('id, name');
     organizationId = existing?.find((o) => normalizeOrgName(o.name ?? '') === normalizeOrgName(company))?.id ?? null;
-    if (!organizationId) {
-      const { data: org } = await supabase.from('organizations').insert({ name: company }).select('id').single();
+    if (organizationId) {
+      await supabase.from('organizations').update(orgPatch).eq('id', organizationId);
+    } else {
+      const { data: org } = await supabase.from('organizations').insert({ ...orgPatch, name: company }).select('id').single();
       if (org) organizationId = org.id;
     }
   }
@@ -276,13 +297,21 @@ export async function updateDeal(formData: FormData): Promise<void> {
     patch.service_tag = services[0] ?? null;
   }
 
+  // A etapa só muda quando o formulário está em dia com o banco. O painel fica
+  // aberto enquanto o negócio pode mudar por fora (ganhar, arrastar no kanban),
+  // e o formulário salva sozinho: sem esta trava, o salvamento seguinte regravava
+  // a etapa velha e trazia de volta pro funil um negócio que já tinha sido ganho.
   const stageRaw = String(formData.get('stage') ?? '').trim();
   if (DEAL_STAGES.includes(stageRaw as DealStage)) {
-    patch.stage = stageRaw;
+    const { data: atual } = await supabase.from('deals').select('stage').eq('id', id).single();
+    const base = String(formData.get('stage_base') ?? '').trim();
+    const emDia = !base || !atual || atual.stage === base;
     // Só reinicia o "parado há X dias" se a etapa realmente mudou: salvar o
     // negócio para corrigir um telefone não pode fazer ele parecer recém-movido.
-    const { data: atual } = await supabase.from('deals').select('stage').eq('id', id).single();
-    if (atual && atual.stage !== stageRaw) patch.stage_changed_at = new Date().toISOString();
+    if (emDia && atual && atual.stage !== stageRaw) {
+      patch.stage = stageRaw;
+      patch.stage_changed_at = new Date().toISOString();
+    }
   }
   if (notes !== undefined) patch.notes = notes;
 
@@ -292,27 +321,42 @@ export async function updateDeal(formData: FormData): Promise<void> {
 }
 
 /**
- * Fecha o negócio (marca "ganho") e cria o contrato correspondente no financeiro,
- * herdando valor/MRR do deal. Não duplica se o deal já tiver contrato vinculado.
- * Próximo passo do fluxo: preparar o documento de contrato.
+ * Fecha o negócio: marca "ganho" e tira do funil. Só isso — o contrato no
+ * financeiro é um passo à parte ("Gerar contrato"), porque fechar a venda e
+ * abrir o contrato são decisões diferentes e nem sempre acontecem no mesmo dia.
  */
 export async function winDeal(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   if (!id) return;
 
   const supabase = getSupabaseAdmin();
-  const { data: deal } = await supabase
-    .from('deals')
-    .select('id, organization_id, service_tag, valor_pontual, mrr, notes, proposal_path, proposal_name')
-    .eq('id', id)
-    .single();
-  if (!deal) return;
-
   const fechadoEm = new Date().toISOString();
-  await supabase
+  const { error } = await supabase
     .from('deals')
     .update({ stage: 'ganho', updated_at: fechadoEm, stage_changed_at: fechadoEm })
     .eq('id', id);
+  if (error) throw new Error(`Falha ao marcar como ganho: ${error.message}`);
+
+  revalidatePath('/admin/pipeline');
+}
+
+/**
+ * Cria o contrato do negócio ganho no financeiro, herdando valor/MRR, proposta e
+ * parcelas do card. Não duplica: se o negócio já tem contrato vinculado, só
+ * completa o que faltar. Próximo passo do fluxo: preparar o documento na aba
+ * Clientes.
+ */
+export async function generateDealContract(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data: deal } = await supabase
+    .from('deals')
+    .select('id, organization_id, service_tag, service_tags, valor_pontual, mrr, notes, proposal_path, proposal_name')
+    .eq('id', id)
+    .single();
+  if (!deal) return;
 
   // Parcelas/mensalidades planejadas do negócio — usadas para as datas de vigência
   // e o ciclo do contrato, e mais abaixo copiadas como cobranças.
@@ -336,10 +380,13 @@ export async function winDeal(formData: FormData): Promise<void> {
     engagementId = existing[0].engagement_id;
   } else {
     const isRecurring = Number(deal.mrr ?? 0) > 0;
+    // O produto vem da lista nova (service_tags); o campo antigo, singular, fica
+    // como retaguarda para os negócios cadastrados antes dela.
+    const produto = (deal.service_tags ?? [])[0] ?? deal.service_tag;
     let title = 'Contrato';
-    if (deal.service_tag) {
-      const { data: prod } = await supabase.from('products').select('name').eq('key', deal.service_tag).maybeSingle();
-      title = prod?.name ?? SERVICE_TITLES[deal.service_tag] ?? 'Contrato';
+    if (produto) {
+      const { data: prod } = await supabase.from('products').select('name').eq('key', produto).maybeSingle();
+      title = prod?.name ?? SERVICE_TITLES[produto] ?? 'Contrato';
     }
 
     // Vigência e ciclo vêm das mensalidades geradas no card.
@@ -347,7 +394,7 @@ export async function winDeal(formData: FormData): Promise<void> {
     const end_date = parcelas && parcelas.length > 0 ? parcelas[parcelas.length - 1].due_date : null;
     const billing_cycle = isRecurring && parcelas && parcelas.length > 0 ? `mensal (${parcelas.length}x)` : null;
 
-    const { data: eng } = await supabase
+    const { data: eng, error: engErr } = await supabase
       .from('engagements')
       .insert({
         organization_id: deal.organization_id,
@@ -363,10 +410,9 @@ export async function winDeal(formData: FormData): Promise<void> {
       })
       .select('id')
       .single();
-    if (eng) {
-      engagementId = eng.id;
-      await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: eng.id });
-    }
+    if (engErr || !eng) throw new Error(`Falha ao criar o contrato: ${engErr?.message}`);
+    engagementId = eng.id;
+    await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: eng.id });
   }
 
   // Leva a proposta e as parcelas do negócio para o contrato recém-vinculado.

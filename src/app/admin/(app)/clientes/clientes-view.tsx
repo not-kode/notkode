@@ -5,6 +5,7 @@ import { createEngagement, createReceivable, concludeEngagement, markReceivableP
 import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal, createClient, deleteOrganization } from './actions';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
+import { siteHref, instagramHandle, instagramHref } from '../_shared/org-links';
 import { AutoSaveForm } from '../_shared/auto-save-form';
 import { AssinaturaBloco, type AssinaturaResumo } from './assinatura-bloco';
 import { ModelosView, type ModeloRow } from './modelos-view';
@@ -30,6 +31,7 @@ export type Contrato = {
 export type ModeloDisponivel = { id: string; nome: string };
 export type ClientView = {
   id: string; name: string | null; market: string | null;
+  site: string | null; instagram: string | null;
   legal_name: string | null; tax_id: string | null; state_registration: string | null;
   address_street: string | null; address_number: string | null; address_district: string | null;
   address_city: string | null; address_state: string | null; address_zip: string | null;
@@ -315,6 +317,10 @@ function NovoClienteDrawer({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-3">
             <div><label className={labelCls}>E-mail</label><input name="contact_email" type="email" className={inputCls} placeholder="nome@empresa.com" /></div>
             <div><label className={labelCls}>WhatsApp</label><input name="contact_whatsapp" className={inputCls} placeholder="(11) 99999-9999" /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className={labelCls}>Site</label><input name="site" className={inputCls} placeholder="cliente.com.br" /></div>
+            <div><label className={labelCls}>Instagram</label><input name="instagram" className={inputCls} placeholder="@cliente" /></div>
           </div>
         </div>
 
@@ -1056,6 +1062,23 @@ function ProjectHeader({ client, productLabels = {} }: { client: ClientView; pro
           <span className={cellLabel + ' shrink-0 pt-0.5'}>Contato</span>
           <span className="text-text-secondary">{contact ? [contact.name ?? '—', contact.whatsapp, contact.email].filter(Boolean).join(' · ') : '—'}</span>
         </div>
+        {(client.site || client.instagram) && (
+          <div className="flex gap-2">
+            <span className={cellLabel + ' shrink-0 pt-0.5'}>Na web</span>
+            <span className="flex flex-wrap items-center gap-x-3 text-text-secondary">
+              {siteHref(client.site) && (
+                <a href={siteHref(client.site)!} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary">
+                  {client.site}
+                </a>
+              )}
+              {instagramHandle(client.instagram) && (
+                <a href={instagramHref(client.instagram)!} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary">
+                  @{instagramHandle(client.instagram)}
+                </a>
+              )}
+            </span>
+          </div>
+        )}
         <div className="flex gap-2">
           <span className={cellLabel + ' shrink-0 pt-0.5'}>Origem</span>
           <span className="text-text-secondary">{origem || '—'}</span>
@@ -1140,20 +1163,27 @@ function OnboardingTab({ client, templates }: { client: ClientView; templates: {
             const ativo = b.id === abertoId;
             return (
               <li key={b.id}>
-                <button
-                  onClick={() => setAbertoId(ativo ? null : b.id)}
-                  className={`flex w-full flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-left transition-colors ${
+                {/* O link do cliente fica na linha, sem precisar abrir o briefing:
+                    enquanto ninguém respondeu, é a ação principal daqui. */}
+                <div
+                  className={`flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 transition-colors ${
                     ativo ? 'border-primary/40 bg-primary/[0.04]' : 'border-black/[0.06] bg-white hover:border-black/15'
                   }`}
                 >
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
-                    {b.product_name ?? 'Briefing'}
-                  </span>
-                  <StatusBadge enviado={enviado} />
-                  <span className="font-label text-[10px] text-text-muted">
-                    {enviado ? `respondido em ${fmtBriefingDate(b.submitted_at)}` : `criado em ${fmtBriefingDate(b.created_at)}`}
-                  </span>
-                </button>
+                  <button
+                    onClick={() => setAbertoId(ativo ? null : b.id)}
+                    className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
+                      {b.product_name ?? 'Briefing'}
+                    </span>
+                    <StatusBadge enviado={enviado} />
+                    <span className="font-label text-[10px] text-text-muted">
+                      {enviado ? `respondido em ${fmtBriefingDate(b.submitted_at)}` : `criado em ${fmtBriefingDate(b.created_at)}`}
+                    </span>
+                  </button>
+                  {!enviado && <CopyLink url={`${SITE_URL_CLIENTE}/onboarding/${b.token}`} destaque />}
+                </div>
 
                 {ativo && (
                   <div className="mt-2 overflow-hidden rounded-md border border-black/[0.06] bg-white">

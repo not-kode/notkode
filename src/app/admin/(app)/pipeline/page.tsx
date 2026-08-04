@@ -10,6 +10,8 @@ type Channel = { kind: string; value: string; is_primary: boolean };
 type OrgRow = {
   id: string;
   name: string | null;
+  site: string | null;
+  instagram: string | null;
   legal_name: string | null;
   tax_id: string | null;
   state_registration: string | null;
@@ -57,7 +59,7 @@ export default async function PipelinePage() {
     .select(
       'id, stage, stage_changed_at, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, ' +
         'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
-        'organizations(id, name, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep), ' +
+        'organizations(id, name, site, instagram, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep), ' +
         'deal_installments(id, description, amount, due_date)',
     )
     .order('created_at', { ascending: false });
@@ -96,6 +98,11 @@ export default async function PipelinePage() {
     ];
   });
 
+  // Negócios que já viraram contrato: o card ganho mostra "gerar contrato" só
+  // enquanto ele não existe.
+  const { data: vinculos } = await supabase.from('deal_engagements').select('deal_id');
+  const comContrato = new Set((vinculos ?? []).map((v) => v.deal_id as string));
+
   // Produtos/serviços da tabela products (lista editável pelo próprio sistema).
   const { data: prodRows } = await supabase.from('products').select('key, name, active').order('sort');
   const products: Product[] = (prodRows ?? []).map((p) => ({ key: p.key, name: p.name, active: p.active }));
@@ -131,6 +138,7 @@ export default async function PipelinePage() {
     proposal_path: r.proposal_path,
     proposal_name: r.proposal_name,
     installments: [...(r.deal_installments ?? [])].sort((a, b) => a.due_date.localeCompare(b.due_date)),
+    has_contract: comContrato.has(r.id),
   }));
 
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');

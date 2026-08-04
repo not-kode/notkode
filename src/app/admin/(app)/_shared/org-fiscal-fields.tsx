@@ -6,6 +6,8 @@
 // Renderiza só os inputs — o <form>, o id oculto e o botão de salvar ficam com quem usa.
 
 export type OrgFiscal = {
+  site?: string | null;
+  instagram?: string | null;
   legal_name: string | null;
   tax_id: string | null;
   state_registration: string | null;
@@ -36,7 +38,16 @@ function Field({ label, name, defaultValue, placeholder, className = '' }: { lab
 export function OrgFiscalFields({ org, includeRepCpf = true }: { org: Partial<OrgFiscal> | null | undefined; includeRepCpf?: boolean }) {
   return (
     <>
+      {/* Onde o cliente está na internet. Fica com o telefone e o e-mail dele,
+          porque é isso que se procura junto na hora de falar com ele. */}
       <div>
+        <p className="mb-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Presença do cliente</p>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Site" name="site" defaultValue={org?.site} placeholder="cliente.com.br" />
+          <Field label="Instagram" name="instagram" defaultValue={org?.instagram} placeholder="@cliente" />
+        </div>
+      </div>
+      <div className="border-t border-black/[0.06] pt-4">
         <p className="mb-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">Dados para o contrato</p>
         <div className="flex flex-col gap-3">
           <Field label="Razão social" name="legal_name" defaultValue={org?.legal_name} placeholder="Empresa LTDA" />

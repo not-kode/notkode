@@ -6,7 +6,7 @@ import { mimeDaProposta } from '@/lib/proposta-mime';
 
 // Dados cadastrais da empresa (usados para gerar contratos).
 const ORG_FIELDS = [
-  'name', 'legal_name', 'tax_id', 'state_registration',
+  'name', 'site', 'instagram', 'legal_name', 'tax_id', 'state_registration',
   'address_street', 'address_number', 'address_district',
   'address_city', 'address_state', 'address_zip', 'legal_rep', 'legal_rep_cpf',
 ] as const;

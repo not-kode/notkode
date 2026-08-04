@@ -176,8 +176,13 @@ export function OnboardingView({
                   <td className="px-4 py-3 font-mono text-xs text-text-secondary">{countAnswers(r.respostas)}</td>
                   <td className="px-4 py-3 font-mono text-xs text-text-muted">{fmtDateShort(r.created_at)}</td>
                   <td className="px-4 py-3 font-mono text-xs text-text-muted">{fmtDateShort(r.submitted_at)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="font-mono text-xs text-primary">abrir →</span>
+                  <td className="px-4 py-3">
+                    {/* O link de responder fica na própria linha: é o que se manda
+                        pro cliente, e vivia escondido dentro do briefing aberto. */}
+                    <div className="flex items-center justify-end gap-3">
+                      {!enviado && <CopyLink url={`${siteUrl}/onboarding/${r.token}`} destaque />}
+                      <span className="font-mono text-xs text-primary">abrir →</span>
+                    </div>
                   </td>
                 </tr>
               );

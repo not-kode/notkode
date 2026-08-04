@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 type Channel = { kind: string; value: string; is_primary: boolean };
 type OrgRow = {
   id: string; name: string | null; market: string | null;
+  site: string | null; instagram: string | null;
   legal_name: string | null; tax_id: string | null; state_registration: string | null;
   address_street: string | null; address_number: string | null; address_district: string | null;
   address_city: string | null; address_state: string | null; address_zip: string | null;
@@ -65,7 +66,7 @@ export default async function ClientesPage() {
   const [{ data: orgData }, { data: engData }, { data: recData }, { data: coData }, { data: briefData }, { data: dealData }, { data: leadData }] = await Promise.all([
     supabase
       .from('organizations')
-      .select('id, name, market, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep, legal_rep_cpf')
+      .select('id, name, market, site, instagram, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep, legal_rep_cpf')
       .order('name'),
     supabase
       .from('engagements')

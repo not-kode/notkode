@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   createDeal,
   updateDeal,
   winDeal,
+  generateDealContract,
   uploadDealProposal,
   removeDealProposal,
   addDealInstallment,
@@ -187,6 +188,43 @@ function CreateIdentityFields({ orgOptions }: { orgOptions: OrgOption[] }) {
           />
         </div>
       </div>
+
+      {/* Site e Instagram ficam com o cliente (a empresa), não com o negócio:
+          são os mesmos em toda negociação futura. */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={labelCls}>Site</label>
+          <input name="org_site" placeholder="cliente.com.br" className={inputCls} />
+        </div>
+        <div>
+          <label className={labelCls}>Instagram</label>
+          <input name="org_instagram" placeholder="@cliente" className={inputCls} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+/**
+ * Seletor de etapa. Acompanha o negócio: quando ele muda por fora (ganhar,
+ * arrastar o card no funil), o campo mostra a etapa nova em vez de continuar
+ * exibindo a antiga. `stage_base` viaja junto para o servidor recusar a troca
+ * de etapa quando este formulário estiver desatualizado.
+ */
+function StageSelect({ current, options }: { current: string; options: readonly string[] }) {
+  const [stage, setStage] = useState(current);
+  useEffect(() => setStage(current), [current]);
+
+  return (
+    <>
+      <input type="hidden" name="stage_base" value={current} />
+      <select name="stage" value={stage} onChange={(e) => setStage(e.target.value)} className={inputCls}>
+        {options.map((s) => (
+          <option key={s} value={s}>
+            {STAGE_LABELS[s as DealStage] ?? s}
+          </option>
+        ))}
+      </select>
     </>
   );
 }
@@ -282,13 +320,7 @@ function FinanceFields({
         </div>
         <div>
           <label className={labelCls}>Estágio</label>
-          <select name="stage" defaultValue={currentStage} className={inputCls}>
-            {stageOptions.map((s) => (
-              <option key={s} value={s}>
-                {STAGE_LABELS[s as DealStage] ?? s}
-              </option>
-            ))}
-          </select>
+          <StageSelect current={currentStage} options={stageOptions} />
         </div>
       </div>
 
@@ -368,10 +400,11 @@ export function DealDrawer({
   const isNew = deal === null;
   const [savePending, startSave] = useTransition();
   const [winPending, startWin] = useTransition();
+  const [contratoPending, startContrato] = useTransition();
   const [manageOpen, setManageOpen] = useState(false);
   // Salvamento pendente do autosave: garante que o que foi digitado agora não se
   // perca se o painel for fechado antes da pausa.
-  const flushRef = useRef<(() => void) | null>(null);
+  const flushRef = useRef<(() => void | Promise<void>) | null>(null);
   const fechar = () => { flushRef.current?.(); onClose(); };
   // O seletor de produto não é um <input>: precisa pedir o salvamento na mão.
   const salvarAgora = () => {
@@ -427,7 +460,8 @@ export function DealDrawer({
             </p>
             <h2 className="text-lg font-semibold leading-tight tracking-tight text-text-primary">{title}</h2>
 
-            {/* Toggle Ganhar negócio — só na edição; cria o contrato no financeiro ao ligar */}
+            {/* Toggle Ganhar negócio — só na edição. Fecha a venda e tira do funil;
+                o contrato é o passo seguinte, com botão próprio. */}
             {!isNew && (
               <button
                 type="button"
@@ -437,9 +471,14 @@ export function DealDrawer({
                 onClick={() => {
                   const fd = new FormData();
                   fd.set('id', deal!.id);
-                  startWin(() => winDeal(fd));
+                  // Espera o autosave pendente gravar antes: as duas gravações
+                  // correndo juntas faziam a etapa velha voltar por cima do ganho.
+                  startWin(async () => {
+                    await flushRef.current?.();
+                    await winDeal(fd);
+                  });
                 }}
-                title={isWon ? 'Negócio ganho' : `Marcar como ganho — cria o contrato${deal!.valor_pontual ? ` de ${brl(deal!.valor_pontual)}` : ''} no financeiro`}
+                title={isWon ? 'Negócio ganho' : 'Marcar como ganho — sai do funil; o contrato você gera no passo seguinte'}
                 className="mt-2.5 inline-flex items-center gap-2 disabled:cursor-default"
               >
                 <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${isWon ? 'bg-success' : 'bg-black/[0.15]'}`}>
@@ -462,7 +501,7 @@ export function DealDrawer({
           </button>
         </div>
 
-        {/* Desfecho ganho + próximo passo */}
+        {/* Desfecho ganho + próximo passo: gerar o contrato no financeiro. */}
         {isWon && (
           <div className="mx-5 mt-4 rounded-md border border-success/25 bg-success/[0.06] px-4 py-3">
             <p className="flex items-center gap-2 text-sm font-medium text-success">
@@ -471,9 +510,34 @@ export function DealDrawer({
               </svg>
               Negócio ganho
             </p>
-            <p className="mt-1 font-label text-[11px] text-text-secondary">
-              Próximo passo: preencher os dados cadastrais e o contrato na aba <strong className="font-semibold">Clientes</strong>.
-            </p>
+
+            {deal!.has_contract ? (
+              <p className="mt-1 font-label text-[11px] text-text-secondary">
+                Contrato criado no financeiro. Próximo passo: preencher os dados cadastrais e o
+                documento na aba <strong className="font-semibold">Clientes</strong>.
+              </p>
+            ) : (
+              <>
+                <p className="mt-1 font-label text-[11px] text-text-secondary">
+                  Gerar o contrato leva valor, proposta e parcelas deste card para o financeiro.
+                </p>
+                <button
+                  type="button"
+                  disabled={contratoPending}
+                  onClick={() => {
+                    const fd = new FormData();
+                    fd.set('id', deal!.id);
+                    startContrato(async () => {
+                      await flushRef.current?.();
+                      await generateDealContract(fd);
+                    });
+                  }}
+                  className="mt-2.5 rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-success/90 disabled:opacity-60"
+                >
+                  {contratoPending ? 'Gerando…' : 'Gerar contrato'}
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -520,6 +584,13 @@ export function DealDrawer({
               <div className="grid grid-cols-2 gap-3">
                 <Field label="WhatsApp" name="whatsapp" defaultValue={deal?.whatsapp} placeholder="(00) 00000-0000" />
                 <Field label="E-mail" name="email" type="email" defaultValue={deal?.email} placeholder="opcional" />
+              </div>
+
+              {/* Site e Instagram são do cliente: ficam salvos na empresa e
+                  aparecem também na ficha dela, na aba Clientes. */}
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Site" name="org_site" defaultValue={deal?.org?.site} placeholder="cliente.com.br" />
+                <Field label="Instagram" name="org_instagram" defaultValue={deal?.org?.instagram} placeholder="@cliente" />
               </div>
             </>
           )}

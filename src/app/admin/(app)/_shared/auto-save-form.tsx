@@ -10,14 +10,16 @@ type Estado = 'parado' | 'salvando' | 'salvo';
  * salvar — o aviso de "salvando/salvo" aparece no canto e some.
  *
  * `flushRef` deixa quem abriu (um drawer, por exemplo) forçar o salvamento do
- * que ficou pendente antes de fechar.
+ * que ficou pendente antes de fechar. Ele devolve uma promessa: quem vai gravar
+ * outra coisa no mesmo registro logo em seguida precisa ESPERAR, senão as duas
+ * gravações correm juntas e a mais lenta é que fica valendo.
  */
 export function AutoSaveForm({ action, children, className, delay = 800, flushRef, onSaved, auto = true, id }: {
   action: (formData: FormData) => void | Promise<void>;
   children: ReactNode;
   className?: string;
   delay?: number;
-  flushRef?: { current: (() => void) | null };
+  flushRef?: { current: (() => void | Promise<void>) | null };
   onSaved?: () => void;
   /** Com `false` vira um formulário comum (criação, que precisa de confirmação). */
   auto?: boolean;
@@ -37,6 +39,17 @@ export function AutoSaveForm({ action, children, className, delay = 800, flushRe
     form.requestSubmit();
   };
 
+  // Mesmo salvamento, mas chamando a ação na mão para poder ser aguardado
+  // (requestSubmit não devolve nada).
+  const enviarAgora = async () => {
+    const form = formRef.current;
+    if (!form || !form.checkValidity()) return;
+    if (auto) setEstado('salvando');
+    await action(new FormData(form));
+    if (auto) setEstado('salvo');
+    onSaved?.();
+  };
+
   const agendar = () => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(submitNow, delay);
@@ -44,7 +57,12 @@ export function AutoSaveForm({ action, children, className, delay = 800, flushRe
 
   useEffect(() => {
     if (!flushRef) return;
-    flushRef.current = () => { if (timer.current) submitNow(); };
+    flushRef.current = async () => {
+      if (!timer.current) return; // nada esperando a pausa: não regrava à toa
+      clearTimeout(timer.current);
+      timer.current = null;
+      await enviarAgora();
+    };
     return () => { flushRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flushRef]);
