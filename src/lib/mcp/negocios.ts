@@ -8,11 +8,93 @@ import {
 } from './nucleo';
 import { DEAL_STAGES } from '@/app/admin/(app)/pipeline/stages';
 import {
+  isRecurring, monthlyDescription, pendingMonthly, type RecurringEng,
+} from '@/app/admin/(app)/financeiro/recurring';
+import {
   ONBOARDING_TEMPLATES, PREFILL_KEY, getOnboardingTemplate, prefilledIds, templateQuestionIds,
 } from '@/lib/onboarding-schema';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
 const STATUS_RECEBIVEL = ['pendente', 'recebido', 'atrasado', 'cancelado'] as const;
+
+/** Quantos meses à frente a projeção alcança quando ninguém pede um mês específico. */
+const HORIZONTE_PREVISAO = 6;
+
+type ItemRecebivel = {
+  id: string | null;
+  cliente: string | null;
+  descricao: string | null;
+  valor: number;
+  vencimento: string;
+  situacao: string;
+  pago_em: string | null;
+  valor_pago: number | null;
+  forma: string | null;
+};
+
+/** Mês seguinte de um AAAA-MM. */
+const mesSeguinte = (m: string): string => {
+  const [y, mm] = m.split('-').map(Number);
+  return mm === 12 ? `${y + 1}-01` : `${y}-${String(mm + 1).padStart(2, '0')}`;
+};
+
+/**
+ * Mensalidades de contrato recorrente que ainda não viraram cobrança, como itens
+ * previstos — a mesma régua das linhas previstas do Financeiro.
+ *
+ * Só do mês corrente em diante: no passado vale o que aconteceu. Com um mês
+ * pedido, projeta só ele (mesmo lá na frente); sem mês, vai até
+ * HORIZONTE_PREVISAO meses à frente, senão a resposta viraria uma lista de
+ * cobrança até o fim de todo contrato.
+ */
+async function projetarMensalidades(engagementId: string | null, mes?: string): Promise<ItemRecebivel[]> {
+  const db = supabase();
+  const mesAtual = hoje().slice(0, 7);
+  const meses: string[] = [];
+  if (mes) {
+    if (mes < mesAtual) return [];
+    meses.push(mes);
+  } else {
+    for (let m = mesAtual, i = 0; i <= HORIZONTE_PREVISAO; m = mesSeguinte(m), i++) meses.push(m);
+  }
+
+  let q = db
+    .from('engagements')
+    .select('id, title, type, lifecycle, mrr, start_date, end_date, organizations(name)')
+    .eq('type', 'recorrente');
+  if (engagementId) q = q.eq('id', engagementId);
+  const { data } = await q;
+
+  const engs = ((data ?? []) as unknown as (RecurringEng & {
+    title: string | null; organizations: { name: string | null } | null;
+  })[]).filter(isRecurring);
+  if (engs.length === 0) return [];
+
+  const { data: recData } = await db
+    .from('receivables')
+    .select('engagement_id, due_date')
+    .in('engagement_id', engs.map((e) => e.id));
+
+  const dues = new Map<string, string[]>();
+  for (const r of (recData ?? []) as { engagement_id: string | null; due_date: string }[]) {
+    if (!r.engagement_id) continue;
+    dues.set(r.engagement_id, [...(dues.get(r.engagement_id) ?? []), r.due_date]);
+  }
+
+  return meses.flatMap((m) =>
+    pendingMonthly(engs, dues, m).map(({ eng, due_date }) => ({
+      id: null,
+      cliente: eng.organizations?.name ?? eng.title,
+      descricao: monthlyDescription(m),
+      valor: eng.mrr ?? 0,
+      vencimento: due_date,
+      situacao: 'prevista',
+      pago_em: null,
+      valor_pago: null,
+      forma: null,
+    })),
+  );
+}
 
 export const ferramentasDeNegocio: Ferramenta[] = [
   {
@@ -160,7 +242,9 @@ export const ferramentasDeNegocio: Ferramenta[] = [
 
   {
     nome: 'listar_recebiveis',
-    descricao: 'O que há para receber e o que já entrou, com filtro de projeto, cliente, situação e mês.',
+    descricao:
+      'O que há para receber e o que já entrou, com filtro de projeto, cliente, situação e mês. ' +
+      'Mensalidade de contrato recorrente que ainda não virou cobrança aparece como "prevista".',
     entrada: objeto({
       projeto: texto('Nome do cliente, título ou id do projeto.'),
       situacao: opcoes(STATUS_RECEBIVEL, 'Filtra por situação.'),
@@ -180,28 +264,40 @@ export const ferramentasDeNegocio: Ferramenta[] = [
 
       const situacao = str(args, 'situacao');
       const mes = str(args, 'mes');
-      const itens = ((linhas ?? []) as unknown as Record<string, unknown>[])
-        .filter((r) => !situacao || r.status === situacao)
-        .filter((r) => !mes || String(r.due_date ?? '').slice(0, 7) === mes)
-        .map((r) => ({
-          id: r.id,
-          cliente: (r.organizations as { name?: string } | null)?.name ?? null,
-          descricao: r.description,
-          valor: r.amount,
-          vencimento: r.due_date,
-          situacao: r.status,
-          pago_em: r.paid_at,
-          valor_pago: r.paid_amount,
-          forma: r.method,
-        }));
+      const lancados = ((linhas ?? []) as unknown as Record<string, unknown>[]).map((r) => ({
+        id: r.id as string | null,
+        cliente: (r.organizations as { name?: string } | null)?.name ?? null,
+        descricao: r.description as string | null,
+        valor: Number(r.amount ?? 0),
+        vencimento: r.due_date as string,
+        situacao: r.status as string,
+        pago_em: r.paid_at as string | null,
+        valor_pago: r.paid_amount as number | null,
+        forma: r.method as string | null,
+      }));
+
+      // Mensalidade de contrato recorrente só vira cobrança quando é lançada no
+      // Financeiro. Sem projetar, um mês à frente responderia bem menos do que o
+      // contratado — o mesmo buraco que a tela do Financeiro fecha com as linhas
+      // previstas. Só entra do mês corrente em diante: o passado é o que houve.
+      const previstos = situacao ? [] : await projetarMensalidades(alvo?.id ?? null, mes ?? undefined);
+
+      const itens = [...lancados, ...previstos]
+        .filter((r) => !situacao || r.situacao === situacao)
+        .filter((r) => !mes || String(r.vencimento ?? '').slice(0, 7) === mes)
+        .sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)));
 
       const soma = (f: (r: (typeof itens)[number]) => boolean) =>
         itens.filter(f).reduce((s, r) => s + Number(r.valor ?? 0), 0);
       const hj = hoje();
+      const previsto = soma((r) => r.situacao === 'prevista');
 
       return {
         total: itens.length,
-        a_receber: reais(soma((r) => r.situacao === 'pendente')),
+        // "A receber" é o contratado do recorte: o que já foi cobrado mais o que
+        // ainda vai ser. `previsto` diz quanto desse total falta lançar.
+        a_receber: reais(soma((r) => r.situacao === 'pendente') + previsto),
+        previsto: reais(previsto),
         atrasado: reais(soma((r) => r.situacao === 'pendente' && String(r.vencimento ?? '') < hj)),
         recebido: reais(soma((r) => r.situacao === 'recebido')),
         recebiveis: itens,

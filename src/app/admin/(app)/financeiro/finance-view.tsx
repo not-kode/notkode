@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { AutoSaveForm } from '../_shared/auto-save-form';
 import { createReceivable, deleteReceivable, generateMonthlyReceivables, markReceivablePaid, unmarkReceivable, updateReceivable } from './actions';
-import { isRecurring, monthlyDueDate, pendingMonthly } from './recurring';
+import { isRecurring, monthlyDescription, monthlyDueDate, pendingMonthly } from './recurring';
 
 export type EngView = {
   id: string; title: string | null; type: string; status: string; lifecycle: string;
@@ -45,7 +45,7 @@ const inputCls =
   'w-full rounded-md border border-black/[0.08] bg-white px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/10';
 const labelCls = 'mb-1 block font-label text-[10px] uppercase tracking-[0.12em] text-text-muted';
 
-function Kpi({ label, value, tone, count, onClick }: { label: string; value: string; tone?: string; count?: number; onClick?: () => void }) {
+function Kpi({ label, value, tone, count, nota, onClick }: { label: string; value: string; tone?: string; count?: number; nota?: string; onClick?: () => void }) {
   return (
     <button
       type="button"
@@ -54,14 +54,23 @@ function Kpi({ label, value, tone, count, onClick }: { label: string; value: str
     >
       <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">{label}</p>
       <p className={`mt-1 text-xl font-semibold ${tone ?? 'text-text-primary'}`}>{value}</p>
-      {count != null && <p className="mt-1 font-label text-[10px] text-text-muted/70">{count} {count === 1 ? 'item' : 'itens'}</p>}
+      {(count != null || nota) && (
+        <p className="mt-1 font-label text-[10px] text-text-muted/70">
+          {count != null && `${count} ${count === 1 ? 'item' : 'itens'}`}
+          {count != null && nota && ' · '}
+          {nota}
+        </p>
+      )}
     </button>
   );
 }
 
 function StatusPill({ status, late }: { status: string; late?: boolean }) {
-  const label = late && status === 'pendente' ? 'Atrasado' : { pendente: 'Pendente', recebido: 'Recebido', atrasado: 'Atrasado', cancelado: 'Cancelado' }[status] ?? status;
-  const cls = status === 'recebido' ? 'bg-success/10 text-success' : late ? 'bg-danger/10 text-danger' : 'bg-black/[0.05] text-text-secondary';
+  const label = late && status === 'pendente' ? 'Atrasado' : { pendente: 'Pendente', recebido: 'Recebido', atrasado: 'Atrasado', cancelado: 'Cancelado', previsto: 'Prevista' }[status] ?? status;
+  const cls = status === 'recebido' ? 'bg-success/10 text-success'
+    : status === 'previsto' ? 'bg-warning/10 text-warning'
+    : late ? 'bg-danger/10 text-danger'
+    : 'bg-black/[0.05] text-text-secondary';
   return <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${cls}`}>{label}</span>;
 }
 
@@ -77,28 +86,6 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
   const isLate = (r: RecView) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr);
   const monthShort = MONTHS[Number(month.slice(5)) - 1].slice(0, 3);
 
-  // Listas que compõem cada KPI — o número e o "de onde vem" saem da mesma fonte.
-  const listas = useMemo(() => {
-    const recorrentes = engagements.filter(isRecurring);
-    const aReceber = receivables.filter((r) => r.status === 'pendente' && ym(r.due_date) === month && !isLate(r));
-    const atrasado = receivables.filter(isLate);
-    // Faturamento é pela data em que o dinheiro entrou (paid_at), igual à Visão geral.
-    const recebido = receivables.filter((r) => r.status === 'recebido' && !!r.paid_at && ym(r.paid_at) === month);
-    return { recorrentes, aReceber, atrasado, recebido };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [engagements, receivables, month, todayStr]);
-
-  const kpis = useMemo(() => ({
-    // Mesma régua da Visão geral: "a receber" = pendente AINDA NO PRAZO; o que
-    // venceu conta só no cartão Atrasado (antes a mesma parcela dobrava nos dois).
-    mrr: listas.recorrentes.reduce((s, e) => s + (e.mrr ?? 0), 0),
-    aReceber: listas.aReceber.reduce((s, r) => s + r.amount, 0),
-    atrasado: listas.atrasado.reduce((s, r) => s + r.amount, 0),
-    recebido: listas.recebido.reduce((s, r) => s + (r.paid_amount ?? r.amount), 0),
-  }), [listas]);
-
-  const parcelasMes = useMemo(() => receivables.filter((r) => ym(r.due_date) === month), [receivables, month]);
-
   // Vencimentos já lançados por contrato: base para saber o dia habitual da
   // cobrança e quais mensalidades ainda faltam no mês.
   const duesByEng = useMemo(() => {
@@ -111,6 +98,75 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
   }, [receivables]);
 
   const faltantes = useMemo(() => pendingMonthly(engagements, duesByEng, month), [engagements, duesByEng, month]);
+
+  /**
+   * Mensalidade de contrato recorrente que ainda não virou parcela também é
+   * receita contratada: entra no mês como linha PREVISTA, do mês corrente em
+   * diante. É a mesma régua da Visão geral — sem isso, setembro e outubro
+   * apareciam sem a mensalidade da Rede Papa e companhia só porque o lançamento
+   * é manual. Nada é gravado: pausar ou encerrar o contrato tira a previsão
+   * sozinho, e lançar de verdade continua sendo um ato à parte.
+   * O passado fica de fora: lá vale o que aconteceu, não o que era para ser.
+   */
+  const previstas = useMemo<RecView[]>(() => {
+    if (month < todayStr.slice(0, 7)) return [];
+    return faltantes.map(({ eng, due_date }) => ({
+      id: `previsto:${eng.id}`,
+      description: monthlyDescription(month),
+      amount: eng.mrr ?? 0,
+      due_date,
+      status: 'previsto',
+      paid_amount: null,
+      paid_at: null,
+      engagement_id: eng.id,
+      engagement_title: eng.title,
+      org_name: eng.org_name,
+    }));
+  }, [faltantes, month, todayStr]);
+
+  // Listas que compõem cada KPI — o número e o "de onde vem" saem da mesma fonte.
+  const listas = useMemo(() => {
+    const recorrentes = engagements.filter(isRecurring);
+    const aReceber = [
+      ...receivables.filter((r) => r.status === 'pendente' && ym(r.due_date) === month && !isLate(r)),
+      ...previstas,
+    ];
+    const atrasado = receivables.filter(isLate);
+    // Faturamento é pela data em que o dinheiro entrou (paid_at), igual à Visão geral.
+    const recebido = receivables.filter((r) => r.status === 'recebido' && !!r.paid_at && ym(r.paid_at) === month);
+    return { recorrentes, aReceber, atrasado, recebido };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engagements, receivables, previstas, month, todayStr]);
+
+  const kpis = useMemo(() => ({
+    // Mesma régua da Visão geral: "a receber" = pendente AINDA NO PRAZO (mais a
+    // mensalidade prevista); o que venceu conta só no cartão Atrasado (antes a
+    // mesma parcela dobrava nos dois). Prevista nunca entra em Atrasado: não
+    // existe cobrança emitida para estar em atraso.
+    mrr: listas.recorrentes.reduce((s, e) => s + (e.mrr ?? 0), 0),
+    aReceber: listas.aReceber.reduce((s, r) => s + r.amount, 0),
+    atrasado: listas.atrasado.reduce((s, r) => s + r.amount, 0),
+    recebido: listas.recebido.reduce((s, r) => s + (r.paid_amount ?? r.amount), 0),
+  }), [listas]);
+
+  const parcelasMes = useMemo(
+    () => [...receivables.filter((r) => ym(r.due_date) === month), ...previstas]
+      .sort((a, b) => a.due_date.localeCompare(b.due_date)),
+    [receivables, month, previstas],
+  );
+
+  /**
+   * Total contratado do mês: tudo que vence nele, o que já entrou junto com o
+   * que falta. "A receber" sozinho encolhe a cada baixa e deixa a pergunta
+   * "quanto é o mês inteiro?" sem resposta na tela. Cancelada fica de fora, que
+   * é dinheiro que não vem mais.
+   */
+  const totalMes = useMemo(
+    () => parcelasMes
+      .filter((r) => r.status !== 'cancelado')
+      .reduce((s, r) => s + (r.status === 'recebido' ? (r.paid_amount ?? r.amount) : r.amount), 0),
+    [parcelasMes],
+  );
 
   const gerarMensalidades = (engagementId?: string) => {
     const fd = new FormData();
@@ -157,21 +213,22 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="MRR ativo" value={brl(kpis.mrr)} tone="text-primary" count={listas.recorrentes.length} onClick={() => setDetail('mrr')} />
-        <Kpi label={`A receber · ${monthShort}`} value={brl(kpis.aReceber)} count={listas.aReceber.length} onClick={() => setDetail('aReceber')} />
+        <Kpi label={`A receber · ${monthShort}`} value={brl(kpis.aReceber)} count={listas.aReceber.length} nota={`de ${brl(totalMes)} no mês`} onClick={() => setDetail('aReceber')} />
         <Kpi label="Atrasado" value={brl(kpis.atrasado)} tone={kpis.atrasado > 0 ? 'text-danger' : undefined} count={listas.atrasado.length} onClick={() => setDetail('atrasado')} />
         <Kpi label={`Recebido · ${monthShort}`} value={brl(kpis.recebido)} tone="text-success" count={listas.recebido.length} onClick={() => setDetail('recebido')} />
       </div>
 
-      {/* Mensalidade de contrato recorrente não nasce sozinha: aqui aparece o que
-          falta lançar no mês aberto, com o lançamento em um clique. */}
-      {faltantes.length > 0 && (
+      {/* Mensalidade de contrato recorrente não nasce sozinha: ela já aparece
+          prevista nos números e na lista, e aqui vai o lançamento de todas em um
+          clique, para quando a cobrança for realmente emitida. */}
+      {previstas.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/30 bg-warning/[0.06] px-4 py-3">
           <div>
             <p className="text-sm font-medium text-text-primary">
-              {faltantes.length === 1 ? '1 mensalidade recorrente ainda não lançada' : `${faltantes.length} mensalidades recorrentes ainda não lançadas`} em {monthLabel(month)}
+              {previstas.length === 1 ? '1 mensalidade recorrente ainda não lançada' : `${previstas.length} mensalidades recorrentes ainda não lançadas`} em {monthLabel(month)}
             </p>
             <p className="mt-0.5 text-xs text-text-muted">
-              {faltantes.map(({ eng }) => `${eng.org_name ?? eng.title}`).join(', ')} · {brl(faltantes.reduce((s, f) => s + (f.eng.mrr ?? 0), 0))}
+              {previstas.map((p) => p.org_name ?? p.engagement_title).join(', ')} · {brl(previstas.reduce((s, p) => s + p.amount, 0))} · já contando como previstas abaixo
             </p>
           </div>
           <button onClick={() => gerarMensalidades()} disabled={pending} className="shrink-0 rounded-md bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:opacity-60">
@@ -200,15 +257,18 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
               <tbody>
                 {parcelasMes.map((r) => {
                   const late = isLate(r);
+                  const previsto = r.status === 'previsto';
                   return (
-                    <tr key={r.id} onClick={() => setEditing(r)} className="cursor-pointer border-b border-black/[0.04] transition-colors last:border-0 hover:bg-black/[0.015]">
-                      <td className={`whitespace-nowrap px-4 py-3 font-label text-xs ${late ? 'text-danger' : 'text-text-muted'}`}>{fmtDate(r.due_date)}</td>
+                    <tr key={r.id} onClick={() => { if (!previsto) setEditing(r); }} className={`border-b border-black/[0.04] transition-colors last:border-0 hover:bg-black/[0.015] ${previsto ? 'bg-warning/[0.03]' : 'cursor-pointer'}`}>
+                      <td className={`whitespace-nowrap px-4 py-3 font-label text-xs ${late ? 'text-danger' : previsto && r.due_date < todayStr ? 'text-warning' : 'text-text-muted'}`}>{fmtDate(r.due_date)}</td>
                       <td className="px-4 py-3 font-medium text-text-primary">{r.org_name ?? '—'}</td>
                       <td className="px-4 py-3 text-text-secondary">{r.description ?? r.engagement_title ?? '—'}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right font-medium text-text-primary">{brl(r.amount)}</td>
                       <td className="px-4 py-3"><StatusPill status={r.status} late={late} /></td>
                       <td className="whitespace-nowrap px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                        {r.status === 'recebido' ? (
+                        {previsto ? (
+                          <button onClick={() => gerarMensalidades(r.engagement_id ?? undefined)} disabled={pending} className="rounded-md border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/5 disabled:opacity-50">Lançar</button>
+                        ) : r.status === 'recebido' ? (
                           <span className="inline-flex items-center gap-2">
                             <span className="font-label text-[10px] text-success">✓ {fmtDate(r.paid_at)}</span>
                             <button onClick={() => unmark(r.id)} disabled={pending} className="font-label text-[10px] text-text-muted underline decoration-dotted transition hover:text-danger disabled:opacity-50">desfazer</button>
@@ -247,7 +307,13 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
           isLate={isLate}
           pending={pending}
           onClose={() => setDetail(null)}
-          onPickParcela={(r) => { setDetail(null); setEditing(r); }}
+          onPickParcela={(r) => {
+            // Prevista ainda não existe no banco: clicar nela lança a parcela em
+            // vez de abrir uma edição de algo que não está lá.
+            if (r.status === 'previsto') { gerarMensalidades(r.engagement_id ?? undefined); return; }
+            setDetail(null);
+            setEditing(r);
+          }}
           onGerar={gerarMensalidades}
         />
       )}
@@ -356,6 +422,7 @@ function DetailDrawer({ which, month, listas, duesByEng, isLate, pending, onClos
                   <p className="mt-1 font-label text-[10px] text-text-muted">
                     vence {fmtDate(r.due_date)}
                     {r.status === 'recebido' && r.paid_at && ` · recebida ${fmtDate(r.paid_at)}`}
+                    {r.status === 'previsto' && ' · clique para lançar'}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
