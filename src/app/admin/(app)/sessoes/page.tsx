@@ -1,25 +1,29 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 import { carregarGravacoes } from './recordings-data';
 import { RecordingsTable } from './recordings-table';
 import { carregarHeatmap } from './heatmap-data';
 import { HeatmapView } from './heatmap-view';
+import { carregarFunisDeFormulario } from './form-funnel-data';
+import { FormFunnelsView } from './form-funnel-view';
+import { PeriodFilter } from '../period-filter';
+import { resolveRange } from '../period';
 
 export const dynamic = 'force-dynamic';
 
-// Comportamento no site: as gravações e o mapa de calor saem dos mesmos eventos
-// e respondem à mesma pergunta ("o que as pessoas fazem aqui"), então são
-// sub-abas de uma tela só.
+// Comportamento no site é UM assunto: gravações, mapa de calor e o funil de
+// formulário saem dos mesmos eventos e respondem à mesma pergunta ("o que as
+// pessoas fazem aqui"). São sub-abas de uma tela, não itens de menu.
 //
-// O funil de formulário saiu daqui e foi para Leads: quem preencheu, quem parou
-// no meio e onde as pessoas travam são a mesma conversa, e estavam em telas
-// diferentes.
+// Aqui o funil é o desenho agregado (quantos chegaram a cada etapa). As pessoas
+// que pararam no meio, com nome e o que responderam, ficam em Leads.
 
-type Aba = 'gravacoes' | 'calor';
+type Aba = 'gravacoes' | 'calor' | 'formularios';
 
 const ABAS: { id: Aba; label: string }[] = [
   { id: 'gravacoes', label: 'Gravações' },
   { id: 'calor', label: 'Mapa de calor' },
+  { id: 'formularios', label: 'Formulários' },
 ];
 
 export default async function ComportamentoPage({
@@ -28,16 +32,15 @@ export default async function ComportamentoPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = (await searchParams) ?? {};
-  // Link antigo (e o histórico do navegador) continua funcionando: vai para
-  // onde o funil mora agora.
-  if (sp.ver === 'formularios') redirect('/admin/leads?ver=formularios');
-
-  const aba: Aba = sp.ver === 'calor' ? 'calor' : 'gravacoes';
+  const aba: Aba = sp.ver === 'calor' ? 'calor' : sp.ver === 'formularios' ? 'formularios' : 'gravacoes';
+  // O período só manda na aba Formulários; as outras duas leem tudo o que existe.
+  const range = resolveRange({ range: sp.range, from: sp.from, to: sp.to });
 
   // Carrega só o que a aba aberta precisa.
-  const [gravacoes, heatmap] = await Promise.all([
+  const [gravacoes, heatmap, funis] = await Promise.all([
     carregarGravacoes(),
     aba === 'calor' ? carregarHeatmap() : Promise.resolve(null),
+    aba === 'formularios' ? carregarFunisDeFormulario(range) : Promise.resolve(null),
   ]);
 
   const naoVistas = gravacoes.sessions.filter((s) => !s.vista).length;
@@ -57,9 +60,11 @@ export default async function ComportamentoPage({
                 <span className="font-medium text-primary">{naoVistas} não vista{naoVistas === 1 ? '' : 's'}</span>
               </>
             )}
-            {' · '}assista o que cada visitante fez e veja onde todos clicam. Texto digitado fica mascarado.
+            {' · '}assista o que cada visitante fez, veja onde todos clicam e onde param de preencher. Texto digitado
+            fica mascarado.
           </p>
         </div>
+        {aba === 'formularios' && <Suspense fallback={null}><PeriodFilter /></Suspense>}
       </header>
 
       <nav className="mb-5 inline-flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
@@ -86,12 +91,18 @@ export default async function ComportamentoPage({
 
       {aba === 'gravacoes' && <RecordingsTable sessions={gravacoes.sessions} />}
       {aba === 'calor' && <HeatmapView paginas={heatmap ?? []} />}
-
-      <p className="mt-4 text-[11px] text-text-muted">
-        Onde as pessoas param de preencher agora fica em{' '}
-        <Link href="/admin/leads?ver=formularios" className="text-primary hover:underline">Leads · Formulários</Link>,
-        junto de quem enviou e de quem começou e desistiu.
-      </p>
+      {aba === 'formularios' && (
+        <>
+          <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-text-muted">
+            Por página · onde as pessoas param<span className="ml-2 normal-case tracking-normal">· {range.label}</span>
+          </p>
+          <FormFunnelsView funnels={funis ?? []} />
+          <p className="mt-4 text-[11px] text-text-muted">
+            Quem parou no meio, com nome e o que respondeu, fica em{' '}
+            <Link href="/admin/leads?ver=formularios" className="text-primary hover:underline">Leads · Formulários</Link>.
+          </p>
+        </>
+      )}
     </div>
   );
 }

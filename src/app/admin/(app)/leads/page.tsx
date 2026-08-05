@@ -1,18 +1,14 @@
 import Link from 'next/link';
-import { Suspense } from 'react';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { promoteLead } from './actions';
-import { carregarFunisDeFormulario } from '../sessoes/form-funnel-data';
-import { FormFunnelsView } from '../sessoes/form-funnel-view';
 import { PararamView } from './pararam-view';
-import { PeriodFilter } from '../period-filter';
-import { resolveRange } from '../period';
 
 export const dynamic = 'force-dynamic';
 
-// Formulário do site é um assunto só: quem enviou, quem começou e parou, e onde
-// as pessoas travam. O funil vivia em Analytics, longe dos nomes que ele
-// explica — para responder "esse lead veio de onde" era preciso trocar de tela.
+// Duas listas de gente, não uma lista e um gráfico: em "Leads" quem enviou o
+// formulário, em "Formulários" quem mexeu e parou no meio (com a etapa em que
+// parou e o que já tinha respondido). O desenho do funil por página é outra
+// conversa e mora em Analytics.
 type Aba = 'leads' | 'formularios';
 
 const ABAS: { id: Aba; label: string }[] = [
@@ -80,8 +76,6 @@ export default async function LeadsPage({
 }) {
   const sp = (await searchParams) ?? {};
   const aba: Aba = sp.ver === 'formularios' ? 'formularios' : 'leads';
-  const range = resolveRange({ range: sp.range, from: sp.from, to: sp.to });
-  const funis = aba === 'formularios' ? await carregarFunisDeFormulario(range) : null;
 
   const supabase = getSupabaseAdmin();
   const [{ data, error }, { data: draftData }] = await Promise.all([
@@ -123,7 +117,6 @@ export default async function LeadsPage({
             )}
           </p>
         </div>
-        {aba === 'formularios' && <Suspense fallback={null}><PeriodFilter /></Suspense>}
       </header>
 
       <nav className="mb-5 inline-flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
@@ -144,27 +137,12 @@ export default async function LeadsPage({
 
       {aba === 'formularios' && (
         <>
-        {/* Quem parou no meio e o funil respondem à mesma pergunta e agora moram
-            juntos: primeiro as pessoas (com o que já tinham preenchido), depois
-            o desenho de onde o formulário perde gente. */}
-        <section className="mb-8">
-          <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-text-primary">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-warning" />
-            Começaram e não enviaram ({drafts.length})
-          </h2>
           <p className="mb-3 text-xs text-text-muted">
-            Mexeram no formulário, deixaram contato e não finalizaram. Dá para chamar no WhatsApp com o que
-            já contaram na mão.
+            Mexeram no formulário e não finalizaram. Clique na linha para ver o que a pessoa já tinha respondido
+            quando parou. O desenho do funil por página fica em{' '}
+            <Link href="/admin/sessoes?ver=formularios" className="text-primary hover:underline">Analytics</Link>.
           </p>
-          <PararamView
-            pessoas={drafts.map((d) => ({ ...d, temGravacao: recorded.has(d.session_id) }))}
-          />
-        </section>
-
-          <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-text-muted">
-            Por página · onde as pessoas param<span className="ml-2 normal-case tracking-normal">· {range.label}</span>
-          </p>
-          <FormFunnelsView funnels={funis ?? []} />
+          <PararamView pessoas={drafts.map((d) => ({ ...d, temGravacao: recorded.has(d.session_id) }))} />
         </>
       )}
 
