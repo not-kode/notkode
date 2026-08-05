@@ -1,8 +1,9 @@
 'use client';
 
 import { useRef, useState, useTransition, type ReactNode } from 'react';
+import { AlertTriangle, CircleDot, Mail, Phone, User, Wallet } from 'lucide-react';
 import { createEngagement, createReceivable, concludeEngagement, markReceivablePaid, unmarkReceivable, updateEngagementDetails, deleteEngagement, updateReceivable, deleteReceivable, backfillMonthlyReceivables } from '../financeiro/actions';
-import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal, createClient, deleteOrganization } from './actions';
+import { updateOrganization, updateEngagementContract, uploadProposal, removeProposal, createClient, deleteOrganization, escopoDaProposta } from './actions';
 import { DEFAULT_CLIENT_OBLIGATIONS, DEFAULT_PROVIDER_OBLIGATIONS } from '../../contrato/defaults';
 import { OrgFiscalFields } from '../_shared/org-fiscal-fields';
 import { siteHref, instagramHandle, instagramHref } from '../_shared/org-links';
@@ -404,13 +405,9 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [newContract, setNewContract] = useState(false);
   const [tab, setTab] = useState<'contratos' | 'cadastro' | 'onboarding'>(client.contratos.length > 0 ? 'contratos' : 'cadastro');
-  // Qual briefing está aberto na aba Onboarding. Fica aqui porque o resumo lá em
-  // cima também manda abrir um ("ver respostas"), sem passar por copiar link.
+  // Qual briefing está aberto na aba Onboarding: o mais recente já abre pronto,
+  // porque abrir a aba é justamente para ler as respostas.
   const [briefingAberto, setBriefingAberto] = useState<string | null>(client.briefings[0]?.id ?? null);
-  const verRespostas = (id: string) => {
-    setBriefingAberto(id);
-    setTab('onboarding');
-  };
 
   const markPaid = (id: string, amount: number) => {
     const fd = new FormData();
@@ -461,7 +458,7 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
       wide
     >
       {/* Resumo do projeto — os macros do cliente num relance */}
-      <ProjectHeader client={client} productLabels={productLabels} onVerRespostas={verRespostas} />
+      <ProjectHeader client={client} productLabels={productLabels} />
 
       {/* Abas */}
       <div className="flex gap-1 border-b border-black/[0.06] pb-3">
@@ -815,10 +812,7 @@ function ContractCard({ eng, cliente, modelos, onMarkPaid, onUnmark, onConclude,
       {editing && (
         <AutoSaveForm action={onSaveContract} className="mt-3 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
           <input type="hidden" name="id" value={eng.id} />
-          <div>
-            <label className={labelCls}>Objeto / escopo (Cláusula 1)</label>
-            <textarea name="scope" defaultValue={eng.scope ?? ''} rows={4} className={inputCls + ' resize-y'} placeholder="Descreva o que será entregue neste contrato…" />
-          </div>
+          <EscopoField eng={eng} />
           <div>
             <label className={labelCls}>Renovação (Cláusula 5)</label>
             <textarea name="renewal_note" defaultValue={eng.renewal_note ?? ''} rows={2} className={inputCls + ' resize-y'} placeholder="Ex: renovação por R$ X/mês após o período…" />
@@ -1044,6 +1038,66 @@ function Drawer({ title, eyebrow, sub, onClose, children, wide }: {
 }
 
 /**
+ * Objeto do contrato (Cláusula 1) com um atalho: puxar da proposta anexada o
+ * que foi vendido. Contrato sem escopo sai dizendo "conforme acordado entre as
+ * partes", que não diz nada — e a lista já existe, escrita na proposta.
+ */
+function EscopoField({ eng }: { eng: Contrato }) {
+  const [texto, setTexto] = useState(eng.scope ?? '');
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [buscando, setBuscando] = useState(false);
+  const caixaRef = useRef<HTMLTextAreaElement>(null);
+
+  const puxar = async () => {
+    setBuscando(true);
+    setAviso(null);
+    const r = await escopoDaProposta(eng.id);
+    setBuscando(false);
+    if (r.aviso) { setAviso(r.aviso); return; }
+    setTexto(r.texto);
+    // O formulário salva sozinho ao ouvir o evento; mexer no estado do React
+    // não basta porque quem grava é o onInput do <form>.
+    const el = caixaRef.current;
+    if (el) {
+      const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+      setter?.call(el, r.texto);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <label className={labelCls + ' mb-0'}>Objeto / escopo (Cláusula 1)</label>
+        <button
+          type="button"
+          onClick={puxar}
+          disabled={buscando}
+          className="rounded-md border border-black/[0.1] px-2 py-1 font-label text-[10px] uppercase tracking-wider text-text-secondary transition hover:border-primary/40 hover:text-primary disabled:opacity-50"
+        >
+          {buscando ? 'lendo…' : '↓ puxar da proposta'}
+        </button>
+      </div>
+      <textarea
+        ref={caixaRef}
+        name="scope"
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        rows={5}
+        className={inputCls + ' resize-y'}
+        placeholder="Descreva o que será entregue neste contrato…"
+      />
+      {aviso && <p className="mt-1 text-[11px] text-warning">{aviso}</p>}
+      {!texto.trim() && !aviso && (
+        <p className="mt-1 text-[11px] text-text-muted">
+          Sem isto, a Cláusula 1 do contrato sai genérica e não diz o que será feito.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
  * Com quem se fala, embaixo do nome do cliente. WhatsApp e e-mail são links: o
  * caminho normal depois de abrir a ficha é justamente chamar a pessoa.
  */
@@ -1051,28 +1105,29 @@ function ContatoDoTopo({ contato }: { contato: ClientContact | null }) {
   if (!contato) return null;
   const zap = (contato.whatsapp ?? '').replace(/\D/g, '');
   return (
-    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-text-secondary">
-      {contato.name && <span className="font-medium text-text-primary">{contato.name}</span>}
+    <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-text-secondary">
+      {contato.name && (
+        <span className="inline-flex items-center gap-1 font-medium text-text-primary">
+          <User className="h-3 w-3 text-text-muted" />
+          {contato.name}
+        </span>
+      )}
       {contato.whatsapp && (
-        <>
-          <span className="text-text-muted/50">·</span>
-          <a
-            href={`https://wa.me/${zap.startsWith('55') ? zap : `55${zap}`}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transition-colors hover:text-primary"
-          >
-            {contato.whatsapp}
-          </a>
-        </>
+        <a
+          href={`https://wa.me/${zap.startsWith('55') ? zap : `55${zap}`}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 transition-colors hover:text-primary"
+        >
+          <Phone className="h-3 w-3 text-text-muted" />
+          {contato.whatsapp}
+        </a>
       )}
       {contato.email && (
-        <>
-          <span className="text-text-muted/50">·</span>
-          <a href={`mailto:${contato.email}`} className="truncate transition-colors hover:text-primary">
-            {contato.email}
-          </a>
-        </>
+        <a href={`mailto:${contato.email}`} className="inline-flex min-w-0 items-center gap-1 transition-colors hover:text-primary">
+          <Mail className="h-3 w-3 shrink-0 text-text-muted" />
+          <span className="truncate">{contato.email}</span>
+        </a>
       )}
     </p>
   );
@@ -1080,10 +1135,9 @@ function ContatoDoTopo({ contato }: { contato: ClientContact | null }) {
 
 // Cabeçalho de projeto: reúne os macros do cliente que antes ficavam espalhados
 // (etapa, prazo, valor, saúde financeira, contato, origem do lead e briefing).
-function ProjectHeader({ client, productLabels = {}, onVerRespostas }: {
+function ProjectHeader({ client, productLabels = {} }: {
   client: ClientView;
   productLabels?: Record<string, string>;
-  onVerRespostas: (briefingId: string) => void;
 }) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const live = client.contratos.find(isLive) ?? null;
@@ -1099,14 +1153,6 @@ function ProjectHeader({ client, productLabels = {}, onVerRespostas }: {
     valorAvulso > 0 ? avulsoLabel(valorAvulso, parcelasAvulso) : null,
   ].filter(Boolean).join(' + ') || '—';
 
-  // Contratos "vivos" para a quebra por serviço — ativos primeiro, pausados depois.
-  const liveList = client.contratos.filter(isLive).sort((a, b) => (b.mrr ?? 0) - (a.mrr ?? 0));
-  const engValorLabel = (e: Contrato) =>
-    [
-      (e.mrr ?? 0) > 0 ? `${brl(e.mrr!)}/mês` : null,
-      (e.valor ?? 0) > 0 ? `${brl(e.valor!)} avulso` : null,
-    ].filter(Boolean).join(' · ') || '—';
-
   // Situação = estado comercial do contrato (Ativo/Pausado…), não "etapa de
   // entrega" — o trabalho é recorrente, não é um projeto com data de conclusão.
   const stageLabel = live ? (LIFECYCLE_LABELS[live.lifecycle] ?? live.lifecycle) : client.contratos.length ? 'Encerrado' : 'Sem contrato';
@@ -1120,77 +1166,64 @@ function ProjectHeader({ client, productLabels = {}, onVerRespostas }: {
 
   const cellLabel = 'font-label text-[10px] uppercase tracking-[0.12em] text-text-muted';
 
-  // Vigência numa linha só, com o alerta de renovação junto: em duas linhas a
-  // data quebrava no meio e não dava para ler de relance.
-  const vigencia = live?.start_date || live?.end_date
-    ? `${fmtDateShort(live?.start_date ?? null)} a ${fmtDateShort(live?.end_date ?? null)}`
-    : '—';
+  /**
+   * Renovação só aparece quando pede ação: vencido ou vencendo em até 30 dias, e
+   * contrato sem vigência definida. A vigência normal de cada contrato está no
+   * card dele, logo abaixo — repetir aqui era dizer a mesma data duas vezes.
+   */
   const renov = live ? renewalBadge(live.end_date, todayStr) : null;
+  const alerta = renov && renov.cls !== 'bg-black/[0.05] text-text-secondary' ? renov : null;
 
   return (
     <div className="rounded-lg border border-primary/15 bg-primary/[0.03] p-4">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+      {/* Três coisas, e só: em que pé está, quanto vale, se o dinheiro está em
+          dia. O resto (contratos, vigência de cada um, briefing) tem aba
+          própria logo abaixo e estava aqui em duplicata. */}
+      <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
         <div>
-          <p className={cellLabel}>Situação</p>
-          <span className={`mt-1 inline-block rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${lifeTone}`}>{stageLabel}</span>
+          <p className={`flex items-center gap-1 ${cellLabel}`}>
+            <CircleDot className="h-3 w-3" />
+            Situação
+          </p>
+          <span className={`mt-1 inline-block rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${lifeTone}`}>
+            {stageLabel}
+          </span>
         </div>
-        <div>
-          <p className={cellLabel}>Valor</p>
-          <p className="mt-1 whitespace-nowrap text-[13px] font-semibold text-text-primary">{valorLabel}</p>
-        </div>
-        <div>
-          <p className={cellLabel}>Vigência</p>
-          <p className="mt-1 whitespace-nowrap text-[13px] tabular-nums text-text-primary">{vigencia}</p>
-          {renov && (
-            <span className={`mt-1 inline-block rounded-full px-1.5 py-0.5 font-label text-[9px] uppercase tracking-wider ${renov.cls}`}>
-              {renov.label}
-            </span>
-          )}
-        </div>
-        <div>
-          <p className={cellLabel}>Financeiro</p>
-          {fin.count > 0 ? (
-            <>
-              <p className="mt-1 text-[13px] font-semibold text-danger">{brl(fin.atrasadoTotal)} atrasado</p>
-              <p className="font-label text-[10px] text-text-muted">
-                {fin.count} parcela{fin.count === 1 ? '' : 's'} vencida{fin.count === 1 ? '' : 's'}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="mt-1 text-[13px] text-text-primary">Em dia</p>
-              {fin.proxima && (
-                <p className="font-label text-[10px] leading-tight text-text-muted">
-                  próx. {brl(fin.proxima.amount)}
-                  <br />
-                  em {fmtDateShort(fin.proxima.due_date)}
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      </div>
 
-      {/* A quebra por contrato só aparece quando há mais de um: com um contrato
-          só, ela repetia o mesmo número que já está em Valor, duas vezes. */}
-      {liveList.length > 1 && (
-        <div className="mt-3 border-t border-primary/10 pt-3">
-          <p className={cellLabel + ' mb-2'}>Contratos ({liveList.length})</p>
-          <ul className="flex flex-col gap-1">
-            {liveList.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-2 text-xs">
-                <span className="flex min-w-0 items-center gap-1.5 text-text-secondary">
-                  <span className="truncate">{e.title ?? 'Contrato'}</span>
-                  {e.lifecycle === 'pausado' && (
-                    <span className="shrink-0 rounded-full bg-warning/12 px-1.5 font-label text-[9px] uppercase tracking-wider text-warning">pausado</span>
-                  )}
-                </span>
-                <span className="shrink-0 font-medium tabular-nums text-text-primary">{engValorLabel(e)}</span>
-              </li>
-            ))}
-          </ul>
+        <div>
+          <p className={`flex items-center gap-1 ${cellLabel}`}>
+            <Wallet className="h-3 w-3" />
+            Valor
+          </p>
+          <p className="mt-1 text-[13px] font-semibold text-text-primary">{valorLabel}</p>
         </div>
-      )}
+
+        <div>
+          <p className={`flex items-center gap-1 ${cellLabel}`}>
+            <AlertTriangle className="h-3 w-3" />
+            Financeiro
+          </p>
+          {fin.count > 0 ? (
+            <p className="mt-1 text-[13px] font-semibold text-danger">
+              {brl(fin.atrasadoTotal)} atrasado
+              <span className="ml-1 font-label text-[10px] font-normal text-text-muted">
+                · {fin.count} parcela{fin.count === 1 ? '' : 's'}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1 text-[13px] text-text-primary">Em dia</p>
+          )}
+        </div>
+
+        {alerta && (
+          <div>
+            <p className={cellLabel}>Renovação</p>
+            <span className={`mt-1 inline-block rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${alerta.cls}`}>
+              {alerta.label}
+            </span>
+          </div>
+        )}
+      </div>
 
       {(origem || client.site || client.instagram) && (
         <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t border-primary/10 pt-3 text-xs">
@@ -1211,63 +1244,10 @@ function ProjectHeader({ client, productLabels = {}, onVerRespostas }: {
           )}
         </div>
       )}
-
-      {client.briefing && (
-        <div className="mt-3"><BriefingCard briefing={client.briefing} onVerRespostas={onVerRespostas} /></div>
-      )}
     </div>
   );
 }
 
-function BriefingCard({ briefing, onVerRespostas }: {
-  briefing: ClientBriefing;
-  onVerRespostas: (id: string) => void;
-}) {
-  const [copied, setCopied] = useState(false);
-  const enviado = briefing.status === 'enviado';
-  const quando = briefing.submitted_at
-    ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(briefing.submitted_at))
-    : null;
-
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-black/[0.06] bg-white px-3 py-2.5">
-      <div>
-        <p className="font-label text-[10px] uppercase tracking-[0.14em] text-text-secondary">
-          Briefing de onboarding{briefing.product_name ? ` · ${briefing.product_name}` : ''}
-        </p>
-        <p className="mt-1 flex items-center gap-2 text-sm">
-          <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${enviado ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
-            {enviado ? 'respondido' : 'aguardando'}
-          </span>
-          {enviado && quando && <span className="font-label text-[10px] text-text-muted">em {quando}</span>}
-        </p>
-      </div>
-      <div className="flex items-center gap-2">
-        {/* Respondido: ler as respostas é a ação principal, e ela acontece aqui
-            dentro — antes só dava copiando o link e abrindo o formulário. */}
-        {enviado && (
-          <button
-            type="button"
-            onClick={() => onVerRespostas(briefing.id)}
-            className="rounded-md bg-primary px-3 py-1.5 font-label text-[11px] font-medium text-white transition-colors hover:bg-primary/90"
-          >
-            ver respostas →
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={async () => {
-            try { await navigator.clipboard.writeText(briefing.url); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* ignore */ }
-          }}
-          className="rounded-md border border-black/[0.08] px-2.5 py-1.5 font-label text-[11px] text-text-secondary transition-colors hover:border-primary hover:text-primary"
-          title={briefing.url}
-        >
-          {copied ? '✓ copiado' : '⧉ copiar link'}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 /**
  * Onboarding do cliente: os briefings dele, com link para copiar e as respostas

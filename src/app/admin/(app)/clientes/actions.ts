@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { mimeDaProposta } from '@/lib/proposta-mime';
+import { extrairEscopo } from '@/lib/escopo-da-proposta';
 
 // Dados cadastrais da empresa (usados para gerar contratos).
 const ORG_FIELDS = [
@@ -260,4 +261,35 @@ export async function createContact(formData: FormData): Promise<void> {
   }
 
   revalidatePath('/admin/clientes');
+}
+
+/**
+ * Lê a proposta anexada e devolve o que ela promete entregar, para virar a
+ * Cláusula 1 do contrato. Não grava nada: quem decide se o texto serve é quem
+ * está olhando, e a proposta às vezes traz opção A e opção B.
+ */
+export async function escopoDaProposta(engagementId: string): Promise<{ texto: string; aviso?: string }> {
+  if (!engagementId) return { texto: '', aviso: 'Contrato não encontrado.' };
+
+  const supabase = getSupabaseAdmin();
+  const { data: eng } = await supabase
+    .from('engagements')
+    .select('proposal_path, proposal_name')
+    .eq('id', engagementId)
+    .single();
+
+  const caminho = eng?.proposal_path as string | undefined;
+  if (!caminho) return { texto: '', aviso: 'Este contrato não tem proposta anexada.' };
+  if (!/\.html?$/i.test(caminho)) {
+    return { texto: '', aviso: 'A proposta anexada é um PDF: só consigo ler os entregáveis de proposta em HTML.' };
+  }
+
+  const { data, error } = await supabase.storage.from('propostas').download(caminho);
+  if (error || !data) return { texto: '', aviso: 'Não consegui abrir o arquivo da proposta.' };
+
+  const { texto, itens } = extrairEscopo(await data.text());
+  if (itens.length === 0) {
+    return { texto: '', aviso: 'Não achei uma lista de entregáveis nessa proposta. Escreva o escopo à mão.' };
+  }
+  return { texto };
 }

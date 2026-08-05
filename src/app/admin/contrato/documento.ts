@@ -164,7 +164,23 @@ export function contratoHtml({
 
   // ── Blocos automáticos ────────────────────────────────────────────────
   const objeto = (): string[] => {
-    const itens = [aplicarMarcadores(eng.scope ?? modelo.escopo_padrao ?? 'O presente contrato tem por objeto a prestação dos serviços descritos abaixo, conforme escopo acordado entre as partes.', valores)];
+    // Escopo em várias linhas (a lista de entregáveis puxada da proposta) vira
+    // lista de verdade no documento; em linha única, segue como parágrafo.
+    const bruto = aplicarMarcadores(
+      eng.scope ?? modelo.escopo_padrao
+      ?? 'O presente contrato tem por objeto a prestação dos serviços descritos abaixo, conforme escopo acordado entre as partes.',
+      valores,
+    );
+    const linhas = bruto.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const marcadas = linhas.filter((l) => /^[•\-*]/.test(l));
+    const itens = marcadas.length > 0
+      ? [
+          [
+            ...linhas.filter((l) => !/^[•\-*]/.test(l)),
+            `<ul class="lista">${marcadas.map((l) => `<li>${esc(l.replace(/^[•\-*]\s*/, ''))}</li>`).join('')}</ul>`,
+          ].join(' '),
+        ]
+      : [bruto];
     if (eng.proposal_path) {
       itens.push('O escopo detalhado dos serviços consta na Proposta Comercial anexa, que integra este contrato como <strong>Anexo I</strong>.');
     }
@@ -311,6 +327,8 @@ export const CONTRATO_CSS = `
   .clausula p, .clausula .item { font-size: 13.5px; margin-bottom: 6px; text-align: justify; }
   .parcelas { margin: 6px 0 6px 20px; }
   .parcelas li { font-size: 13.5px; margin-bottom: 3px; }
+  .lista { margin: 6px 0 6px 20px; }
+  .lista li { font-size: 13.5px; margin-bottom: 3px; }
   .anexo { margin-top: 24px; padding: 14px 16px; border: 1px solid rgba(25,25,24,.18); border-radius: 8px; background: #fff; }
   .anexo p { font-size: 13px; }
   .close { margin-top: 28px; font-size: 13.5px; }
