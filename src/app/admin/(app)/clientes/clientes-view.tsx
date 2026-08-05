@@ -671,9 +671,13 @@ function ContractCard({ eng, cliente, modelos, onMarkPaid, onUnmark, onConclude,
   const menuItem = 'flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-text-secondary transition-colors hover:bg-black/[0.04] hover:text-text-primary';
   const total = eng.parcelas.reduce((s, r) => s + r.amount, 0);
   const recebido = eng.parcelas.filter((r) => r.status === 'recebido').reduce((s, r) => s + (r.paid_amount ?? r.amount), 0);
+  // Mesma régua do resumo lá em cima: contrato de R$ 4.000 em cinco parcelas
+  // aparecia como "avulso" aqui e "em 5x" no resumo, no mesmo cliente.
   const valorLabel = [
     (eng.mrr ?? 0) > 0 ? `${brl(eng.mrr!)}/mês` : null,
-    (eng.valor ?? 0) > 0 ? `${brl(eng.valor!)} avulso` : null,
+    (eng.valor ?? 0) > 0
+      ? avulsoLabel(eng.valor!, eng.parcelas.filter((r) => r.status !== 'cancelado').length)
+      : null,
   ].filter(Boolean).join(' · ') || '—';
 
   // Cor de fundo/borda e da pílula pelo ciclo de vida (ativo azul · pausado âmbar · churn vermelho · encerrado neutro).
@@ -1156,8 +1160,10 @@ function ProjectHeader({ client, productLabels = {}, onVerRespostas }: {
             <>
               <p className="mt-1 text-[13px] text-text-primary">Em dia</p>
               {fin.proxima && (
-                <p className="whitespace-nowrap font-label text-[10px] text-text-muted">
-                  próx. {brl(fin.proxima.amount)} em {fmtDateShort(fin.proxima.due_date)}
+                <p className="font-label text-[10px] leading-tight text-text-muted">
+                  próx. {brl(fin.proxima.amount)}
+                  <br />
+                  em {fmtDateShort(fin.proxima.due_date)}
                 </p>
               )}
             </>
