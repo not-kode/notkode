@@ -16,7 +16,7 @@ import { RESPONSAVEL_PADRAO } from '../entregas/status';
 
 type Db = SupabaseClient;
 
-/** Tarefa do pacote: `dias` são dias úteis a partir do ganho. */
+/** Tarefa do pacote: `dias` são dias corridos a partir do ganho. */
 type Padrao = {
   chave: string;
   titulo: string;
@@ -63,15 +63,15 @@ const PACOTE: Padrao[] = [
   },
 ];
 
-/** Dia útil `n` passos à frente de hoje: prazo não cai em sábado nem domingo. */
-export function diaUtil(n: number, base = new Date()): string {
-  const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate()));
-  let restam = n;
-  while (restam > 0) {
-    d.setUTCDate(d.getUTCDate() + 1);
-    const dow = d.getUTCDay();
-    if (dow !== 0 && dow !== 6) restam--;
-  }
+/**
+ * Prazo `n` dias corridos à frente, encostando no dia útil seguinte quando cai
+ * no fim de semana. Corridos, e não úteis, porque "o cliente tem 7 dias para
+ * responder" é o que foi combinado com ele, e ele conta no calendário.
+ */
+export function prazoEm(n: number, base = new Date()): string {
+  const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate() + n));
+  if (d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() + 2);
+  if (d.getUTCDay() === 0) d.setUTCDate(d.getUTCDate() + 1);
   return d.toISOString().slice(0, 10);
 }
 
@@ -103,7 +103,7 @@ export async function criarTarefasDoGanho(db: Db, dealId: string): Promise<void>
     notes: p.notas,
     status: 'a_fazer',
     priority: 'alta',
-    due_date: p.chave === 'pagamento' && primeiraParcela ? primeiraParcela : diaUtil(p.dias),
+    due_date: p.chave === 'pagamento' && primeiraParcela ? primeiraParcela : prazoEm(p.dias),
     assignee: RESPONSAVEL_PADRAO,
     // Checklist de bastidor (contrato, cobrança): não é o cronograma que o
     // cliente acompanha pelo link.
