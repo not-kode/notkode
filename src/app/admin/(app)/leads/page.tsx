@@ -113,8 +113,11 @@ export default async function LeadsPage({
         <div>
           <h1 className="text-2xl font-semibold">Leads do site</h1>
           <p className="mt-1 text-sm text-text-muted">
-            {leads.length} submissõe{leads.length === 1 ? '' : 's'} · {pending} a promover
-            {drafts.length > 0 && <> · {drafts.length} começaram e não enviaram</>}
+            {aba === 'leads' ? (
+              <>{leads.length} lead{leads.length === 1 ? '' : 's'} · {pending} a promover</>
+            ) : (
+              <>quem parou no meio e onde as pessoas travam{drafts.length > 0 && <> · {drafts.length} para chamar</>}</>
+            )}
           </p>
         </div>
         {aba === 'formularios' && <Suspense fallback={null}><PeriodFilter /></Suspense>}
@@ -138,6 +141,69 @@ export default async function LeadsPage({
 
       {aba === 'formularios' && (
         <>
+        {/* Começou a preencher e parou é assunto de formulário, não de lead: em
+            Leads ficam só as pessoas que enviaram de verdade. */}
+        {drafts.length > 0 && (
+          <section className="mb-8">
+            <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-warning" />
+              Começaram e não enviaram ({drafts.length})
+            </h2>
+            <p className="mb-3 text-xs text-text-muted">
+              Preencheram parte do formulário e deixaram um contato, mas não finalizaram. Dá pra chamar no WhatsApp.
+            </p>
+            <div className="overflow-x-auto rounded-md border border-warning/25 bg-warning/[0.03]">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                    <th className="px-4 py-3 font-medium">Última atividade</th>
+                    <th className="px-4 py-3 font-medium">Contato</th>
+                    <th className="px-4 py-3 font-medium">Serviço</th>
+                    <th className="px-4 py-3 font-medium">Parou em</th>
+                    <th className="px-4 py-3 font-medium">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drafts.map((d) => (
+                    <tr key={d.session_id} className="border-b border-border-subtle/10 align-top last:border-0">
+                      <td className="whitespace-nowrap px-4 py-3 text-text-muted">{fmtDate(d.updated_at)}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-text-primary">{d.name ?? '—'}{d.company ? ` · ${d.company}` : ''}</div>
+                        {d.email && <div className="text-xs text-text-muted">{d.email}</div>}
+                        {d.whatsapp && <div className="text-xs text-text-muted">{d.whatsapp}</div>}
+                        {recorded.has(d.session_id) && (
+                          <Link
+                            href={`/admin/sessoes/${d.session_id}`}
+                            className="mt-1 inline-flex items-center gap-1 font-label text-[10px] text-primary transition-colors hover:underline"
+                          >
+                            ▶ ver gravação
+                          </Link>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{d.service_tag ?? '—'}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{d.last_step ?? '—'}</td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        {d.whatsapp ? (
+                          <a
+                            href={waLink(d.whatsapp)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded-md bg-[#25D366] px-3 py-1.5 text-xs font-medium text-white transition hover:brightness-95"
+                          >
+                            WhatsApp
+                          </a>
+                        ) : (
+                          <span className="text-xs text-text-muted">sem whats</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
           <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-text-muted">
             Por página · onde as pessoas param<span className="ml-2 normal-case tracking-normal">· {range.label}</span>
           </p>
@@ -149,68 +215,6 @@ export default async function LeadsPage({
         <p className="rounded-md border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
           Erro ao carregar leads: {error.message}
         </p>
-      )}
-
-      {/* Começaram a preencher (já deixaram contato) mas não enviaram. Dá pra correr atrás. */}
-      {aba === 'leads' && drafts.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-text-primary">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-warning" />
-            Começaram e não enviaram ({drafts.length})
-          </h2>
-          <p className="mb-3 text-xs text-text-muted">
-            Preencheram parte do formulário e deixaram um contato, mas não finalizaram. Dá pra chamar no WhatsApp.
-          </p>
-          <div className="overflow-x-auto rounded-md border border-warning/25 bg-warning/[0.03]">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead>
-                <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
-                  <th className="px-4 py-3 font-medium">Última atividade</th>
-                  <th className="px-4 py-3 font-medium">Contato</th>
-                  <th className="px-4 py-3 font-medium">Serviço</th>
-                  <th className="px-4 py-3 font-medium">Parou em</th>
-                  <th className="px-4 py-3 font-medium">Ação</th>
-                </tr>
-              </thead>
-              <tbody>
-                {drafts.map((d) => (
-                  <tr key={d.session_id} className="border-b border-border-subtle/10 align-top last:border-0">
-                    <td className="whitespace-nowrap px-4 py-3 text-text-muted">{fmtDate(d.updated_at)}</td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-text-primary">{d.name ?? '—'}{d.company ? ` · ${d.company}` : ''}</div>
-                      {d.email && <div className="text-xs text-text-muted">{d.email}</div>}
-                      {d.whatsapp && <div className="text-xs text-text-muted">{d.whatsapp}</div>}
-                      {recorded.has(d.session_id) && (
-                        <Link
-                          href={`/admin/sessoes/${d.session_id}`}
-                          className="mt-1 inline-flex items-center gap-1 font-label text-[10px] text-primary transition-colors hover:underline"
-                        >
-                          ▶ ver gravação
-                        </Link>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{d.service_tag ?? '—'}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-text-secondary">{d.last_step ?? '—'}</td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      {d.whatsapp ? (
-                        <a
-                          href={waLink(d.whatsapp)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-md bg-[#25D366] px-3 py-1.5 text-xs font-medium text-white transition hover:brightness-95"
-                        >
-                          WhatsApp
-                        </a>
-                      ) : (
-                        <span className="text-xs text-text-muted">sem whats</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
       )}
 
       {aba === 'leads' && !error && leads.length === 0 && (
