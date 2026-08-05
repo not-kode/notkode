@@ -45,7 +45,7 @@ export type ClientView = {
 const SITE_URL_CLIENTE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
 
 export type ClientBriefing = {
-  status: string; product_name: string | null; submitted_at: string | null; url: string;
+  id: string; status: string; product_name: string | null; submitted_at: string | null; url: string;
 };
 export type LeadOrigin = {
   service_tag: string | null; page_origin: string | null;
@@ -88,6 +88,40 @@ function faltamNoCadastro(c: ClientView): string[] {
   if (!c.address_street || !c.address_city) falta.push('endereço');
   if (!c.legal_rep) falta.push('representante legal');
   return falta;
+}
+
+/**
+ * O que o contrato cobra fora da mensalidade. Normalmente é o campo "valor
+ * avulso"; quando ele veio em branco num contrato sem MRR (fechamento antigo,
+ * lançado direto nas parcelas), as próprias parcelas dizem quanto é.
+ */
+function valorAvulsoDe(e: Contrato): number {
+  if ((e.valor ?? 0) > 0) return e.valor!;
+  if ((e.mrr ?? 0) > 0) return 0;
+  return e.parcelas.filter((p) => p.status !== 'cancelado').reduce((s, p) => s + p.amount, 0);
+}
+
+/**
+ * Quanto o cliente paga, pelos contratos que ainda valem: a mensalidade
+ * recorrente (MRR, só contratos ativos — pausado não fatura) e, separada, a
+ * cobrança de pagamento único/parcelado. Pagamento único não é MRR, então quem
+ * fechou avulso aparecia zerado na lista mesmo devendo alguns milhares.
+ */
+function valorDoCliente(c: ClientView) {
+  const mrr = c.contratos.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
+  const pontuais = c.contratos.filter((e) => isLive(e) && valorAvulsoDe(e) > 0);
+  const avulso = pontuais.reduce((s, e) => s + valorAvulsoDe(e), 0);
+  // "3x" só faz sentido com um contrato pontual: somar as parcelas de dois
+  // contratos diferentes anunciaria um parcelamento que não existe.
+  const parcelas = pontuais.length === 1
+    ? pontuais[0].parcelas.filter((p) => p.status !== 'cancelado').length
+    : 0;
+  return { mrr, avulso, parcelas };
+}
+
+/** Rótulo do avulso: "R$ 3.500,00 avulso" ou "R$ 3.500,00 em 3x". */
+function avulsoLabel(avulso: number, parcelas: number): string {
+  return parcelas > 1 ? `${brl(avulso)} em ${parcelas}x` : `${brl(avulso)} avulso`;
 }
 
 // Saúde financeira do cliente a partir das parcelas de todos os contratos.
@@ -185,8 +219,6 @@ export function ClientesView({ clients, productLabels = {}, templates = [], mode
   const selected = clients.find((c) => c.id === selectedId) ?? null;
   const excluindo = clients.find((c) => c.id === excluindoId) ?? null;
 
-  // MRR conta só contratos ativos (pausado não fatura; churn/encerrado saíram).
-  const mrrOf = (c: ClientView) => c.contratos.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
   const todayStr = new Date().toISOString().slice(0, 10);
 
   return (
@@ -229,13 +261,13 @@ export function ClientesView({ clients, productLabels = {}, templates = [], mode
                 <th className="px-4 py-3 font-medium">Contato principal</th>
                 <th className="px-4 py-3 font-medium">Contratos</th>
                 <th className="px-4 py-3 font-medium">Vigência</th>
-                <th className="px-4 py-3 text-right font-medium">MRR</th>
+                <th className="px-4 py-3 text-right font-medium">Valor</th>
                 <th className="w-10 px-2 py-3"><span className="sr-only">Excluir</span></th>
               </tr>
             </thead>
             <tbody>
               {clients.map((c) => {
-                const mrr = mrrOf(c);
+                const { mrr, avulso, parcelas } = valorDoCliente(c);
                 const ativos = c.contratos.filter(isLive).length;
                 const stage = clientStage(c);
                 const renewal = clientRenewal(c, todayStr);
@@ -252,7 +284,20 @@ export function ClientesView({ clients, productLabels = {}, templates = [], mode
                     <td className="whitespace-nowrap px-4 py-3">
                       {renewal ? <span className={`rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${renewal.cls}`}>{renewal.label}</span> : <span className="text-text-muted">—</span>}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">{mrr > 0 ? <span className="font-medium text-primary">{brl(mrr)}<span className="text-text-muted">/mês</span></span> : '—'}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      {mrr > 0 || avulso > 0 ? (
+                        <div className="flex flex-col items-end gap-0.5 leading-tight">
+                          {mrr > 0 && (
+                            <span className="font-medium text-primary">{brl(mrr)}<span className="text-text-muted">/mês</span></span>
+                          )}
+                          {avulso > 0 && (
+                            <span className={mrr > 0 ? 'font-label text-[11px] text-text-secondary' : 'font-medium text-text-primary'}>
+                              {mrr > 0 ? '+ ' : ''}{avulsoLabel(avulso, parcelas)}
+                            </span>
+                          )}
+                        </div>
+                      ) : <span className="text-text-muted">—</span>}
+                    </td>
                     <td className="w-10 whitespace-nowrap px-2 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
@@ -359,6 +404,13 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [newContract, setNewContract] = useState(false);
   const [tab, setTab] = useState<'contratos' | 'cadastro' | 'onboarding'>(client.contratos.length > 0 ? 'contratos' : 'cadastro');
+  // Qual briefing está aberto na aba Onboarding. Fica aqui porque o resumo lá em
+  // cima também manda abrir um ("ver respostas"), sem passar por copiar link.
+  const [briefingAberto, setBriefingAberto] = useState<string | null>(client.briefings[0]?.id ?? null);
+  const verRespostas = (id: string) => {
+    setBriefingAberto(id);
+    setTab('onboarding');
+  };
 
   const markPaid = (id: string, amount: number) => {
     const fd = new FormData();
@@ -401,7 +453,7 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
   return (
     <Drawer title={client.name ?? 'Cliente'} eyebrow="Cliente" onClose={onClose} wide>
       {/* Resumo do projeto — os macros do cliente num relance */}
-      <ProjectHeader client={client} productLabels={productLabels} />
+      <ProjectHeader client={client} productLabels={productLabels} onVerRespostas={verRespostas} />
 
       {/* Abas */}
       <div className="flex gap-1 border-b border-black/[0.06] pb-3">
@@ -417,7 +469,12 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
       </div>
 
       {tab === 'onboarding' && (
-        <OnboardingTab client={client} templates={templates} />
+        <OnboardingTab
+          client={client}
+          templates={templates}
+          abertoId={briefingAberto}
+          onAbrir={setBriefingAberto}
+        />
       )}
 
       {tab === 'cadastro' && (
@@ -967,16 +1024,24 @@ function Drawer({ title, eyebrow, onClose, children, wide }: { title: string; ey
 
 // Cabeçalho de projeto: reúne os macros do cliente que antes ficavam espalhados
 // (etapa, prazo, valor, saúde financeira, contato, origem do lead e briefing).
-function ProjectHeader({ client, productLabels = {} }: { client: ClientView; productLabels?: Record<string, string> }) {
+function ProjectHeader({ client, productLabels = {}, onVerRespostas }: {
+  client: ClientView;
+  productLabels?: Record<string, string>;
+  onVerRespostas: (briefingId: string) => void;
+}) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const live = client.contratos.find(isLive) ?? null;
   const fin = financeHealth(client.contratos, todayStr);
   const contact = client.contacts[0] ?? null;
   const lo = client.leadOrigin;
 
-  const mrr = client.contratos.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
-  const valorAvulso = client.contratos.filter(isLive).reduce((s, e) => s + (e.valor ?? 0), 0);
-  const valorLabel = mrr > 0 ? `${brl(mrr)}/mês` : valorAvulso > 0 ? brl(valorAvulso) : '—';
+  // Mensal e avulso convivem: cliente com contrato recorrente e uma venda
+  // pontual mostrava só a mensalidade, e o pagamento único sumia do resumo.
+  const { mrr, avulso: valorAvulso, parcelas: parcelasAvulso } = valorDoCliente(client);
+  const valorLabel = [
+    mrr > 0 ? `${brl(mrr)}/mês` : null,
+    valorAvulso > 0 ? avulsoLabel(valorAvulso, parcelasAvulso) : null,
+  ].filter(Boolean).join(' + ') || '—';
 
   // Contratos "vivos" para a quebra por serviço — ativos primeiro, pausados depois.
   const liveList = client.contratos.filter(isLive).sort((a, b) => (b.mrr ?? 0) - (a.mrr ?? 0));
@@ -1050,7 +1115,7 @@ function ProjectHeader({ client, productLabels = {} }: { client: ClientView; pro
               <span className={cellLabel}>Total recorrente</span>
               <span className="font-semibold tabular-nums text-primary">
                 {mrr > 0 ? `${brl(mrr)}/mês` : '—'}
-                {valorAvulso > 0 && <span className="ml-1.5 font-normal text-text-muted">+ {brl(valorAvulso)} avulso</span>}
+                {valorAvulso > 0 && <span className="ml-1.5 font-normal text-text-muted">+ {avulsoLabel(valorAvulso, parcelasAvulso)}</span>}
               </span>
             </div>
           )}
@@ -1085,12 +1150,17 @@ function ProjectHeader({ client, productLabels = {} }: { client: ClientView; pro
         </div>
       </div>
 
-      {client.briefing && <div className="mt-3"><BriefingCard briefing={client.briefing} /></div>}
+      {client.briefing && (
+        <div className="mt-3"><BriefingCard briefing={client.briefing} onVerRespostas={onVerRespostas} /></div>
+      )}
     </div>
   );
 }
 
-function BriefingCard({ briefing }: { briefing: ClientBriefing }) {
+function BriefingCard({ briefing, onVerRespostas }: {
+  briefing: ClientBriefing;
+  onVerRespostas: (id: string) => void;
+}) {
   const [copied, setCopied] = useState(false);
   const enviado = briefing.status === 'enviado';
   const quando = briefing.submitted_at
@@ -1111,6 +1181,17 @@ function BriefingCard({ briefing }: { briefing: ClientBriefing }) {
         </p>
       </div>
       <div className="flex items-center gap-2">
+        {/* Respondido: ler as respostas é a ação principal, e ela acontece aqui
+            dentro — antes só dava copiando o link e abrindo o formulário. */}
+        {enviado && (
+          <button
+            type="button"
+            onClick={() => onVerRespostas(briefing.id)}
+            className="rounded-md bg-primary px-3 py-1.5 font-label text-[11px] font-medium text-white transition-colors hover:bg-primary/90"
+          >
+            ver respostas →
+          </button>
+        )}
         <button
           type="button"
           onClick={async () => {
@@ -1121,9 +1202,6 @@ function BriefingCard({ briefing }: { briefing: ClientBriefing }) {
         >
           {copied ? '✓ copiado' : '⧉ copiar link'}
         </button>
-        {enviado && (
-          <span className="font-label text-[10px] text-text-muted">respostas na aba Onboarding</span>
-        )}
       </div>
     </div>
   );
@@ -1134,10 +1212,12 @@ function BriefingCard({ briefing }: { briefing: ClientBriefing }) {
  * ali dentro. Antes isso era uma tela separada no menu; onboarding é assunto do
  * cliente, então mora na ficha dele.
  */
-function OnboardingTab({ client, templates }: { client: ClientView; templates: { key: string; label: string }[] }) {
-  const [abertoId, setAbertoId] = useState<string | null>(client.briefings[0]?.id ?? null);
-  const aberto = client.briefings.find((b) => b.id === abertoId) ?? null;
-
+function OnboardingTab({ client, templates, abertoId, onAbrir }: {
+  client: ClientView;
+  templates: { key: string; label: string }[];
+  abertoId: string | null;
+  onAbrir: (id: string | null) => void;
+}) {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -1171,7 +1251,7 @@ function OnboardingTab({ client, templates }: { client: ClientView; templates: {
                   }`}
                 >
                   <button
-                    onClick={() => setAbertoId(ativo ? null : b.id)}
+                    onClick={() => onAbrir(ativo ? null : b.id)}
                     className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left"
                   >
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">

@@ -155,6 +155,7 @@ export default async function ClientesPage() {
       : null,
     briefing: brief
       ? {
+          id: brief.id,
           status: brief.status,
           product_name: brief.product_name,
           submitted_at: brief.submitted_at,
