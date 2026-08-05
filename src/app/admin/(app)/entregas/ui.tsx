@@ -6,8 +6,9 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, Check, ChevronDown, Pause, Play } from 'lucide-react';
+import { Calendar, Check, ChevronDown, Pause, Play, Plus } from 'lucide-react';
 import { PRIORITIES, PRIORITY_LABELS, type Priority } from './status';
+import type { Pessoa } from './types';
 
 export const inputCls =
   'w-full rounded-sm border border-black/[0.08] bg-white px-2.5 py-1.5 text-sm text-text-primary ' +
@@ -208,6 +209,126 @@ export function PriorityChip({ value, onChange, compacto }: {
               {p === value && <Check className="ml-auto h-3 w-3 text-primary" />}
             </button>
           ))}
+        </div>,
+        document.body,
+      )}
+    </div>
+  );
+}
+
+/**
+ * Quem toca a tarefa, escolhido numa lista em vez de digitado.
+ *
+ * Digitar o nome toda vez fazia a mesma pessoa virar três ("Camila", "camila
+ * gregório", "Cami") e nenhuma busca por responsável fechava a conta. A lista
+ * traz quem já toca tarefas por aqui e os contatos dos clientes, para quando a
+ * bola está com o cliente; nome que ainda não existe entra digitando, e da
+ * próxima vez já aparece na lista.
+ */
+export function PessoaSelect({ value, pessoas, onChange, compacto = false }: {
+  value: string | null;
+  pessoas: Pessoa[];
+  onChange: (v: string) => void;
+  /** Só o avatar, para caber na célula da lista e no card do quadro. */
+  compacto?: boolean;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [busca, setBusca] = useState('');
+  const menuRef = useRef<HTMLDivElement>(null);
+  const botaoRef = useRef<HTMLButtonElement>(null);
+  const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 208, 288);
+  useFechaAoRolar(aberto, () => setAberto(false));
+
+  const termo = busca.trim().toLowerCase();
+  const achadas = pessoas.filter((p) => !termo || p.nome.toLowerCase().includes(termo));
+  const nomeNovo = busca.trim();
+  const inedito = nomeNovo.length > 1 && !pessoas.some((p) => p.nome.toLowerCase() === nomeNovo.toLowerCase());
+
+  const escolher = (nome: string) => {
+    onChange(nome);
+    setBusca('');
+    setAberto(false);
+  };
+
+  const grupos: { titulo: string; itens: Pessoa[] }[] = [
+    { titulo: 'Equipe', itens: achadas.filter((p) => p.tipo === 'equipe') },
+    { titulo: 'Clientes', itens: achadas.filter((p) => p.tipo === 'cliente') },
+  ].filter((g) => g.itens.length > 0);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        ref={botaoRef}
+        onClick={() => setAberto((v) => !v)}
+        title={value || 'Definir responsável'}
+        className={compacto ? '' : 'inline-flex max-w-[10rem] items-center gap-1.5 rounded-full px-1 py-0.5 text-[12px] text-text-secondary transition-opacity hover:opacity-80'}
+      >
+        <Avatar nome={value} />
+        {!compacto && <span className="truncate">{value || 'quem toca'}</span>}
+      </button>
+
+      {aberto && pos && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-50 w-52 overflow-hidden rounded-md border border-black/[0.08] bg-white shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
+          style={{ left: pos.left, top: pos.top }}
+        >
+          <input
+            autoFocus
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && inedito) escolher(nomeNovo);
+              if (e.key === 'Enter' && !inedito && achadas[0]) escolher(achadas[0].nome);
+            }}
+            placeholder="Buscar ou escrever"
+            className="w-full border-b border-black/[0.06] px-2.5 py-2 text-xs outline-none placeholder:text-text-muted"
+          />
+
+          <div className="max-h-56 overflow-y-auto py-1">
+            {inedito && (
+              <button
+                onClick={() => escolher(nomeNovo)}
+                className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs text-primary transition-colors hover:bg-primary/[0.06]"
+              >
+                <Plus className="h-3 w-3 shrink-0" />
+                <span className="truncate">usar “{nomeNovo}”</span>
+              </button>
+            )}
+
+            {grupos.map((g) => (
+              <div key={g.titulo}>
+                <p className="px-2.5 pb-0.5 pt-1.5 font-label text-[9px] uppercase tracking-[0.14em] text-text-muted">
+                  {g.titulo}
+                </p>
+                {g.itens.map((p) => (
+                  <button
+                    key={`${p.tipo}-${p.nome}`}
+                    onClick={() => escolher(p.nome)}
+                    className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs text-text-secondary transition-colors hover:bg-black/[0.04]"
+                  >
+                    <Avatar nome={p.nome} />
+                    <span className="truncate">{p.nome}</span>
+                    {p.nome === value && <Check className="ml-auto h-3 w-3 shrink-0 text-primary" />}
+                  </button>
+                ))}
+              </div>
+            ))}
+
+            {value && (
+              <button
+                onClick={() => escolher('')}
+                className="mt-1 flex w-full items-center gap-2 border-t border-black/[0.06] px-2.5 py-1.5 text-left text-xs text-text-muted transition-colors hover:bg-black/[0.04]"
+              >
+                sem responsável
+              </button>
+            )}
+
+            {grupos.length === 0 && !inedito && (
+              <p className="px-2.5 py-2 text-xs text-text-muted">Ninguém com esse nome.</p>
+            )}
+          </div>
         </div>,
         document.body,
       )}

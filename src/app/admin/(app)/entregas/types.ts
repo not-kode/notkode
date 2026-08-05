@@ -1,5 +1,6 @@
 // Formato que a página serve para as visualizações de Entregas.
 
+import { PRIORITY_ORDER } from './status';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
 
 export type PhaseView = {
@@ -27,6 +28,23 @@ export type TaskComProjeto = TaskView & {
 };
 
 export type ProjectKind = 'contrato' | 'negocio';
+
+/**
+ * A ordem das tarefas, igual em toda tela: o que vence antes vem primeiro,
+ * empate no mesmo dia vai pela prioridade e o que não tem prazo fica no fim.
+ *
+ * É ordem fixa de propósito. Antes havia um seletor com sete ordens (quadro,
+ * mais recentes, prazo mais distante...) e a lista abria na última escolha, que
+ * podia ser qualquer uma: dava trabalho para responder "o que é mais urgente",
+ * que é a única pergunta que essa tela precisa responder.
+ */
+export function porPrazo(a: TaskView, b: TaskView): number {
+  const prazo = (t: TaskView) => t.dueDate ?? '9999-99-99';
+  return prazo(a).localeCompare(prazo(b))
+    || PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
+    || a.sort - b.sort;
+}
+
 
 /**
  * De quem é a tarefa nova. O quadro mostra contratos e negócios ganhos ainda sem
@@ -67,3 +85,10 @@ export type NotaView = {
   id: string; projetoId: string | null; titulo: string; conteudo: string | null;
   tipo: string; tags: string[]; criadaEm: string; atualizadaEm: string;
 };
+
+/**
+ * Quem pode tocar uma tarefa: a equipe (quem já aparece como responsável em
+ * alguma tarefa) e os contatos e empresas dos clientes, para quando o próximo
+ * passo depende do cliente e não da casa.
+ */
+export type Pessoa = { nome: string; tipo: 'equipe' | 'cliente' };

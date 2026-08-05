@@ -7,36 +7,19 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import {
   PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS, TASK_STATUSES, type TaskStatus,
 } from './status';
-import { donoDaTarefa } from './types';
-import type { ComentarioView, PhaseView, ProjectKind, Send, TaskComProjeto } from './types';
-import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, Sigla, TimerChip, hoje } from './ui';
+import { donoDaTarefa, porPrazo } from './types';
+import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TaskComProjeto } from './types';
+import { ChipSelect, DateChip, InlineText, PessoaSelect, PriorityChip, Sigla, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
-// 'urgencia' é a ordem padrão: o que vence antes em cima e, dentro do mesmo dia,
-// o mais urgente primeiro. 'manual' é a ordem do quadro, a que você monta
-// arrastando. Clicar num cabeçalho troca para aquela coluna; arrastar devolve
-// para a manual, senão a lista mostraria uma ordem e o banco guardaria outra.
-type Coluna =
-  | 'urgencia' | 'manual' | 'criada' | 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
-
-/** Ordens prontas do seletor do topo, sem precisar caçar o cabeçalho certo. */
-const ORDENS: { id: string; label: string; col: Coluna; asc: boolean }[] = [
-  { id: 'urgencia',      label: 'Prazo e urgência',   col: 'urgencia',   asc: true },
-  { id: 'manual',        label: 'Ordem do quadro',    col: 'manual',     asc: true },
-  { id: 'recentes',      label: 'Mais recentes',      col: 'criada',     asc: false },
-  { id: 'antigas',       label: 'Mais antigas',       col: 'criada',     asc: true },
-  { id: 'prazo',         label: 'Prazo mais próximo', col: 'prazo',      asc: true },
-  { id: 'prazo_longe',   label: 'Prazo mais distante', col: 'prazo',     asc: false },
-  { id: 'prioridade',    label: 'Prioridade',         col: 'prioridade', asc: true },
-];
-
-/** A escolha de ordem é jeito de trabalhar, não dado: fica no navegador. */
-const PREF_ORDEM = 'notkode.entregas.ordem';
+// A lista tem uma ordem só, `porPrazo`: o que vence antes em cima, empate pela
+// prioridade, sem prazo no fim. Arrastar continua servindo para trocar de bloco.
+type Coluna = 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
 
 /** A ordem dos blocos: o que está em jogo primeiro, feito no fim. */
 const BLOCOS: TaskStatus[] = ['a_fazer', 'fazendo', 'revisao', 'backlog', 'feito'];
@@ -49,44 +32,32 @@ const BLOCO_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success/12 text-[#15803D]',
 };
 
-export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind, mostrarProjeto, onAbrirProjeto, send }: {
+export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind, pessoas, mostrarProjeto, onAbrirProjeto, send }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
   projectKind: ProjectKind;
+  pessoas: Pessoa[];
   mostrarProjeto: boolean;
   /** Clique no nome da empresa: fecha a visão "Todos" e abre só aquele projeto. */
   onAbrirProjeto: (id: string) => void;
   send: Send;
 }) {
-  const [ordem, setOrdem] = useState<{ col: Coluna; asc: boolean }>({ col: 'urgencia', asc: true });
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [alvo, setAlvo] = useState<string | null>(null);
   const [punho, setPunho] = useState<string | null>(null);
   const [criandoEm, setCriandoEm] = useState<TaskStatus | null>(null);
-  // Feito nasce fechado: é histórico, não fila.
-  const [fechados, setFechados] = useState<TaskStatus[]>(['feito']);
+  // Bloco aberto ou fechado, só quando você mandou. Sem dito seu vale o padrão:
+  // bloco vazio nasce fechado (uma faixa fina em vez de "nada aqui" ocupando a
+  // tela) e Done também, que é histórico, não fila.
+  const [dobra, setDobra] = useState<Partial<Record<TaskStatus, boolean>>>({});
   const [abertaId, setAberta] = useState<string | null>(null);
   // Seleção para agir em lote: concluir dez tarefas uma a uma é trabalho à toa.
   const [selecao, setSelecao] = useState<string[]>([]);
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
-
-  // A ordem escolhida volta na próxima visita: trocar toda vez cansa.
-  useEffect(() => {
-    const salva = localStorage.getItem(PREF_ORDEM);
-    const achada = ORDENS.find((o) => o.id === salva);
-    if (achada) setOrdem({ col: achada.col, asc: achada.asc });
-  }, []);
-
-  const guardarOrdem = (col: Coluna, asc: boolean) => {
-    setOrdem({ col, asc });
-    const achada = ORDENS.find((o) => o.col === col && o.asc === asc);
-    if (achada) localStorage.setItem(PREF_ORDEM, achada.id);
-    else localStorage.removeItem(PREF_ORDEM);
-  };
 
   // Esc larga a seleção: é a saída sem risco de esbarrar num botão da barra.
   useEffect(() => {
@@ -110,30 +81,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
   ];
   const colspan = colunas.length + 4;
 
-  const chave = (t: TaskComProjeto): string | number => {
-    switch (ordem.col) {
-      case 'titulo': return t.title.toLowerCase();
-      case 'projeto': return t.projetoNome.toLowerCase();
-      case 'quem': return (t.assignee ?? '').toLowerCase();
-      case 'inicio': return t.startDate ?? '9999';
-      case 'prioridade': return PRIORITY_ORDER[t.priority];
-      case 'tempo': return -t.tempoSegundos;
-      case 'criada': return t.createdAt;
-      case 'prazo': return t.dueDate ?? '9999';
-      case 'manual': return t.sort;
-      // Prazo manda; empate no mesmo dia (e o monte sem prazo) vai pela
-      // prioridade. Sem prazo fica no fim, que é onde ele não atrapalha.
-      default: return `${t.dueDate ?? '9999-99-99'}#${PRIORITY_ORDER[t.priority]}`;
-    }
-  };
-
-  const ordenar = (lista: TaskComProjeto[]) =>
-    [...lista].sort((a, b) => {
-      const va = chave(a), vb = chave(b);
-      const cmp = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb));
-      // Empate cai no prazo: entre duas tarefas iguais, vale a que vence antes.
-      return (ordem.asc ? cmp : -cmp) || (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999');
-    });
+  const ordenar = (lista: TaskComProjeto[]) => [...lista].sort(porPrazo);
 
   const raizes = tasks.filter((t) => !t.parentId);
   const marcada = (id: string) => selecao.includes(id);
@@ -165,7 +113,8 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
    * Soltou: as tarefas vão para o status do bloco de destino, na posição em que
    * foram soltas (`before` vazio = fim do bloco). Arrastar uma linha que está
    * marcada leva o lote inteiro junto — foi para isso que ele foi selecionado.
-   * Como a posição só existe na ordem manual, arrastar devolve a lista para ela.
+   * A posição dentro do bloco fica guardada e serve de desempate, mas quem manda
+   * na ordem da lista é o prazo.
    */
   const soltar = (id: string, status: TaskStatus, before: string) => {
     setArrastando(null);
@@ -174,34 +123,16 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
     const lote = marcada(id) && selecao.length > 1;
     const ids = lote ? selecaoEmOrdem() : [id];
     if (ids.includes(before)) return;
-    guardarOrdem('manual', true);
     send(moveTask, { ids: ids.join(','), status, before });
     if (lote) setSelecao([]);
   };
 
-  const ordemAtual = ORDENS.find((o) => o.col === ordem.col && o.asc === ordem.asc);
-
   return (
     <div className="flex flex-col gap-3">
-      {/* Como a lista está ordenada. As colunas continuam clicáveis; isto aqui é
-          o atalho para as ordens que se usa todo dia, "mais recentes" à frente. */}
-      <div className="flex items-center justify-end gap-1.5">
-        <ArrowUpDown className="h-3.5 w-3.5 text-text-muted" />
-        <ChipSelect
-          value={ordemAtual?.id ?? '—'}
-          placeholder="personalizada"
-          titulo="Ordenar a lista"
-          onChange={(v) => {
-            const o = ORDENS.find((x) => x.id === v);
-            if (o) guardarOrdem(o.col, o.asc);
-          }}
-          options={ORDENS.map((o) => ({ value: o.id, label: o.label }))}
-        />
-      </div>
-
       {BLOCOS.map((status) => {
         const doBloco = ordenar(raizes.filter((t) => t.status === status));
-        const fechado = fechados.includes(status);
+        // Vazio (e Done) fecha sozinho; o que você abriu ou fechou na mão vence.
+        const fechado = dobra[status] ?? (doBloco.length === 0 || status === 'feito');
         const blocoTodo = doBloco.length > 0 && doBloco.every((t) => marcada(t.id));
 
         return (
@@ -233,7 +164,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
                 className="h-3.5 w-3.5 accent-primary disabled:opacity-30"
               />
               <button
-                onClick={() => setFechados((f) => (fechado ? f.filter((s) => s !== status) : [...f, status]))}
+                onClick={() => setDobra((d) => ({ ...d, [status]: !fechado }))}
                 aria-label={fechado ? 'Abrir bloco' : 'Fechar bloco'}
                 className="rounded p-0.5 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
               >
@@ -247,18 +178,8 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
               <span className="text-[11px] tabular-nums text-text-muted">{doBloco.length}</span>
 
               <div className="ml-auto flex items-center gap-3">
-                {/* Ordenado por uma coluna, arrastar não teria onde encaixar:
-                    este atalho devolve a lista para a ordem que você monta. */}
-                {ordem.col !== 'manual' && (
-                  <button
-                    onClick={() => guardarOrdem('manual', true)}
-                    className="text-[11px] text-text-muted underline decoration-dotted transition-colors hover:text-primary"
-                  >
-                    voltar à ordem manual
-                  </button>
-                )}
                 <button
-                  onClick={() => { setCriandoEm(status); setFechados((f) => f.filter((s) => s !== status)); }}
+                  onClick={() => { setCriandoEm(status); setDobra((d) => ({ ...d, [status]: false })); }}
                   className="inline-flex items-center gap-1 text-[12px] text-text-muted transition-colors hover:text-primary"
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -275,22 +196,14 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
                       <th className="w-6" />
                       <th className="w-8" />
                       <th className="w-9" />
-                      {colunas.map((c) => {
-                        const ativa = ordem.col === c.id;
-                        return (
-                          <th key={c.id} className={`${c.cls} px-3 py-1.5 text-left`}>
-                            <button
-                              onClick={() => guardarOrdem(c.id, ordem.col === c.id ? !ordem.asc : true)}
-                              className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide transition-colors ${
-                                ativa ? 'text-text-primary' : 'text-text-muted hover:text-text-secondary'
-                              }`}
-                            >
-                              {c.label}
-                              {ativa && (ordem.asc ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
-                            </button>
-                          </th>
-                        );
-                      })}
+                      {colunas.map((c) => (
+                        <th
+                          key={c.id}
+                          className={`${c.cls} px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-text-muted`}
+                        >
+                          {c.label}
+                        </th>
+                      ))}
                       <th className="w-10" />
                     </tr>
                   </thead>
@@ -393,15 +306,11 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
                             </td>
                           ) : (
                             <td className="px-3 py-2">
-                              <div className="flex items-center gap-1.5">
-                                <Avatar nome={t.assignee} />
-                                <InlineText
-                                  value={t.assignee ?? ''}
-                                  onSave={(v) => send(updateTask, { id: t.id, assignee: v })}
-                                  placeholder="quem"
-                                  className="text-[12px] text-text-secondary"
-                                />
-                              </div>
+                              <PessoaSelect
+                                value={t.assignee}
+                                pessoas={pessoas}
+                                onChange={(v) => send(updateTask, { id: t.id, assignee: v })}
+                              />
                             </td>
                           )}
 
@@ -466,6 +375,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
       {selecao.length > 0 && (
         <BarraSelecao
           quantas={selecao.length}
+          pessoas={pessoas}
           etapas={mostrarProjeto ? null : phasesDe(projectId)}
           editar={editarLote}
           apagar={apagarLote}
@@ -481,6 +391,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
           phases={phasesDe(aberta.projetoId)}
           projectId={aberta.projetoId}
           projectKind={aberta.projetoKind}
+          pessoas={pessoas}
           send={send}
           onFechar={() => setAberta(null)}
         />
@@ -497,14 +408,14 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
  * A etapa só entra quando a lista é de um projeto só: em "Todos", cada tarefa
  * pertence a um cronograma diferente e não existe etapa comum para aplicar.
  */
-function BarraSelecao({ quantas, etapas, editar, apagar, limpar }: {
+function BarraSelecao({ quantas, pessoas, etapas, editar, apagar, limpar }: {
   quantas: number;
+  pessoas: Pessoa[];
   etapas: PhaseView[] | null;
   editar: (campos: Record<string, string>) => void;
   apagar: () => void;
   limpar: () => void;
 }) {
-  const [quem, setQuem] = useState('');
 
   // Em portal e fixa na janela: dentro da tabela ela ficava presa no fim da
   // página (o conteúdo do admin rola na horizontal, e isso mata o sticky).
@@ -552,14 +463,16 @@ function BarraSelecao({ quantas, etapas, editar, apagar, limpar }: {
         />
       )}
 
-      {/* Enter aplica; vazio limpa o responsável de todas. */}
-      <input
-        value={quem}
-        onChange={(e) => setQuem(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') { editar({ assignee: quem }); setQuem(''); } }}
+      {/* Mesma lista de nomes da tarefa: escolher passa o lote inteiro para essa pessoa. */}
+      <ChipSelect
+        value="—"
         placeholder="Responsável"
-        title="Digite o nome e aperte Enter"
-        className="w-28 rounded-full border border-black/[0.1] px-2.5 py-1 text-[12px] text-text-primary outline-none transition-colors focus:border-primary/40"
+        titulo="Responsável das selecionadas"
+        onChange={(v) => editar({ assignee: v })}
+        options={[
+          { value: '', label: 'sem responsável' },
+          ...pessoas.map((p) => ({ value: p.nome, label: p.nome })),
+        ]}
       />
 
       <input

@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { EntregasView } from './entregas-view';
-import type { ComentarioView, NotaView, ProjectView } from './types';
+import type { ComentarioView, NotaView, Pessoa, ProjectView } from './types';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
 
 export const dynamic = 'force-dynamic';
@@ -154,5 +154,37 @@ export default async function EntregasPage() {
     }
   }
 
-  return <EntregasView projects={[...negocios, ...visiveis]} comentarios={comentarios} notas={notas} />;
+  // Quem pode tocar tarefa. Vem de dois lugares: quem já é responsável por
+  // alguma (a equipe, sem precisar de cadastro à parte) e os contatos e empresas
+  // dos clientes, para quando a bola está com o cliente e não com a casa.
+  const { data: contatoData } = await supabase.from('contacts').select('name');
+  const { data: orgData } = await supabase.from('organizations').select('name');
+
+  const equipe = [...new Set(
+    tasks.map((t) => (t.assignee ?? '').trim()).filter(Boolean),
+  )].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  const daCasa = new Set(equipe.map((n) => n.toLowerCase()));
+  const clientes = [...new Set(
+    [...(contatoData ?? []), ...(orgData ?? [])]
+      .map((c) => ((c as { name: string | null }).name ?? '').trim())
+      .filter(Boolean),
+  )]
+    // Nome que já aparece como responsável não se repete no grupo de baixo.
+    .filter((n) => !daCasa.has(n.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  const pessoas: Pessoa[] = [
+    ...equipe.map((nome) => ({ nome, tipo: 'equipe' as const })),
+    ...clientes.map((nome) => ({ nome, tipo: 'cliente' as const })),
+  ];
+
+  return (
+    <EntregasView
+      projects={[...negocios, ...visiveis]}
+      comentarios={comentarios}
+      notas={notas}
+      pessoas={pessoas}
+    />
+  );
 }

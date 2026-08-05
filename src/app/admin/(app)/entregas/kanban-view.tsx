@@ -8,9 +8,9 @@ import { useState } from 'react';
 import { Check, Plus, Trash2 } from 'lucide-react';
 import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
-import { donoDaTarefa } from './types';
-import type { ComentarioView, PhaseView, ProjectKind, Send, TaskComProjeto, TaskView } from './types';
-import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
+import { donoDaTarefa, porPrazo } from './types';
+import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TaskComProjeto, TaskView } from './types';
+import { ChipSelect, DateChip, PessoaSelect, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
 /** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
@@ -22,12 +22,13 @@ const COLUNA_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success',
 };
 
-export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKind, mostrarProjeto, onAbrirProjeto, pending, send }: {
+export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKind, pessoas, mostrarProjeto, onAbrirProjeto, pending, send }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
   projectKind: ProjectKind;
+  pessoas: Pessoa[];
   mostrarProjeto: boolean;
   /** Clique no nome da empresa no card: abre só as tarefas daquele projeto. */
   onAbrirProjeto: (id: string) => void;
@@ -44,7 +45,8 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {TASK_STATUSES.map((status) => {
-        const daColuna = tasks.filter((t) => t.status === status && !t.parentId).sort((a, b) => a.sort - b.sort);
+        // Mesma ordem da lista: o que vence antes fica no topo da coluna.
+        const daColuna = tasks.filter((t) => t.status === status && !t.parentId).sort(porPrazo);
         const destacada = alvo === status && arrastando;
 
         return (
@@ -59,7 +61,9 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
               setAlvo(null);
               if (id) send(moveTask, { id, status, before: '' });
             }}
-            className={`flex min-h-[9rem] flex-col overflow-hidden rounded-md border transition-colors ${
+            className={`flex flex-col overflow-hidden rounded-md border transition-colors ${
+              daColuna.length === 0 ? '' : 'min-h-[9rem]'
+            } ${
               destacada ? 'border-primary/50 bg-primary/[0.04]' : 'border-black/[0.07] bg-neutral-50'
             }`}
           >
@@ -87,6 +91,7 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
                   key={t.id}
                   task={t}
                   phases={phasesDe(t.projetoId)}
+                  pessoas={pessoas}
                   projeto={mostrarProjeto ? t.projetoNome : null}
                   onAbrirProjeto={() => onAbrirProjeto(t.projetoId)}
                   send={send}
@@ -109,10 +114,12 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
                 />
               )}
 
+              {/* Coluna vazia não precisa de um vão grande anunciando o vazio:
+                  fica só a faixa de convite, do tamanho de uma linha. */}
               {daColuna.length === 0 && criandoEm !== status && (
                 <button
                   onClick={() => setCriandoEm(status)}
-                  className="flex flex-1 items-center justify-center rounded-sm border border-dashed border-black/10 py-6 text-[12px] text-text-muted transition-colors hover:border-primary/40 hover:text-primary"
+                  className="flex items-center justify-center rounded-sm border border-dashed border-black/10 py-2 text-[12px] text-text-muted transition-colors hover:border-primary/40 hover:text-primary"
                 >
                   {pending ? 'salvando…' : 'nada aqui'}
                 </button>
@@ -130,6 +137,7 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
           phases={phasesDe(aberta.projetoId)}
           projectId={aberta.projetoId}
           projectKind={aberta.projetoKind}
+          pessoas={pessoas}
           send={send}
           onFechar={() => setAberta(null)}
         />
@@ -138,9 +146,10 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
   );
 }
 
-function TaskCard({ task, phases, projeto, onAbrirProjeto, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
+function TaskCard({ task, phases, pessoas, projeto, onAbrirProjeto, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
   task: TaskView;
   phases: PhaseView[];
+  pessoas: Pessoa[];
   /** Nome do projeto, só quando o quadro mostra vários juntos. */
   projeto: string | null;
   onAbrirProjeto: () => void;
@@ -152,7 +161,6 @@ function TaskCard({ task, phases, projeto, onAbrirProjeto, send, onDragStart, on
   onAbrir: () => void;
   subtarefas: TaskView[];
 }) {
-  const [editandoQuem, setEditandoQuem] = useState(false);
   const atrasada = !!task.dueDate && task.dueDate < hoje() && task.status !== 'feito';
   const etapa = phases.find((p) => p.id === task.phaseId);
 
@@ -244,24 +252,11 @@ function TaskCard({ task, phases, projeto, onAbrirProjeto, send, onDragStart, on
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2 border-t border-black/[0.05] pt-2">
-        {editandoQuem ? (
-          <InlineText
-            value={task.assignee ?? ''}
-            onSave={(v) => { send(updateTask, { id: task.id, assignee: v }); setEditandoQuem(false); }}
-            placeholder="quem toca"
-            className="flex-1 text-[12px] text-text-secondary"
-            abrirAoMontar
-          />
-        ) : (
-          <div className="flex min-w-0 items-center gap-1.5">
-            <Avatar nome={task.assignee} onClick={() => setEditandoQuem(true)} />
-            {task.assignee && (
-              <button onClick={() => setEditandoQuem(true)} className="truncate text-[12px] text-text-secondary hover:text-text-primary">
-                {task.assignee}
-              </button>
-            )}
-          </div>
-        )}
+        <PessoaSelect
+          value={task.assignee}
+          pessoas={pessoas}
+          onChange={(v) => send(updateTask, { id: task.id, assignee: v })}
+        />
 
         {phases.length > 0 && (
           <ChipSelect

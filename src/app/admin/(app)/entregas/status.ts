@@ -16,12 +16,15 @@ export const PHASE_LABELS: Record<PhaseStatus, string> = {
 export const TASK_STATUSES = ['backlog', 'a_fazer', 'fazendo', 'revisao', 'feito'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
+// Rótulos em inglês, como o menu do admin: são nomes curtos de ferramenta, os
+// mesmos que a gente usa falando ("está em review", "joga no backlog"). O que o
+// cliente vê pelo link de acompanhamento não passa por aqui e segue em português.
 export const TASK_LABELS: Record<TaskStatus, string> = {
   backlog: 'Backlog',
-  a_fazer: 'A fazer',
-  fazendo: 'Fazendo',
-  revisao: 'Revisão',
-  feito: 'Feito',
+  a_fazer: 'To do',
+  fazendo: 'In progress',
+  revisao: 'Review',
+  feito: 'Done',
 };
 
 /** Bolinha e tarja de cada status. Ficavam copiadas em três telas. */

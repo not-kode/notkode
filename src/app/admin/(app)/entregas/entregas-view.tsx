@@ -19,7 +19,7 @@ import {
   Link2, List, PanelLeftClose, PanelLeftOpen, Plus, Trash2,
 } from 'lucide-react';
 import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
-import type { ComentarioView, NotaView, PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
+import type { ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
@@ -65,10 +65,12 @@ type Periodo = (typeof PERIODOS)[number]['id'];
 /** Tasks, cronograma e a base de notas do cliente. */
 type Aba = 'tasks' | 'cronograma' | 'notas';
 
-export function EntregasView({ projects, comentarios, notas }: {
+export function EntregasView({ projects, comentarios, notas, pessoas }: {
   projects: ProjectView[];
   comentarios: ComentarioView[];
   notas: NotaView[];
+  /** Quem pode tocar tarefa: a equipe e os contatos dos clientes. */
+  pessoas: Pessoa[];
 }) {
   const ativos = useMemo(() => projects.filter((p) => !p.archivedAt), [projects]);
   const arquivados = useMemo(() => projects.filter((p) => p.archivedAt), [projects]);
@@ -267,6 +269,7 @@ export function EntregasView({ projects, comentarios, notas }: {
               project={aberto}
               comentarios={comentarios}
               notas={notas}
+              pessoas={pessoas}
               tarefas={filtradas}
               tarefasDoEscopo={doEscopo}
               phasesDe={phasesDe}
@@ -384,12 +387,13 @@ function Numeros({ tarefas }: { tarefas: TaskComProjeto[] }) {
 }
 
 function ProjectPanel({
-  project, comentarios, notas, tarefas, tarefasDoEscopo, phasesDe, aba, setAba, visao, setVisao,
+  project, comentarios, notas, pessoas, tarefas, tarefasDoEscopo, phasesDe, aba, setAba, visao, setVisao,
   escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo, pending, send,
 }: {
   project: ProjectView;
   comentarios: ComentarioView[];
   notas: NotaView[];
+  pessoas: Pessoa[];
   tarefas: TaskComProjeto[];
   tarefasDoEscopo: TaskComProjeto[];
   phasesDe: (id: string) => PhaseView[];
@@ -512,6 +516,7 @@ function ProjectPanel({
               phasesDe={phasesDe}
               projectId={project.id}
               projectKind={project.kind}
+              pessoas={pessoas}
               mostrarProjeto={escopo === 'todos'}
               onAbrirProjeto={onAbrirProjeto}
               pending={pending}
@@ -524,6 +529,7 @@ function ProjectPanel({
               phasesDe={phasesDe}
               projectId={project.id}
               projectKind={project.kind}
+              pessoas={pessoas}
               mostrarProjeto={escopo === 'todos'}
               onAbrirProjeto={onAbrirProjeto}
               send={send}

@@ -12,16 +12,17 @@ import { Check, Plus, Trash2, X } from 'lucide-react';
 import { apagarComentario, createTask, criarComentario, deleteTask, toggleTimer, updateTask } from './actions';
 import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
 import { donoDaTarefa } from './types';
-import type { ComentarioView, PhaseView, ProjectKind, Send, TaskView } from './types';
-import { ChipSelect, DateChip, PriorityChip, TimerChip, hoje } from './ui';
+import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TaskView } from './types';
+import { ChipSelect, DateChip, PessoaSelect, PriorityChip, TimerChip, hoje } from './ui';
 
-export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, projectKind, send, onFechar }: {
+export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, projectKind, pessoas, send, onFechar }: {
   task: TaskView;
   comentarios: ComentarioView[];
   subtarefas: TaskView[];
   phases: PhaseView[];
   projectId: string;
   projectKind: ProjectKind;
+  pessoas: Pessoa[];
   send: Send;
   onFechar: () => void;
 }) {
@@ -152,11 +153,10 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, p
 
             <dt className="text-text-muted">Quem</dt>
             <dd>
-              <input
-                defaultValue={task.assignee ?? ''}
-                onBlur={(e) => send(updateTask, { id: task.id, assignee: e.target.value })}
-                placeholder="ninguém"
-                className="w-full rounded-sm border border-transparent px-1.5 py-0.5 text-[12px] text-text-secondary outline-none transition-colors hover:border-black/[0.08] focus:border-primary/40"
+              <PessoaSelect
+                value={task.assignee}
+                pessoas={pessoas}
+                onChange={(v) => send(updateTask, { id: task.id, assignee: v })}
               />
             </dd>
           </dl>
