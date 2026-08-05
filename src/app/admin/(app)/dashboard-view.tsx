@@ -47,6 +47,7 @@ export type DashboardData = {
     conversao: number;
     leads: number;
     visitasPorDia: DayCount[];
+    porPagina: CtaCount[];
     porOrigem: CtaCount[];
     porCta: CtaCount[];
     porServico: ServiceCount[];
@@ -142,6 +143,19 @@ export function DashboardView({ data }: { data: DashboardData }) {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Section title="Páginas mais vistas" sub={`· ${rangeLabel}`}>
+          {s.porPagina.length === 0 ? (
+            <Empty>Sem visitas no período.</Empty>
+          ) : (
+            <>
+              <RankBars data={s.porPagina} labelWidth={150} />
+              <p className="mt-4 text-[11px] text-text-muted">
+                Onde as visitas aconteceram. /apps é a área de produtos, e não o site institucional.
+              </p>
+            </>
+          )}
+        </Section>
+
         <Section title="Origem das visitas" sub={`· ${rangeLabel}`}>
           {s.porOrigem.length === 0 ? (
             <Empty>Sem visitas no período.</Empty>

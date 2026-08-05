@@ -38,8 +38,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     supabase.from('events').select('*', countHead).eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO),
     lerTudo<{ label: string | null }>((de, ate) =>
       supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
-    lerTudo<{ created_at: string; session_id: string | null; referrer: string | null; utm_source: string | null }>((de, ate) =>
-      supabase.from('events').select('created_at, session_id, referrer, utm_source').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
+    lerTudo<{ created_at: string; session_id: string | null; referrer: string | null; utm_source: string | null; page: string | null }>((de, ate) =>
+      supabase.from('events').select('created_at, session_id, referrer, utm_source, page').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', siteToISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
     supabase.from('engagements').select('id, organization_id, lifecycle, type, mrr, start_date, end_date'),
@@ -91,6 +91,19 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const sourceMap = new Map<string, number>();
   for (const r of srcData) sourceMap.set(classifySource(r.referrer, r.utm_source), (sourceMap.get(classifySource(r.referrer, r.utm_source)) ?? 0) + 1);
   const porOrigem = [...sourceMap.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count).slice(0, 8);
+
+  // Páginas mais vistas: sem isso, "123 visitas" é um número solto e não dá para
+  // saber se veio da home, do blog ou de alguém mexendo nos apps o dia inteiro.
+  const pageMap = new Map<string, number>();
+  for (const r of pvRows.data) {
+    // O prefixo de idioma (/pt, /en) é a mesma página para quem lê a métrica.
+    const limpa = (r.page ?? '/').replace(/^\/(pt|en)(?=\/|$)/, '') || '/';
+    pageMap.set(limpa, (pageMap.get(limpa) ?? 0) + 1);
+  }
+  const porPagina = [...pageMap.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
 
   const ctaMap = new Map<string, number>();
   for (const c of ctas) ctaMap.set(c.label ?? 'sem-rótulo', (ctaMap.get(c.label ?? 'sem-rótulo') ?? 0) + 1);
@@ -191,6 +204,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       conversao: sessoes > 0 ? leads.length / sessoes : 0,
       leads: leads.length,
       visitasPorDia,
+      porPagina,
       porOrigem,
       porCta,
       porServico,
