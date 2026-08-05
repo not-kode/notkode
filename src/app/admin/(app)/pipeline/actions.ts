@@ -422,7 +422,10 @@ export async function generateDealContract(formData: FormData): Promise<void> {
 
   // Leva a proposta e as parcelas do negócio para o contrato recém-vinculado.
   if (engagementId) {
-    // Proposta: só copia se o contrato ainda não tiver uma anexada.
+    // Proposta: só copia se o contrato ainda não tiver uma anexada. O arquivo é
+    // DUPLICADO no storage, com caminho próprio do contrato. Antes os dois
+    // apontavam para o mesmo arquivo, e tirar a proposta do negócio (ou apagar o
+    // negócio) deixava o contrato com um anexo que não abria mais.
     if (deal.proposal_path) {
       const { data: eng } = await supabase
         .from('engagements')
@@ -430,9 +433,22 @@ export async function generateDealContract(formData: FormData): Promise<void> {
         .eq('id', engagementId)
         .single();
       if (!eng?.proposal_path) {
+        const ext = deal.proposal_path.split('.').pop() || 'bin';
+        const destino = `${engagementId}/${Date.now()}.${ext}`;
+        const { data: arquivo } = await supabase.storage.from('propostas').download(deal.proposal_path);
+        let caminho = deal.proposal_path;
+        if (arquivo) {
+          const { error: erroCopia } = await supabase.storage
+            .from('propostas')
+            .upload(destino, new Uint8Array(await arquivo.arrayBuffer()), {
+              contentType: mimeDaProposta(deal.proposal_name ?? destino, arquivo.type || 'application/octet-stream'),
+              upsert: true,
+            });
+          if (!erroCopia) caminho = destino;
+        }
         await supabase
           .from('engagements')
-          .update({ proposal_path: deal.proposal_path, proposal_name: deal.proposal_name, updated_at: new Date().toISOString() })
+          .update({ proposal_path: caminho, proposal_name: deal.proposal_name, updated_at: new Date().toISOString() })
           .eq('id', engagementId);
       }
     }
@@ -498,7 +514,18 @@ export async function removeDealProposal(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = getSupabaseAdmin();
   const { data } = await supabase.from('deals').select('proposal_path').eq('id', id).single();
-  if (data?.proposal_path) await supabase.storage.from('propostas').remove([data.proposal_path]);
+  if (data?.proposal_path) {
+    // Contratos antigos ainda apontam para o mesmo arquivo (antes de passarmos a
+    // duplicar). Apagar sem olhar quebrava a proposta do contrato junto.
+    const { data: usando } = await supabase
+      .from('engagements')
+      .select('id')
+      .eq('proposal_path', data.proposal_path)
+      .limit(1);
+    if (!usando || usando.length === 0) {
+      await supabase.storage.from('propostas').remove([data.proposal_path]);
+    }
+  }
   await supabase
     .from('deals')
     .update({ proposal_path: null, proposal_name: null, updated_at: new Date().toISOString() })
