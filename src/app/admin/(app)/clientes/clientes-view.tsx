@@ -451,7 +451,15 @@ function ClientDrawer({ client, productLabels = {}, templates = [], modelos = []
   ];
 
   return (
-    <Drawer title={client.name ?? 'Cliente'} eyebrow="Cliente" onClose={onClose} wide>
+    <Drawer
+      title={client.name ?? 'Cliente'}
+      eyebrow="Cliente"
+      // Com quem se fala vive junto do nome: era a primeira coisa procurada e
+      // estava perdida no meio do resumo, embaixo dos números.
+      sub={<ContatoDoTopo contato={client.contacts[0] ?? null} />}
+      onClose={onClose}
+      wide
+    >
       {/* Resumo do projeto — os macros do cliente num relance */}
       <ProjectHeader client={client} productLabels={productLabels} onVerRespostas={verRespostas} />
 
@@ -1002,7 +1010,15 @@ function ParcelaRow({ r, onMarkPaid, onUnmark, onSave, onDelete, pending }: { r:
   );
 }
 
-function Drawer({ title, eyebrow, onClose, children, wide }: { title: string; eyebrow?: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+function Drawer({ title, eyebrow, sub, onClose, children, wide }: {
+  title: string;
+  eyebrow?: string;
+  /** Linha logo abaixo do título: no cliente, é com quem se fala. */
+  sub?: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  wide?: boolean;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <button aria-label="Fechar" onClick={onClose} className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
@@ -1011,6 +1027,7 @@ function Drawer({ title, eyebrow, onClose, children, wide }: { title: string; ey
           <div>
             {eyebrow && <p className="eyebrow mb-1"><span className="status-dot" />{eyebrow}</p>}
             <h2 className="text-lg font-semibold leading-tight tracking-tight text-text-primary">{title}</h2>
+            {sub}
           </div>
           <button onClick={onClose} className="rounded-md p-1 text-text-muted transition-colors hover:bg-black/[0.04] hover:text-text-primary" aria-label="Fechar">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
@@ -1019,6 +1036,41 @@ function Drawer({ title, eyebrow, onClose, children, wide }: { title: string; ey
         <div className="flex flex-col gap-4 px-5 py-4">{children}</div>
       </aside>
     </div>
+  );
+}
+
+/**
+ * Com quem se fala, embaixo do nome do cliente. WhatsApp e e-mail são links: o
+ * caminho normal depois de abrir a ficha é justamente chamar a pessoa.
+ */
+function ContatoDoTopo({ contato }: { contato: ClientContact | null }) {
+  if (!contato) return null;
+  const zap = (contato.whatsapp ?? '').replace(/\D/g, '');
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-text-secondary">
+      {contato.name && <span className="font-medium text-text-primary">{contato.name}</span>}
+      {contato.whatsapp && (
+        <>
+          <span className="text-text-muted/50">·</span>
+          <a
+            href={`https://wa.me/${zap.startsWith('55') ? zap : `55${zap}`}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-primary"
+          >
+            {contato.whatsapp}
+          </a>
+        </>
+      )}
+      {contato.email && (
+        <>
+          <span className="text-text-muted/50">·</span>
+          <a href={`mailto:${contato.email}`} className="truncate transition-colors hover:text-primary">
+            {contato.email}
+          </a>
+        </>
+      )}
+    </p>
   );
 }
 
@@ -1064,39 +1116,60 @@ function ProjectHeader({ client, productLabels = {}, onVerRespostas }: {
 
   const cellLabel = 'font-label text-[10px] uppercase tracking-[0.12em] text-text-muted';
 
+  // Vigência numa linha só, com o alerta de renovação junto: em duas linhas a
+  // data quebrava no meio e não dava para ler de relance.
+  const vigencia = live?.start_date || live?.end_date
+    ? `${fmtDateShort(live?.start_date ?? null)} a ${fmtDateShort(live?.end_date ?? null)}`
+    : '—';
+  const renov = live ? renewalBadge(live.end_date, todayStr) : null;
+
   return (
     <div className="rounded-lg border border-primary/15 bg-primary/[0.03] p-4">
-      <p className="mb-3 font-label text-[10px] uppercase tracking-[0.14em] text-primary/80">Resumo do projeto</p>
-
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
         <div>
           <p className={cellLabel}>Situação</p>
           <span className={`mt-1 inline-block rounded-full px-2 py-0.5 font-label text-[10px] uppercase tracking-wider ${lifeTone}`}>{stageLabel}</span>
         </div>
         <div>
-          <p className={cellLabel}>Prazo</p>
-          <p className="mt-1 text-[13px] text-text-primary">{fmtDate(live?.start_date ?? null)} <span className="text-text-muted/50">→</span> {fmtDate(live?.end_date ?? null)}</p>
+          <p className={cellLabel}>Valor</p>
+          <p className="mt-1 whitespace-nowrap text-[13px] font-semibold text-text-primary">{valorLabel}</p>
         </div>
         <div>
-          <p className={cellLabel}>Valor</p>
-          <p className="mt-1 text-[13px] font-medium text-text-primary">{valorLabel}</p>
+          <p className={cellLabel}>Vigência</p>
+          <p className="mt-1 whitespace-nowrap text-[13px] tabular-nums text-text-primary">{vigencia}</p>
+          {renov && (
+            <span className={`mt-1 inline-block rounded-full px-1.5 py-0.5 font-label text-[9px] uppercase tracking-wider ${renov.cls}`}>
+              {renov.label}
+            </span>
+          )}
         </div>
         <div>
           <p className={cellLabel}>Financeiro</p>
-          <p className="mt-1 text-[13px]">
-            {fin.count > 0
-              ? <span className="font-medium text-danger">{fin.count} atrasada{fin.count === 1 ? '' : 's'} · {brl(fin.atrasadoTotal)}</span>
-              : fin.proxima
-                ? <span className="text-text-primary">Em dia <span className="text-text-muted">· próx. {fmtDate(fin.proxima.due_date)}</span></span>
-                : <span className="text-text-muted">Em dia</span>}
-          </p>
+          {fin.count > 0 ? (
+            <>
+              <p className="mt-1 text-[13px] font-semibold text-danger">{brl(fin.atrasadoTotal)} atrasado</p>
+              <p className="font-label text-[10px] text-text-muted">
+                {fin.count} parcela{fin.count === 1 ? '' : 's'} vencida{fin.count === 1 ? '' : 's'}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-[13px] text-text-primary">Em dia</p>
+              {fin.proxima && (
+                <p className="whitespace-nowrap font-label text-[10px] text-text-muted">
+                  próx. {brl(fin.proxima.amount)} em {fmtDateShort(fin.proxima.due_date)}
+                </p>
+              )}
+            </>
+          )}
         </div>
       </div>
 
-      {/* Quebra por contrato/serviço: quanto cada um pesa e o total recorrente. */}
-      {liveList.length > 0 && (
+      {/* A quebra por contrato só aparece quando há mais de um: com um contrato
+          só, ela repetia o mesmo número que já está em Valor, duas vezes. */}
+      {liveList.length > 1 && (
         <div className="mt-3 border-t border-primary/10 pt-3">
-          <p className={cellLabel + ' mb-2'}>Contratos &amp; serviços ({liveList.length})</p>
+          <p className={cellLabel + ' mb-2'}>Contratos ({liveList.length})</p>
           <ul className="flex flex-col gap-1">
             {liveList.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-2 text-xs">
@@ -1110,45 +1183,28 @@ function ProjectHeader({ client, productLabels = {}, onVerRespostas }: {
               </li>
             ))}
           </ul>
-          {(mrr > 0 || valorAvulso > 0) && (
-            <div className="mt-2 flex items-center justify-between gap-2 border-t border-primary/10 pt-2">
-              <span className={cellLabel}>Total recorrente</span>
-              <span className="font-semibold tabular-nums text-primary">
-                {mrr > 0 ? `${brl(mrr)}/mês` : '—'}
-                {valorAvulso > 0 && <span className="ml-1.5 font-normal text-text-muted">+ {avulsoLabel(valorAvulso, parcelasAvulso)}</span>}
-              </span>
-            </div>
-          )}
         </div>
       )}
 
-      <div className="mt-3 flex flex-col gap-1.5 border-t border-primary/10 pt-3 text-xs">
-        <div className="flex gap-2">
-          <span className={cellLabel + ' shrink-0 pt-0.5'}>Contato</span>
-          <span className="text-text-secondary">{contact ? [contact.name ?? '—', contact.whatsapp, contact.email].filter(Boolean).join(' · ') : '—'}</span>
-        </div>
-        {(client.site || client.instagram) && (
-          <div className="flex gap-2">
-            <span className={cellLabel + ' shrink-0 pt-0.5'}>Na web</span>
-            <span className="flex flex-wrap items-center gap-x-3 text-text-secondary">
-              {siteHref(client.site) && (
-                <a href={siteHref(client.site)!} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary">
-                  {client.site}
-                </a>
-              )}
-              {instagramHandle(client.instagram) && (
-                <a href={instagramHref(client.instagram)!} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-primary">
-                  @{instagramHandle(client.instagram)}
-                </a>
-              )}
+      {(origem || client.site || client.instagram) && (
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t border-primary/10 pt-3 text-xs">
+          {origem && (
+            <span className="text-text-secondary">
+              <span className={cellLabel}>Origem</span> {origem}
             </span>
-          </div>
-        )}
-        <div className="flex gap-2">
-          <span className={cellLabel + ' shrink-0 pt-0.5'}>Origem</span>
-          <span className="text-text-secondary">{origem || '—'}</span>
+          )}
+          {siteHref(client.site) && (
+            <a href={siteHref(client.site)!} target="_blank" rel="noopener noreferrer" className="text-text-secondary transition-colors hover:text-primary">
+              {client.site}
+            </a>
+          )}
+          {instagramHandle(client.instagram) && (
+            <a href={instagramHref(client.instagram)!} target="_blank" rel="noopener noreferrer" className="text-text-secondary transition-colors hover:text-primary">
+              @{instagramHandle(client.instagram)}
+            </a>
+          )}
         </div>
-      </div>
+      )}
 
       {client.briefing && (
         <div className="mt-3"><BriefingCard briefing={client.briefing} onVerRespostas={onVerRespostas} /></div>

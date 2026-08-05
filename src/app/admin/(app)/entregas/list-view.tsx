@@ -7,14 +7,14 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronRight, GripVertical, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
 import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import {
   PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS, TASK_STATUSES, type TaskStatus,
 } from './status';
 import { donoDaTarefa, porPrazo } from './types';
 import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TaskComProjeto } from './types';
-import { ChipSelect, DateChip, InlineText, PessoaSelect, PriorityChip, Sigla, TimerChip, hoje } from './ui';
+import { ChipSelect, DateChip, InlineText, MenuContexto, PessoaSelect, PriorityChip, Sigla, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
 // A lista tem uma ordem só, `porPrazo`: o que vence antes em cima, empate pela
@@ -55,6 +55,8 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
   const [abertaId, setAberta] = useState<string | null>(null);
   // Seleção para agir em lote: concluir dez tarefas uma a uma é trabalho à toa.
   const [selecao, setSelecao] = useState<string[]>([]);
+  // Botão direito numa linha: onde abrir o menu e sobre qual tarefa.
+  const [menu, setMenu] = useState<{ task: TaskComProjeto; x: number; y: number } | null>(null);
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
@@ -231,6 +233,10 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
                             e.stopPropagation();
                             soltar(e.dataTransfer.getData('text/plain'), status, t.id);
                           }}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            setMenu({ task: t, x: e.clientX, y: e.clientY });
+                          }}
                           className={`group border-b border-black/[0.04] transition-colors last:border-0 ${
                             // O lote inteiro esmaece: dá para ver o que vai junto.
                             arrastando && (arrastando === t.id || (marcada(arrastando) && marcada(t.id))) ? 'opacity-40' : ''
@@ -247,17 +253,22 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
                             <GripVertical className="h-3.5 w-3.5" />
                           </td>
 
+                          {/* Duas caixas na mesma linha confundiam qual era a de
+                              concluir. A de selecionar só aparece com o mouse em
+                              cima (ou quando já está marcada); em repouso fica a
+                              de concluir, que é a de todo dia. */}
                           <td className="py-2 pl-1 pr-0">
                             <input
                               type="checkbox"
                               checked={marcada(t.id)}
                               onChange={() => alternar(t.id)}
                               aria-label={`Selecionar ${t.title}`}
-                              className="h-3.5 w-3.5 accent-primary"
+                              className={`h-3.5 w-3.5 accent-primary transition-opacity focus:opacity-100 group-hover:opacity-100 ${
+                                marcada(t.id) ? 'opacity-100' : 'opacity-0'
+                              }`}
                             />
                           </td>
 
-                          {/* Concluir sem abrir menu: é a ação de todo dia. */}
                           <td className="py-2 pl-2 pr-0">
                             <button
                               onClick={() => send(updateTask, { id: t.id, status: t.status === 'feito' ? 'a_fazer' : 'feito' })}
@@ -332,17 +343,16 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
                             />
                           </td>
 
-                          {/* Sempre visível, de propósito: escondido no hover, ninguém
-                              descobre que existe. Confirma antes, porque apagar aqui
-                              não tem volta. */}
+                          {/* Apagar mora no botão direito da linha: é ação de
+                              exceção e não precisa de uma coluna inteira. */}
                           <td className="px-2 py-2 text-right">
                             <button
-                              onClick={() => { if (confirm(`Apagar a tarefa "${t.title}"? Não tem como desfazer.`)) send(deleteTask, { id: t.id }); }}
-                              className="rounded p-1 text-text-muted/45 transition hover:bg-danger/10 hover:text-danger"
-                              aria-label="Apagar tarefa"
-                              title="Apagar tarefa"
+                              onClick={(e) => setMenu({ task: t, x: e.clientX, y: e.clientY })}
+                              className="rounded p-1 text-text-muted/45 opacity-0 transition group-hover:opacity-100 hover:bg-black/[0.05] hover:text-text-primary"
+                              aria-label="Mais ações"
+                              title="Mais ações (ou clique com o botão direito)"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <MoreHorizontal className="h-3.5 w-3.5" />
                             </button>
                           </td>
                         </tr>
@@ -380,6 +390,32 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
           editar={editarLote}
           apagar={apagarLote}
           limpar={() => setSelecao([])}
+        />
+      )}
+
+      {menu && (
+        <MenuContexto
+          em={{ x: menu.x, y: menu.y }}
+          fechar={() => setMenu(null)}
+          itens={[
+            { label: 'Abrir tarefa', onClick: () => setAberta(menu.task.id) },
+            {
+              label: menu.task.status === 'feito' ? 'Reabrir' : 'Marcar como concluída',
+              onClick: () => send(updateTask, {
+                id: menu.task.id,
+                status: menu.task.status === 'feito' ? 'a_fazer' : 'feito',
+              }),
+            },
+            {
+              label: 'Apagar tarefa',
+              perigo: true,
+              onClick: () => {
+                if (confirm(`Apagar a tarefa "${menu.task.title}"? Não tem como desfazer.`)) {
+                  send(deleteTask, { id: menu.task.id });
+                }
+              },
+            },
+          ]}
         />
       )}
 

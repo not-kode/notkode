@@ -5,12 +5,12 @@
 // para não trazer dependência nova só por causa disso.
 
 import { useState } from 'react';
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, MoreHorizontal, Plus } from 'lucide-react';
 import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
 import { donoDaTarefa, porPrazo } from './types';
 import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TaskComProjeto, TaskView } from './types';
-import { ChipSelect, DateChip, PessoaSelect, PriorityChip, TimerChip, hoje } from './ui';
+import { ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
 /** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
@@ -163,6 +163,7 @@ function TaskCard({ task, phases, pessoas, projeto, onAbrirProjeto, send, onDrag
 }) {
   const atrasada = !!task.dueDate && task.dueDate < hoje() && task.status !== 'feito';
   const etapa = phases.find((p) => p.id === task.phaseId);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
   return (
     <article
@@ -176,6 +177,7 @@ function TaskCard({ task, phases, pessoas, projeto, onAbrirProjeto, send, onDrag
         const id = e.dataTransfer.getData('text/plain');
         if (id && id !== task.id) onDropBefore(id);
       }}
+      onContextMenu={(e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY }); }}
       className={`group cursor-grab rounded-md border border-black/[0.07] bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition-shadow hover:shadow-[0_4px_12px_rgba(16,24,40,0.10)] active:cursor-grabbing ${
         arrastando === task.id ? 'opacity-40' : ''
       }`}
@@ -205,16 +207,43 @@ function TaskCard({ task, phases, pessoas, projeto, onAbrirProjeto, send, onDrag
           {task.title}
         </button>
 
-        {/* Sempre visível: ação escondida no hover ninguém acha. */}
+        {/* Apagar e reabrir moram no botão direito do card; aqui fica só o
+            atalho para quem não pensa em clicar com o direito. */}
         <button
-          onClick={() => { if (confirm(`Apagar a tarefa "${task.title}"? Não tem como desfazer.`)) send(deleteTask, { id: task.id }); }}
-          className="shrink-0 rounded p-0.5 text-text-muted/45 transition hover:bg-danger/10 hover:text-danger"
-          aria-label="Apagar tarefa"
-          title="Apagar tarefa"
+          onClick={(e) => setMenu({ x: e.clientX, y: e.clientY })}
+          className="shrink-0 rounded p-0.5 text-text-muted/45 opacity-0 transition group-hover:opacity-100 hover:bg-black/[0.05] hover:text-text-primary"
+          aria-label="Mais ações"
+          title="Mais ações (ou clique com o botão direito)"
         >
-          <Trash2 className="h-3 w-3" />
+          <MoreHorizontal className="h-3 w-3" />
         </button>
       </div>
+
+      {menu && (
+        <MenuContexto
+          em={menu}
+          fechar={() => setMenu(null)}
+          itens={[
+            { label: 'Abrir tarefa', onClick: onAbrir },
+            {
+              label: task.status === 'feito' ? 'Reabrir' : 'Marcar como concluída',
+              onClick: () => send(updateTask, {
+                id: task.id,
+                status: task.status === 'feito' ? 'a_fazer' : 'feito',
+              }),
+            },
+            {
+              label: 'Apagar tarefa',
+              perigo: true,
+              onClick: () => {
+                if (confirm(`Apagar a tarefa "${task.title}"? Não tem como desfazer.`)) {
+                  send(deleteTask, { id: task.id });
+                }
+              },
+            },
+          ]}
+        />
+      )}
 
       {(etapa || projeto || subtarefas.length > 0) && (
         <p className="mt-1.5 flex items-center gap-2 text-[11px] text-text-muted">

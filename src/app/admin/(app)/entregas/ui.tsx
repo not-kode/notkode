@@ -217,6 +217,49 @@ export function PriorityChip({ value, onChange, compacto }: {
 }
 
 /**
+ * Menu do botão direito, aberto onde o cursor está. Serve para o que é ação de
+ * exceção (apagar, reabrir) e não merece um botão fixo ocupando a linha.
+ */
+export function MenuContexto({ em, itens, fechar }: {
+  em: { x: number; y: number };
+  itens: { label: string; onClick: () => void; perigo?: boolean }[];
+  fechar: () => void;
+}) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const ref = useForaDoElemento(true, fechar, menuRef);
+  useFechaAoRolar(true, fechar);
+
+  // Perto da borda o menu abre para dentro, senão fica cortado pela janela.
+  const left = Math.min(em.x, (typeof window !== 'undefined' ? window.innerWidth : 0) - 184);
+  const top = Math.min(em.y, (typeof window !== 'undefined' ? window.innerHeight : 0) - 8 - itens.length * 32);
+
+  return createPortal(
+    <div ref={ref}>
+      <div
+        ref={menuRef}
+        className="fixed z-50 w-44 overflow-hidden rounded-md border border-black/[0.08] bg-white py-1 shadow-[0_8px_24px_rgba(16,24,40,0.16)]"
+        style={{ left: Math.max(8, left), top: Math.max(8, top) }}
+      >
+        {itens.map((i) => (
+          <button
+            key={i.label}
+            onClick={() => { i.onClick(); fechar(); }}
+            className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs transition-colors ${
+              i.perigo
+                ? 'text-danger hover:bg-danger/[0.07]'
+                : 'text-text-secondary hover:bg-black/[0.04]'
+            }`}
+          >
+            {i.label}
+          </button>
+        ))}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/**
  * Quem toca a tarefa, escolhido numa lista em vez de digitado.
  *
  * Digitar o nome toda vez fazia a mesma pessoa virar três ("Camila", "camila
@@ -400,20 +443,7 @@ export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto
   placeholder?: string;
   curto?: boolean;
 }) {
-  const [editando, setEditando] = useState(false);
   const proxima = !!value && !atrasada && diffDias(hoje(), value) <= 1;
-
-  if (editando) {
-    return (
-      <input
-        type="date"
-        autoFocus
-        defaultValue={value ?? ''}
-        onBlur={(e) => { setEditando(false); if (e.target.value !== (value ?? '')) onSave(e.target.value); }}
-        className="rounded-sm border border-primary/40 bg-white px-1.5 py-0.5 text-[11px] text-text-primary outline-none"
-      />
-    );
-  }
 
   // whitespace-nowrap no chip: "12 mai" quebrando em duas linhas empilhava a data
   // e esticava a altura da linha inteira da tabela.
@@ -425,15 +455,30 @@ export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto
         ? 'bg-black/[0.04] text-text-secondary'
         : 'text-text-muted hover:bg-black/[0.04]';
 
+  /**
+   * O chip nunca sai da tela: o campo de data fica invisível por cima dele e é
+   * quem abre o calendário. Antes o chip virava um input, que é bem mais largo,
+   * e a linha inteira se mexia a cada clique — escolher a data empurrava as
+   * colunas de lugar e depois tudo voltava a encolher.
+   */
   return (
-    <button
-      onClick={() => setEditando(true)}
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors ${tom}`}
-      title={value ? `Prazo: ${fmtDate(value)}` : 'Definir prazo'}
-    >
-      <Calendar className="h-3 w-3" />
-      {(curto ? fmtCurto(value) : fmtDate(value)) ?? placeholder}
-    </button>
+    <span className="relative inline-flex">
+      <span
+        className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors ${tom}`}
+        title={value ? `Prazo: ${fmtDate(value)}` : 'Definir prazo'}
+      >
+        <Calendar className="h-3 w-3" />
+        {(curto ? fmtCurto(value) : fmtDate(value)) ?? placeholder}
+      </span>
+      <input
+        type="date"
+        value={value ?? ''}
+        aria-label={value ? `Prazo ${fmtDate(value)}` : 'Definir prazo'}
+        onChange={(e) => { if (e.target.value !== (value ?? '')) onSave(e.target.value); }}
+        onClick={(e) => e.currentTarget.showPicker?.()}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      />
+    </span>
   );
 }
 
