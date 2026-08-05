@@ -1,8 +1,23 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { promoteLead } from './actions';
+import { carregarFunisDeFormulario } from '../sessoes/form-funnel-data';
+import { FormFunnelsView } from '../sessoes/form-funnel-view';
+import { PeriodFilter } from '../period-filter';
+import { resolveRange } from '../period';
 
 export const dynamic = 'force-dynamic';
+
+// Formulário do site é um assunto só: quem enviou, quem começou e parou, e onde
+// as pessoas travam. O funil vivia em Analytics, longe dos nomes que ele
+// explica — para responder "esse lead veio de onde" era preciso trocar de tela.
+type Aba = 'leads' | 'formularios';
+
+const ABAS: { id: Aba; label: string }[] = [
+  { id: 'leads', label: 'Leads' },
+  { id: 'formularios', label: 'Formulários' },
+];
 
 type LeadRow = {
   id: string;
@@ -55,7 +70,16 @@ type DraftRow = {
 
 const waLink = (whatsapp: string) => `https://wa.me/55${whatsapp.replace(/\D/g, '')}`;
 
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const sp = (await searchParams) ?? {};
+  const aba: Aba = sp.ver === 'formularios' ? 'formularios' : 'leads';
+  const range = resolveRange({ range: sp.range, from: sp.from, to: sp.to });
+  const funis = aba === 'formularios' ? await carregarFunisDeFormulario(range) : null;
+
   const supabase = getSupabaseAdmin();
   const [{ data, error }, { data: draftData }] = await Promise.all([
     supabase.from('lead_submissions').select('*').order('created_at', { ascending: false }),
@@ -85,23 +109,50 @@ export default async function LeadsPage() {
 
   return (
     <div>
-      <header className="mb-6 flex items-end justify-between">
+      <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Leads do site</h1>
           <p className="mt-1 text-sm text-text-muted">
             {leads.length} submissõe{leads.length === 1 ? '' : 's'} · {pending} a promover
+            {drafts.length > 0 && <> · {drafts.length} começaram e não enviaram</>}
           </p>
         </div>
+        {aba === 'formularios' && <Suspense fallback={null}><PeriodFilter /></Suspense>}
       </header>
 
-      {error && (
+      <nav className="mb-5 inline-flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
+        {ABAS.map((a) => (
+          <Link
+            key={a.id}
+            href={a.id === 'leads' ? '/admin/leads' : `/admin/leads?ver=${a.id}`}
+            className={`rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
+              aba === a.id
+                ? 'bg-white text-text-primary shadow-[0_1px_2px_rgba(16,24,40,0.08)]'
+                : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            {a.label}
+          </Link>
+        ))}
+      </nav>
+
+      {aba === 'formularios' && (
+        <>
+          <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-text-muted">
+            Por página · onde as pessoas param<span className="ml-2 normal-case tracking-normal">· {range.label}</span>
+          </p>
+          <FormFunnelsView funnels={funis ?? []} />
+        </>
+      )}
+
+      {aba === 'leads' && error && (
         <p className="rounded-md border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
           Erro ao carregar leads: {error.message}
         </p>
       )}
 
       {/* Começaram a preencher (já deixaram contato) mas não enviaram. Dá pra correr atrás. */}
-      {drafts.length > 0 && (
+      {aba === 'leads' && drafts.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-text-primary">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-warning" />
@@ -162,13 +213,13 @@ export default async function LeadsPage() {
         </section>
       )}
 
-      {!error && leads.length === 0 && (
+      {aba === 'leads' && !error && leads.length === 0 && (
         <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-10 text-center text-sm text-text-muted">
           Nenhum lead ainda. Quando alguém enviar um formulário no site, aparece aqui.
         </p>
       )}
 
-      {leads.length > 0 && (
+      {aba === 'leads' && leads.length > 0 && (
         <div className="overflow-x-auto rounded-md border border-black/[0.06] bg-white">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
