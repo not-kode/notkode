@@ -68,6 +68,10 @@ function FunnelRow({ step, prev, top, isDrop, isLast }: {
 
 function FormFunnelCard({ funnel }: { funnel: FormFunnel }) {
   const steps = funnel.steps;
+  // Sem ninguém mexendo, não há etapa em que parar: o desenho de duas linhas
+  // ("Viu o formulário" → "Enviou") sugeria que alguém tinha parado no envio,
+  // quando na verdade a pessoa nem começou a preencher.
+  const ninguemMexeu = mexeramEm(funnel) === 0;
   // Quem viu o formulário é o topo do desenho; quem começou a preencher é a régua
   // da conversão. Sem essa separação, 0 lead lia igual em dois casos bem
   // diferentes: ninguém chegou ao formulário, ou chegou e não digitou nada.
@@ -94,6 +98,13 @@ function FormFunnelCard({ funnel }: { funnel: FormFunnel }) {
         {nf(started)} mexeram · {nf(sent)} enviaram
       </p>
 
+      {ninguemMexeu ? (
+        <p className="rounded-sm bg-[#191918]/[0.04] px-3 py-2 text-[12px] text-text-secondary">
+          {viram > 0
+            ? `${nf(viram)} chegaram até o formulário e ninguém digitou nada. Não há etapa em que tenham parado.`
+            : 'Ninguém abriu este formulário no período.'}
+        </p>
+      ) : (
       <div className="flex flex-col gap-2.5">
         {steps.map((step, i) => (
           <FunnelRow
@@ -106,11 +117,17 @@ function FormFunnelCard({ funnel }: { funnel: FormFunnel }) {
           />
         ))}
       </div>
+      )}
 
-      {drop > 0 && steps[drop - 1].count > steps[drop].count && (
+      {!ninguemMexeu && drop > 0 && steps[drop - 1].count > steps[drop].count && (
         <p className="mt-3 text-[11px] text-text-secondary">
-          Maior perda: {nf(steps[drop - 1].count - steps[drop].count)} de {nf(steps[drop - 1].count)} pararam em{' '}
-          <span className="font-medium text-danger">{steps[drop].label}</span>.
+          {/* Perder na última etapa é não enviar, não "parar no envio". */}
+          Maior perda: {nf(steps[drop - 1].count - steps[drop].count)} de {nf(steps[drop - 1].count)}{' '}
+          {drop === steps.length - 1 ? (
+            <>chegaram em <span className="font-medium">{steps[drop - 1].label}</span> e <span className="font-medium text-danger">não enviaram</span>.</>
+          ) : (
+            <>pararam em <span className="font-medium text-danger">{steps[drop].label}</span>.</>
+          )}
         </p>
       )}
 
