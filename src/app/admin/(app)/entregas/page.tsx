@@ -28,13 +28,17 @@ type PhaseRow = {
   sort: number; client_visible: boolean;
 };
 type TaskRow = {
-  id: string; engagement_id: string; phase_id: string | null; title: string;
+  id: string; engagement_id: string | null; deal_id: string | null; phase_id: string | null; title: string;
   notes: string | null; status: TaskStatus; priority: Priority | null;
   start_date: string | null; due_date: string | null;
   assignee: string | null; client_visible: boolean; sort: number | null;
   parent_task_id: string | null;
   time_spent_seconds: number | null; timer_started_at: string | null;
   created_at: string;
+};
+type DealRow = {
+  id: string;
+  organizations: { name: string | null } | { name: string | null }[] | null;
 };
 
 export default async function EntregasPage() {
@@ -78,6 +82,7 @@ export default async function EntregasPage() {
     title: e.title,
     orgName: e.organizations?.name ?? null,
     lifecycle: e.lifecycle,
+    kind: 'contrato' as const,
     startDate: e.start_date,
     endDate: e.end_date,
     clientUrl: e.client_token ? `${SITE_URL}/acompanhamento/${e.client_token}` : null,
@@ -108,5 +113,46 @@ export default async function EntregasPage() {
     (p) => p.lifecycle !== 'encerrado' || p.phases.length > 0 || p.tasks.length > 0,
   );
 
-  return <EntregasView projects={visiveis} comentarios={comentarios} notas={notas} />;
+  // Negócio ganho que ainda não virou contrato: o checklist do fechamento nasce
+  // preso a ele, e sem isso essas tarefas não apareceriam em lugar nenhum. Some
+  // daqui no clique de "Gerar contrato", que leva as tarefas para o contrato.
+  const daqueles = tasks.filter((t) => t.deal_id);
+  const dealIds = [...new Set(daqueles.map((t) => t.deal_id as string))];
+  const negocios: ProjectView[] = [];
+  if (dealIds.length > 0) {
+    const { data: dealData } = await supabase
+      .from('deals')
+      .select('id, organizations(name)')
+      .in('id', dealIds);
+
+    for (const d of (dealData ?? []) as unknown as DealRow[]) {
+      const org = Array.isArray(d.organizations) ? d.organizations[0] : d.organizations;
+      negocios.push({
+        id: d.id,
+        title: 'Fechamento do negócio',
+        orgName: org?.name ?? 'Negócio ganho',
+        lifecycle: 'ativo',
+        kind: 'negocio',
+        startDate: null,
+        endDate: null,
+        clientUrl: null,
+        isInternal: false,
+        archivedAt: null,
+        phases: [],
+        tasks: daqueles
+          .filter((t) => t.deal_id === d.id)
+          .map((t) => ({
+            id: t.id, phaseId: null, title: t.title, notes: t.notes, status: t.status,
+            priority: t.priority ?? 'media', startDate: t.start_date, dueDate: t.due_date,
+            assignee: t.assignee, clientVisible: t.client_visible, sort: t.sort ?? 0,
+            parentId: t.parent_task_id,
+            tempoSegundos: t.time_spent_seconds ?? 0,
+            timerDesde: t.timer_started_at,
+            createdAt: t.created_at,
+          })),
+      });
+    }
+  }
+
+  return <EntregasView projects={[...negocios, ...visiveis]} comentarios={comentarios} notas={notas} />;
 }

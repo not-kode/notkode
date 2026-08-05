@@ -133,9 +133,12 @@ async function fecharRelogio(id: string): Promise<Record<string, unknown>> {
 }
 
 export async function createTask(formData: FormData): Promise<void> {
+  // A tarefa pode ser de um contrato ou de um negócio ganho que ainda não virou
+  // contrato — o quadro mostra os dois, e um dos dois campos sempre vem.
   const engagement_id = str(formData, 'engagement_id', 64);
+  const deal_id = str(formData, 'deal_id', 64);
   const title = str(formData, 'title', 300);
-  if (!engagement_id || !title) return;
+  if ((!engagement_id && !deal_id) || !title) return;
 
   const status = str(formData, 'status', 32);
   const priority = str(formData, 'priority', 16);
@@ -145,12 +148,13 @@ export async function createTask(formData: FormData): Promise<void> {
   const { data: ultima } = await supabase
     .from('project_tasks')
     .select('sort')
-    .eq('engagement_id', engagement_id)
+    .eq(engagement_id ? 'engagement_id' : 'deal_id', engagement_id ?? deal_id)
     .order('sort', { ascending: false })
     .limit(1);
 
   const { data: criada } = await supabase.from('project_tasks').insert({
     engagement_id,
+    deal_id,
     phase_id: str(formData, 'phase_id', 64),
     parent_task_id: str(formData, 'parent_task_id', 64),
     title,

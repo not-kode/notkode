@@ -150,7 +150,9 @@ export function EntregasView({ projects, comentarios, notas }: {
   // Escopo "todos" ignora arquivados: arquivar existe justamente para tirar da frente.
   const doEscopo = useMemo<TaskComProjeto[]>(() => {
     const comProjeto = (p: ProjectView): TaskComProjeto[] =>
-      p.tasks.map((t) => ({ ...t, projetoNome: p.orgName ?? p.title ?? 'Sem nome', projetoId: p.id }));
+      p.tasks.map((t) => ({
+        ...t, projetoNome: p.orgName ?? p.title ?? 'Sem nome', projetoId: p.id, projetoKind: p.kind,
+      }));
     return escopo === 'todos' ? ativos.flatMap(comProjeto) : aberto ? comProjeto(aberto) : [];
   }, [escopo, ativos, aberto]);
 
@@ -160,10 +162,13 @@ export function EntregasView({ projects, comentarios, notas }: {
   const phasesDe = (id: string) => fasesPorProjeto.get(id) ?? [];
 
   // Cliente de um lado, casa do outro: são dois modos de trabalho diferentes.
+  // Fechamento vem antes dos dois: é venda ganha esperando virar projeto, e o
+  // que está lá dentro (contrato, briefing, primeira parcela) não pode esperar.
   const grupos = useMemo(
     () => [
-      { titulo: 'Clientes', itens: ativos.filter((p) => !p.isInternal) },
-      { titulo: 'Casa', itens: ativos.filter((p) => p.isInternal) },
+      { titulo: 'Fechamentos', itens: ativos.filter((p) => p.kind === 'negocio') },
+      { titulo: 'Clientes', itens: ativos.filter((p) => p.kind === 'contrato' && !p.isInternal) },
+      { titulo: 'Casa', itens: ativos.filter((p) => p.kind === 'contrato' && p.isInternal) },
     ].filter((g) => g.itens.length > 0),
     [ativos],
   );
@@ -403,25 +408,36 @@ function ProjectPanel({
   const [novaEtapa, setNovaEtapa] = useState(false);
   const nome = project.orgName ?? project.title ?? 'Sem cliente';
   const notasDoProjeto = notas.filter((n) => n.projetoId === project.id).length;
+  // Negócio ganho ainda sem contrato: só o checklist do fechamento existe.
+  // Cronograma, notas, link do cliente e arquivamento são coisas do contrato,
+  // que nasce no "Gerar contrato" e leva essas tarefas junto.
+  const soChecklist = project.kind === 'negocio';
+  // Trocar de um contrato (numa aba de cronograma) para um negócio não pode
+  // deixar a tela numa aba que aquele projeto não tem.
+  const abaAtual: Aba = soChecklist ? 'tasks' : aba;
 
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
           <button onClick={() => setAba('tasks')} className={tabCls(aba === 'tasks')}>Tasks</button>
-          <button onClick={() => setAba('cronograma')} className={tabCls(aba === 'cronograma')}>Cronograma</button>
-          <button onClick={() => setAba('notas')} className={tabCls(aba === 'notas')}>
-            Notas
-            {notasDoProjeto > 0 && (
-              <span className="rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
-                {notasDoProjeto}
-              </span>
-            )}
-          </button>
+          {!soChecklist && (
+            <>
+              <button onClick={() => setAba('cronograma')} className={tabCls(aba === 'cronograma')}>Cronograma</button>
+              <button onClick={() => setAba('notas')} className={tabCls(aba === 'notas')}>
+                Notas
+                {notasDoProjeto > 0 && (
+                  <span className="rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
+                    {notasDoProjeto}
+                  </span>
+                )}
+              </button>
+            </>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {aba === 'tasks' && (
+          {abaAtual === 'tasks' && (
             <>
               {/* Um projeto por vez, ou o dia inteiro de uma vez. */}
               <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
@@ -440,9 +456,16 @@ function ProjectPanel({
             </>
           )}
 
-          <ArquivarProjeto project={project} pending={pending} send={send} />
+          {!soChecklist && <ArquivarProjeto project={project} pending={pending} send={send} />}
         </div>
       </div>
+
+      {soChecklist && (
+        <p className="mb-3 rounded-md border border-success/25 bg-success/[0.05] px-3 py-2 text-[12px] text-text-secondary">
+          Negócio ganho, contrato ainda não gerado. Este é o checklist do fechamento: ao gerar o
+          contrato no card do negócio, ele passa inteiro para o projeto do cliente.
+        </p>
+      )}
 
       {project.archivedAt && (
         <p className="mb-3 rounded-md border border-black/[0.07] bg-neutral-50 px-3 py-2 text-[12px] text-text-muted">
@@ -450,9 +473,9 @@ function ProjectPanel({
         </p>
       )}
 
-      {aba === 'notas' ? (
+      {abaAtual === 'notas' ? (
         <NotasView notas={notas} projectId={project.id} projetoNome={nome} send={send} />
-      ) : aba === 'tasks' ? (
+      ) : abaAtual === 'tasks' ? (
         <>
           <Numeros tarefas={tarefasDoEscopo} />
 
@@ -488,6 +511,7 @@ function ProjectPanel({
               tasks={tarefas}
               phasesDe={phasesDe}
               projectId={project.id}
+              projectKind={project.kind}
               mostrarProjeto={escopo === 'todos'}
               onAbrirProjeto={onAbrirProjeto}
               pending={pending}
@@ -499,6 +523,7 @@ function ProjectPanel({
               tasks={tarefas}
               phasesDe={phasesDe}
               projectId={project.id}
+              projectKind={project.kind}
               mostrarProjeto={escopo === 'todos'}
               onAbrirProjeto={onAbrirProjeto}
               send={send}

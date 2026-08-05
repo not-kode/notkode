@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { mimeDaProposta } from '@/lib/proposta-mime';
 import { DEAL_STAGES, SERVICE_TAGS, type DealStage } from './stages';
 import { normalizeOrgName, type Product } from './orgs';
+import { adotarTarefasDoNegocio, criarTarefasDoGanho } from './tarefas-do-ganho';
 
 export async function moveDealStage(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
@@ -321,9 +322,10 @@ export async function updateDeal(formData: FormData): Promise<void> {
 }
 
 /**
- * Fecha o negócio: marca "ganho" e tira do funil. Só isso — o contrato no
- * financeiro é um passo à parte ("Gerar contrato"), porque fechar a venda e
- * abrir o contrato são decisões diferentes e nem sempre acontecem no mesmo dia.
+ * Fecha o negócio: marca "ganho", tira do funil e abre o checklist do
+ * fechamento. O contrato no financeiro continua sendo um passo à parte ("Gerar
+ * contrato") — ele agora é a primeira tarefa desse checklist, com prazo, em vez
+ * de um botão que só quem lembrava clicava.
  */
 export async function winDeal(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
@@ -337,7 +339,10 @@ export async function winDeal(formData: FormData): Promise<void> {
     .eq('id', id);
   if (error) throw new Error(`Falha ao marcar como ganho: ${error.message}`);
 
+  await criarTarefasDoGanho(supabase, id);
+
   revalidatePath('/admin/pipeline');
+  revalidatePath('/admin/entregas');
 }
 
 /**
@@ -453,9 +458,14 @@ export async function generateDealContract(formData: FormData): Promise<void> {
     }
   }
 
+  // O checklist do fechamento estava preso ao negócio enquanto não havia
+  // contrato: agora ele tem casa própria, e "gerar contrato" acabou de ser feito.
+  if (engagementId) await adotarTarefasDoNegocio(supabase, id, engagementId);
+
   revalidatePath('/admin/pipeline');
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin/clientes');
+  revalidatePath('/admin/entregas');
 }
 
 /** Sobe o arquivo da proposta enviada e vincula ao NEGÓCIO (bucket privado 'propostas'). */

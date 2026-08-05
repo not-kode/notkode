@@ -12,7 +12,8 @@ import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } 
 import {
   PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS, TASK_STATUSES, type TaskStatus,
 } from './status';
-import type { ComentarioView, PhaseView, Send, TaskComProjeto } from './types';
+import { donoDaTarefa } from './types';
+import type { ComentarioView, PhaseView, ProjectKind, Send, TaskComProjeto } from './types';
 import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, Sigla, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
@@ -48,11 +49,12 @@ const BLOCO_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success/12 text-[#15803D]',
 };
 
-export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProjeto, onAbrirProjeto, send }: {
+export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind, mostrarProjeto, onAbrirProjeto, send }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
+  projectKind: ProjectKind;
   mostrarProjeto: boolean;
   /** Clique no nome da empresa: fecha a visão "Todos" e abre só aquele projeto. */
   onAbrirProjeto: (id: string) => void;
@@ -441,7 +443,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
                     {criandoEm === status && (
                       <tr>
                         <td colSpan={colspan} className="px-3 py-2">
-                          <NovaLinha projectId={projectId} status={status} send={send} onFim={() => setCriandoEm(null)} />
+                          <NovaLinha projectId={projectId} projectKind={projectKind} status={status} send={send} onFim={() => setCriandoEm(null)} />
                         </td>
                       </tr>
                     )}
@@ -478,6 +480,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, mostrarProje
           subtarefas={subs(aberta.id)}
           phases={phasesDe(aberta.projetoId)}
           projectId={aberta.projetoId}
+          projectKind={aberta.projetoKind}
           send={send}
           onFechar={() => setAberta(null)}
         />
@@ -587,8 +590,9 @@ function BarraSelecao({ quantas, etapas, editar, apagar, limpar }: {
   );
 }
 
-function NovaLinha({ projectId, status, send, onFim }: {
+function NovaLinha({ projectId, projectKind, status, send, onFim }: {
   projectId: string;
+  projectKind: ProjectKind;
   status: TaskStatus;
   send: Send;
   onFim: () => void;
@@ -597,7 +601,7 @@ function NovaLinha({ projectId, status, send, onFim }: {
 
   const criar = (continuar: boolean) => {
     const limpo = titulo.trim();
-    if (limpo) send(createTask, { engagement_id: projectId, title: limpo, status });
+    if (limpo) send(createTask, { ...donoDaTarefa(projectId, projectKind), title: limpo, status });
     setTitulo('');
     if (!continuar || !limpo) onFim();
   };

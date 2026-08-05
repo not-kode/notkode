@@ -8,7 +8,8 @@ import { useState } from 'react';
 import { Check, Plus, Trash2 } from 'lucide-react';
 import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
-import type { ComentarioView, PhaseView, Send, TaskComProjeto, TaskView } from './types';
+import { donoDaTarefa } from './types';
+import type { ComentarioView, PhaseView, ProjectKind, Send, TaskComProjeto, TaskView } from './types';
 import { Avatar, ChipSelect, DateChip, InlineText, PriorityChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
@@ -21,11 +22,12 @@ const COLUNA_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success',
 };
 
-export function KanbanView({ tasks, comentarios, phasesDe, projectId, mostrarProjeto, onAbrirProjeto, pending, send }: {
+export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKind, mostrarProjeto, onAbrirProjeto, pending, send }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
   projectId: string;
+  projectKind: ProjectKind;
   mostrarProjeto: boolean;
   /** Clique no nome da empresa no card: abre só as tarefas daquele projeto. */
   onAbrirProjeto: (id: string) => void;
@@ -100,6 +102,7 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, mostrarPro
               {criandoEm === status && (
                 <NovaTarefa
                   projectId={projectId}
+                  projectKind={projectKind}
                   status={status}
                   send={send}
                   onFim={() => setCriandoEm(null)}
@@ -126,6 +129,7 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, mostrarPro
           subtarefas={subs(aberta.id)}
           phases={phasesDe(aberta.projetoId)}
           projectId={aberta.projetoId}
+          projectKind={aberta.projetoKind}
           send={send}
           onFechar={() => setAberta(null)}
         />
@@ -274,8 +278,9 @@ function TaskCard({ task, phases, projeto, onAbrirProjeto, send, onDragStart, on
 }
 
 /** Cartão em branco no fim da coluna: digita, Enter cria e já abre o próximo. */
-function NovaTarefa({ projectId, status, send, onFim }: {
+function NovaTarefa({ projectId, projectKind, status, send, onFim }: {
   projectId: string;
+  projectKind: ProjectKind;
   status: TaskStatus;
   send: Send;
   onFim: () => void;
@@ -284,7 +289,7 @@ function NovaTarefa({ projectId, status, send, onFim }: {
 
   const criar = (continuar: boolean) => {
     const limpo = titulo.trim();
-    if (limpo) send(createTask, { engagement_id: projectId, title: limpo, status });
+    if (limpo) send(createTask, { ...donoDaTarefa(projectId, projectKind), title: limpo, status });
     setTitulo('');
     if (!continuar || !limpo) onFim();
   };

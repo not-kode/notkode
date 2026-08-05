@@ -22,10 +22,30 @@ export type TaskView = {
 };
 
 /** Tarefa como as visões usam: no escopo "todos", carrega de que projeto veio. */
-export type TaskComProjeto = TaskView & { projetoNome: string; projetoId: string };
+export type TaskComProjeto = TaskView & {
+  projetoNome: string; projetoId: string; projetoKind: ProjectKind;
+};
+
+export type ProjectKind = 'contrato' | 'negocio';
+
+/**
+ * De quem é a tarefa nova. O quadro mostra contratos e negócios ganhos ainda sem
+ * contrato, e o campo muda conforme o caso — sem isso, tarefa criada dentro de
+ * um negócio tentaria virar tarefa de um contrato que não existe.
+ */
+export function donoDaTarefa(projectId: string, kind: ProjectKind): Record<string, string> {
+  return kind === 'negocio' ? { deal_id: projectId } : { engagement_id: projectId };
+}
 
 export type ProjectView = {
   id: string; title: string | null; orgName: string | null; lifecycle: string;
+  /**
+   * De quem são as tarefas: do contrato (o normal) ou de um negócio ganho que
+   * ainda não virou contrato. O negócio some daqui assim que o contrato nasce e
+   * leva as tarefas junto — é uma sala de espera, não um projeto de verdade:
+   * não tem cronograma, link de cliente nem notas.
+   */
+  kind: 'contrato' | 'negocio';
   startDate: string | null; endDate: string | null; clientUrl: string | null;
   /** Frente da própria casa (o sistema, o site, o pessoal), sem cliente do outro lado. */
   isInternal: boolean;

@@ -11,15 +11,17 @@ import { createPortal } from 'react-dom';
 import { Check, Plus, Trash2, X } from 'lucide-react';
 import { apagarComentario, createTask, criarComentario, deleteTask, toggleTimer, updateTask } from './actions';
 import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
-import type { ComentarioView, PhaseView, Send, TaskView } from './types';
+import { donoDaTarefa } from './types';
+import type { ComentarioView, PhaseView, ProjectKind, Send, TaskView } from './types';
 import { ChipSelect, DateChip, PriorityChip, TimerChip, hoje } from './ui';
 
-export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, send, onFechar }: {
+export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, projectKind, send, onFechar }: {
   task: TaskView;
   comentarios: ComentarioView[];
   subtarefas: TaskView[];
   phases: PhaseView[];
   projectId: string;
+  projectKind: ProjectKind;
   send: Send;
   onFechar: () => void;
 }) {
@@ -52,7 +54,7 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, s
     const limpo = novaSub.trim();
     if (!limpo) return;
     send(createTask, {
-      engagement_id: projectId,
+      ...donoDaTarefa(projectId, projectKind),
       parent_task_id: task.id,
       title: limpo,
       status: 'a_fazer',

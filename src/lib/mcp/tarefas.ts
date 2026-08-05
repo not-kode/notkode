@@ -11,7 +11,10 @@ import { PRIORITIES, RESPONSAVEL_PADRAO, TASK_STATUSES } from '@/app/admin/(app)
 const QUANDO = ['hoje', 'atrasadas', 'semana', 'mes', 'sem_prazo', 'tudo'] as const;
 
 type TarefaRow = {
-  id: string; engagement_id: string; phase_id: string | null; parent_task_id: string | null;
+  // Tarefa de contrato tem engagement_id; a do checklist de um negócio ganho que
+  // ainda não virou contrato tem deal_id no lugar.
+  id: string; engagement_id: string | null; deal_id: string | null;
+  phase_id: string | null; parent_task_id: string | null;
   title: string; notes: string | null; status: string; priority: string;
   start_date: string | null; due_date: string | null; assignee: string | null;
   client_visible: boolean; sort: number | null; time_spent_seconds: number | null;
@@ -63,6 +66,13 @@ export const ferramentasDeTarefa: Ferramenta[] = [
           .map((e) => [e.id, e.organizations?.name ?? e.title ?? 'Sem nome']),
       );
 
+      // Checklist de negócio ganho: o "projeto" dele é o fechamento em si, que
+      // dura só até o contrato ser gerado.
+      const { data: negocios } = await db.from('deals').select('id, organizations(name)').eq('stage', 'ganho');
+      for (const d of (negocios ?? []) as unknown as { id: string; organizations: { name: string | null } | null }[]) {
+        nomeDoProjeto.set(d.id, `Fechamento · ${d.organizations?.name ?? 'negócio ganho'}`);
+      }
+
       const hj = hoje();
       const quando = str(args, 'quando') ?? 'tudo';
       const responsavel = str(args, 'responsavel')?.toLowerCase();
@@ -91,11 +101,14 @@ export const ferramentasDeTarefa: Ferramenta[] = [
       return {
         total: filtradas.length,
         mostrando: Math.min(filtradas.length, limite),
-        tarefas: filtradas.slice(0, limite).map((t) => ({
-          ...daTarefa(t),
-          projeto: nomeDoProjeto.get(t.engagement_id) ?? null,
-          projeto_id: t.engagement_id,
-        })),
+        tarefas: filtradas.slice(0, limite).map((t) => {
+          const dono = t.engagement_id ?? t.deal_id ?? '';
+          return {
+            ...daTarefa(t),
+            projeto: nomeDoProjeto.get(dono) ?? null,
+            projeto_id: dono || null,
+          };
+        }),
       };
     },
   },
