@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { FinanceView, type EngView, type RecView } from './finance-view';
+import { syncRecurringReceivables } from './recurring-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,10 @@ type RecRow = {
 };
 
 export default async function FinanceiroPage() {
+  // Antes de ler, põe as mensalidades dos meses à frente em dia: elas nascem
+  // sozinhas e acompanham mudança de valor, vigência e fim de contrato.
+  await syncRecurringReceivables();
+
   const supabase = getSupabaseAdmin();
   const [{ data: engData }, { data: recData }, { data: orgData }] = await Promise.all([
     supabase

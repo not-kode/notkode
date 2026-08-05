@@ -17,7 +17,7 @@ export type RecView = {
   engagement_id: string | null; engagement_title: string | null; org_name: string | null;
 };
 type Org = { id: string; name: string };
-type DetailKey = 'mrr' | 'aReceber' | 'atrasado' | 'recebido';
+type DetailKey = 'mrr' | 'doMes' | 'atrasado' | 'recebido';
 
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -124,9 +124,20 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
     }));
   }, [faltantes, month, todayStr]);
 
+  const parcelasMes = useMemo(
+    () => [...receivables.filter((r) => ym(r.due_date) === month), ...previstas]
+      .sort((a, b) => a.due_date.localeCompare(b.due_date)),
+    [receivables, month, previstas],
+  );
+
   // Listas que compõem cada KPI — o número e o "de onde vem" saem da mesma fonte.
   const listas = useMemo(() => {
     const recorrentes = engagements.filter(isRecurring);
+    // O cartão do mês é o mês INTEIRO: o que já entrou junto com o que falta.
+    // Antes ele mostrava só o que faltava, e aí encolhia a cada baixa — a
+    // pergunta "de quanto é agosto?" não tinha resposta na tela. Cancelada fica
+    // de fora, que é dinheiro que não vem mais.
+    const doMes = parcelasMes.filter((r) => r.status !== 'cancelado');
     const aReceber = [
       ...receivables.filter((r) => r.status === 'pendente' && ym(r.due_date) === month && !isLate(r)),
       ...previstas,
@@ -134,39 +145,21 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
     const atrasado = receivables.filter(isLate);
     // Faturamento é pela data em que o dinheiro entrou (paid_at), igual à Visão geral.
     const recebido = receivables.filter((r) => r.status === 'recebido' && !!r.paid_at && ym(r.paid_at) === month);
-    return { recorrentes, aReceber, atrasado, recebido };
+    return { recorrentes, doMes, aReceber, atrasado, recebido };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [engagements, receivables, previstas, month, todayStr]);
+  }, [engagements, receivables, parcelasMes, previstas, month, todayStr]);
 
   const kpis = useMemo(() => ({
+    mrr: listas.recorrentes.reduce((s, e) => s + (e.mrr ?? 0), 0),
+    doMes: listas.doMes.reduce((s, r) => s + (r.status === 'recebido' ? (r.paid_amount ?? r.amount) : r.amount), 0),
     // Mesma régua da Visão geral: "a receber" = pendente AINDA NO PRAZO (mais a
     // mensalidade prevista); o que venceu conta só no cartão Atrasado (antes a
     // mesma parcela dobrava nos dois). Prevista nunca entra em Atrasado: não
     // existe cobrança emitida para estar em atraso.
-    mrr: listas.recorrentes.reduce((s, e) => s + (e.mrr ?? 0), 0),
     aReceber: listas.aReceber.reduce((s, r) => s + r.amount, 0),
     atrasado: listas.atrasado.reduce((s, r) => s + r.amount, 0),
     recebido: listas.recebido.reduce((s, r) => s + (r.paid_amount ?? r.amount), 0),
   }), [listas]);
-
-  const parcelasMes = useMemo(
-    () => [...receivables.filter((r) => ym(r.due_date) === month), ...previstas]
-      .sort((a, b) => a.due_date.localeCompare(b.due_date)),
-    [receivables, month, previstas],
-  );
-
-  /**
-   * Total contratado do mês: tudo que vence nele, o que já entrou junto com o
-   * que falta. "A receber" sozinho encolhe a cada baixa e deixa a pergunta
-   * "quanto é o mês inteiro?" sem resposta na tela. Cancelada fica de fora, que
-   * é dinheiro que não vem mais.
-   */
-  const totalMes = useMemo(
-    () => parcelasMes
-      .filter((r) => r.status !== 'cancelado')
-      .reduce((s, r) => s + (r.status === 'recebido' ? (r.paid_amount ?? r.amount) : r.amount), 0),
-    [parcelasMes],
-  );
 
   const gerarMensalidades = (engagementId?: string) => {
     const fd = new FormData();
@@ -213,7 +206,7 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="MRR ativo" value={brl(kpis.mrr)} tone="text-primary" count={listas.recorrentes.length} onClick={() => setDetail('mrr')} />
-        <Kpi label={`A receber · ${monthShort}`} value={brl(kpis.aReceber)} count={listas.aReceber.length} nota={`de ${brl(totalMes)} no mês`} onClick={() => setDetail('aReceber')} />
+        <Kpi label={`Total · ${monthShort}`} value={brl(kpis.doMes)} count={listas.doMes.length} nota={`${brl(kpis.aReceber)} a receber`} onClick={() => setDetail('doMes')} />
         <Kpi label="Atrasado" value={brl(kpis.atrasado)} tone={kpis.atrasado > 0 ? 'text-danger' : undefined} count={listas.atrasado.length} onClick={() => setDetail('atrasado')} />
         <Kpi label={`Recebido · ${monthShort}`} value={brl(kpis.recebido)} tone="text-success" count={listas.recebido.length} onClick={() => setDetail('recebido')} />
       </div>
@@ -346,7 +339,7 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
 function DetailDrawer({ which, month, listas, duesByEng, isLate, pending, onClose, onPickParcela, onGerar }: {
   which: DetailKey;
   month: string;
-  listas: { recorrentes: EngView[]; aReceber: RecView[]; atrasado: RecView[]; recebido: RecView[] };
+  listas: { recorrentes: EngView[]; doMes: RecView[]; aReceber: RecView[]; atrasado: RecView[]; recebido: RecView[] };
   duesByEng: Map<string, string[]>;
   isLate: (r: RecView) => boolean;
   pending: boolean;
@@ -356,7 +349,7 @@ function DetailDrawer({ which, month, listas, duesByEng, isLate, pending, onClos
 }) {
   const titles: Record<DetailKey, string> = {
     mrr: 'MRR ativo',
-    aReceber: `A receber · ${monthLabel(month)}`,
+    doMes: `Total · ${monthLabel(month)}`,
     atrasado: 'Atrasado',
     recebido: `Recebido · ${monthLabel(month)}`,
   };

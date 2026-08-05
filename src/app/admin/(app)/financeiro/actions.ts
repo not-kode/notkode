@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { monthlyDescription, pendingMonthly, type RecurringEng } from './recurring';
+import { syncRecurringReceivables } from './recurring-sync';
 
 // Dois eixos independentes do contrato:
 //   • status (etapa de entrega) e lifecycle (ciclo de vida comercial).
@@ -85,6 +86,10 @@ export async function updateEngagementDetails(formData: FormData): Promise<void>
   const supabase = getSupabaseAdmin();
   await supabase.from('engagements').update(patch).eq('id', id);
 
+  // Pausar, encerrar, mudar o valor ou encurtar a vigência tem que chegar nas
+  // mensalidades que já estão lançadas lá na frente.
+  await syncRecurringReceivables(id);
+
   revalidateFinance();
 }
 
@@ -124,6 +129,9 @@ export async function concludeEngagement(formData: FormData): Promise<void> {
     .from('engagements')
     .update({ status: 'entregue', lifecycle: 'encerrado', end_date, updated_at: new Date().toISOString() })
     .eq('id', id);
+
+  // Contrato concluído não segue cobrando: as mensalidades futuras saem junto.
+  await syncRecurringReceivables(id);
 
   revalidateFinance();
 }

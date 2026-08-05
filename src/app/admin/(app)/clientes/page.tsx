@@ -3,6 +3,7 @@ import { ONBOARDING_TEMPLATES } from '@/lib/onboarding-schema';
 import { ClientesView, type ClientView } from './clientes-view';
 import type { ModeloRow } from './modelos-view';
 import { lerClausulas } from '@/app/admin/contrato/modelo';
+import { syncRecurringReceivables } from '../financeiro/recurring-sync';
 import type { BriefingRow } from '../onboarding/onboarding-view';
 
 export const dynamic = 'force-dynamic';
@@ -62,6 +63,10 @@ function pick(channels: Channel[] | null, kind: string): string | null {
 }
 
 export default async function ClientesPage() {
+  // A ficha do cliente lista as parcelas do contrato, então ela também precisa
+  // das mensalidades dos meses à frente em dia (mesma régua do Financeiro).
+  await syncRecurringReceivables();
+
   const supabase = getSupabaseAdmin();
   const [{ data: orgData }, { data: engData }, { data: recData }, { data: coData }, { data: briefData }, { data: dealData }, { data: leadData }] = await Promise.all([
     supabase
