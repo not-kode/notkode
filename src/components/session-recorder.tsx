@@ -38,6 +38,19 @@ export function SessionRecorder() {
     let buffer: RRWebEvent[] = [];
     const sid = getSessionId();
 
+    // Aba esquecida aberta gravava a noite inteira: apareceram sessões de 20 e de
+    // 24 horas, cada uma mandando um pedaço a cada poucos segundos. Isso enchia a
+    // conta de requisições e a média de tempo do painel, sem nenhum comportamento
+    // de visitante do outro lado. A gravação agora tem freio em três pontos:
+    //   1. pausa quando a aba sai da frente;
+    //   2. encerra depois de INATIVIDADE sem nenhum evento;
+    //   3. encerra de vez ao passar de TETO de gravação.
+    const INATIVIDADE = 3 * 60 * 1000;
+    const TETO = 20 * 60 * 1000;
+    const comecouEm = Date.now();
+    let ultimoEvento = Date.now();
+    let encerrada = false;
+
     const flush = (useBeacon = false) => {
       if (buffer.length === 0) return;
       const chunk = buffer;
@@ -62,6 +75,7 @@ export function SessionRecorder() {
         let first = true;
         stop = rrweb.record({
           emit(event) {
+            ultimoEvento = Date.now();
             buffer.push(event);
             // Persiste o FullSnapshot inicial o quanto antes: se a sessão for
             // curta, garante que o player tenha o DOM base para reproduzir.
@@ -78,12 +92,32 @@ export function SessionRecorder() {
           recordCanvas: false,
           collectFonts: false,
           sampling: { mousemove: 50, scroll: 150 },
-          checkoutEveryNms: 2 * 60 * 1000, // reemite FullSnapshot a cada 2 min (retomada/SPA)
+          // Reemitir o DOM inteiro de 2 em 2 minutos rendia um envio pesado
+          // mesmo com a página parada; 10 minutos continua servindo para retomar
+          // a reprodução no meio da sessão.
+          checkoutEveryNms: 10 * 60 * 1000,
         });
-        timer = setInterval(() => flush(false), 5000);
+        // A cada 15s (era 5s): a gravação não perde nada, e são três vezes menos
+        // requisições em toda visita.
+        timer = setInterval(() => {
+          if (document.visibilityState !== 'visible') return; // aba no fundo não grava
+          const agora = Date.now();
+          if (agora - ultimoEvento > INATIVIDADE || agora - comecouEm > TETO) { encerrar(); return; }
+          flush(false);
+        }, 15000);
       } catch {
         /* rrweb indisponível → sem gravação, site segue normal */
       }
+    };
+
+    /** Fecha a gravação: manda o que falta e para o rrweb. Sem retomada. */
+    const encerrar = () => {
+      if (encerrada) return;
+      encerrada = true;
+      if (timer) { clearInterval(timer); timer = undefined; }
+      flush(true);
+      try { stop?.(); } catch { /* noop */ }
+      stop = undefined;
     };
 
     // Não competir com o carregamento/hidratação: começa quando a página carregou
