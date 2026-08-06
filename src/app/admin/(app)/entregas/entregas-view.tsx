@@ -10,15 +10,11 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  createPhase, updatePhase, deletePhase, movePhase,
-  setProjectArchived, generateClientToken, revokeClientToken,
-} from './actions';
+import { setProjectArchived, generateClientToken, revokeClientToken } from './actions';
 import {
   Archive, ArchiveRestore, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid,
-  Link2, List, PanelLeftClose, PanelLeftOpen, Plus, Trash2,
+  Link2, List, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
-import { PHASE_LABELS, PHASE_STATUSES, type PhaseStatus } from './status';
 import type { ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
@@ -36,20 +32,6 @@ const tabCls = (ativo: boolean) =>
   `inline-flex max-w-[12rem] items-center gap-1.5 truncate rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
     ativo ? 'bg-white text-text-primary shadow-[0_1px_2px_rgba(16,24,40,0.08)]' : 'text-text-muted hover:text-text-primary'
   }`;
-
-const PHASE_STATUS_DOT: Record<PhaseStatus, string> = {
-  pendente: 'bg-neutral-300',
-  em_andamento: 'bg-primary',
-  concluida: 'bg-success',
-  pausada: 'bg-warning',
-};
-
-const PHASE_STATUS_TOM: Record<PhaseStatus, string> = {
-  pendente: 'bg-black/[0.04] text-text-secondary',
-  em_andamento: 'bg-primary/10 text-primary',
-  concluida: 'bg-success/12 text-[#15803D]',
-  pausada: 'bg-warning/15 text-[#B45309]',
-};
 
 const PERIODOS = [
   { id: 'tudo',      label: 'Tudo' },
@@ -409,7 +391,6 @@ function ProjectPanel({
   pending: boolean;
   send: Send;
 }) {
-  const [novaEtapa, setNovaEtapa] = useState(false);
   const nome = project.orgName ?? project.title ?? 'Sem cliente';
   const notasDoProjeto = notas.filter((n) => n.projetoId === project.id).length;
   // Negócio ganho ainda sem contrato: só o checklist do fechamento existe.
@@ -460,6 +441,7 @@ function ProjectPanel({
             </>
           )}
 
+          {!soChecklist && <ClientLink project={project} pending={pending} send={send} />}
           {!soChecklist && <ArquivarProjeto project={project} pending={pending} send={send} />}
         </div>
       </div>
@@ -539,64 +521,10 @@ function ProjectPanel({
       ) : (
         <div className="flex flex-col gap-5">
           {/* O cronograma é sempre de um cliente só, mesmo com a lista em "Todos":
-              é ele que vira o link de acompanhamento. */}
-          <Gantt phases={project.phases} tasks={project.tasks} titulo={`Cronograma · ${nome}`} />
-
-          <ClientLink project={project} pending={pending} send={send} />
-
-          <section>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-[13px] font-semibold text-text-primary">Etapas do cronograma</h2>
-              <button
-                onClick={() => setNovaEtapa((v) => !v)}
-                className="inline-flex items-center gap-1.5 rounded-sm border border-black/[0.1] bg-white px-2.5 py-1 text-xs font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
-              >
-                {novaEtapa ? 'Cancelar' : <><Plus className="h-3.5 w-3.5" />Etapa</>}
-              </button>
-            </div>
-
-            {novaEtapa && (
-              <form
-                action={(fd) => {
-                  send(createPhase, {
-                    engagement_id: project.id,
-                    name: String(fd.get('name') ?? ''),
-                    start_date: String(fd.get('start_date') ?? ''),
-                    end_date: String(fd.get('end_date') ?? ''),
-                  });
-                  setNovaEtapa(false);
-                }}
-                className="mb-3 grid grid-cols-1 gap-2 rounded-md border border-primary/20 bg-primary/[0.03] p-3 sm:grid-cols-[1fr_auto_auto_auto]"
-              >
-                <input name="name" required placeholder="Nome da etapa (ex: Descoberta)" className={inputCls} />
-                <input name="start_date" type="date" className={inputCls} title="Início" />
-                <input name="end_date" type="date" className={inputCls} title="Fim" />
-                <button type="submit" disabled={pending} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60">
-                  Adicionar
-                </button>
-              </form>
-            )}
-
-            {project.phases.length === 0 && !novaEtapa ? (
-              <p className="rounded-md border border-black/[0.06] bg-white px-4 py-6 text-center text-sm text-text-muted">
-                Sem etapas ainda. As etapas agrupam as tarefas no cronograma que o cliente vê.
-              </p>
-            ) : (
-              <ol className="flex flex-col gap-2">
-                {project.phases.map((phase, i) => (
-                  <PhaseRow
-                    key={phase.id}
-                    phase={phase}
-                    tarefas={project.tasks.filter((t) => t.phaseId === phase.id).length}
-                    primeira={i === 0}
-                    ultima={i === project.phases.length - 1}
-                    pending={pending}
-                    send={send}
-                  />
-                ))}
-              </ol>
-            )}
-          </section>
+              é ele que vira o link de acompanhamento. As barras saem das próprias
+              tarefas, então não há o que cadastrar aqui: nome e prazo se editam
+              na linha, e o resto se resolve no quadro. */}
+          <Gantt phases={project.phases} tasks={project.tasks} titulo={`Cronograma · ${nome}`} send={send} />
         </div>
       )}
     </div>
@@ -626,119 +554,55 @@ function ArquivarProjeto({ project, pending, send }: { project: ProjectView; pen
   );
 }
 
+/**
+ * Link de acompanhamento como botão, não como painel. Gerar o link é ação de um
+ * clique e acontece uma vez por projeto; ocupava um bloco inteiro do cronograma
+ * repetindo a explicação toda vez.
+ */
 function ClientLink({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
-  return (
-    <section className="rounded-md border border-black/[0.07] bg-white px-4 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
-      <p className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-text-primary">
-        <Link2 className="h-3.5 w-3.5 text-text-muted" />
-        Acompanhamento do cliente
-      </p>
-      {project.clientUrl ? (
-        <div className="mt-1.5 flex flex-wrap items-center gap-2">
-          <code className="min-w-0 flex-1 truncate rounded bg-black/[0.04] px-2 py-1 text-xs text-text-secondary">
-            {project.clientUrl}
-          </code>
-          <button
-            onClick={() => navigator.clipboard?.writeText(project.clientUrl!)}
-            className="rounded-md border border-black/[0.1] px-2.5 py-1 text-xs font-medium text-text-secondary transition hover:border-primary/40 hover:text-primary"
-          >
-            Copiar
-          </button>
-          <button
-            onClick={() => send(revokeClientToken, { engagement_id: project.id })}
-            disabled={pending}
-            className="text-[11px] text-text-muted underline decoration-dotted transition hover:text-danger disabled:opacity-50"
-          >
-            revogar
-          </button>
-        </div>
-      ) : (
-        <div className="mt-1.5 flex flex-wrap items-center gap-3">
-          <p className="text-xs text-text-muted">
-            Gere um link para o cliente acompanhar o cronograma. Ele vê só a linha do tempo do que estiver marcado como
-            visível, sem login e sem status interno.
-          </p>
-          <button
-            onClick={() => send(generateClientToken, { engagement_id: project.id })}
-            disabled={pending}
-            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
-          >
-            Gerar link
-          </button>
-        </div>
-      )}
-    </section>
-  );
-}
+  const [copiado, setCopiado] = useState(false);
 
-function PhaseRow({ phase, tarefas, primeira, ultima, pending, send }: {
-  phase: PhaseView;
-  tarefas: number;
-  primeira: boolean;
-  ultima: boolean;
-  pending: boolean;
-  send: Send;
-}) {
-  const atrasada = !!phase.endDate && phase.endDate < hoje() && phase.status !== 'concluida';
-
-  return (
-    <li className="group flex flex-wrap items-center gap-2 rounded-md border border-black/[0.07] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
-      <span className={`h-2 w-2 shrink-0 rounded-full ${PHASE_STATUS_DOT[phase.status]}`} />
-
-      <InlineText
-        value={phase.name}
-        onSave={(v) => send(updatePhase, { id: phase.id, name: v })}
-        className="min-w-0 flex-1 text-[13px] font-semibold text-text-primary"
-      />
-
-      {tarefas > 0 && (
-        <span className="rounded-full bg-black/[0.05] px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-text-muted">
-          {tarefas} tarefa{tarefas === 1 ? '' : 's'}
-        </span>
-      )}
-
-      <DateChip value={phase.startDate} onSave={(v) => send(updatePhase, { id: phase.id, start_date: v })} placeholder="início" />
-      <span className="text-[11px] text-text-muted">→</span>
-      <DateChip value={phase.endDate} onSave={(v) => send(updatePhase, { id: phase.id, end_date: v })} atrasada={atrasada} placeholder="fim" />
-
-      <ChipSelect
-        value={phase.status}
-        onChange={(v) => send(updatePhase, { id: phase.id, status: v })}
-        tone={PHASE_STATUS_TOM[phase.status]}
-        titulo="Situação da etapa"
-        options={PHASE_STATUSES.map((s) => ({ value: s, label: PHASE_LABELS[s], dot: PHASE_STATUS_DOT[s] }))}
-      />
-
-      {/* Visível para o cliente: a etapa aparece (ou não) no link de acompanhamento. */}
+  if (!project.clientUrl) {
+    return (
       <button
-        onClick={() => send(updatePhase, { id: phase.id, client_visible: phase.clientVisible ? 'off' : 'on' })}
+        onClick={() => send(generateClientToken, { engagement_id: project.id })}
         disabled={pending}
-        title={phase.clientVisible ? 'O cliente vê esta etapa' : 'Etapa interna: o cliente não vê'}
-        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${
-          phase.clientVisible ? 'bg-primary/10 text-primary' : 'bg-black/[0.04] text-text-muted'
-        }`}
+        title="Gera um link sem login para o cliente acompanhar o cronograma"
+        className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-[12px] font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary disabled:opacity-60"
       >
-        {phase.clientVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-        {phase.clientVisible ? 'cliente vê' : 'interna'}
+        <Link2 className="h-3.5 w-3.5" />
+        Gerar link do cliente
       </button>
+    );
+  }
 
-      {/* Mesma regra das tarefas: ação visível, não escondida atrás do mouse. */}
-      <span className="flex items-center gap-0.5">
-        <button onClick={() => send(movePhase, { id: phase.id, dir: 'up' })} disabled={pending || primeira} className="rounded p-1 text-text-muted transition hover:bg-black/[0.04] hover:text-text-primary disabled:opacity-25" aria-label="Subir">
-          <ChevronUp className="h-3.5 w-3.5" />
-        </button>
-        <button onClick={() => send(movePhase, { id: phase.id, dir: 'down' })} disabled={pending || ultima} className="rounded p-1 text-text-muted transition hover:bg-black/[0.04] hover:text-text-primary disabled:opacity-25" aria-label="Descer">
-          <ChevronDown className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={() => { if (confirm(`Apagar a etapa "${phase.name}"? As tarefas dela viram tarefas sem etapa.`)) send(deletePhase, { id: phase.id }); }}
-          disabled={pending}
-          className="rounded p-1 text-text-muted/60 transition hover:bg-danger/10 hover:text-danger disabled:opacity-30"
-          aria-label="Apagar etapa"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      </span>
-    </li>
+  return (
+    <div className="inline-flex items-center gap-1">
+      <button
+        onClick={() => {
+          navigator.clipboard?.writeText(project.clientUrl!);
+          setCopiado(true);
+          setTimeout(() => setCopiado(false), 1800);
+        }}
+        title={project.clientUrl}
+        className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-[12px] font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
+      >
+        <Link2 className="h-3.5 w-3.5" />
+        {copiado ? 'link copiado' : 'link do cliente'}
+      </button>
+      <button
+        onClick={() => {
+          if (confirm('Revogar o link? Quem tiver o endereço para de conseguir abrir o acompanhamento.')) {
+            send(revokeClientToken, { engagement_id: project.id });
+          }
+        }}
+        disabled={pending}
+        title="Revogar o link"
+        className="rounded-md px-1.5 py-1.5 text-[11px] text-text-muted transition hover:text-danger disabled:opacity-50"
+      >
+        revogar
+      </button>
+    </div>
   );
 }
+

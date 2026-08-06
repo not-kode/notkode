@@ -8,9 +8,10 @@
 // com o cliente, e tarefa solta ali dentro aparece como item aleatório. Ela é
 // listada à parte, e só do lado de dentro, para ganhar uma etapa.
 
-import type { PhaseView, TaskView } from './types';
+import { updatePhase, updateTask } from './actions';
+import type { PhaseView, Send, TaskView } from './types';
 import { PHASE_LABELS } from './status';
-import { diffDias, fmtDate, hoje, somaDias } from './ui';
+import { DateChip, InlineText, diffDias, fmtDate, hoje, somaDias } from './ui';
 
 type Barra = {
   id: string;
@@ -69,11 +70,13 @@ function marcas(de: string, dias: number): { pos: number; label: string; forte: 
  * vermelha de atraso — cobrança de prazo é conversa nossa, não sinalização
  * automática numa tela que ele abre sozinho.
  */
-export function Gantt({ phases, tasks, titulo, modoCliente }: {
+export function Gantt({ phases, tasks, titulo, modoCliente, send }: {
   phases: PhaseView[];
   tasks: TaskView[];
   titulo?: string;
   modoCliente?: boolean;
+  /** Com `send`, nome e prazo viram editáveis na própria linha (só no admin). */
+  send?: Send;
 }) {
   const hj = hoje();
 
@@ -81,6 +84,10 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
   const semData: { id: string; titulo: string; etapa: string | null }[] = [];
   // Tarefas do projeto que ainda não pertencem a nenhuma etapa.
   const semEtapa = tasks.filter((t) => !t.phaseId && !t.parentId);
+  // Projeto sem etapas montadas ainda tem cronograma: as tarefas principais
+  // viram as barras. Antes o cliente abria o link e via "cronograma sendo
+  // montado" mesmo com o trabalho todo cadastrado e com prazo.
+  const semEtapaNenhuma = phases.length === 0;
 
   phases.forEach((p, i) => {
     // Subtarefa não vira linha própria: ela é detalhe de dentro da tarefa.
@@ -123,17 +130,53 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
     }
   });
 
+  if (semEtapaNenhuma) {
+    semEtapa.forEach((t, i) => {
+      const inicio = t.startDate ?? t.dueDate;
+      const fim = t.dueDate ?? t.startDate;
+      if (!inicio || !fim) { semData.push({ id: t.id, titulo: t.title, etapa: null }); return; }
+      barras.push({
+        id: t.id,
+        titulo: t.title,
+        inicio,
+        fim: fim < inicio ? inicio : fim,
+        // Sem etapas, cada tarefa é uma linha de primeiro nível: é ela a "etapa"
+        // que o cliente enxerga.
+        tipo: 'etapa',
+        concluida: t.status === 'feito',
+        atrasada: fim < hj && t.status !== 'feito',
+        cor: i % CORES.length,
+        quem: t.assignee,
+      });
+    });
+    // Cronograma se lê na ordem do tempo, não na ordem do quadro.
+    barras.sort((a, b) => a.inicio.localeCompare(b.inicio) || a.fim.localeCompare(b.fim));
+  }
+
   if (barras.length === 0) {
     return (
       <div className="rounded-md border border-black/[0.07] bg-white px-4 py-12 text-center shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
-        <p className="text-sm text-text-secondary">Nenhuma etapa com data ainda.</p>
+        <p className="text-sm text-text-secondary">Nenhuma tarefa com data ainda.</p>
         <p className="mt-1 text-[13px] text-text-muted">
-          Crie as etapas do projeto, coloque as tarefas dentro delas com começo e prazo, e o cronograma se desenha
-          sozinho.
+          Basta uma tarefa com prazo para o cronograma se desenhar sozinho. Etapas são opcionais e servem para
+          agrupar o que vai junto.
         </p>
       </div>
     );
   }
+
+  /** No admin, o nome e o prazo se editam aqui mesmo: é onde se olha o projeto
+   *  inteiro antes de mostrar para o cliente. */
+  const salvarNome = (b: Barra, valor: string) => {
+    if (!send) return;
+    if (b.tipo === 'etapa' && phases.some((p) => p.id === b.id)) send(updatePhase, { id: b.id, name: valor });
+    else send(updateTask, { id: b.id, title: valor });
+  };
+  const salvarPrazo = (b: Barra, valor: string) => {
+    if (!send) return;
+    if (b.tipo === 'etapa' && phases.some((p) => p.id === b.id)) send(updatePhase, { id: b.id, end_date: valor });
+    else send(updateTask, { id: b.id, due_date: valor });
+  };
 
   const { de, dias } = janela(barras);
   const pos = (d: string) => (diffDias(de, d) / dias) * 100;
@@ -179,15 +222,24 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
               {barras.map((b) => (
                 <div
                   key={b.id}
-                  className={`flex h-7 items-center truncate ${
+                  className={`flex h-7 items-center gap-1.5 truncate ${
                     b.tipo === 'etapa'
                       ? 'text-[13px] font-semibold text-text-primary'
                       : 'pl-3 text-[12px] text-text-secondary'
                   }`}
                   title={b.titulo}
                 >
-                  {b.tipo === 'tarefa' && <span className="mr-1.5 text-text-muted">└</span>}
-                  {b.titulo}
+                  {b.tipo === 'tarefa' && <span className="text-text-muted">└</span>}
+                  {send ? (
+                    <InlineText
+                      value={b.titulo}
+                      onSave={(v) => salvarNome(b, v)}
+                      className="min-w-0 flex-1 truncate"
+                      title="Clique para renomear"
+                    />
+                  ) : (
+                    b.titulo
+                  )}
                 </div>
               ))}
             </div>
@@ -244,7 +296,15 @@ export function Gantt({ phases, tasks, titulo, modoCliente }: {
             <div className="flex w-24 shrink-0 flex-col gap-1">
               {barras.map((b) => (
                 <div key={b.id} className="flex h-7 items-center justify-end text-[11px] tabular-nums text-text-muted">
-                  {fmtDate(b.fim)}
+                  {send ? (
+                    <DateChip
+                      value={b.fim}
+                      onSave={(v) => salvarPrazo(b, v)}
+                      atrasada={b.atrasada && !b.concluida}
+                    />
+                  ) : (
+                    fmtDate(b.fim)
+                  )}
                 </div>
               ))}
             </div>

@@ -26,6 +26,13 @@ type TaskRow = {
   parent_task_id: string | null;
 };
 
+/** "12 ago" — data curta, do jeito que se lê num acompanhamento. */
+const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+function fmtDataCurta(d: string): string {
+  const [, m, dia] = d.split('-');
+  return `${Number(dia)} ${MESES_CURTOS[Number(m) - 1]}`;
+}
+
 export default async function AcompanhamentoPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const supabase = getSupabaseAdmin();
@@ -61,8 +68,20 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
 
   const phases = (phaseData ?? []) as PhaseRow[];
   const tasks = (taskData ?? []) as TaskRow[];
-  const concluidas = phases.filter((p) => p.status === 'concluida').length;
+
+  // Sem etapas montadas, quem conta o andamento são as próprias tarefas: é o
+  // caso normal dos projetos daqui, e sem isso a barra de progresso ficava
+  // parada em zero mesmo com metade do trabalho entregue.
+  const macros = tasks.filter((t) => !t.parent_task_id);
+  const feitas = macros.filter((t) => t.status === 'feito');
+  const proximas = macros
+    .filter((t) => t.status !== 'feito')
+    .sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'));
+
+  const concluidas = phases.length > 0 ? phases.filter((p) => p.status === 'concluida').length : feitas.length;
+  const total = phases.length > 0 ? phases.length : macros.length;
   const atual = phases.find((p) => p.status === 'em_andamento') ?? null;
+  const fazendo = macros.find((t) => t.status === 'fazendo') ?? null;
 
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-5 py-12 sm:py-16">
@@ -75,33 +94,35 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
         </h1>
         {eng.title && <p className="mt-1 text-base text-text-secondary">{eng.title}</p>}
 
-        {phases.length > 0 && (
+        {total > 0 && (
           <div className="mt-5 rounded-lg border border-black/[0.07] bg-white px-4 py-3">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-sm text-text-secondary">
                 {atual ? (
                   <>Agora em <strong className="font-medium text-text-primary">{atual.name}</strong></>
-                ) : concluidas === phases.length ? (
+                ) : fazendo ? (
+                  <>Agora em <strong className="font-medium text-text-primary">{fazendo.title}</strong></>
+                ) : concluidas === total ? (
                   <strong className="font-medium text-success">Projeto concluído</strong>
                 ) : (
-                  'Em preparação'
+                  'Em andamento'
                 )}
               </p>
               <p className="font-mono text-xs tabular-nums text-text-muted">
-                {concluidas}/{phases.length} etapas
+                {concluidas}/{total} {phases.length > 0 ? 'etapas' : 'entregas'}
               </p>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
               <div
                 className="h-full rounded-full bg-success transition-all"
-                style={{ width: `${phases.length ? (concluidas / phases.length) * 100 : 0}%` }}
+                style={{ width: `${total ? (concluidas / total) * 100 : 0}%` }}
               />
             </div>
           </div>
         )}
       </header>
 
-      {phases.length === 0 && tasks.length === 0 ? (
+      {macros.length === 0 && phases.length === 0 ? (
         <p className="rounded-lg border border-black/[0.07] bg-white px-4 py-12 text-center text-sm text-text-muted">
           O cronograma está sendo montado. Em breve as etapas aparecem aqui.
         </p>
@@ -120,6 +141,62 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
             tempoSegundos: 0, timerDesde: null, createdAt: '',
           }))}
         />
+      )}
+
+      {/* Depois do desenho, a leitura em palavras: o que já ficou pronto e o que
+          vem agora. É o que o cliente pergunta no WhatsApp. */}
+      {macros.length > 0 && (
+        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <section className="rounded-lg border border-black/[0.07] bg-white p-4">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />
+              Já entregue ({feitas.length})
+            </h2>
+            {feitas.length === 0 ? (
+              <p className="text-sm text-text-muted">Nada concluído ainda.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {feitas.map((t) => (
+                  <li key={t.id} className="flex items-baseline gap-2 text-sm">
+                    <span className="text-success">✓</span>
+                    <span className="text-text-secondary">{t.title}</span>
+                    {t.due_date && (
+                      <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-text-muted">
+                        {fmtDataCurta(t.due_date)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-lg border border-black/[0.07] bg-white p-4">
+            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+              Próximos ({proximas.length})
+            </h2>
+            {proximas.length === 0 ? (
+              <p className="text-sm text-text-muted">Tudo em dia por aqui.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {proximas.map((t) => (
+                  <li key={t.id} className="flex items-baseline gap-2 text-sm">
+                    <span className={t.status === 'fazendo' ? 'text-primary' : 'text-text-muted'}>
+                      {t.status === 'fazendo' ? '◐' : '○'}
+                    </span>
+                    <span className="text-text-secondary">{t.title}</span>
+                    {t.due_date && (
+                      <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-text-muted">
+                        {fmtDataCurta(t.due_date)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       )}
 
       <footer className="mt-12 border-t border-black/[0.07] pt-5">
