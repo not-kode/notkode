@@ -189,7 +189,7 @@ export function Gantt({ phases, tasks, titulo, modoCliente, send }: {
           {/* Régua: é ela que diz o mês. A data exata de cada linha aparece no
               hover, em vez de uma coluna de datas repetindo tudo do lado. */}
           <div className="flex gap-3 pb-2">
-            <div className="w-56 shrink-0" />
+            <div className="w-64 shrink-0" />
             <div className="relative h-4 flex-1">
               {marcas(de, dias).map((m) => (
                 <span
@@ -204,7 +204,7 @@ export function Gantt({ phases, tasks, titulo, modoCliente, send }: {
           </div>
 
           <div className="flex gap-3">
-            <div className="flex w-56 shrink-0 flex-col gap-1">
+            <div className="flex w-64 shrink-0 flex-col gap-1">
               {visiveis.map((b) => (
                 <div
                   key={b.id}
@@ -270,28 +270,24 @@ export function Gantt({ phases, tasks, titulo, modoCliente, send }: {
                       />
                     )}
 
-                    {/* A data aparece ao passar o mouse, colada na marca. No admin
-                        ela é o próprio campo: dá para remarcar o prazo daqui. */}
+                    {/* A data fica SEMPRE colada na marca: é assim que se lê qual
+                        tarefa cai em qual dia sem caçar com o mouse nem olhar
+                        para uma coluna do outro lado da tela. No admin ela é o
+                        próprio campo de prazo, então dá para remarcar daqui. */}
                     <span
-                      className={`pointer-events-none absolute top-1/2 z-20 -translate-y-1/2 whitespace-nowrap px-2 text-[10px] tabular-nums opacity-0 transition-opacity group-hover:opacity-100 ${tom.texto} ${
-                        rotuloDireita ? '-translate-x-full' : ''
-                      }`}
-                      style={{ left: `${rotuloDireita ? Math.min(100, esquerda) : Math.min(99, esquerda + largura)}%` }}
+                      className="absolute top-1/2 z-20 flex -translate-y-1/2 items-center whitespace-nowrap"
+                      style={
+                        rotuloDireita
+                          ? { right: `${Math.max(0, 100 - Math.max(0, esquerda))}%`, paddingRight: '0.4rem' }
+                          : { left: `${Math.min(99, esquerda + largura)}%`, paddingLeft: '0.4rem' }
+                      }
                     >
-                      {send ? null : quando}
-                    </span>
-
-                    {send && (
-                      <span
-                        className="absolute top-1/2 z-20 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
-                        style={{
-                          left: rotuloDireita ? undefined : `${Math.min(99, esquerda + largura)}%`,
-                          right: rotuloDireita ? '0.25rem' : undefined,
-                        }}
-                      >
+                      {send ? (
                         <DateChip value={b.fim} onSave={(v) => salvarPrazo(b, v)} atrasada={b.estado === 'atrasado'} />
-                      </span>
-                    )}
+                      ) : (
+                        <span className={`text-[10px] tabular-nums ${tom.texto}`}>{quando}</span>
+                      )}
+                    </span>
                   </div>
                 );
               })}
