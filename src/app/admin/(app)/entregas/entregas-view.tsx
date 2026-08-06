@@ -79,22 +79,20 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
     start(async () => { await action(fd); router.refresh(); });
   };
 
-  // Tarefa criada em outro lugar (o MCP no terminal, outra aba, o celular) tem
-  // que cair aqui sozinha. Enquanto a aba está à vista, a tela se atualiza de
-  // tempos em tempos; escondida, para de buscar.
-  //
-  // De 20 em 20 segundos, uma aba esquecida aberta fazia 4.000 recarregamentos
-  // por dia sozinha. Um minuto continua parecendo instantâneo para quem está
-  // trabalhando e custa um terço disso — e voltar para a aba atualiza na hora.
+  // Tarefa criada em outro lugar (o MCP no terminal, o celular) tem que cair
+  // aqui sozinha — mas não a cada 20 segundos, como era: aba esquecida aberta
+  // fazia milhares de recarregamentos por dia e era isso que estava enchendo a
+  // conta de requisições. A tela se atualiza quando você volta para ela, que é
+  // o momento em que a informação velha atrapalha.
   useEffect(() => {
-    const atualizar = () => {
+    const aoVoltar = () => {
       if (document.visibilityState === 'visible') router.refresh();
     };
-    document.addEventListener('visibilitychange', atualizar);
-    const timer = setInterval(atualizar, 60_000);
+    document.addEventListener('visibilitychange', aoVoltar);
+    window.addEventListener('focus', aoVoltar);
     return () => {
-      clearInterval(timer);
-      document.removeEventListener('visibilitychange', atualizar);
+      document.removeEventListener('visibilitychange', aoVoltar);
+      window.removeEventListener('focus', aoVoltar);
     };
   }, [router]);
 
