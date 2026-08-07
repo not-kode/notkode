@@ -17,6 +17,20 @@ import {
 type Context = { cliente: string; produto: string; escopo: string };
 type Answers = Record<string, string | string[]>;
 
+/** Anexos já enviados numa pergunta de arquivo. Briefing antigo guardava um nome só. */
+function nomesAnexados(v: string | string[] | undefined): string[] {
+  if (Array.isArray(v)) return v;
+  return typeof v === 'string' && v.trim() !== '' ? [v] : [];
+}
+
+/** Rótulo do campo de arquivo: um nome aparece inteiro, vários viram contagem. */
+function resumoAnexos(v: string | string[] | undefined): string {
+  const nomes = nomesAnexados(v);
+  if (nomes.length === 0) return '';
+  if (nomes.length === 1) return nomes[0];
+  return `${nomes.length} arquivos enviados · escolher mais`;
+}
+
 export function OnboardingForm({
   token,
   context,
@@ -53,18 +67,26 @@ export function OnboardingForm({
   const setText = (id: string, v: string) =>
     setAnswers((a) => ({ ...semPrefill(a, id), [id]: v }));
 
-  // Upload real do anexo → grava o path retornado em answers[id].
-  const onFile = async (id: string, file: File | undefined) => {
-    if (!file) return;
+  // Upload real dos anexos → acumula os nomes enviados em answers[id].
+  // Catálogo, fotos e fichas técnicas chegam em vários arquivos, e em levas:
+  // escolher de novo soma ao que já subiu, em vez de substituir.
+  const onFile = async (id: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
     setUploading(id);
+    const enviados: string[] = [];
     try {
-      const fd = new FormData();
-      fd.append('token', token);
-      fd.append('file', file);
-      const res = await fetch('/api/onboarding/upload', { method: 'POST', body: fd });
-      const json = await res.json();
-      setText(id, res.ok ? json.name : '');
-      if (!res.ok) console.error('[onboarding] upload falhou:', json.error);
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append('token', token);
+        fd.append('file', file);
+        const res = await fetch('/api/onboarding/upload', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (res.ok) enviados.push(json.name);
+        else console.error('[onboarding] upload falhou:', json.error);
+      }
+      if (enviados.length > 0) {
+        setAnswers((a) => ({ ...semPrefill(a, id), [id]: [...nomesAnexados(a[id]), ...enviados] }));
+      }
     } catch (e) {
       console.error('[onboarding] upload erro:', e);
     } finally {
@@ -325,7 +347,7 @@ function Section({
   setText: (id: string, v: string) => void;
   toggleChip: (q: OnboardingQuestion, opt: string) => void;
   isChipOn: (q: OnboardingQuestion, opt: string) => boolean;
-  onFile: (id: string, file: File | undefined) => void;
+  onFile: (id: string, files: FileList | null) => void;
   uploading: string | null;
   onPrev: () => void;
   onNext: () => void;
@@ -404,8 +426,9 @@ function Section({
                 <label className="filedrop">
                   <input
                     type="file"
+                    multiple
                     className="sr-only"
-                    onChange={(e) => onFile(q.id, e.target.files?.[0])}
+                    onChange={(e) => onFile(q.id, e.target.files)}
                   />
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -414,7 +437,7 @@ function Section({
                   <span>
                     {uploading === q.id
                       ? 'Enviando…'
-                      : (answers[q.id] as string) || 'Escolher arquivo (PDF, planilha, doc...)'}
+                      : resumoAnexos(answers[q.id]) || 'Escolher arquivos (PDF, planilha, fotos...)'}
                   </span>
                 </label>
               ) : (
