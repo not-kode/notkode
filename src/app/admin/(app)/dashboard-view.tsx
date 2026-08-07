@@ -36,8 +36,10 @@ export type DashboardData = {
     aReceber: number;
     emAtraso: number;
     mrr: number;
-    /** Os mesmos números antes do repasse ao parceiro e da nota fiscal. */
-    brutos: { faturamento: number; aReceber: number; emAtraso: number; mrr: number };
+    /** O que sobra de cada número depois do repasse ao parceiro e da nota. */
+    liquidos: { faturamento: number; aReceber: number; emAtraso: number; mrr: number };
+    /** Quanto do faturamento do período vira nota fiscal. */
+    nota: number;
     clientesAtivos: number;
     ganhos: number;
     receitaPorMes: MonthProjection[];
@@ -60,22 +62,22 @@ export type DashboardData = {
 const card = 'rounded-md border border-[#191918]/[0.08] bg-surface-base';
 
 /**
- * `bruto` só aparece quando ele é maior que o valor mostrado: os cartões de
- * dinheiro trazem o LÍQUIDO (sem repasse ao parceiro nem nota), e quem viu o
- * valor cheio na proposta precisa achar a diferença sem ter que abrir o
- * financeiro.
+ * O valor grande é sempre o COBRADO, o mesmo do contrato. `sobra` aparece só
+ * quando repasse ou nota comem alguma coisa dele: quem negociou o preço precisa
+ * reconhecer o número, e o que fica depois do imposto é outra informação, não
+ * uma correção da primeira.
  */
-function Kpi({ label, value, tone, hint, bruto }: { label: string; value: string; tone?: 'accent' | 'danger'; hint?: string; bruto?: string }) {
-  const valueTone = tone === 'accent' ? 'text-primary' : tone === 'danger' ? 'text-danger' : 'text-text-primary';
+function Kpi({ label, value, tone, hint, sobra }: { label: string; value: string; tone?: 'accent' | 'danger' | 'warning'; hint?: string; sobra?: string }) {
+  const valueTone = tone === 'accent' ? 'text-primary' : tone === 'danger' ? 'text-danger' : tone === 'warning' ? 'text-warning' : 'text-text-primary';
   return (
     <div className={`${card} p-4`}>
       <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">{label}</p>
       <p className={`mt-2 font-mono text-[26px] font-medium leading-none tracking-tight ${valueTone}`}>{value}</p>
-      {(hint || bruto) && (
+      {(hint || sobra) && (
         <p className="mt-1.5 text-[10px] text-text-muted">
           {hint}
-          {hint && bruto && ' · '}
-          {bruto && <span className="text-text-muted/70">{bruto} bruto</span>}
+          {hint && sobra && ' · '}
+          {sobra && <span className="text-text-muted/70">sobram {sobra}</span>}
         </p>
       )}
     </div>
@@ -102,8 +104,8 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** O bruto só interessa quando há desconto: senão vira o mesmo número duas vezes. */
-const soBruto = (bruto: number, liquido: number) => (bruto > liquido + 0.5 ? brl(bruto) : undefined);
+/** O que sobra só interessa quando algo é descontado: senão é o mesmo número duas vezes. */
+const soSobra = (liquido: number, cobrado: number) => (liquido < cobrado - 0.5 ? brl(liquido) : undefined);
 
 const Empty = ({ children }: { children: React.ReactNode }) => (
   <p className="py-8 text-center text-sm text-text-muted">{children}</p>
@@ -127,11 +129,13 @@ export function DashboardView({ data }: { data: DashboardData }) {
       {/* ════════════════ NEGÓCIO — o que importa primeiro ════════════════ */}
       <GroupLabel>Negócio · {rangeLabel}</GroupLabel>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`recebido · ${rangeLabel}`} bruto={soBruto(n.brutos.faturamento, n.faturamento)} />
-        <Kpi label="A receber" value={brl(n.aReceber)} hint={`no prazo · ${rangeLabel}`} bruto={soBruto(n.brutos.aReceber, n.aReceber)} />
-        <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido · total" bruto={soBruto(n.brutos.emAtraso, n.emAtraso)} />
-        <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês · hoje" bruto={soBruto(n.brutos.mrr, n.mrr)} />
+      <div className={`mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 ${n.nota > 0 ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
+        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`recebido · ${rangeLabel}`} sobra={soSobra(n.liquidos.faturamento, n.faturamento)} />
+        <Kpi label="A receber" value={brl(n.aReceber)} hint={`no prazo · ${rangeLabel}`} sobra={soSobra(n.liquidos.aReceber, n.aReceber)} />
+        <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido · total" sobra={soSobra(n.liquidos.emAtraso, n.emAtraso)} />
+        <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês · hoje" sobra={soSobra(n.liquidos.mrr, n.mrr)} />
+        {/* Imposto tem cartão próprio: sai do lucro, não do valor do contrato. */}
+        {n.nota > 0 && <Kpi label="Nota fiscal" value={`− ${brl(n.nota)}`} tone="warning" hint={`6% do faturado · ${rangeLabel}`} />}
         <Kpi label="Clientes ativos" value={nf(n.clientesAtivos)} hint="hoje" />
         <Kpi label="Negócios ganhos" value={nf(n.ganhos)} hint="desde o início" />
       </div>

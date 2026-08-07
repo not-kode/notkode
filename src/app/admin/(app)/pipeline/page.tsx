@@ -1,7 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
 import { PipelineBoard, type BoardDeal } from './board';
-import { dealTotal, dealTotalNet, dealMonthly, dealMonthlyNet, dealMrrNet } from './deal-value';
+import { dealTotal, dealTotalNet, dealMonthly, dealMonthlyNet, dealNota } from './deal-value';
 import { type OrgOption, type Product } from './orgs';
 
 export const dynamic = 'force-dynamic';
@@ -144,16 +144,22 @@ export default async function PipelinePage() {
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');
 
   // Quanto o pipeline vale por inteiro e quanto viraria receita todo mês se tudo
-  // fechasse. Fechar R$ 65 mil parcelado não é R$ 65 mil por mês. Os números de
-  // destaque são sempre LÍQUIDOS (sem o repasse ao parceiro e sem a nota): é o
-  // que entra de verdade. O bruto fica como referência, em letra miúda.
-  const openValueBruto = openDeals.reduce((sum, d) => sum + dealTotal(d), 0);
-  const openValue = openDeals.reduce((sum, d) => sum + dealTotalNet(d), 0);
-  const openMensalBruto = openDeals.reduce((sum, d) => sum + dealMonthly(d), 0);
-  const openMensal = openDeals.reduce((sum, d) => sum + dealMonthlyNet(d), 0);
+  // fechasse. Fechar R$ 65 mil parcelado não é R$ 65 mil por mês.
+  //
+  // O número de destaque é o VALOR FECHADO, o que foi vendido. Nota e repasse
+  // são custos dele, não desconto: trocar o valor do projeto pelo que sobra
+  // depois do imposto confunde quem negociou o preço. O líquido fica na linha de
+  // baixo, e a nota tem cartão próprio.
+  const openValue = openDeals.reduce((sum, d) => sum + dealTotal(d), 0);
+  const openValueNet = openDeals.reduce((sum, d) => sum + dealTotalNet(d), 0);
+  const openMensal = openDeals.reduce((sum, d) => sum + dealMonthly(d), 0);
+  const openMensalNet = openDeals.reduce((sum, d) => sum + dealMonthlyNet(d), 0);
   const mensais = openDeals.filter((d) => dealMonthly(d) > 0).length;
   // Recorrente: de quanto para quanto o MRR iria se tudo fechasse.
-  const mrrPipeline = openDeals.reduce((sum, d) => sum + dealMrrNet(d), 0);
+  const mrrPipeline = openDeals.reduce((sum, d) => sum + (d.mrr ?? 0), 0);
+  // Quanto do pipeline vai embora em nota, e de quantos negócios ela sai.
+  const notaPipeline = openDeals.reduce((sum, d) => sum + dealNota(d), 0);
+  const comNota = openDeals.filter((d) => d.precisa_nota && dealTotal(d) > 0).length;
   const won = deals.filter((d) => d.stage === 'ganho').length;
   const lost = deals.filter((d) => d.stage === 'perdido').length;
 
@@ -176,16 +182,28 @@ export default async function PipelinePage() {
             <p className="mt-0.5 text-xl font-semibold text-text-primary">{brl(openValue)}</p>
             <p className="font-label text-[10px] text-text-muted/70">
               {openDeals.length} em aberto
-              {openValueBruto > openValue && <> · {brl(openValueBruto)} bruto</>}
+              {openValueNet < openValue && <> · sobram {brl(openValueNet)}</>}
             </p>
           </div>
           <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">
             <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Por mês</p>
             <p className="mt-0.5 text-xl font-semibold text-primary">{brl(openMensal)}</p>
             <p className="font-label text-[10px] text-text-muted/70">
-              {brl(openMensalBruto)} bruto · {mensais} negócio{mensais === 1 ? '' : 's'}
+              {mensais} negócio{mensais === 1 ? '' : 's'}
+              {openMensalNet < openMensal && <> · sobram {brl(openMensalNet)}</>}
             </p>
           </div>
+          {/* Quanto do que está na mesa vai embora em imposto. Fica ao lado do
+              valor cheio para a conta não sumir dentro dele. */}
+          {notaPipeline > 0 && (
+            <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">
+              <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Nota fiscal</p>
+              <p className="mt-0.5 text-xl font-semibold text-warning">− {brl(notaPipeline)}</p>
+              <p className="font-label text-[10px] text-text-muted/70">
+                6% · {comNota} negócio{comNota === 1 ? '' : 's'} com nota
+              </p>
+            </div>
+          )}
           {/* De quanto para quanto o recorrente iria: o número que diz se vale o esforço. */}
           {mrrPipeline > 0 && (
             <div className="min-w-[13rem] rounded-md border border-primary/25 bg-primary/[0.04] px-4 py-3">

@@ -3,7 +3,7 @@ import { DashboardView, type DashboardData, type DayCount, type MonthProjection 
 import { resolveRange } from './period';
 import { pendingMonthly } from './financeiro/recurring';
 import { SERVICE_LABELS, classifySource } from './_shared/site-metrics';
-import { liquidoDaParcela, parcelasPorContrato, somarLiquido, type ContratoLiquido } from './_shared/liquido';
+import { ALIQUOTA_NOTA, liquidoDaParcela, parcelasPorContrato, somarLiquido, type ContratoLiquido } from './_shared/liquido';
 
 export const dynamic = 'force-dynamic';
 
@@ -136,29 +136,39 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   // Vale o que entrou de verdade (paid_amount), não o valor cheio da parcela —
   // um pagamento parcial não pode virar faturamento cheio. Mesma régua do Financeiro.
   const recebidoDe = (r: { amount: number; paid_amount: number | null }) => r.paid_amount ?? r.amount;
-  // E vale o LÍQUIDO: repasse ao parceiro e nota fiscal passam pela conta sem
-  // serem receita. Mesma régua do funil, senão o painel promete um dinheiro que
-  // não fica com a gente.
-  const contratos = new Map<string, ContratoLiquido>(
-    engs.map((e) => [e.id, { type: e.type, repasse_valor: e.repasse_valor, precisa_nota: e.precisa_nota ?? false }]),
-  );
+  // O número de destaque é o VALOR COBRADO. Repasse ao parceiro e nota são
+  // custos em cima dele: entram como "o que sobra" na linha de apoio e, no caso
+  // da nota, num cartão próprio. Encolher o faturamento pelo imposto faria o
+  // painel discordar do contrato que foi assinado.
+  const contratoDe = (e: (typeof engs)[number]): ContratoLiquido =>
+    ({ type: e.type, repasse_valor: e.repasse_valor, precisa_nota: e.precisa_nota ?? false });
+  const contratos = new Map<string, ContratoLiquido>(engs.map((e) => [e.id, contratoDe(e)]));
   const nParcelas = parcelasPorContrato(recs);
-  const somar = (linhas: typeof recs, valorDe?: (r: (typeof recs)[number]) => number) =>
+  const somar = (linhas: typeof recs, valorDe: (r: (typeof recs)[number]) => number = (r) => r.amount) =>
+    linhas.reduce((s, r) => s + valorDe(r), 0);
+  const somarNet = (linhas: typeof recs, valorDe?: (r: (typeof recs)[number]) => number) =>
     somarLiquido(linhas, contratos, nParcelas, valorDe);
+  // Quanto de imposto sai de uma lista de parcelas.
+  const somarNota = (linhas: typeof recs, valorDe: (r: (typeof recs)[number]) => number = (r) => r.amount) =>
+    linhas.reduce((s, r) => {
+      const c = r.engagement_id ? contratos.get(r.engagement_id) : null;
+      return s + (c?.precisa_nota ? valorDe(r) * ALIQUOTA_NOTA : 0);
+    }, 0);
 
-  const faturamento = somar(
-    recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr),
-    recebidoDe,
-  );
+  const recebidas = recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr);
   // A receber = pendente ainda no prazo com vencimento DENTRO do período escolhido.
   // Os presets de mês/ano cobrem o período inteiro (ver period.ts), então o que
   // vence mais pra frente no mesmo recorte entra aqui em vez de sumir.
-  const aReceber = somar(recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date >= fromStr && r.due_date <= toStr));
+  const aReceberLinhas = recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date >= fromStr && r.due_date <= toStr);
   // Em atraso = status 'atrasado' OU pendente já vencido (regra unificada).
-  const emAtraso = somar(recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr)));
-  const mrr = engs
-    .filter((e) => e.lifecycle === 'ativo')
-    .reduce((s, e) => s + liquidoDaParcela(e.mrr ?? 0, { type: e.type, repasse_valor: e.repasse_valor, precisa_nota: e.precisa_nota ?? false }), 0);
+  const atrasadas = recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr));
+  const ativos = engs.filter((e) => e.lifecycle === 'ativo');
+
+  const faturamento = somar(recebidas, recebidoDe);
+  const aReceber = somar(aReceberLinhas);
+  const emAtraso = somar(atrasadas);
+  const mrr = ativos.reduce((s, e) => s + (e.mrr ?? 0), 0);
+  const notaDoPeriodo = somarNota(recebidas, recebidoDe);
   const clientesAtivos = new Set(engs.filter((e) => (e.lifecycle === 'ativo' || e.lifecycle === 'pausado') && e.organization_id).map((e) => e.organization_id)).size;
 
   // Receita mês a mês. O passado é o que entrou; o futuro separa o que já está
@@ -186,16 +196,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     // lançamento é manual. Passado fica de fora — lá vale o que aconteceu.
     const recorrentePrevisto =
       key >= mesAtualKey
-        ? pendingMonthly(engs, duesByEng, key).reduce(
-            (s, p) =>
-              s +
-              liquidoDaParcela(p.eng.mrr ?? 0, {
-                type: p.eng.type,
-                repasse_valor: p.eng.repasse_valor,
-                precisa_nota: p.eng.precisa_nota ?? false,
-              }),
-            0,
-          )
+        ? pendingMonthly(engs, duesByEng, key).reduce((s, p) => s + (p.eng.mrr ?? 0), 0)
         : 0;
     receitaPorMes.push({
       key,
@@ -206,7 +207,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         recorrentePrevisto,
       pipeline: parcelasPipeline
         .filter((p) => p.due_date.startsWith(key))
-        .reduce((s, p) => s + liquidoDaParcela(p.amount, p.negocio, p.parcelas), 0),
+        .reduce((s, p) => s + p.amount, 0),
       atual: key === mesAtualKey,
     });
   }
@@ -234,12 +235,14 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     rangeLabel: range.label,
     negocio: {
       faturamento, aReceber, emAtraso, mrr, clientesAtivos,
-      brutos: {
-        faturamento: recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + recebidoDe(r), 0),
-        aReceber: recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date >= fromStr && r.due_date <= toStr).reduce((s, r) => s + r.amount, 0),
-        emAtraso: recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr)).reduce((s, r) => s + r.amount, 0),
-        mrr: engs.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0),
+      // O que sobra de cada número depois do repasse ao parceiro e da nota.
+      liquidos: {
+        faturamento: somarNet(recebidas, recebidoDe),
+        aReceber: somarNet(aReceberLinhas),
+        emAtraso: somarNet(atrasadas),
+        mrr: ativos.reduce((s, e) => s + liquidoDaParcela(e.mrr ?? 0, contratoDe(e)), 0),
       },
+      nota: notaDoPeriodo,
       ganhos: wonDeals.count ?? 0,
       receitaPorMes,
     },

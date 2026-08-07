@@ -36,6 +36,15 @@ export function dealTotalNet(d: DealValue): number {
 }
 
 /**
+ * Quanto do negócio vai virar nota fiscal. Zero quando o cliente não precisa
+ * dela. É custo do valor fechado, não desconto: o projeto continua valendo o que
+ * foi vendido, e este é o número que diz o quanto disso não fica.
+ */
+export function dealNota(d: DealValue): number {
+  return d.precisa_nota ? dealTotal(d) * NOTA : 0;
+}
+
+/**
  * A parte RECORRENTE líquida do negócio: quanto ele somaria ao MRR se fechasse.
  * Negócio pontual, mesmo parcelado, não entra — parcela acaba, mensalidade não.
  */

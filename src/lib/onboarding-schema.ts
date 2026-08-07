@@ -470,7 +470,202 @@ const SOCIAL_SECTIONS: OnboardingSection[] = [
   },
 ];
 
-export type OnboardingTemplateKey = 'produto' | 'site' | 'sistema-ia' | 'agentes' | 'identidade' | 'social';
+// ── Site com catálogo (B2B) ───────────────────────────────────────────────
+// Indústria/distribuidora que não vende online: o site é catálogo + pedido de
+// orçamento. O template "site" não serve aqui porque o que trava a produção
+// não é objetivo nem referência visual, é insumo: a planilha de produtos, as
+// fichas, as fotos, e as duas estruturas que só o cliente pode definir, os
+// setores de atuação e quais produtos andam juntos.
+//
+// As categorias do catálogo entram pré-preenchidas pela Notkode (respostas do
+// MCP) para o cliente só conferir, em vez de listar tudo de novo.
+const CATALOGO_SECTIONS: OnboardingSection[] = [
+  {
+    id: 'cat-negocio',
+    title: 'Empresa & público',
+    lede: 'Quem vocês são e para quem o site fala.',
+    questions: [
+      { id: 'cat_frase', type: 'area', ph: 'Ex: fabricamos fixadores e perfilados para instalações elétricas e industriais',
+        label: 'Em uma frase, o que a empresa faz e para quem?' },
+      { id: 'cat_diferenciais', type: 'area', star: true,
+        label: 'Por que o cliente compra de vocês e não do concorrente?',
+        hint: 'Até 3 motivos. É o que vira o texto do site.' },
+      { id: 'cat_publico', type: 'chips', multi: true, star: true,
+        options: ['Indústria e grandes obras', 'Revendedor e distribuidor', 'Instalador e prestador de serviço', 'Consumidor final'],
+        label: 'Quem é o público do site?' },
+      { id: 'cat_publico_principal', type: 'text', ph: 'Ex: revendedor',
+        label: 'Desses, qual é o mais importante?' },
+      { id: 'cat_regiao', type: 'text', ph: 'Ex: Brasil todo, com foco em SP e MG',
+        label: 'Qual a região atendida?' },
+      { id: 'cat_condicao_comercial', type: 'text', ph: 'Ex: pedido mínimo de R$ 500',
+        label: 'Tem alguma condição comercial que precisa aparecer no site?' },
+    ],
+  },
+  {
+    id: 'cat-catalogo',
+    title: 'Catálogo de produtos',
+    lede: 'É o que mais demora a juntar. Quanto antes vier, antes o site sai.',
+    questions: [
+      { id: 'cat_categorias', type: 'chips', multi: true, star: true,
+        options: [
+          'Abraçadeiras Metálicas', 'Eletrocalha e Acessórios', 'Perfilados e Acessórios',
+          'Fitas Metálicas', 'Barra Roscada', 'Parafusos e Acessórios', 'Trilho DIN', 'Chumbadores',
+        ],
+        label: 'Confirme as categorias que vão para o site.',
+        hint: 'Estas são as que identificamos no catálogo de vocês. Desmarque o que não entra.' },
+      { id: 'cat_categorias_extra', type: 'text', ph: 'Ex: eletrodutos',
+        label: 'Faltou alguma categoria? Escreva aqui.' },
+
+      { id: 'cat_planilha', type: 'chips', star: true,
+        options: ['Vamos enviar a planilha', 'Só temos o catálogo em PDF'],
+        label: 'Podem enviar a planilha com todos os produtos?',
+        hint: 'Uma linha por produto, com nome, código, medidas e categoria.' },
+      { id: 'cat_planilha_anexo', type: 'file', showIf: { q: 'cat_planilha', in: ['Vamos enviar a planilha'] },
+        label: 'Anexe a planilha de produtos.' },
+
+      { id: 'cat_fotos', type: 'chips', star: true,
+        options: ['Temos de todos', 'Temos de parte deles', 'Ainda não temos'],
+        label: 'Vocês têm foto dos produtos?' },
+      { id: 'cat_fotos_anexo', type: 'file', showIf: { q: 'cat_fotos', in: ['Temos de todos', 'Temos de parte deles'] },
+        label: 'Anexe as fotos que já existem.', hint: 'Pode ser um .zip ou o link da pasta na pergunta seguinte.' },
+      { id: 'cat_fotos_link', type: 'text', ph: 'https:// (Drive, Dropbox, WeTransfer...)',
+        showIf: { q: 'cat_fotos', in: ['Temos de todos', 'Temos de parte deles'] },
+        label: '…ou cole o link da pasta com as fotos.' },
+      { id: 'cat_fotos_faltando', type: 'chips',
+        showIf: { q: 'cat_fotos', in: ['Temos de parte deles', 'Ainda não temos'] },
+        options: ['Usar a foto da categoria', 'Vamos produzir as fotos que faltam'],
+        label: 'Para os produtos sem foto, o que preferem?' },
+
+      { id: 'cat_fichas', type: 'chips', star: true,
+        options: ['Vamos enviar as fichas', 'As informações só existem dentro do catálogo em PDF'],
+        label: 'E as fichas técnicas dos produtos?',
+        hint: 'Medidas, material, acabamento e norma. É o que entra na página de cada produto.' },
+      { id: 'cat_fichas_anexo', type: 'file', showIf: { q: 'cat_fichas', in: ['Vamos enviar as fichas'] },
+        label: 'Anexe as fichas técnicas.' },
+      { id: 'cat_ficha_download', type: 'chips', options: ['Sim, deixar para baixar', 'Não, só na página'],
+        label: 'A ficha em PDF deve ficar disponível para download no site?' },
+
+      { id: 'cat_fora', type: 'text', ph: 'Ex: itens sob encomenda, linha descontinuada',
+        label: 'Tem produto no catálogo que NÃO deve ir para o site?' },
+    ],
+  },
+  {
+    id: 'cat-setores',
+    title: 'Setores',
+    lede: 'Além da navegação por categoria, o site organiza os produtos por setor de atuação, para o cliente entrar pelo tipo de obra dele.',
+    questions: [
+      { id: 'set_lista', type: 'area', star: true,
+        ph: 'Ex: Construção civil, Energia solar, Indústria, Saneamento',
+        label: 'Quais setores devem aparecer no site?',
+        hint: 'Escreva o nome do jeito que vocês querem que apareça.' },
+      { id: 'set_produtos', type: 'area', star: true,
+        ph: 'Energia solar: perfilados inteiros + chumbadores mecânicos + barra roscada 3/8\nIndústria: eletrocalhas + abraçadeiras metálicas',
+        label: 'Quais produtos entram em cada setor?',
+        hint: 'Pode responder por categoria inteira ou por produto específico. Um produto pode estar em mais de um setor.' },
+      { id: 'set_anexo', type: 'file',
+        label: 'Se preferir, anexe uma planilha com os produtos e o setor de cada um.' },
+      { id: 'set_texto', type: 'chips', options: ['Vocês escrevem e nós aprovamos', 'Nós escrevemos'],
+        label: 'Cada setor terá um texto curto de apresentação. Quem escreve?' },
+    ],
+  },
+  {
+    id: 'cat-upsell',
+    title: 'Produtos que andam juntos',
+    lede: 'Quando o cliente coloca um produto na cotação, o site sugere o que costuma ir junto. Nenhum preço aparece no site.',
+    questions: [
+      { id: 'up_combinacoes', type: 'area', star: true,
+        ph: 'Ex: quem leva perfilado leva também abraçadeira e barra roscada',
+        label: 'Quais produtos costumam ser vendidos juntos?' },
+      { id: 'up_promocao', type: 'area',
+        label: 'Já existe alguma combinação em promoção hoje, para já subirmos no site?' },
+      { id: 'up_nome', type: 'chips',
+        options: ['Leve também', 'Produtos que combinam', 'Acessórios recomendados'],
+        label: 'Como preferem chamar essa sugestão no site?' },
+    ],
+  },
+  {
+    id: 'cat-cotacao',
+    title: 'Atendimento & cotação',
+    lede: 'O cliente monta a lista de produtos no site e envia tudo de uma vez pelo WhatsApp de vocês.',
+    questions: [
+      { id: 'wa_numero', type: 'text', ph: '(00) 00000-0000', star: true,
+        label: 'Qual número recebe as cotações do site?' },
+      { id: 'wa_horario', type: 'text', ph: 'Ex: seg a sex, 8h às 18h',
+        label: 'Qual o horário de atendimento?' },
+      { id: 'wa_dados', type: 'chips', multi: true,
+        options: ['Nome', 'Empresa', 'Cidade', 'CNPJ', 'Quantidade de cada produto'],
+        label: 'Além dos produtos, o que precisa vir na mensagem?' },
+      { id: 'contato_publico', type: 'area', ph: 'Telefone, e-mail e endereço',
+        label: 'Quais dados de contato entram no rodapé e na página de contato?' },
+    ],
+  },
+  {
+    id: 'cat-revendedor',
+    title: 'Canal do revendedor',
+    lede: 'Página com formulário para quem quer revender os produtos de vocês.',
+    questions: [
+      { id: 'rev_campos', type: 'chips', multi: true,
+        options: ['Nome', 'Empresa e CNPJ', 'Cidade e estado', 'Ramo de atuação', 'Telefone e e-mail', 'Volume estimado'],
+        label: 'Quais informações vocês precisam receber de quem se cadastra?' },
+      { id: 'rev_email', type: 'text', ph: 'comercial@...', star: true,
+        label: 'Qual e-mail recebe o aviso de cada cadastro?' },
+      { id: 'rev_requisitos', type: 'text', ph: 'Ex: ter CNPJ e comprar a partir de X',
+        label: 'Existe algum requisito para ser revendedor que deva aparecer na página?' },
+      { id: 'rev_material', type: 'chips', options: ['Sim, vamos anexar', 'Não temos'],
+        label: 'Tem algum material para enviar a essas pessoas?',
+        hint: 'Apresentação, tabela, condições comerciais.' },
+      { id: 'rev_material_anexo', type: 'file', showIf: { q: 'rev_material', in: ['Sim, vamos anexar'] },
+        label: 'Anexe o material do revendedor.' },
+    ],
+  },
+  {
+    id: 'cat-provas',
+    title: 'Provas & conteúdo',
+    lede: 'O que dá credibilidade para quem não conhece a empresa.',
+    questions: [
+      { id: 'prova_depoimentos', type: 'chips',
+        options: ['Sim, temos', 'Podemos coletar', 'Não queremos usar'],
+        label: 'Querem colocar depoimentos de clientes no site?' },
+      { id: 'prova_logos', type: 'chips',
+        options: ['Sim, pode usar', 'Só de alguns', 'Não pode'],
+        label: 'Querem destacar empresas que já são clientes através dos logotipos delas?' },
+      { id: 'prova_logos_quais', type: 'text', showIf: { q: 'prova_logos', in: ['Sim, pode usar', 'Só de alguns'] },
+        label: 'Quais empresas podemos mostrar?' },
+      { id: 'prova_certificacoes', type: 'text', ph: 'Ex: ISO 9001, normas ABNT',
+        label: 'Têm certificações, normas ou selos que devam aparecer?' },
+      { id: 'prova_fotos_empresa', type: 'chips',
+        options: ['Sim, temos', 'Vamos produzir', 'Não temos'],
+        label: 'Têm fotos da fábrica, do estoque ou da equipe?' },
+      { id: 'prova_numeros', type: 'text', ph: 'Ex: 20 anos de mercado, 3 mil itens em linha',
+        label: 'Tem algum número da empresa que valha destacar?' },
+    ],
+  },
+  {
+    id: 'cat-acessos',
+    title: 'Acessos & materiais',
+    lede: 'Isso não trava o começo do projeto, mas precisa estar resolvido antes da publicação.',
+    access: true,
+    questions: [
+      { id: 'link_materiais', type: 'text', ph: 'Link do Drive / Dropbox / pasta',
+        label: 'Link da pasta com os materiais da marca.' },
+      { id: 'acesso_dominio', type: 'text', ph: 'Ex: Registro.br, GoDaddy...',
+        label: 'Onde o domínio está registrado (e vocês conseguem dar acesso ao DNS)?' },
+      { id: 'acesso_email_dominio', type: 'text', ph: 'Ex: Google Workspace, Locaweb',
+        label: 'O e-mail da empresa usa esse mesmo domínio? Em qual serviço?',
+        hint: 'Importante para não derrubar o e-mail de vocês na troca do site.' },
+      { id: 'acesso_google', type: 'chips', options: ['Convite enviado', 'Ainda não temos'],
+        label: 'Google Ads' },
+      { id: 'acesso_meta', type: 'chips', options: ['Convite enviado', 'Ainda não temos'],
+        label: 'Meta Business (Instagram/Facebook)' },
+      { id: 'lgpd_email', type: 'text', ph: 'contato@...',
+        label: 'Qual e-mail publicamos na Política de Privacidade para contato sobre dados?' },
+      { id: 'cat_livre', type: 'area',
+        label: 'Algo que não perguntamos e que vocês acham importante para o site?' },
+    ],
+  },
+];
+
+export type OnboardingTemplateKey = 'produto' | 'site' | 'site-catalogo' | 'sistema-ia' | 'agentes' | 'identidade' | 'social';
 
 export type OnboardingTemplate = {
   label: string;
@@ -492,6 +687,12 @@ export const ONBOARDING_TEMPLATES: Record<OnboardingTemplateKey, OnboardingTempl
     label: 'Site / Landing Page',
     welcome: 'Este briefing nos dá tudo que precisamos para desenhar e construir o seu site do jeito certo.',
     sections: SITE_SECTIONS,
+  },
+  'site-catalogo': {
+    label: 'Site com catálogo (B2B)',
+    welcome:
+      'Este briefing junta o que precisamos para montar o catálogo e construir o site. As perguntas de produto, setor e material são as que destravam a produção, então vale responder com calma.',
+    sections: CATALOGO_SECTIONS,
   },
   'sistema-ia': {
     label: 'Sistema com IA',

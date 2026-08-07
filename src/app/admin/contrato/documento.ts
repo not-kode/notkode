@@ -197,6 +197,10 @@ export function contratoHtml({
     fecharLista();
     if (eng.proposal_path) {
       itens.push('O escopo detalhado dos serviços consta na Proposta Comercial anexa, que integra este contrato como <strong>Anexo I</strong>.');
+      // A proposta é do início da negociação e o que foi fechado costuma mudar
+      // depois dela (desconto, parcela a mais). Sem dizer quem vale, o contrato
+      // assinado carrega dois valores diferentes e nenhum critério de desempate.
+      itens.push('Havendo divergência entre este contrato e o <strong>Anexo I</strong>, prevalecem as condições deste contrato, em especial quanto a valores, prazos e forma de pagamento.');
     }
     return itens;
   };

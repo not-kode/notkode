@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { AutoSaveForm } from '../_shared/auto-save-form';
-import { liquidoDaParcela, parcelasPorContrato, somarLiquido, type ContratoLiquido } from '../_shared/liquido';
+import { ALIQUOTA_NOTA, liquidoDaParcela, parcelasPorContrato, somarLiquido, type ContratoLiquido } from '../_shared/liquido';
 import { createReceivable, deleteReceivable, generateMonthlyReceivables, markReceivablePaid, unmarkReceivable, updateReceivable } from './actions';
 import { isRecurring, monthlyDescription, monthlyDueDate, pendingMonthly } from './recurring';
 
@@ -151,44 +151,56 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engagements, receivables, parcelasMes, previstas, month, todayStr]);
 
-  // Repasse ao parceiro e nota fiscal passam pela conta mas não são nossos. Os
-  // cartões mostram o LÍQUIDO, mesma régua do funil; o bruto fica em letra miúda
-  // quando os dois diferem. Sem isso, "recebi X" no financeiro nunca batia com o
-  // "se fechar tudo" do pipeline.
+  // Os cartões mostram o VALOR COBRADO, que é o que foi contratado com o
+  // cliente. Repasse ao parceiro e nota são custos em cima dele, não desconto:
+  // trocar o valor do contrato pelo que sobra depois do imposto confunde quem
+  // combinou o preço. O que sobra vai na linha de baixo, e a nota tem cartão só
+  // dela.
   const contratos = useMemo(
     () => new Map<string, ContratoLiquido>(engagements.map((e) => [e.id, e])),
     [engagements],
   );
   const nParcelas = useMemo(() => parcelasPorContrato(receivables), [receivables]);
+  const contratoDe = (r: RecView) => (r.engagement_id ? contratos.get(r.engagement_id) ?? null : null);
   const liquido = (r: RecView, valor = r.amount) =>
-    liquidoDaParcela(valor, r.engagement_id ? contratos.get(r.engagement_id) : null, r.engagement_id ? nParcelas.get(r.engagement_id) ?? 1 : 1);
+    liquidoDaParcela(valor, contratoDe(r), r.engagement_id ? nParcelas.get(r.engagement_id) ?? 1 : 1);
+  const notaDe = (r: RecView, valor = r.amount) => (contratoDe(r)?.precisa_nota ? valor * ALIQUOTA_NOTA : 0);
 
   const recebidoDe = (r: RecView) => (r.status === 'recebido' ? r.paid_amount ?? r.amount : r.amount);
 
   const kpis = useMemo(() => ({
-    mrr: listas.recorrentes.reduce((s, e) => s + liquidoDaParcela(e.mrr ?? 0, e), 0),
-    doMes: somarLiquido(listas.doMes, contratos, nParcelas, recebidoDe),
+    mrr: listas.recorrentes.reduce((s, e) => s + (e.mrr ?? 0), 0),
+    doMes: listas.doMes.reduce((s, r) => s + recebidoDe(r), 0),
     // Mesma régua da Visão geral: "a receber" = pendente AINDA NO PRAZO (mais a
     // mensalidade prevista); o que venceu conta só no cartão Atrasado (antes a
     // mesma parcela dobrava nos dois). Prevista nunca entra em Atrasado: não
     // existe cobrança emitida para estar em atraso.
-    aReceber: somarLiquido(listas.aReceber, contratos, nParcelas),
-    atrasado: somarLiquido(listas.atrasado, contratos, nParcelas),
-    recebido: somarLiquido(listas.recebido, contratos, nParcelas, recebidoDe),
-  }), [listas, contratos, nParcelas]);
-
-  // O bruto de cada cartão: só aparece onde há desconto, como referência.
-  const brutos = useMemo(() => ({
-    mrr: listas.recorrentes.reduce((s, e) => s + (e.mrr ?? 0), 0),
-    doMes: listas.doMes.reduce((s, r) => s + recebidoDe(r), 0),
     aReceber: listas.aReceber.reduce((s, r) => s + r.amount, 0),
     atrasado: listas.atrasado.reduce((s, r) => s + r.amount, 0),
     recebido: listas.recebido.reduce((s, r) => s + recebidoDe(r), 0),
   }), [listas]);
 
-  /** "R$ 9.200 bruto", só quando o desconto existe. */
-  const notaBruto = (chave: keyof typeof kpis) =>
-    brutos[chave] > kpis[chave] + 0.005 ? `${brl(brutos[chave])} bruto` : undefined;
+  // O que sobra de cada cartão depois do repasse e da nota.
+  const liquidos = useMemo(() => ({
+    mrr: listas.recorrentes.reduce((s, e) => s + liquidoDaParcela(e.mrr ?? 0, e), 0),
+    doMes: somarLiquido(listas.doMes, contratos, nParcelas, recebidoDe),
+    aReceber: somarLiquido(listas.aReceber, contratos, nParcelas),
+    atrasado: somarLiquido(listas.atrasado, contratos, nParcelas),
+    recebido: somarLiquido(listas.recebido, contratos, nParcelas, recebidoDe),
+  }), [listas, contratos, nParcelas]);
+
+  // Quanto do mês vira nota: o que está no mês inteiro e, dentro dele, o que já
+  // foi recebido — a nota de um dinheiro que ainda não entrou é uma previsão.
+  const nota = useMemo(() => ({
+    doMes: listas.doMes.reduce((s, r) => s + notaDe(r, recebidoDe(r)), 0),
+    recebido: listas.recebido.reduce((s, r) => s + notaDe(r, recebidoDe(r)), 0),
+    clientes: new Set(listas.doMes.filter((r) => contratoDe(r)?.precisa_nota).map((r) => r.org_name ?? r.id)).size,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [listas, contratos]);
+
+  /** "sobram R$ 9.200", só quando repasse ou nota comem alguma coisa. */
+  const sobra = (chave: keyof typeof kpis) =>
+    liquidos[chave] < kpis[chave] - 0.005 ? `sobram ${brl(liquidos[chave])}` : undefined;
 
   const gerarMensalidades = (engagementId?: string) => {
     const fd = new FormData();
@@ -233,11 +245,23 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
         </div>
       </header>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Kpi label="MRR ativo" value={brl(kpis.mrr)} tone="text-primary" count={listas.recorrentes.length} nota={notaBruto('mrr')} onClick={() => setDetail('mrr')} />
-        <Kpi label={`Total · ${monthShort}`} value={brl(kpis.doMes)} count={listas.doMes.length} nota={[`${brl(kpis.aReceber)} a receber`, notaBruto('doMes')].filter(Boolean).join(' · ')} onClick={() => setDetail('doMes')} />
-        <Kpi label="Atrasado" value={brl(kpis.atrasado)} tone={kpis.atrasado > 0 ? 'text-danger' : undefined} count={listas.atrasado.length} nota={notaBruto('atrasado')} onClick={() => setDetail('atrasado')} />
-        <Kpi label={`Recebido · ${monthShort}`} value={brl(kpis.recebido)} tone="text-success" count={listas.recebido.length} nota={notaBruto('recebido')} onClick={() => setDetail('recebido')} />
+      <div className={`mb-6 grid grid-cols-2 gap-3 ${nota.doMes > 0 ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
+        <Kpi label="MRR ativo" value={brl(kpis.mrr)} tone="text-primary" count={listas.recorrentes.length} nota={sobra('mrr')} onClick={() => setDetail('mrr')} />
+        <Kpi label={`Total · ${monthShort}`} value={brl(kpis.doMes)} count={listas.doMes.length} nota={[`${brl(kpis.aReceber)} a receber`, sobra('doMes')].filter(Boolean).join(' · ')} onClick={() => setDetail('doMes')} />
+        <Kpi label="Atrasado" value={brl(kpis.atrasado)} tone={kpis.atrasado > 0 ? 'text-danger' : undefined} count={listas.atrasado.length} nota={sobra('atrasado')} onClick={() => setDetail('atrasado')} />
+        <Kpi label={`Recebido · ${monthShort}`} value={brl(kpis.recebido)} tone="text-success" count={listas.recebido.length} nota={sobra('recebido')} onClick={() => setDetail('recebido')} />
+        {/* Quanto do mês vira imposto. Sai do lucro, não do valor do contrato,
+            por isso vive num cartão próprio em vez de encolher os outros. */}
+        {nota.doMes > 0 && (
+          <div className="rounded-md border border-warning/25 bg-warning/[0.04] p-4 text-left">
+            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Nota · {monthShort}</p>
+            <p className="mt-1 text-xl font-semibold text-warning">− {brl(nota.doMes)}</p>
+            <p className="mt-1 font-label text-[10px] text-text-muted/70">
+              6% · {nota.clientes} cliente{nota.clientes === 1 ? '' : 's'}
+              {nota.recebido > 0 && nota.recebido < nota.doMes - 0.005 && <> · {brl(nota.recebido)} do que já entrou</>}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Mensalidade de contrato recorrente não nasce sozinha: ela já aparece
