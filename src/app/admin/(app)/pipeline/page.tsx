@@ -2,7 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
 import { PipelineBoard, type BoardDeal } from './board';
 import { dealTotal, dealTotalNet, dealMonthly, dealMonthlyNet, dealNota } from './deal-value';
-import { liquidoDaParcela } from '../_shared/liquido';
+import { ALIQUOTA_NOTA, liquidoDaParcela, motivoDoDesconto } from '../_shared/liquido';
 import { type OrgOption, type Product } from './orgs';
 
 export const dynamic = 'force-dynamic';
@@ -172,6 +172,13 @@ export default async function PipelinePage() {
   // Quanto do pipeline vai embora em nota, e de quantos negócios ela sai.
   const notaPipeline = openDeals.reduce((sum, d) => sum + dealNota(d), 0);
   const comNota = openDeals.filter((d) => d.precisa_nota && dealTotal(d) > 0).length;
+  // A nota da receita de todo mês, dos dois lados: a mensalidade dos contratos
+  // ativos e a do que está no funil.
+  const notaMensal =
+    openDeals.reduce((sum, d) => sum + (d.precisa_nota ? dealMonthly(d) * ALIQUOTA_NOTA : 0), 0) +
+    ativos.reduce((s, e) => s + (e.precisa_nota ? (e.mrr ?? 0) * ALIQUOTA_NOTA : 0), 0);
+  const porMesMotivo = motivoDoDesconto(mrrAtual + openMensal, mrrAtualNet + openMensalNet, notaMensal);
+  const totalMotivo = motivoDoDesconto(openValue, openValueNet, notaPipeline);
   const won = deals.filter((d) => d.stage === 'ganho').length;
   const lost = deals.filter((d) => d.stage === 'perdido').length;
 
@@ -194,7 +201,7 @@ export default async function PipelinePage() {
             <p className="mt-0.5 text-xl font-semibold text-text-primary">{brl(openValue)}</p>
             <p className="font-label text-[10px] text-text-muted/70">
               {openDeals.length} em aberto
-              {openValueNet < openValue && <> · sobram {brl(openValueNet)}</>}
+              {totalMotivo && <> · {brl(openValueNet)} {totalMotivo}</>}
             </p>
           </div>
           {/* Quanto do que está na mesa vai embora em imposto. Fica ao lado do
@@ -221,9 +228,7 @@ export default async function PipelinePage() {
               <p className="font-label text-[10px] text-text-muted/70">
                 hoje → com {brl(mrrPipeline)} do funil
                 {parcelasMensais > 0.5 && <> · mais {brl(parcelasMensais)}/mês em parcelas</>}
-                {mrrAtualNet + openMensalNet < mrrAtual + openMensal - 0.5 && (
-                  <> · sobram {brl(mrrAtualNet + openMensalNet)}</>
-                )}
+                {porMesMotivo && <> · {brl(mrrAtualNet + openMensalNet)} {porMesMotivo}</>}
               </p>
             </div>
           )}

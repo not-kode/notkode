@@ -481,24 +481,90 @@ const SOCIAL_SECTIONS: OnboardingSection[] = [
 // MCP) para o cliente só conferir, em vez de listar tudo de novo.
 const CATALOGO_SECTIONS: OnboardingSection[] = [
   {
-    id: 'cat-negocio',
-    title: 'Empresa & público',
-    lede: 'Quem vocês são e para quem o site fala.',
+    id: 'cat-empresa',
+    title: 'A empresa',
+    lede: 'Esta parte é a que vira o texto do site. Responda como você contaria para alguém que nunca ouviu falar da empresa, sem se preocupar com formalidade.',
     questions: [
-      { id: 'cat_frase', type: 'area', ph: 'Ex: fabricamos fixadores e perfilados para instalações elétricas e industriais',
-        label: 'Em uma frase, o que a empresa faz e para quem?' },
-      { id: 'cat_diferenciais', type: 'area', star: true,
-        label: 'Por que o cliente compra de vocês e não do concorrente?',
-        hint: 'Até 3 motivos. É o que vira o texto do site.' },
-      { id: 'cat_publico', type: 'chips', multi: true, star: true,
-        options: ['Indústria e grandes obras', 'Revendedor e distribuidor', 'Instalador e prestador de serviço', 'Consumidor final'],
-        label: 'Quem é o público do site?' },
-      { id: 'cat_publico_principal', type: 'text', ph: 'Ex: revendedor',
-        label: 'Desses, qual é o mais importante?' },
-      { id: 'cat_regiao', type: 'text', ph: 'Ex: Brasil todo, com foco em SP e MG',
-        label: 'Qual a região atendida?' },
-      { id: 'cat_condicao_comercial', type: 'text', ph: 'Ex: pedido mínimo de R$ 500',
-        label: 'Tem alguma condição comercial que precisa aparecer no site?' },
+      { id: 'emp_historia', type: 'area', star: true,
+        ph: 'Como começou, o que mudou desde então e do que vocês mais se orgulham hoje',
+        label: 'Conte a história da empresa.' },
+      { id: 'emp_fabrica_revende', type: 'chips',
+        options: ['Fabricamos tudo', 'Fabricamos parte e revendemos o resto', 'Revendemos'],
+        label: 'O que é fabricação de vocês e o que é revenda?',
+        hint: 'Muda bastante o jeito de escrever o site.' },
+      { id: 'emp_percepcao', type: 'chips', multi: true, star: true,
+        options: [
+          'Fábrica que entrega rápido',
+          'Especialista técnico, que entende de norma e medida',
+          'Quem tem o melhor preço',
+          'Parceira de quem revende',
+          'Empresa sólida, com anos de estrada',
+          'Quem tem tudo no mesmo lugar, sem precisar procurar em três fornecedores',
+        ],
+        label: 'Quando a pessoa terminar de ver o site, como você quer que ela enxergue a empresa?',
+        hint: 'Marque no máximo três. É o que a gente vai reforçar em cada página.' },
+      { id: 'emp_percepcao_nao', type: 'text', ph: 'Ex: parecer uma loja de parafuso de bairro',
+        label: 'E o que você NÃO quer que passe?' },
+      { id: 'emp_elogio', type: 'text', ph: 'Ex: "vocês me atenderam no mesmo dia"',
+        label: 'Qual é o elogio que vocês mais ouvem dos clientes?' },
+      { id: 'emp_perde', type: 'text', ph: 'Ex: preço, prazo, o cliente achou mais barato...',
+        label: 'Quando vocês perdem uma venda, normalmente é por quê?',
+        hint: 'Serve para o site responder isso antes do cliente pensar nisso.' },
+      { id: 'emp_site_falta', type: 'area', star: true,
+        ph: 'Ex: não mostra que temos estoque próprio, não fala de quem já atendemos...',
+        label: 'O site de hoje fala de prazo, qualidade e preço competitivo. O que falta lá que o cliente precisava saber?' },
+      { id: 'emp_regiao', type: 'text', ph: 'Ex: Brasil todo, com foco em SP e no ABC',
+        label: 'Quais regiões vocês atendem?' },
+      { id: 'emp_condicao_comercial', type: 'text', ph: 'Ex: pedido mínimo, venda só para CNPJ',
+        label: 'Tem alguma regra de venda que o cliente precisa saber logo de cara?' },
+    ],
+  },
+  {
+    id: 'cat-publico',
+    title: 'Quem compra',
+    lede: 'Quanto mais concreto aqui, mais o texto do site vai falar a língua de quem lê. Pode responder do jeito que você falaria no balcão.',
+    questions: [
+      { id: 'pub_quem', type: 'chips', multi: true, star: true,
+        options: [
+          'Comprador de indústria',
+          'Engenheiro ou projetista',
+          'Eletricista e instalador',
+          'Construtora e empreiteira',
+          'Loja de material elétrico',
+          'Distribuidor',
+          'Almoxarifado de fábrica',
+          'Pessoa física',
+        ],
+        label: 'Quem procura vocês hoje?' },
+      { id: 'pub_principal', type: 'text', ph: 'Ex: loja de material elétrico',
+        star: true,
+        label: 'Desses, quem traz mais faturamento?' },
+      { id: 'pub_compra', type: 'chips', multi: true,
+        options: [
+          'Compra pouca coisa, mas todo mês',
+          'Compra grande de obra, de vez em quando',
+          'Compra por lista de engenharia ou projeto',
+          'Compra para revender',
+        ],
+        label: 'Como é a compra desse cliente?' },
+      { id: 'pub_valor', type: 'text', ph: 'Ex: a maioria entre R$ 800 e R$ 5 mil',
+        label: 'Quanto costuma valer um pedido desses?',
+        hint: 'Não vai aparecer no site. Serve para sabermos com quem estamos falando.' },
+      { id: 'pub_decide', type: 'chips', multi: true, star: true,
+        options: ['Preço', 'Prazo de entrega', 'Ter tudo no mesmo lugar', 'Qualidade e norma', 'Atendimento', 'Prazo de pagamento'],
+        label: 'O que mais pesa na hora de ele escolher o fornecedor?' },
+      { id: 'pub_duvidas', type: 'area', star: true,
+        ph: 'Ex: "vocês têm pronta entrega?", "atende medida especial?", "qual o prazo?"',
+        label: 'O que ele mais pergunta antes de fechar o pedido?' },
+      { id: 'pub_vocabulario', type: 'area', star: true,
+        ph: 'Ex: uns falam cinta, outros falam fita; tem quem chame perfilado de canaleta',
+        label: 'Como o cliente chama os produtos no dia a dia?',
+        hint: 'Nomes diferentes, jeito da região, marca usada como nome. É o vocabulário que vamos usar no site e nas buscas.' },
+      { id: 'pub_chega', type: 'chips', multi: true,
+        options: ['Indicação', 'Google', 'Representante', 'Cliente antigo que volta', 'Feira', 'Instagram', 'Não sabemos'],
+        label: 'Como esse cliente chega até vocês hoje?' },
+      { id: 'pub_nao', type: 'text', ph: 'Ex: quem quer uma peça só',
+        label: 'E quem NÃO é cliente de vocês?' },
     ],
   },
   {
@@ -564,8 +630,10 @@ const CATALOGO_SECTIONS: OnboardingSection[] = [
         hint: 'Pode responder por categoria inteira ou por produto específico. Um produto pode estar em mais de um setor.' },
       { id: 'set_anexo', type: 'file',
         label: 'Se preferir, anexe uma planilha com os produtos e o setor de cada um.' },
-      { id: 'set_texto', type: 'chips', options: ['Vocês escrevem e nós aprovamos', 'Nós escrevemos'],
-        label: 'Cada setor terá um texto curto de apresentação. Quem escreve?' },
+      { id: 'set_porque', type: 'area',
+        ph: 'Ex: na energia solar o que pega é a fixação do trilho no telhado sem furar a telha',
+        label: 'Por que um cliente de cada setor procura vocês?',
+        hint: 'O texto de cada setor é escrito por nós; isso aqui é o que ele precisa dizer.' },
     ],
   },
   {
@@ -669,55 +737,17 @@ export type OnboardingTemplateKey = 'produto' | 'site' | 'site-catalogo' | 'sist
 
 export type OnboardingTemplate = {
   label: string;
-  /** Parágrafo de boas-vindas do formulário público. */
-  welcome: string;
-  /** Abertura do título, antes do nome do produto. Padrão: lançamento. */
-  headline?: string;
   sections: OnboardingSection[];
 };
 
 export const ONBOARDING_TEMPLATES: Record<OnboardingTemplateKey, OnboardingTemplate> = {
-  produto: {
-    label: 'Produto / E-commerce',
-    welcome:
-      'Este briefing nos dá tudo que precisamos para construir o CRM, rodar o tráfego pago e montar a landing page do seu novo produto.',
-    sections: ONBOARDING_SECTIONS,
-  },
-  site: {
-    label: 'Site / Landing Page',
-    welcome: 'Este briefing nos dá tudo que precisamos para desenhar e construir o seu site do jeito certo.',
-    sections: SITE_SECTIONS,
-  },
-  'site-catalogo': {
-    label: 'Site com catálogo (B2B)',
-    welcome:
-      'Este briefing junta o que precisamos para montar o catálogo e construir o site. As perguntas de produto, setor e material são as que destravam a produção, então vale responder com calma.',
-    sections: CATALOGO_SECTIONS,
-  },
-  'sistema-ia': {
-    label: 'Sistema com IA',
-    welcome:
-      'Este briefing nos dá tudo que precisamos para desenhar o seu sistema sob medida, do jeito que a sua operação funciona.',
-    sections: SISTEMA_SECTIONS,
-  },
-  agentes: {
-    label: 'Agentes & Automação',
-    welcome:
-      'Este briefing nos dá tudo que precisamos para montar seus agentes e automações sem quebrar o que já funciona.',
-    sections: AGENTES_SECTIONS,
-  },
-  identidade: {
-    label: 'Identidade & Brandbook',
-    welcome: 'Este briefing nos dá tudo que precisamos para criar uma identidade com a cara da sua marca.',
-    sections: IDENTIDADE_SECTIONS,
-  },
-  social: {
-    label: 'Social Media & Criativo',
-    headline: 'Vamos preparar o conteúdo do',
-    welcome:
-      'Este briefing nos dá o que precisamos para montar o calendário do mês e os criativos de anúncio. Perfil, fotos e histórico de campanha a gente já acessa; aqui perguntamos só o que depende de você.',
-    sections: SOCIAL_SECTIONS,
-  },
+  produto: { label: 'Produto / E-commerce', sections: ONBOARDING_SECTIONS },
+  site: { label: 'Site / Landing Page', sections: SITE_SECTIONS },
+  'site-catalogo': { label: 'Site com catálogo (B2B)', sections: CATALOGO_SECTIONS },
+  'sistema-ia': { label: 'Sistema com IA', sections: SISTEMA_SECTIONS },
+  agentes: { label: 'Agentes & Automação', sections: AGENTES_SECTIONS },
+  identidade: { label: 'Identidade & Brandbook', sections: IDENTIDADE_SECTIONS },
+  social: { label: 'Social Media & Criativo', sections: SOCIAL_SECTIONS },
 };
 
 /** Template pelo key gravado no briefing; desconhecido/nulo cai no de produto (v1). */

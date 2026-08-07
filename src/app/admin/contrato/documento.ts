@@ -234,7 +234,10 @@ export function contratoHtml({
     }
     itens.push('Os pagamentos serão realizados via PIX, para a chave a ser informada pela CONTRATADA.');
     itens.push('Em caso de atraso no pagamento, será cobrada multa de 10% (dez por cento) sobre o valor devido, acrescida de juros de mora de 1% (um por cento) ao mês.');
-    itens.push('<strong>Custos de terceiros:</strong> eventuais custos de uso de APIs, integrações e modelos de IA de provedores terceiros, quando aplicáveis ao escopo contratado, são de responsabilidade da CONTRATANTE, cobrados diretamente pelos respectivos provedores, e não estão inclusos no valor deste contrato.');
+    // A ressalva de custos de terceiros saiu daqui e virou cláusula de texto no
+    // modelo: o que é custo à parte muda com o serviço (API de IA num sistema,
+    // hospedagem e domínio num site), e preso no bloco de pagamento nenhum
+    // modelo conseguia trocar a redação.
     return itens;
   };
 
@@ -293,8 +296,10 @@ export function contratoHtml({
     <p class="lead">As partes, de comum acordo, celebram o presente <strong>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</strong>, conforme as cláusulas e condições a seguir estipuladas:</p>
   </section>`;
 
+  // Só identifica o anexo: que ele integra o contrato já está dito na cláusula
+  // do objeto, e repetir aqui era dizer a mesma coisa duas vezes no documento.
   const anexo = eng.proposal_path
-    ? '<div class="anexo"><p><strong>Anexo I – Proposta Comercial.</strong> A Proposta Comercial anexa faz parte integrante deste contrato, detalhando o escopo dos serviços contratados.</p></div>'
+    ? '<div class="anexo"><p><strong>Anexo I – Proposta Comercial</strong>, anexa a este instrumento.</p></div>'
     : '';
 
   const assinaturas = `

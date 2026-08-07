@@ -146,12 +146,12 @@ export function OnboardingForm({
         </div>
       </div>
 
-      <main className="mx-auto max-w-[680px] px-6 pb-32 pt-10">
+      {/* Mesma largura da barra superior e da barra de progresso: a página
+          inteira fica alinhada de ponta a ponta. */}
+      <main className="mx-auto max-w-4xl px-6 pb-32 pt-10">
         {step === 0 && (
           <Welcome
             context={context}
-            welcome={tpl.welcome}
-            headline={tpl.headline}
             sections={sections}
             prefilled={conferir.size}
             onStart={() => go(1)}
@@ -192,40 +192,21 @@ export function OnboardingForm({
 
 function Welcome({
   context,
-  welcome,
-  headline,
   sections,
   prefilled,
   onStart,
 }: {
   context: Context;
-  welcome: string;
-  headline?: string;
   sections: OnboardingSection[];
   prefilled: number;
   onStart: () => void;
 }) {
   return (
     <section className="animate-fade-up">
-      <span className="font-label text-[11px] uppercase tracking-[0.18em] text-text-muted">
-        Notkode · Onboarding de cliente
-      </span>
-      <h1 className="mt-3.5 text-balance text-[clamp(30px,6vw,44px)] font-semibold leading-[1.05] tracking-[-0.025em]">
-        {headline ?? 'Vamos preparar o lançamento do'}{' '}
-        <span className="text-cyan-700">{context.produto}</span>.
-      </h1>
-      <p className="mt-3.5 max-w-[54ch] text-[16.5px] text-text-secondary">
-        {welcome} Leva ~15 minutos e você pode parar e voltar quando quiser
-        — salvamos cada resposta automaticamente.
-      </p>
-
-      {/* Cliente e produto são rótulos de uma linha; o escopo é texto corrido
-          e ocupa a largura toda, senão fica espremido em um terço da caixa. */}
-      <div className="my-8 overflow-hidden rounded-lg border border-border-subtle/40">
-        <div className="grid grid-cols-2 gap-px bg-border-subtle/20 max-[560px]:grid-cols-1">
-          <Fact k="Cliente" v={context.cliente} />
-          <Fact k="Produto" v={context.produto} />
-        </div>
+      {/* O contexto vem antes do título: é a primeira coisa que o cliente
+          confere. O nome dele já está na barra superior, não repetimos aqui. */}
+      <div className="overflow-hidden rounded-lg border border-border-subtle/40">
+        <Fact k="Produto" v={context.produto} />
         {context.escopo.trim() && (
           <div className="border-t border-border-subtle/40 bg-surface-base px-[18px] py-4">
             <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">
@@ -237,6 +218,17 @@ function Welcome({
           </div>
         )}
       </div>
+
+      {/* Título e subtítulo são fixos para todo briefing: o que muda de
+          cliente para cliente já está no bloco de contexto acima. */}
+      <h1 className="mt-9 text-balance text-[clamp(30px,6vw,44px)] font-semibold leading-[1.05] tracking-[-0.025em]">
+        Bora iniciar.
+      </h1>
+      <p className="mb-8 mt-3.5 text-[16.5px] leading-[1.6] text-text-secondary">
+        As perguntas abaixo servem para a gente entender a sua empresa, como o negócio funciona hoje
+        e o que você espera deste projeto. Leva ~15 minutos e você pode parar e voltar quando
+        quiser.
+      </p>
 
       {prefilled > 0 && (
         <p className="mb-8 rounded-lg border border-cyan-700/25 bg-cyan-700/[0.06] px-[18px] py-3.5 text-[15px] leading-[1.6] text-text-secondary">
@@ -358,7 +350,7 @@ function Section({
       <h1 className="text-balance text-[clamp(26px,5vw,34px)] font-semibold leading-[1.08] tracking-[-0.02em]">
         {s.title}
       </h1>
-      <p className="mb-8 mt-2 max-w-[56ch] text-[15px] text-text-secondary">{s.lede}</p>
+      <p className="mb-8 mt-2 text-[15px] text-text-secondary">{s.lede}</p>
 
       {s.access && <AccessBox />}
 

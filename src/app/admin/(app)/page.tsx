@@ -242,6 +242,14 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         emAtraso: somarNet(atrasadas),
         mrr: ativos.reduce((s, e) => s + liquidoDaParcela(e.mrr ?? 0, contratoDe(e)), 0),
       },
+      // A parte de nota dentro de cada um: é o que deixa o cartão dizer se a
+      // diferença veio do imposto, do repasse ao parceiro, ou dos dois.
+      notas: {
+        faturamento: notaDoPeriodo,
+        aReceber: somarNota(aReceberLinhas),
+        emAtraso: somarNota(atrasadas),
+        mrr: ativos.reduce((s, e) => s + ((e.precisa_nota ?? false) ? (e.mrr ?? 0) * ALIQUOTA_NOTA : 0), 0),
+      },
       nota: notaDoPeriodo,
       ganhos: wonDeals.count ?? 0,
       receitaPorMes,

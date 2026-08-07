@@ -4,6 +4,7 @@
 import { Suspense } from 'react';
 import { PeriodFilter } from './period-filter';
 import { VisitsChart, SourceDonut, RankBars, RevenueProjection } from './charts';
+import { motivoDoDesconto } from './_shared/liquido';
 
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const nf = (n: number) => n.toLocaleString('pt-BR');
@@ -38,6 +39,8 @@ export type DashboardData = {
     mrr: number;
     /** O que sobra de cada número depois do repasse ao parceiro e da nota. */
     liquidos: { faturamento: number; aReceber: number; emAtraso: number; mrr: number };
+    /** A parte de nota dentro de cada um deles, para o cartão dizer o porquê. */
+    notas: { faturamento: number; aReceber: number; emAtraso: number; mrr: number };
     /** Quanto do faturamento do período vira nota fiscal. */
     nota: number;
     clientesAtivos: number;
@@ -77,7 +80,7 @@ function Kpi({ label, value, tone, hint, sobra }: { label: string; value: string
         <p className="mt-1.5 text-[10px] text-text-muted">
           {hint}
           {hint && sobra && ' · '}
-          {sobra && <span className="text-text-muted/70">sobram {sobra}</span>}
+          {sobra && <span className="text-text-muted/70">{sobra}</span>}
         </p>
       )}
     </div>
@@ -104,8 +107,11 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** O que sobra só interessa quando algo é descontado: senão é o mesmo número duas vezes. */
-const soSobra = (liquido: number, cobrado: number) => (liquido < cobrado - 0.5 ? brl(liquido) : undefined);
+/** "R$ 36.582 depois da nota e do repasse" — vazio quando nada foi descontado. */
+const soSobra = (liquido: number, cobrado: number, nota: number) => {
+  const motivo = motivoDoDesconto(cobrado, liquido, nota);
+  return motivo ? `${brl(liquido)} ${motivo}` : undefined;
+};
 
 const Empty = ({ children }: { children: React.ReactNode }) => (
   <p className="py-8 text-center text-sm text-text-muted">{children}</p>
@@ -130,10 +136,10 @@ export function DashboardView({ data }: { data: DashboardData }) {
       <GroupLabel>Negócio · {rangeLabel}</GroupLabel>
 
       <div className={`mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 ${n.nota > 0 ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
-        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`recebido · ${rangeLabel}`} sobra={soSobra(n.liquidos.faturamento, n.faturamento)} />
-        <Kpi label="A receber" value={brl(n.aReceber)} hint={`no prazo · ${rangeLabel}`} sobra={soSobra(n.liquidos.aReceber, n.aReceber)} />
-        <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido · total" sobra={soSobra(n.liquidos.emAtraso, n.emAtraso)} />
-        <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês · hoje" sobra={soSobra(n.liquidos.mrr, n.mrr)} />
+        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`recebido · ${rangeLabel}`} sobra={soSobra(n.liquidos.faturamento, n.faturamento, n.notas.faturamento)} />
+        <Kpi label="A receber" value={brl(n.aReceber)} hint={`no prazo · ${rangeLabel}`} sobra={soSobra(n.liquidos.aReceber, n.aReceber, n.notas.aReceber)} />
+        <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido · total" sobra={soSobra(n.liquidos.emAtraso, n.emAtraso, n.notas.emAtraso)} />
+        <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês · hoje" sobra={soSobra(n.liquidos.mrr, n.mrr, n.notas.mrr)} />
         {/* Imposto tem cartão próprio: sai do lucro, não do valor do contrato. */}
         {n.nota > 0 && <Kpi label="Nota fiscal" value={`− ${brl(n.nota)}`} tone="warning" hint={`6% do faturado · ${rangeLabel}`} />}
         <Kpi label="Clientes ativos" value={nf(n.clientesAtivos)} hint="hoje" />

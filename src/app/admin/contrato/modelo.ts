@@ -70,6 +70,14 @@ export const MODELO_DE_FABRICA: Modelo = {
     { tipo: 'obrigacoes_cliente', titulo: 'Das Obrigações da Contratante' },
     { tipo: 'obrigacoes_contratada', titulo: 'Das Obrigações da Contratada' },
     { tipo: 'pagamento', titulo: 'Do Valor e Condições de Pagamento' },
+    {
+      tipo: 'texto',
+      titulo: 'Dos Custos de Terceiros',
+      texto: [
+        'Eventuais custos de uso de APIs, integrações e modelos de IA de provedores terceiros, quando aplicáveis ao escopo contratado, são de responsabilidade da CONTRATANTE, cobrados diretamente pelos respectivos provedores, e não estão inclusos no valor deste contrato.',
+        'A CONTRATADA não responde por indisponibilidade, alteração de política ou alteração de preço dos serviços de terceiros.',
+      ].join('\n'),
+    },
     { tipo: 'vigencia', titulo: 'Do Prazo Contratual e Renovação' },
     {
       tipo: 'texto',

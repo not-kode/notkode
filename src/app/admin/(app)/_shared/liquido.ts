@@ -50,6 +50,20 @@ export function mrrLiquido(contrato: ContratoLiquido & { mrr: number | null }): 
 }
 
 /**
+ * O que comeu a diferença entre o valor cobrado e o que sobra, para a tela
+ * dizer o porquê em vez de mostrar dois números e deixar a conta com quem lê.
+ * Devolve null quando nada foi descontado.
+ */
+export function motivoDoDesconto(cobrado: number, liquido: number, nota: number): string | null {
+  const tirado = cobrado - liquido;
+  if (tirado <= 0.005) return null;
+  const temNota = nota > 0.005;
+  const temRepasse = tirado - nota > 0.005;
+  if (temNota && temRepasse) return 'depois da nota e do repasse';
+  return temNota ? 'depois da nota' : 'depois do repasse';
+}
+
+/**
  * Quantas parcelas cada contrato tem, para ratear o repasse do pontual. Conta as
  * cobranças já lançadas, que é a melhor medida disponível do parcelamento.
  */

@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { AutoSaveForm } from '../_shared/auto-save-form';
-import { ALIQUOTA_NOTA, liquidoDaParcela, parcelasPorContrato, somarLiquido, type ContratoLiquido } from '../_shared/liquido';
+import { ALIQUOTA_NOTA, liquidoDaParcela, motivoDoDesconto, parcelasPorContrato, somarLiquido, type ContratoLiquido } from '../_shared/liquido';
 import { createReceivable, deleteReceivable, generateMonthlyReceivables, markReceivablePaid, unmarkReceivable, updateReceivable } from './actions';
 import { isRecurring, monthlyDescription, monthlyDueDate, pendingMonthly } from './recurring';
 
@@ -198,9 +198,22 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [listas, contratos]);
 
-  /** "sobram R$ 9.200", só quando repasse ou nota comem alguma coisa. */
-  const sobra = (chave: keyof typeof kpis) =>
-    liquidos[chave] < kpis[chave] - 0.005 ? `sobram ${brl(liquidos[chave])}` : undefined;
+  // Quanto de cada cartão é nota: entra na conta que diz POR QUE o que sobra é
+  // menor, para o cartão não mostrar dois números sem explicar a diferença.
+  const notaPorCartao = useMemo(() => ({
+    mrr: listas.recorrentes.reduce((s, e) => s + (e.precisa_nota ? (e.mrr ?? 0) * ALIQUOTA_NOTA : 0), 0),
+    doMes: listas.doMes.reduce((s, r) => s + notaDe(r, recebidoDe(r)), 0),
+    aReceber: listas.aReceber.reduce((s, r) => s + notaDe(r), 0),
+    atrasado: listas.atrasado.reduce((s, r) => s + notaDe(r), 0),
+    recebido: listas.recebido.reduce((s, r) => s + notaDe(r, recebidoDe(r)), 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [listas, contratos]);
+
+  /** "R$ 9.200 depois da nota e do repasse", só quando algo foi descontado. */
+  const sobra = (chave: keyof typeof kpis) => {
+    const motivo = motivoDoDesconto(kpis[chave], liquidos[chave], notaPorCartao[chave]);
+    return motivo ? `${brl(liquidos[chave])} ${motivo}` : undefined;
+  };
 
   const gerarMensalidades = (engagementId?: string) => {
     const fd = new FormData();
