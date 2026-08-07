@@ -24,15 +24,29 @@ export function dealTotal(d: DealValue): number {
 }
 
 /**
+ * Quanto o parceiro leva do negócio inteiro.
+ *
+ * No RECORRENTE o repasse é mensal: seis meses de mensalidade são seis
+ * repasses. Contar uma vez só fazia o "se fechar tudo" prometer um dinheiro que
+ * ia embora todo mês. No pontual o valor é do trabalho inteiro, e vale uma vez.
+ */
+export function dealRepasse(d: DealValue): number {
+  const valor = d.repasse_valor ?? 0;
+  if (valor <= 0) return 0;
+  const recorrente = (d.mrr ?? 0) > 0;
+  return recorrente ? valor * Math.max(1, d.installments.length) : valor;
+}
+
+/**
  * O que de fato entra se o negócio fechar: o valor cheio menos o repasse ao
- * parceiro e menos a nota, quando o cliente precisa dela. É este o número de
- * "se fechar tudo" — dinheiro que entra, não dinheiro que passa pela conta.
+ * parceiro e menos a nota, quando o cliente precisa dela. Dinheiro que entra,
+ * não dinheiro que passa pela conta.
  */
 export function dealTotalNet(d: DealValue): number {
   const bruto = dealTotal(d);
   if (bruto <= 0) return 0;
   const nota = d.precisa_nota ? bruto * NOTA : 0;
-  return Math.max(0, bruto - (d.repasse_valor ?? 0) - nota);
+  return Math.max(0, bruto - dealRepasse(d) - nota);
 }
 
 /**

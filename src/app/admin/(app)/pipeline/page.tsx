@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
 import { PipelineBoard, type BoardDeal } from './board';
 import { dealTotal, dealTotalNet, dealMonthly, dealMonthlyNet, dealNota } from './deal-value';
+import { liquidoDaParcela } from '../_shared/liquido';
 import { type OrgOption, type Product } from './orgs';
 
 export const dynamic = 'force-dynamic';
@@ -107,13 +108,20 @@ export default async function PipelinePage() {
   const { data: prodRows } = await supabase.from('products').select('key, name, active').order('sort');
   const products: Product[] = (prodRows ?? []).map((p) => ({ key: p.key, name: p.name, active: p.active }));
 
-  // MRR que já existe hoje: base para mostrar de quanto para quanto o recorrente
-  // iria se o pipeline inteiro fechasse.
+  // MRR que já existe hoje: base para mostrar de quanto para quanto a receita de
+  // todo mês iria se o pipeline inteiro fechasse. O repasse e a nota dos
+  // contratos ativos vêm junto para o "sobram" falar do mês inteiro, e não só da
+  // parte que ainda depende de fechar.
   const { data: engRows } = await supabase
     .from('engagements')
-    .select('mrr, lifecycle')
+    .select('mrr, lifecycle, type, repasse_valor, precisa_nota')
     .eq('lifecycle', 'ativo');
-  const mrrAtual = (engRows ?? []).reduce((s, e) => s + (e.mrr ?? 0), 0);
+  const ativos = (engRows ?? []) as { mrr: number | null; type: string; repasse_valor: number | null; precisa_nota: boolean | null }[];
+  const mrrAtual = ativos.reduce((s, e) => s + (e.mrr ?? 0), 0);
+  const mrrAtualNet = ativos.reduce(
+    (s, e) => s + liquidoDaParcela(e.mrr ?? 0, { type: e.type, repasse_valor: e.repasse_valor, precisa_nota: e.precisa_nota ?? false }),
+    0,
+  );
 
   const rows = (data ?? []) as unknown as DealRow[];
   const deals: BoardDeal[] = rows.map((r) => ({
@@ -152,11 +160,15 @@ export default async function PipelinePage() {
   // baixo, e a nota tem cartão próprio.
   const openValue = openDeals.reduce((sum, d) => sum + dealTotal(d), 0);
   const openValueNet = openDeals.reduce((sum, d) => sum + dealTotalNet(d), 0);
+  // Quanto o funil somaria à receita de todo mês. Vive DENTRO do cartão de
+  // recorrente: eram dois cartões falando de mês com números diferentes (o do
+  // funil e o total), e ler um exigia fazer a conta do outro de cabeça.
   const openMensal = openDeals.reduce((sum, d) => sum + dealMonthly(d), 0);
   const openMensalNet = openDeals.reduce((sum, d) => sum + dealMonthlyNet(d), 0);
-  const mensais = openDeals.filter((d) => dealMonthly(d) > 0).length;
-  // Recorrente: de quanto para quanto o MRR iria se tudo fechasse.
+  // Parte do "por mês" que é mensalidade de verdade: parcela de negócio pontual
+  // pinga todo mês, mas acaba, então não pode virar MRR.
   const mrrPipeline = openDeals.reduce((sum, d) => sum + (d.mrr ?? 0), 0);
+  const parcelasMensais = openMensal - mrrPipeline;
   // Quanto do pipeline vai embora em nota, e de quantos negócios ela sai.
   const notaPipeline = openDeals.reduce((sum, d) => sum + dealNota(d), 0);
   const comNota = openDeals.filter((d) => d.precisa_nota && dealTotal(d) > 0).length;
@@ -185,14 +197,6 @@ export default async function PipelinePage() {
               {openValueNet < openValue && <> · sobram {brl(openValueNet)}</>}
             </p>
           </div>
-          <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">
-            <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Por mês</p>
-            <p className="mt-0.5 text-xl font-semibold text-primary">{brl(openMensal)}</p>
-            <p className="font-label text-[10px] text-text-muted/70">
-              {mensais} negócio{mensais === 1 ? '' : 's'}
-              {openMensalNet < openMensal && <> · sobram {brl(openMensalNet)}</>}
-            </p>
-          </div>
           {/* Quanto do que está na mesa vai embora em imposto. Fica ao lado do
               valor cheio para a conta não sumir dentro dele. */}
           {notaPipeline > 0 && (
@@ -204,16 +208,23 @@ export default async function PipelinePage() {
               </p>
             </div>
           )}
-          {/* De quanto para quanto o recorrente iria: o número que diz se vale o esforço. */}
-          {mrrPipeline > 0 && (
-            <div className="min-w-[13rem] rounded-md border border-primary/25 bg-primary/[0.04] px-4 py-3">
-              <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Recorrente</p>
+          {/* De quanto para quanto a receita de todo mês iria: o número que diz
+              se vale o esforço, com o quanto vem do funil escrito por extenso. */}
+          {openMensal > 0 && (
+            <div className="min-w-[15rem] rounded-md border border-primary/25 bg-primary/[0.04] px-4 py-3">
+              <p className="font-label text-[11px] uppercase tracking-wider text-text-muted">Por mês</p>
               <p className="mt-0.5 flex items-baseline gap-1.5 text-xl font-semibold text-text-primary">
                 {brl(mrrAtual)}
                 <span className="font-label text-sm font-normal text-text-muted">→</span>
                 <span className="text-primary">{brl(mrrAtual + mrrPipeline)}</span>
               </p>
-              <p className="font-label text-[10px] text-text-muted/70">hoje → se fechar tudo</p>
+              <p className="font-label text-[10px] text-text-muted/70">
+                hoje → com {brl(mrrPipeline)} do funil
+                {parcelasMensais > 0.5 && <> · mais {brl(parcelasMensais)}/mês em parcelas</>}
+                {mrrAtualNet + openMensalNet < mrrAtual + openMensal - 0.5 && (
+                  <> · sobram {brl(mrrAtualNet + openMensalNet)}</>
+                )}
+              </p>
             </div>
           )}
           {(won > 0 || lost > 0) && (
