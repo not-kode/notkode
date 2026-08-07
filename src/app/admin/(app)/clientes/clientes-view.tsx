@@ -23,6 +23,7 @@ export type Parcela = { id: string; description: string | null; amount: number; 
 export type Contrato = {
   id: string; title: string | null; type: string; status: string; lifecycle: string;
   valor: number | null; mrr: number | null; start_date: string | null; end_date: string | null; notes: string | null;
+  execution_start: string | null; execution_end: string | null;
   scope: string | null; renewal_note: string | null; client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
   contract_template_id: string | null;
@@ -828,6 +829,21 @@ function ContractCard({ eng, cliente, modelos, onMarkPaid, onUnmark, onConclude,
         <AutoSaveForm action={onSaveContract} className="mt-3 flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
           <input type="hidden" name="id" value={eng.id} />
           <EscopoField eng={eng} />
+          {/* Prazo de obra, que não é o calendário das parcelas: em projeto
+              fechado a cobrança costuma passar bem da entrega. */}
+          {eng.type !== 'recorrente' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelCls}>Início da execução</label>
+                <input name="execution_start" type="date" defaultValue={eng.execution_start ?? ''} className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Entrega prevista</label>
+                <input name="execution_end" type="date" defaultValue={eng.execution_end ?? ''} className={inputCls} />
+                <p className="mt-1 font-label text-[10px] text-text-muted">Vazio: vigora até a aprovação final.</p>
+              </div>
+            </div>
+          )}
           <div>
             <label className={labelCls}>Renovação (Cláusula 5)</label>
             <textarea name="renewal_note" defaultValue={eng.renewal_note ?? ''} rows={2} className={inputCls + ' resize-y'} placeholder="Ex: renovação por R$ X/mês após o período…" />

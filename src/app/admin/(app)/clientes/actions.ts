@@ -59,6 +59,11 @@ export async function updateEngagementContract(formData: FormData): Promise<void
   if (formData.get('renewal_note') != null) patch.renewal_note = String(formData.get('renewal_note')).trim() || null;
   if (formData.get('client_obligations') != null) patch.client_obligations = String(formData.get('client_obligations')).trim() || null;
   if (formData.get('provider_obligations') != null) patch.provider_obligations = String(formData.get('provider_obligations')).trim() || null;
+  // Datas de execução: campo vazio grava nulo, que é o que faz o contrato
+  // vigorar até a aprovação final em vez de citar uma data que ninguém definiu.
+  for (const campo of ['execution_start', 'execution_end'] as const) {
+    if (formData.get(campo) != null) patch[campo] = String(formData.get(campo)).trim() || null;
+  }
 
   const supabase = getSupabaseAdmin();
   await supabase.from('engagements').update(patch).eq('id', id);

@@ -23,6 +23,8 @@ export const CONTRATADA = {
 export type Eng = {
   id: string; title: string | null; type: string; valor: number | null; mrr: number | null;
   start_date: string | null; end_date: string | null; scope: string | null; renewal_note: string | null;
+  /** Prazo de obra do projeto, que não é o calendário das parcelas. */
+  execution_start?: string | null; execution_end?: string | null;
   client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
   organizations: {
@@ -233,7 +235,9 @@ export function contratoHtml({
       itens.push(`O pagamento observará o seguinte cronograma:<ul class="parcelas">${linhas}</ul>`);
     }
     itens.push('Os pagamentos serão realizados via PIX, para a chave a ser informada pela CONTRATADA.');
-    itens.push('Em caso de atraso no pagamento, será cobrada multa de 10% (dez por cento) sobre o valor devido, acrescida de juros de mora de 1% (um por cento) ao mês.');
+    // 2% e não 10%: é o teto que não se discute em cobrança, e foi o que a
+    // advogada usou no contrato que ela revisou.
+    itens.push('Em caso de atraso no pagamento, será cobrada multa moratória de 2% (dois por cento) sobre o valor em atraso, acrescida de juros de mora de 1% (um por cento) ao mês, calculados proporcionalmente aos dias de atraso.');
     // A ressalva de custos de terceiros saiu daqui e virou cláusula de texto no
     // modelo: o que é custo à parte muda com o serviço (API de IA num sistema,
     // hospedagem e domínio num site), e preso no bloco de pagamento nenhum
@@ -241,11 +245,32 @@ export function contratoHtml({
     return itens;
   };
 
+  // Em contrato recorrente, vigência e cobrança são a mesma linha do tempo. Em
+  // projeto fechado não são: as parcelas podem se estender muito além da
+  // entrega, e ler o parcelamento como prazo faz o documento prometer meses de
+  // contrato para uma obra de semanas. Por isso o projeto usa as datas de
+  // execução, e sem elas vigora até a aprovação final.
   const vigencia = (): string[] => {
+    const recorrente = hasMrr || eng.type === 'recorrente';
+    if (recorrente) {
+      const itens = [
+        `Este contrato tem vigência ${meses ? `de <strong>${meses} meses</strong>` : 'conforme acordado entre as partes'}`
+        + `${eng.start_date ? `, com início em ${esc(fmtDate(eng.start_date))}` : ', com início na data de sua assinatura'}`
+        + `${eng.end_date ? ` e término em ${esc(fmtDate(eng.end_date))}` : ''}.`,
+      ];
+      if (eng.renewal_note) itens.push(esc(eng.renewal_note));
+      itens.push('Os prazos e entregas previstos poderão ser prorrogados por acordo mútuo, mediante formalização de Termo Aditivo, especialmente em caso de atraso no fornecimento de acessos ou materiais pela CONTRATANTE.');
+      return itens;
+    }
+
+    const inicio = eng.execution_start;
+    const fim = eng.execution_end;
     const itens = [
-      `Este contrato tem vigência ${meses ? `de <strong>${meses} meses</strong>` : 'conforme acordado entre as partes'}`
-      + `${eng.start_date ? `, com início em ${esc(fmtDate(eng.start_date))}` : ', com início na data de sua assinatura'}`
-      + `${eng.end_date ? ` e término em ${esc(fmtDate(eng.end_date))}` : ''}.`,
+      inicio
+        ? `A execução dos serviços tem início em <strong>${esc(fmtDate(inicio))}</strong>`
+          + (fim ? ` e término previsto em <strong>${esc(fmtDate(fim))}</strong>.` : '.')
+        : 'A execução dos serviços tem início na data da assinatura deste contrato e do recebimento integral dos acessos, informações e materiais de responsabilidade da CONTRATANTE.',
+      'Este contrato vigora até a conclusão e a aprovação final dos serviços, ainda que o cronograma de pagamento se estenda além dessa data.',
     ];
     if (eng.renewal_note) itens.push(esc(eng.renewal_note));
     itens.push('Os prazos e entregas previstos poderão ser prorrogados por acordo mútuo, mediante formalização de Termo Aditivo, especialmente em caso de atraso no fornecimento de acessos ou materiais pela CONTRATANTE.');

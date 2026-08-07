@@ -13,7 +13,7 @@ export async function carregarContrato(id: string): Promise<{ eng: Eng; parcelas
   const [{ data: engData }, { data: recData }] = await Promise.all([
     supabase
       .from('engagements')
-      .select('id, title, type, valor, mrr, start_date, end_date, scope, renewal_note, client_obligations, provider_obligations, proposal_path, proposal_name, contract_template_id, organizations(name, legal_name, tax_id, legal_rep, legal_rep_cpf, address_street, address_number, address_district, address_city, address_state, address_zip)')
+      .select('id, title, type, valor, mrr, start_date, end_date, execution_start, execution_end, scope, renewal_note, client_obligations, provider_obligations, proposal_path, proposal_name, contract_template_id, organizations(name, legal_name, tax_id, legal_rep, legal_rep_cpf, address_street, address_number, address_district, address_city, address_state, address_zip)')
       .eq('id', id)
       .single(),
     // Parcela cancelada não entra no contrato: o documento mostra o que foi de fato acordado.
