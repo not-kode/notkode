@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { mimeDaProposta } from '@/lib/proposta-mime';
-import { extrairEscopo } from '@/lib/escopo-da-proposta';
+import { escopoDoArquivo } from '@/lib/escopo-da-proposta';
 
 // Dados cadastrais da empresa (usados para gerar contratos).
 const ORG_FIELDS = [
@@ -278,18 +278,5 @@ export async function escopoDaProposta(engagementId: string): Promise<{ texto: s
     .eq('id', engagementId)
     .single();
 
-  const caminho = eng?.proposal_path as string | undefined;
-  if (!caminho) return { texto: '', aviso: 'Este contrato não tem proposta anexada.' };
-  if (!/\.html?$/i.test(caminho)) {
-    return { texto: '', aviso: 'A proposta anexada é um PDF: só consigo ler os entregáveis de proposta em HTML.' };
-  }
-
-  const { data, error } = await supabase.storage.from('propostas').download(caminho);
-  if (error || !data) return { texto: '', aviso: 'Não consegui abrir o arquivo da proposta.' };
-
-  const { texto, itens } = extrairEscopo(await data.text());
-  if (itens.length === 0) {
-    return { texto: '', aviso: 'Não achei uma lista de entregáveis nessa proposta. Escreva o escopo à mão.' };
-  }
-  return { texto };
+  return escopoDoArquivo(supabase, eng?.proposal_path as string | undefined);
 }

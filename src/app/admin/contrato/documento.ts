@@ -172,15 +172,29 @@ export function contratoHtml({
       valores,
     );
     const linhas = bruto.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-    const marcadas = linhas.filter((l) => /^[•\-*]/.test(l));
-    const itens = marcadas.length > 0
-      ? [
-          [
-            ...linhas.filter((l) => !/^[•\-*]/.test(l)),
-            `<ul class="lista">${marcadas.map((l) => `<li>${esc(l.replace(/^[•\-*]\s*/, ''))}</li>`).join('')}</ul>`,
-          ].join(' '),
-        ]
-      : [bruto];
+    const eMarcada = (l: string) => /^[•\-*]/.test(l);
+
+    // Cada trecho de linhas com marcador vira uma lista, no lugar onde estava:
+    // o texto que vem depois da lista (o limite do escopo, por exemplo) precisa
+    // continuar depois dela.
+    const itens: string[] = [];
+    let lista: string[] = [];
+    const fecharLista = () => {
+      if (lista.length === 0) return;
+      const html = `<ul class="lista">${lista.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`;
+      lista = [];
+      // A frase que anuncia a lista ("o escopo compreende:") fica com ela no
+      // mesmo item numerado; solta, viraria um item que não diz nada.
+      const anterior = itens[itens.length - 1];
+      if (anterior && anterior.trim().endsWith(':')) itens[itens.length - 1] = `${anterior} ${html}`;
+      else itens.push(html);
+    };
+    for (const linha of linhas) {
+      if (eMarcada(linha)) { lista.push(linha.replace(/^[•\-*]\s*/, '')); continue; }
+      fecharLista();
+      itens.push(linha);
+    }
+    fecharLista();
     if (eng.proposal_path) {
       itens.push('O escopo detalhado dos serviços consta na Proposta Comercial anexa, que integra este contrato como <strong>Anexo I</strong>.');
     }
