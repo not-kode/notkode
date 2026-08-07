@@ -36,6 +36,8 @@ export type DashboardData = {
     aReceber: number;
     emAtraso: number;
     mrr: number;
+    /** Os mesmos números antes do repasse ao parceiro e da nota fiscal. */
+    brutos: { faturamento: number; aReceber: number; emAtraso: number; mrr: number };
     clientesAtivos: number;
     ganhos: number;
     receitaPorMes: MonthProjection[];
@@ -57,13 +59,25 @@ export type DashboardData = {
 
 const card = 'rounded-md border border-[#191918]/[0.08] bg-surface-base';
 
-function Kpi({ label, value, tone, hint }: { label: string; value: string; tone?: 'accent' | 'danger'; hint?: string }) {
+/**
+ * `bruto` só aparece quando ele é maior que o valor mostrado: os cartões de
+ * dinheiro trazem o LÍQUIDO (sem repasse ao parceiro nem nota), e quem viu o
+ * valor cheio na proposta precisa achar a diferença sem ter que abrir o
+ * financeiro.
+ */
+function Kpi({ label, value, tone, hint, bruto }: { label: string; value: string; tone?: 'accent' | 'danger'; hint?: string; bruto?: string }) {
   const valueTone = tone === 'accent' ? 'text-primary' : tone === 'danger' ? 'text-danger' : 'text-text-primary';
   return (
     <div className={`${card} p-4`}>
       <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">{label}</p>
       <p className={`mt-2 font-mono text-[26px] font-medium leading-none tracking-tight ${valueTone}`}>{value}</p>
-      {hint && <p className="mt-1.5 text-[10px] text-text-muted">{hint}</p>}
+      {(hint || bruto) && (
+        <p className="mt-1.5 text-[10px] text-text-muted">
+          {hint}
+          {hint && bruto && ' · '}
+          {bruto && <span className="text-text-muted/70">{bruto} bruto</span>}
+        </p>
+      )}
     </div>
   );
 }
@@ -88,6 +102,9 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** O bruto só interessa quando há desconto: senão vira o mesmo número duas vezes. */
+const soBruto = (bruto: number, liquido: number) => (bruto > liquido + 0.5 ? brl(bruto) : undefined);
+
 const Empty = ({ children }: { children: React.ReactNode }) => (
   <p className="py-8 text-center text-sm text-text-muted">{children}</p>
 );
@@ -111,10 +128,10 @@ export function DashboardView({ data }: { data: DashboardData }) {
       <GroupLabel>Negócio · {rangeLabel}</GroupLabel>
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`recebido · ${rangeLabel}`} />
-        <Kpi label="A receber" value={brl(n.aReceber)} hint={`no prazo · ${rangeLabel}`} />
-        <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido · total" />
-        <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês · hoje" />
+        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`recebido · ${rangeLabel}`} bruto={soBruto(n.brutos.faturamento, n.faturamento)} />
+        <Kpi label="A receber" value={brl(n.aReceber)} hint={`no prazo · ${rangeLabel}`} bruto={soBruto(n.brutos.aReceber, n.aReceber)} />
+        <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido · total" bruto={soBruto(n.brutos.emAtraso, n.emAtraso)} />
+        <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês · hoje" bruto={soBruto(n.brutos.mrr, n.mrr)} />
         <Kpi label="Clientes ativos" value={nf(n.clientesAtivos)} hint="hoje" />
         <Kpi label="Negócios ganhos" value={nf(n.ganhos)} hint="desde o início" />
       </div>

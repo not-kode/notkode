@@ -8,6 +8,7 @@ type EngRow = {
   id: string; title: string | null; type: string; status: string; lifecycle: string;
   valor: number | null; mrr: number | null; billing_cycle: string | null;
   start_date: string | null; end_date: string | null; notes: string | null;
+  repasse_valor: number | null; precisa_nota: boolean | null;
   organization_id: string | null;
   organizations: { name: string | null } | null;
 };
@@ -29,7 +30,7 @@ export default async function FinanceiroPage() {
     supabase
       .from('engagements')
       .select(
-        'id, title, type, status, lifecycle, valor, mrr, billing_cycle, start_date, end_date, notes, organization_id, organizations(name)',
+        'id, title, type, status, lifecycle, valor, mrr, billing_cycle, start_date, end_date, notes, repasse_valor, precisa_nota, organization_id, organizations(name)',
       )
       .order('created_at', { ascending: false }),
     supabase
@@ -60,6 +61,8 @@ export default async function FinanceiroPage() {
     start_date: e.start_date,
     end_date: e.end_date,
     notes: e.notes,
+    repasse_valor: e.repasse_valor,
+    precisa_nota: e.precisa_nota ?? false,
     organization_id: e.organization_id,
     org_name: e.organizations?.name ?? null,
   }));

@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { mimeDaProposta } from '@/lib/proposta-mime';
 import { DEAL_STAGES, SERVICE_TAGS, type DealStage } from './stages';
 import { normalizeOrgName, type Product } from './orgs';
-import { adotarTarefasDoNegocio, criarTarefasDoGanho } from './tarefas-do-ganho';
+import { aoGanharNegocio, criarContratoDoNegocio } from './ganhar';
 
 export async function moveDealStage(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
@@ -194,16 +194,6 @@ export async function createDeal(formData: FormData): Promise<void> {
   revalidatePath('/admin/pipeline');
 }
 
-// service_tag do negócio → título legível do contrato criado ao ganhar.
-const SERVICE_TITLES: Record<string, string> = {
-  'sistemas-ia': 'Sistema com IA',
-  'sites': 'Site / Landing Page',
-  'agentes-automacao': 'Agentes & Automação',
-  'ecommerce': 'E-commerce',
-  'identidade': 'Identidade & Brandbook',
-  'manutencao': 'Plano de Manutenção',
-};
-
 /** Edita um NEGÓCIO a partir do drawer: empresa (obrigatória), contato/canais
  *  (opcionais), produto, valor, estágio e notas. Os dados fiscais/cadastrais da
  *  empresa (razão social, endereço) ficam na aba Clientes, não aqui. */
@@ -322,10 +312,12 @@ export async function updateDeal(formData: FormData): Promise<void> {
 }
 
 /**
- * Fecha o negócio: marca "ganho", tira do funil e abre o checklist do
- * fechamento. O contrato no financeiro continua sendo um passo à parte ("Gerar
- * contrato") — ele agora é a primeira tarefa desse checklist, com prazo, em vez
- * de um botão que só quem lembrava clicava.
+ * Fecha o negócio: marca "ganho", tira do funil, gera o contrato no financeiro e
+ * abre o checklist do fechamento.
+ *
+ * O contrato já sai daqui porque depender do segundo clique fazia o valor
+ * simplesmente sumir: fora do funil e ainda sem parcelas, o negócio ganho não
+ * aparecia nem no dashboard nem no financeiro.
  */
 export async function winDeal(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
@@ -339,149 +331,32 @@ export async function winDeal(formData: FormData): Promise<void> {
     .eq('id', id);
   if (error) throw new Error(`Falha ao marcar como ganho: ${error.message}`);
 
-  await criarTarefasDoGanho(supabase, id);
-
-  revalidatePath('/admin/pipeline');
-  revalidatePath('/admin/entregas');
-}
-
-/**
- * Cria o contrato do negócio ganho no financeiro, herdando valor/MRR, proposta e
- * parcelas do card. Não duplica: se o negócio já tem contrato vinculado, só
- * completa o que faltar. Próximo passo do fluxo: preparar o documento na aba
- * Clientes.
- */
-export async function generateDealContract(formData: FormData): Promise<void> {
-  const id = String(formData.get('id') ?? '');
-  if (!id) return;
-
-  const supabase = getSupabaseAdmin();
-  const { data: deal } = await supabase
-    .from('deals')
-    .select('id, organization_id, service_tag, service_tags, valor_pontual, mrr, notes, proposal_path, proposal_name')
-    .eq('id', id)
-    .single();
-  if (!deal) return;
-
-  // Parcelas/mensalidades planejadas do negócio — usadas para as datas de vigência
-  // e o ciclo do contrato, e mais abaixo copiadas como cobranças.
-  const { data: parcelas } = await supabase
-    .from('deal_installments')
-    .select('description, amount, due_date')
-    .eq('deal_id', id)
-    .order('due_date', { ascending: true });
-
-  // Descobre (ou cria) o contrato vinculado a este negócio. SEMPRE um contrato
-  // próprio: cada negócio ganho vira seu contrato/cobranças, mesmo que o cliente
-  // já tenha outros — assim uma venda nova não some dentro de um contrato antigo.
-  let engagementId: string | null = null;
-  const { data: existing } = await supabase
-    .from('deal_engagements')
-    .select('engagement_id')
-    .eq('deal_id', id)
-    .limit(1);
-
-  if (existing && existing.length > 0) {
-    engagementId = existing[0].engagement_id;
-  } else {
-    const isRecurring = Number(deal.mrr ?? 0) > 0;
-    // O produto vem da lista nova (service_tags); o campo antigo, singular, fica
-    // como retaguarda para os negócios cadastrados antes dela.
-    const produto = (deal.service_tags ?? [])[0] ?? deal.service_tag;
-    let title = 'Contrato';
-    if (produto) {
-      const { data: prod } = await supabase.from('products').select('name').eq('key', produto).maybeSingle();
-      title = prod?.name ?? SERVICE_TITLES[produto] ?? 'Contrato';
-    }
-
-    // Vigência e ciclo vêm das mensalidades geradas no card.
-    const start_date = parcelas && parcelas.length > 0 ? parcelas[0].due_date : null;
-    const end_date = parcelas && parcelas.length > 0 ? parcelas[parcelas.length - 1].due_date : null;
-    const billing_cycle = isRecurring && parcelas && parcelas.length > 0 ? `mensal (${parcelas.length}x)` : null;
-
-    const { data: eng, error: engErr } = await supabase
-      .from('engagements')
-      .insert({
-        organization_id: deal.organization_id,
-        type: isRecurring ? 'recorrente' : 'pontual',
-        status: 'aguardando',
-        title,
-        valor: isRecurring ? null : deal.valor_pontual ?? null,
-        mrr: isRecurring ? deal.mrr : null,
-        billing_cycle,
-        start_date,
-        end_date,
-        notes: deal.notes ?? null,
-      })
-      .select('id')
-      .single();
-    if (engErr || !eng) throw new Error(`Falha ao criar o contrato: ${engErr?.message}`);
-    engagementId = eng.id;
-    await supabase.from('deal_engagements').insert({ deal_id: id, engagement_id: eng.id });
-  }
-
-  // Leva a proposta e as parcelas do negócio para o contrato recém-vinculado.
-  if (engagementId) {
-    // Proposta: só copia se o contrato ainda não tiver uma anexada. O arquivo é
-    // DUPLICADO no storage, com caminho próprio do contrato. Antes os dois
-    // apontavam para o mesmo arquivo, e tirar a proposta do negócio (ou apagar o
-    // negócio) deixava o contrato com um anexo que não abria mais.
-    if (deal.proposal_path) {
-      const { data: eng } = await supabase
-        .from('engagements')
-        .select('proposal_path')
-        .eq('id', engagementId)
-        .single();
-      if (!eng?.proposal_path) {
-        const ext = deal.proposal_path.split('.').pop() || 'bin';
-        const destino = `${engagementId}/${Date.now()}.${ext}`;
-        const { data: arquivo } = await supabase.storage.from('propostas').download(deal.proposal_path);
-        let caminho = deal.proposal_path;
-        if (arquivo) {
-          const { error: erroCopia } = await supabase.storage
-            .from('propostas')
-            .upload(destino, new Uint8Array(await arquivo.arrayBuffer()), {
-              contentType: mimeDaProposta(deal.proposal_name ?? destino, arquivo.type || 'application/octet-stream'),
-              upsert: true,
-            });
-          if (!erroCopia) caminho = destino;
-        }
-        await supabase
-          .from('engagements')
-          .update({ proposal_path: caminho, proposal_name: deal.proposal_name, updated_at: new Date().toISOString() })
-          .eq('id', engagementId);
-      }
-    }
-
-    // Parcelas: só copia se o contrato ainda não tiver nenhuma (evita duplicar).
-    const { count } = await supabase
-      .from('receivables')
-      .select('id', { count: 'exact', head: true })
-      .eq('engagement_id', engagementId);
-    if (!count) {
-      if (parcelas && parcelas.length > 0) {
-        await supabase.from('receivables').insert(
-          parcelas.map((p) => ({
-            description: p.description,
-            amount: p.amount,
-            due_date: p.due_date,
-            engagement_id: engagementId,
-            organization_id: deal.organization_id,
-            status: 'pendente',
-          })),
-        );
-      }
-    }
-  }
-
-  // O checklist do fechamento estava preso ao negócio enquanto não havia
-  // contrato: agora ele tem casa própria, e "gerar contrato" acabou de ser feito.
-  if (engagementId) await adotarTarefasDoNegocio(supabase, id, engagementId);
+  await aoGanharNegocio(supabase, id);
 
   revalidatePath('/admin/pipeline');
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin/clientes');
   revalidatePath('/admin/entregas');
+  revalidatePath('/admin');
+}
+
+/**
+ * Retaguarda do botão "Gerar contrato": o ganho já cria o contrato sozinho, mas
+ * o negócio ganho antes disso (ou aquele em que a criação automática falhou)
+ * ainda precisa de um clique. Não duplica: se já existe contrato vinculado, só
+ * completa o que faltar.
+ */
+export async function generateDealContract(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  await criarContratoDoNegocio(getSupabaseAdmin(), id);
+
+  revalidatePath('/admin/pipeline');
+  revalidatePath('/admin/financeiro');
+  revalidatePath('/admin/clientes');
+  revalidatePath('/admin/entregas');
+  revalidatePath('/admin');
 }
 
 /** Sobe o arquivo da proposta enviada e vincula ao NEGÓCIO (bucket privado 'propostas'). */

@@ -26,6 +26,7 @@ export type Contrato = {
   scope: string | null; renewal_note: string | null; client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
   contract_template_id: string | null;
+  repasse_valor: number | null; precisa_nota: boolean;
   assinatura: AssinaturaResumo | null;
   parcelas: Parcela[];
 };
@@ -804,6 +805,20 @@ function ContractCard({ eng, cliente, modelos, onMarkPaid, onUnmark, onConclude,
           <div className="grid grid-cols-2 gap-3">
             <div><label className={labelCls}>Início</label><input name="start_date" type="date" defaultValue={eng.start_date ?? ''} className={inputCls} /></div>
             <div><label className={labelCls}>Fim</label><input name="end_date" type="date" defaultValue={eng.end_date ?? ''} className={inputCls} /></div>
+          </div>
+          {/* O que passa pela conta sem ser nosso: é isto que faz o financeiro
+              mostrar quanto entra de verdade, na mesma régua do funil. */}
+          <input type="hidden" name="fiscal_present" value="1" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Repasse ao parceiro (R$)</label>
+              <input name="repasse_valor" inputMode="decimal" defaultValue={eng.repasse_valor != null ? String(eng.repasse_valor) : ''} className={inputCls} placeholder="0" />
+              <p className="mt-1 font-label text-[10px] text-text-muted">{eng.type === 'recorrente' ? 'por mês' : 'do contrato inteiro, rateado pelas parcelas'}</p>
+            </div>
+            <label className="flex items-center gap-2 self-start pt-6 text-sm text-text-secondary">
+              <input type="checkbox" name="precisa_nota" defaultChecked={eng.precisa_nota} className="h-4 w-4 rounded border-black/20" />
+              Cliente precisa de nota
+            </label>
           </div>
           <button type="button" onClick={() => setEditingDetails(false)} className="self-start font-label text-[11px] text-text-muted hover:text-text-secondary">fechar</button>
         </AutoSaveForm>

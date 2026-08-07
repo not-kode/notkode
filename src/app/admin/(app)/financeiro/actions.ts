@@ -80,6 +80,10 @@ export async function updateEngagementDetails(formData: FormData): Promise<void>
 
   if (formData.has('mrr')) patch.mrr = num(formData.get('mrr'));
   if (formData.has('valor')) patch.valor = num(formData.get('valor'));
+  // O que passa pela conta sem ser nosso. O formulário sempre manda o marcador
+  // da nota, senão desmarcar a caixa não teria como chegar aqui.
+  if (formData.has('repasse_valor')) patch.repasse_valor = num(formData.get('repasse_valor')) || null;
+  if (formData.has('fiscal_present')) patch.precisa_nota = formData.get('precisa_nota') === 'on';
   if (formData.has('start_date')) patch.start_date = String(formData.get('start_date') ?? '') || null;
   if (formData.has('end_date')) patch.end_date = String(formData.get('end_date') ?? '') || null;
 

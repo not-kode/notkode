@@ -2,6 +2,8 @@
  * Contas de valor do negócio, em módulo próprio (sem 'use client') porque rodam
  * no servidor, no topo do pipeline, e no cliente, no total de cada coluna.
  */
+import { ALIQUOTA_NOTA as NOTA } from '../_shared/liquido';
+
 export type DealValue = {
   valor_pontual: number | null;
   mrr: number | null;
@@ -9,9 +11,6 @@ export type DealValue = {
   precisa_nota: boolean;
   installments: { amount: number }[];
 };
-
-/** Alíquota usada no sistema quando o cliente precisa de nota fiscal. */
-const NOTA = 0.06;
 
 /**
  * Valor cheio do negócio: com parcelas planejadas vale a soma delas — é o

@@ -3,6 +3,7 @@ import { DashboardView, type DashboardData, type DayCount, type MonthProjection 
 import { resolveRange } from './period';
 import { pendingMonthly } from './financeiro/recurring';
 import { SERVICE_LABELS, classifySource } from './_shared/site-metrics';
+import { liquidoDaParcela, parcelasPorContrato, somarLiquido, type ContratoLiquido } from './_shared/liquido';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,9 +43,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       supabase.from('events').select('created_at, session_id, referrer, utm_source, page').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
     supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', siteToISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
-    supabase.from('engagements').select('id, organization_id, lifecycle, type, mrr, start_date, end_date'),
+    supabase.from('engagements').select('id, organization_id, lifecycle, type, mrr, start_date, end_date, repasse_valor, precisa_nota'),
     supabase.from('receivables').select('amount, status, due_date, paid_at, paid_amount, engagement_id'),
-    supabase.from('deals').select('id, stage'),
+    supabase.from('deals').select('id, stage, mrr, repasse_valor, precisa_nota'),
     supabase.from('deal_installments').select('deal_id, amount, due_date'),
   ]);
 
@@ -53,18 +54,32 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const engs = (engRows.data ?? []) as {
     id: string; organization_id: string | null; lifecycle: string; type: string;
     mrr: number | null; start_date: string | null; end_date: string | null;
+    repasse_valor: number | null; precisa_nota: boolean | null;
   }[];
   const recs = (recRows.data ?? []) as { amount: number; status: string; due_date: string; paid_at: string | null; paid_amount: number | null; engagement_id: string | null }[];
 
   // Parcelas dos negócios ainda em aberto: é a parte da projeção que depende de
   // fechar. Negócio ganho já virou contrato e aparece como parcela a receber.
-  const abertos = new Set(
-    ((dealRows.data ?? []) as { id: string; stage: string }[])
+  const abertos = new Map(
+    ((dealRows.data ?? []) as { id: string; stage: string; mrr: number | null; repasse_valor: number | null; precisa_nota: boolean | null }[])
       .filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido')
-      .map((d) => d.id),
+      .map((d) => [
+        d.id,
+        // Negócio recorrente segue a régua do recorrente: o repasse pesa em cada
+        // mensalidade, não é rateado entre elas.
+        { type: (d.mrr ?? 0) > 0 ? 'recorrente' : 'pontual', repasse_valor: d.repasse_valor, precisa_nota: d.precisa_nota ?? false } as ContratoLiquido,
+      ]),
   );
-  const parcelasPipeline = ((dealInstRows.data ?? []) as { deal_id: string; amount: number; due_date: string }[])
+  const parcelasCruas = ((dealInstRows.data ?? []) as { deal_id: string; amount: number; due_date: string }[])
     .filter((p) => abertos.has(p.deal_id));
+  // Quantas parcelas cada negócio tem, para ratear o repasse do pontual.
+  const parcelasDoDeal = new Map<string, number>();
+  for (const p of parcelasCruas) parcelasDoDeal.set(p.deal_id, (parcelasDoDeal.get(p.deal_id) ?? 0) + 1);
+  const parcelasPipeline = parcelasCruas.map((p) => ({
+    ...p,
+    negocio: abertos.get(p.deal_id) ?? null,
+    parcelas: parcelasDoDeal.get(p.deal_id) ?? 1,
+  }));
   const visitas = pv.count ?? 0;
 
   // ── Site: visitas por dia (bucket adapta ao tamanho do intervalo) ──
@@ -121,14 +136,29 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   // Vale o que entrou de verdade (paid_amount), não o valor cheio da parcela —
   // um pagamento parcial não pode virar faturamento cheio. Mesma régua do Financeiro.
   const recebidoDe = (r: { amount: number; paid_amount: number | null }) => r.paid_amount ?? r.amount;
-  const faturamento = recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + recebidoDe(r), 0);
+  // E vale o LÍQUIDO: repasse ao parceiro e nota fiscal passam pela conta sem
+  // serem receita. Mesma régua do funil, senão o painel promete um dinheiro que
+  // não fica com a gente.
+  const contratos = new Map<string, ContratoLiquido>(
+    engs.map((e) => [e.id, { type: e.type, repasse_valor: e.repasse_valor, precisa_nota: e.precisa_nota ?? false }]),
+  );
+  const nParcelas = parcelasPorContrato(recs);
+  const somar = (linhas: typeof recs, valorDe?: (r: (typeof recs)[number]) => number) =>
+    somarLiquido(linhas, contratos, nParcelas, valorDe);
+
+  const faturamento = somar(
+    recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr),
+    recebidoDe,
+  );
   // A receber = pendente ainda no prazo com vencimento DENTRO do período escolhido.
   // Os presets de mês/ano cobrem o período inteiro (ver period.ts), então o que
   // vence mais pra frente no mesmo recorte entra aqui em vez de sumir.
-  const aReceber = recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date >= fromStr && r.due_date <= toStr).reduce((s, r) => s + r.amount, 0);
+  const aReceber = somar(recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date >= fromStr && r.due_date <= toStr));
   // Em atraso = status 'atrasado' OU pendente já vencido (regra unificada).
-  const emAtraso = recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr)).reduce((s, r) => s + r.amount, 0);
-  const mrr = engs.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0);
+  const emAtraso = somar(recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr)));
+  const mrr = engs
+    .filter((e) => e.lifecycle === 'ativo')
+    .reduce((s, e) => s + liquidoDaParcela(e.mrr ?? 0, { type: e.type, repasse_valor: e.repasse_valor, precisa_nota: e.precisa_nota ?? false }), 0);
   const clientesAtivos = new Set(engs.filter((e) => (e.lifecycle === 'ativo' || e.lifecycle === 'pausado') && e.organization_id).map((e) => e.organization_id)).size;
 
   // Receita mês a mês. O passado é o que entrou; o futuro separa o que já está
@@ -156,21 +186,27 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     // lançamento é manual. Passado fica de fora — lá vale o que aconteceu.
     const recorrentePrevisto =
       key >= mesAtualKey
-        ? pendingMonthly(engs, duesByEng, key).reduce((s, p) => s + (p.eng.mrr ?? 0), 0)
+        ? pendingMonthly(engs, duesByEng, key).reduce(
+            (s, p) =>
+              s +
+              liquidoDaParcela(p.eng.mrr ?? 0, {
+                type: p.eng.type,
+                repasse_valor: p.eng.repasse_valor,
+                precisa_nota: p.eng.precisa_nota ?? false,
+              }),
+            0,
+          )
         : 0;
     receitaPorMes.push({
       key,
       mes: `${MESES[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`,
-      recebido: recs
-        .filter((r) => r.status === 'recebido' && r.paid_at?.startsWith(key))
-        .reduce((s, r) => s + recebidoDe(r), 0),
+      recebido: somar(recs.filter((r) => r.status === 'recebido' && r.paid_at?.startsWith(key)), recebidoDe),
       aReceber:
-        recs
-          .filter((r) => r.status !== 'recebido' && r.status !== 'cancelado' && r.due_date.startsWith(key))
-          .reduce((s, r) => s + r.amount, 0) + recorrentePrevisto,
+        somar(recs.filter((r) => r.status !== 'recebido' && r.status !== 'cancelado' && r.due_date.startsWith(key))) +
+        recorrentePrevisto,
       pipeline: parcelasPipeline
         .filter((p) => p.due_date.startsWith(key))
-        .reduce((s, p) => s + p.amount, 0),
+        .reduce((s, p) => s + liquidoDaParcela(p.amount, p.negocio, p.parcelas), 0),
       atual: key === mesAtualKey,
     });
   }
@@ -196,7 +232,17 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
   const data: DashboardData = {
     rangeLabel: range.label,
-    negocio: { faturamento, aReceber, emAtraso, mrr, clientesAtivos, ganhos: wonDeals.count ?? 0, receitaPorMes },
+    negocio: {
+      faturamento, aReceber, emAtraso, mrr, clientesAtivos,
+      brutos: {
+        faturamento: recs.filter((r) => r.status === 'recebido' && r.paid_at && r.paid_at >= fromStr && r.paid_at <= toStr).reduce((s, r) => s + recebidoDe(r), 0),
+        aReceber: recs.filter((r) => r.status === 'pendente' && r.due_date >= todayStr && r.due_date >= fromStr && r.due_date <= toStr).reduce((s, r) => s + r.amount, 0),
+        emAtraso: recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr)).reduce((s, r) => s + r.amount, 0),
+        mrr: engs.filter((e) => e.lifecycle === 'ativo').reduce((s, e) => s + (e.mrr ?? 0), 0),
+      },
+      ganhos: wonDeals.count ?? 0,
+      receitaPorMes,
+    },
     site: {
       visitas,
       sessoes,

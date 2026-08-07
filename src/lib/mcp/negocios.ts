@@ -7,6 +7,7 @@ import {
   obrigatorio, opcoes, reais, str, supabase, texto, type Ferramenta,
 } from './nucleo';
 import { DEAL_STAGES } from '@/app/admin/(app)/pipeline/stages';
+import { aoGanharNegocio } from '@/app/admin/(app)/pipeline/ganhar';
 import {
   isRecurring, monthlyDescription, pendingMonthly, type RecurringEng,
 } from '@/app/admin/(app)/financeiro/recurring';
@@ -193,8 +194,8 @@ export const ferramentasDeNegocio: Ferramenta[] = [
   {
     nome: 'atualizar_negocio',
     descricao:
-      'Mexe num negócio do funil: estágio, valores, previsão, observações. Para marcar como ganho e já virar ' +
-      'contrato, prefira fazer pela tela do pipeline, que cria o projeto e as parcelas junto.',
+      'Mexe num negócio do funil: estágio, valores, previsão, observações. Marcar como ganho já cria o contrato ' +
+      'no financeiro com as parcelas do negócio, igual à tela do pipeline.',
     entrada: objeto(
       {
         negocio: texto('Id do negócio, ou nome do cliente quando ele só tem um.'),
@@ -232,9 +233,21 @@ export const ferramentasDeNegocio: Ferramenta[] = [
       if (args.observacoes !== undefined) patch.notes = str(args, 'observacoes');
 
       if (Object.keys(patch).length === 1) throw new ErroDeUso('Nada para mudar.');
+      if (patch.stage) patch.stage_changed_at = patch.updated_at;
       const { error } = await db.from('deals').update(patch).eq('id', alvo.id);
       if (error) throw new ErroDeUso(`Não deu para salvar: ${error.message}`);
-      return { atualizado: alvo.organizations?.name ?? alvo.id, campos: Object.keys(patch).filter((k) => k !== 'updated_at') };
+
+      // Ganhar pelo terminal tem que valer o mesmo que ganhar pela tela: contrato
+      // no financeiro e checklist do fechamento. Sem isso o valor some do
+      // dashboard, que só enxerga negócio em aberto ou parcela já lançada.
+      const ganhouAgora = patch.stage === 'ganho' && alvo.stage !== 'ganho';
+      if (ganhouAgora) await aoGanharNegocio(db, alvo.id);
+
+      return {
+        atualizado: alvo.organizations?.name ?? alvo.id,
+        campos: Object.keys(patch).filter((k) => k !== 'updated_at'),
+        ...(ganhouAgora ? { contrato: 'criado no financeiro, com as parcelas do negócio' } : {}),
+      };
     },
   },
 

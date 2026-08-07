@@ -23,6 +23,7 @@ type EngRow = {
   scope: string | null; renewal_note: string | null; client_obligations: string | null; provider_obligations: string | null;
   proposal_path: string | null; proposal_name: string | null;
   contract_template_id: string | null;
+  repasse_valor: number | null; precisa_nota: boolean | null;
 };
 type RecRow = {
   id: string; engagement_id: string | null; description: string | null; amount: number;
@@ -75,7 +76,7 @@ export default async function ClientesPage() {
       .order('name'),
     supabase
       .from('engagements')
-      .select('id, organization_id, title, type, status, lifecycle, valor, mrr, start_date, end_date, notes, scope, renewal_note, client_obligations, provider_obligations, proposal_path, proposal_name, contract_template_id')
+      .select('id, organization_id, title, type, status, lifecycle, valor, mrr, start_date, end_date, notes, scope, renewal_note, client_obligations, provider_obligations, proposal_path, proposal_name, contract_template_id, repasse_valor, precisa_nota')
       .order('created_at', { ascending: true }),
     supabase
       .from('receivables')
@@ -191,6 +192,7 @@ export default async function ClientesPage() {
         id: e.id, title: e.title, type: e.type, status: e.status, lifecycle: e.lifecycle,
         valor: e.valor, mrr: e.mrr, start_date: e.start_date, end_date: e.end_date, notes: e.notes,
         scope: e.scope, renewal_note: e.renewal_note, client_obligations: e.client_obligations, provider_obligations: e.provider_obligations,
+        repasse_valor: e.repasse_valor, precisa_nota: e.precisa_nota ?? false,
         proposal_path: e.proposal_path, proposal_name: e.proposal_name,
         contract_template_id: e.contract_template_id,
         assinatura: (() => {

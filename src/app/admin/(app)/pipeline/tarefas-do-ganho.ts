@@ -78,8 +78,15 @@ export function prazoEm(n: number, base = new Date()): string {
 /**
  * Põe o checklist no negócio recém-ganho. Não repete: negócio que já tem tarefa
  * própria (ganho desfeito e refeito, dois cliques seguidos) fica como está.
+ *
+ * `pularContrato` serve para quando o contrato já foi criado junto com o ganho:
+ * a tarefa de gerá-lo nasceria cumprida, só sujando o quadro.
  */
-export async function criarTarefasDoGanho(db: Db, dealId: string): Promise<void> {
+export async function criarTarefasDoGanho(
+  db: Db,
+  dealId: string,
+  { pularContrato = false }: { pularContrato?: boolean } = {},
+): Promise<void> {
   const { data: existentes } = await db
     .from('project_tasks')
     .select('id')
@@ -97,7 +104,9 @@ export async function criarTarefasDoGanho(db: Db, dealId: string): Promise<void>
     .limit(1);
   const primeiraParcela = (parcelas ?? [])[0]?.due_date as string | undefined;
 
-  const linhas = PACOTE.map((p, i) => ({
+  const pacote = pularContrato ? PACOTE.filter((p) => p.chave !== 'contrato') : PACOTE;
+
+  const linhas = pacote.map((p, i) => ({
     deal_id: dealId,
     title: p.titulo,
     notes: p.notas,
