@@ -1,6 +1,7 @@
 'use server';
 
 import { Resend } from 'resend';
+import { remetenteDaNotkode } from '@/lib/email-remetente';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 type Respostas = Record<string, string | string[]>;
@@ -66,7 +67,7 @@ function escapeHtml(s: string): string {
 
 async function notify(cliente: string, produto: string) {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.LEAD_FROM_EMAIL;
+  const from = remetenteDaNotkode();
   const to = process.env.LEAD_NOTIFICATION_EMAIL;
   if (!key || !from || !to) {
     console.warn('[onboarding] Resend env ausente, e-mail não enviado');

@@ -4,8 +4,9 @@
 
 import { Resend } from 'resend';
 import { escapeHtml, hashLegivel, linkDeAssinatura, linkDeVerificacao } from './nucleo';
+import { remetenteDaNotkode } from '@/lib/email-remetente';
 
-const REMETENTE = process.env.LEAD_FROM_EMAIL ?? 'Notkode <contato@notkode.com.br>';
+const REMETENTE = remetenteDaNotkode() ?? 'Notkode <contato@notkode.com.br>';
 const COPIA_INTERNA = process.env.LEAD_NOTIFICATION_EMAIL ?? null;
 
 const MOLDURA = (corpo: string) => `

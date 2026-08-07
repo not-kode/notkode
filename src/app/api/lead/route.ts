@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { remetenteDaNotkode } from '@/lib/email-remetente';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { getPricingSchema } from '@/lib/lead-schemas';
 import { buildLeadEmail } from '@/lib/lead-email';
@@ -184,7 +185,7 @@ export async function POST(req: Request) {
   let internalEmailError: string | null = null;
   let leadEmailError: string | null = null;
   const resendKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.LEAD_FROM_EMAIL;
+  const fromEmail = remetenteDaNotkode();
   const notifyEmail = process.env.LEAD_NOTIFICATION_EMAIL;
 
   if (resendKey && fromEmail && notifyEmail) {
