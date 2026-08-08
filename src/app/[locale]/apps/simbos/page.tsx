@@ -20,7 +20,7 @@ import { BackToApps } from '@/components/apps/back-to-apps';
 import { DownloadPicker } from '@/components/apps/download-picker';
 import { SectionIntro } from '@/components/apps/section-intro';
 import { AppsQualificationForm } from '@/components/apps/apps-qualification-form';
-import { SIMBOS_DOWNLOADS, SIMBOS_VERSION } from '@/data/downloads';
+import { getSimbosRelease } from '@/lib/simbos-release';
 
 export async function generateMetadata({
   params,
@@ -50,6 +50,10 @@ export default async function SimbosPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: 'AppSimbos' });
+
+  // Sai dos manifestos publicados junto com os instaladores, não de um número
+  // escrito no repositório — ver src/lib/simbos-release.ts.
+  const { version, downloads } = await getSimbosRelease();
 
   const faqs = ['whatIsIt', 'account', 'terminal', 'privacy', 'updates', 'windows'].map((k) => ({
     q: t(`faq.${k}.q`),
@@ -398,7 +402,7 @@ export default async function SimbosPage({
         <div className="container mx-auto px-5 lg:px-8 py-24 lg:py-32">
           <SectionIntro eyebrow={t('downloadEyebrow')} title={t('downloadTitle')} />
 
-          <DownloadPicker downloads={SIMBOS_DOWNLOADS} namespace="AppSimbos" />
+          <DownloadPicker downloads={downloads} namespace="AppSimbos" />
 
           <Reveal delay={200}>
             <div
@@ -418,7 +422,7 @@ export default async function SimbosPage({
                 {t('installWin')}
               </p>
               <p className="font-mono text-[11px] text-text-secondary mt-5">
-                {t('versionLabel', { version: SIMBOS_VERSION })}
+                {t('versionLabel', { version })}
               </p>
             </div>
           </Reveal>

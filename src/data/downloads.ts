@@ -55,27 +55,33 @@ export const FALA_DOWNLOADS: AppDownload[] = [
 // vivem fora e o site redireciona — ver o rewrite de /downloads/simbos em
 // next.config.mjs. O caminho público não pode mudar: cada cópia instalada lê
 // latest-mac.yml / latest.yml dele para descobrir se saiu versão nova.
+//
+// Diferente do Fala, aqui a versão não é escrita à mão: a página lê esses mesmos
+// manifestos e monta os cards a partir deles — ver src/lib/simbos-release.ts.
+// O que está abaixo é o plano B, usado só quando os manifestos não respondem na
+// hora de gerar a página. Ficou parado uma release inteira quando era a fonte da
+// verdade: o site ainda oferecia a 0.1.0 com a 0.2.3 no ar há dias.
 
-export const SIMBOS_VERSION = '0.1.0';
+export const SIMBOS_FALLBACK_VERSION = '0.2.3';
 
-export const SIMBOS_DOWNLOADS: AppDownload[] = [
+export const SIMBOS_FALLBACK_DOWNLOADS: AppDownload[] = [
   {
     target: 'mac-arm',
-    url: `/downloads/simbos/SimbOS-${SIMBOS_VERSION}-arm64.dmg`,
+    url: `/downloads/simbos/SimbOS-${SIMBOS_FALLBACK_VERSION}-arm64.dmg`,
     format: '.dmg',
     size: '123 MB',
     requirement: 'macOS 11+',
   },
   {
     target: 'mac-intel',
-    url: `/downloads/simbos/SimbOS-${SIMBOS_VERSION}.dmg`,
+    url: `/downloads/simbos/SimbOS-${SIMBOS_FALLBACK_VERSION}.dmg`,
     format: '.dmg',
     size: '128 MB',
     requirement: 'macOS 11+',
   },
   {
     target: 'windows',
-    url: `/downloads/simbos/SimbOS Setup ${SIMBOS_VERSION}.exe`,
+    url: `/downloads/simbos/SimbOS Setup ${SIMBOS_FALLBACK_VERSION}.exe`,
     format: '.exe',
     size: '104 MB',
     requirement: 'Windows 10/11 (x64)',
