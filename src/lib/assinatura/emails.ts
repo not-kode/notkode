@@ -35,6 +35,9 @@ async function enviar(
   try {
     const { error } = await new Resend(chave).emails.send({
       from: REMETENTE, to: para, subject: assunto, html: MOLDURA(html), text: texto,
+      // Quem responde "recebi" ou "não consigo assinar" tem que cair numa caixa
+      // que alguém lê, mesmo que um dia o remetente vire um endereço da empresa.
+      ...(COPIA_INTERNA ? { replyTo: COPIA_INTERNA } : {}),
       ...(anexos?.length ? { attachments: anexos } : {}),
     });
     if (error) {
