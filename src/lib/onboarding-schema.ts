@@ -250,8 +250,6 @@ export const ONBOARDING_SECTIONS: OnboardingSection[] = [
 // seções comuns (marca, acessos) e têm perguntas próprias.
 // ─────────────────────────────────────────────────────────────────────────
 
-const MARCA_SECTION = ONBOARDING_SECTIONS.find((s) => s.id === 'marca')!;
-
 /** Acessos enxutos para serviços que não envolvem mídia paga/e-commerce. */
 const ACESSOS_BASICOS: OnboardingSection = {
   id: 'acessos-basicos',
@@ -271,35 +269,130 @@ const ACESSOS_BASICOS: OnboardingSection = {
   ],
 };
 
+/**
+ * Site institucional.
+ *
+ * A redação é da Notkode: o cliente não escreve o site, ele conta o que a gente
+ * não tem como saber. Por isso aqui não se pergunta se os textos existem, nem
+ * quais sites ele admira — nenhuma das duas coisas vira entrega, e perguntar
+ * abre espaço para ele achar que precisa produzir conteúdo.
+ *
+ * O que a gente precisa mesmo é matéria-prima: como cada serviço funciona por
+ * dentro, quem já é cliente, quais projetos podem ser contados e as fotos
+ * disso. É essa a ordem das seções.
+ */
 const SITE_SECTIONS: OnboardingSection[] = [
   {
-    id: 'objetivo-site',
-    title: 'Objetivo & Conteúdo',
-    lede: 'O que o site precisa alcançar e o que vai dentro dele.',
+    id: 'empresa',
+    title: 'A empresa',
+    lede: 'O básico que a gente precisa saber para escrever sobre vocês sem inventar nada.',
     questions: [
-      { id: 'site_objetivo', type: 'chips', multi: true,
-        options: ['Vender', 'Captar leads', 'Apresentar a empresa', 'Agendar contato', 'Portfólio'],
-        label: 'Qual é o objetivo principal do site?' },
-      { id: 'site_acao', type: 'text', ph: 'Ex: chamar no WhatsApp, pedir orçamento...',
-        label: 'Qual AÇÃO o visitante deve fazer ao entrar?' },
-      { id: 'site_paginas', type: 'chips', multi: true,
-        options: ['Página única (landing)', 'Home', 'Sobre', 'Serviços/Produtos', 'Portfólio/Cases', 'Blog', 'Contato'],
-        label: 'Quais páginas o site precisa ter?' },
-      { id: 'site_publico', type: 'area',
-        label: 'Quem é o público que vai visitar o site?' },
-      { id: 'site_diferenciais', type: 'area',
-        label: 'Quais são os seus diferenciais em relação aos concorrentes?' },
-      { id: 'site_referencias', type: 'area', ph: 'Links de 2 ou 3 sites + o que você gosta em cada um',
-        label: 'Quais sites você admira e por quê?' },
-      { id: 'site_textos', type: 'chips',
-        options: ['Tenho prontos', 'Tenho parte', 'Preciso que criem'],
-        label: 'Os textos do site já existem?' },
-      { id: 'site_depoimentos', type: 'chips', options: ['Sim, tenho', 'Não tenho'],
-        label: 'Tem depoimentos ou avaliações de clientes pra usar?' },
+      { id: 'emp_oque', type: 'area', star: true,
+        ph: 'Ex: fazemos estudos ambientais para obras de infraestrutura...',
+        label: 'O que a empresa faz e para quem?' },
+      { id: 'emp_historia', type: 'area',
+        ph: 'Quando começou, como chegou até aqui, o que mudou no caminho',
+        label: 'Conte um pouco da história da empresa.' },
+      { id: 'emp_regiao', type: 'text', ph: 'Ex: DF, GO, MG e projetos pontuais em outros estados',
+        label: 'Onde vocês atuam?' },
+      { id: 'emp_equipe', type: 'area', star: true,
+        ph: 'Nome, formação e registro profissional de cada um',
+        label: 'Quem é a equipe técnica?',
+        hint: 'Entra na página como prova de que existe gente qualificada por trás.' },
+      { id: 'emp_registros', type: 'area', ph: 'Ex: CREA, CTF/IBAMA, cadastros em órgãos ambientais',
+        label: 'Quais registros e certificações a empresa tem?' },
+      { id: 'emp_diferencial', type: 'area',
+        label: 'Por que um cliente escolhe vocês e não o concorrente?' },
+      { id: 'emp_quem_contrata', type: 'area',
+        ph: 'Ex: construtoras e mineradoras; quem decide costuma ser o gerente ambiental',
+        label: 'Quem costuma contratar vocês, e quem decide a contratação?' },
     ],
   },
-  MARCA_SECTION,
-  ACESSOS_BASICOS,
+  {
+    id: 'servicos',
+    title: 'Serviços',
+    lede: 'Cada serviço vira uma página, então é aqui que a gente precisa de detalhe.',
+    questions: [
+      { id: 'serv_areas', type: 'area', star: true,
+        ph: 'Uma por linha',
+        label: 'Quais áreas de atuação viram página no site?' },
+      { id: 'serv_como_funciona', type: 'area', star: true,
+        ph: 'Ex: o EIA/RIMA entra na fase de licença prévia, é exigido pelo IBAMA ou órgão estadual, leva de 6 a 12 meses e entrega...',
+        label: 'Explique como funciona cada área: o que é entregue, em que fase entra e qual órgão está envolvido.',
+        hint: 'Pode escrever solto, do seu jeito. Quanto mais detalhe técnico, melhor fica o texto da página, e nada aqui vai para o ar sem você aprovar.' },
+      { id: 'serv_procurados', type: 'area',
+        label: 'Quais serviços mais trazem cliente hoje?' },
+      { id: 'serv_duvidas', type: 'area',
+        ph: 'Ex: quanto tempo demora, se acompanha a vistoria, se responde exigência do órgão',
+        label: 'O que o cliente sempre pergunta antes de fechar?' },
+      { id: 'serv_arquivos', type: 'file',
+        label: 'Se tiver material técnico que ajude a explicar os serviços, anexe aqui.',
+        hint: 'Apresentação, portfólio, proposta antiga: qualquer coisa que já descreva o trabalho.' },
+    ],
+  },
+  {
+    id: 'provas',
+    title: 'Projetos & Clientes',
+    lede: 'O que já foi feito é o melhor argumento de venda, e é o que costuma faltar no site.',
+    questions: [
+      { id: 'prova_projetos', type: 'area', star: true,
+        ph: 'Um por linha: cliente, o que foi feito, onde e quando',
+        label: 'Quais projetos executados podemos contar no site?' },
+      { id: 'prova_fotos', type: 'file', star: true,
+        label: 'Anexe fotos dos projetos.',
+        hint: 'Foto de campo, equipe em obra, o empreendimento. Pode mandar várias, mesmo sem tratamento.' },
+      { id: 'prova_videos', type: 'file',
+        label: 'Se tiver vídeos, anexe também.' },
+      { id: 'prova_clientes', type: 'area',
+        ph: 'Um por linha',
+        label: 'Quais clientes podemos citar pelo nome no site?',
+        hint: 'A ideia é montar uma faixa com os logos deles. Só entra quem você autorizar.' },
+      { id: 'prova_logos', type: 'file',
+        label: 'Se tiver os logos desses clientes em arquivo, anexe.' },
+      { id: 'prova_depoimento', type: 'chips', options: ['Sim', 'Não', 'Consigo pedir'],
+        label: 'Quer colocar depoimento de cliente no site?' },
+      { id: 'prova_depoimento_texto', type: 'area',
+        showIf: { q: 'prova_depoimento', in: ['Sim'] },
+        ph: 'Texto do depoimento, nome e cargo de quem falou',
+        label: 'Cole os depoimentos que você já tem.' },
+    ],
+  },
+  {
+    id: 'contato-site',
+    title: 'Contato',
+    lede: 'Para onde vai quem pede orçamento pelo site.',
+    questions: [
+      { id: 'contato_campos', type: 'area', star: true,
+        ph: 'Ex: empreendimento, fase do licenciamento, órgão e prazo',
+        label: 'O que o formulário do site precisa perguntar?' },
+      { id: 'contato_destino', type: 'text', ph: 'E-mail que recebe os pedidos',
+        label: 'Para qual e-mail os pedidos devem chegar?' },
+      { id: 'contato_whatsapp', type: 'text', ph: '(00) 00000-0000',
+        label: 'Qual WhatsApp fica no site?' },
+      { id: 'contato_endereco', type: 'text',
+        label: 'Qual endereço aparece no site e na ficha do Google?' },
+    ],
+  },
+  {
+    id: 'acessos-site',
+    title: 'Acessos & Materiais',
+    lede: 'O que a gente precisa liberar para publicar o site no endereço de vocês.',
+    access: true,
+    questions: [
+      { id: 'acesso_dominio', type: 'text', star: true, ph: 'Ex: Registro.br, GoDaddy, Locaweb...',
+        label: 'Onde o domínio está registrado?',
+        hint: 'Precisamos do acesso ao painel do domínio para apontar o site quando ele estiver pronto. Só isso, o resto da hospedagem já está com a gente.' },
+      { id: 'acesso_dominio_status', type: 'chips',
+        options: ['Já enviei o acesso', 'Não sei onde está', 'Prefiro fazer junto numa call'],
+        label: 'Consegue liberar esse acesso?' },
+      { id: 'acesso_google_negocio', type: 'chips',
+        options: ['Sim, já existe', 'Não existe', 'Não sei'],
+        label: 'A empresa já tem ficha no Google (aquele quadro que aparece na busca)?' },
+      { id: 'logo_arquivo', type: 'file',
+        label: 'Anexe o logo da empresa no melhor arquivo que tiver.',
+        hint: 'De preferência PNG com fundo transparente, SVG, ou o arquivo original de quem criou.' },
+    ],
+  },
 ];
 
 const SISTEMA_SECTIONS: OnboardingSection[] = [
