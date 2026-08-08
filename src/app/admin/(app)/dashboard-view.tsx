@@ -33,14 +33,16 @@ export type MonthProjection = {
 export type DashboardData = {
   rangeLabel: string;
   negocio: {
+    /** O período inteiro: o que entrou mais o que ainda vem. */
+    total: number;
     faturamento: number;
     aReceber: number;
     emAtraso: number;
     mrr: number;
     /** O que sobra de cada número depois do repasse ao parceiro e da nota. */
-    liquidos: { faturamento: number; aReceber: number; emAtraso: number; mrr: number };
+    liquidos: { total: number; faturamento: number; aReceber: number; emAtraso: number; mrr: number };
     /** A parte de nota dentro de cada um deles, para o cartão dizer o porquê. */
-    notas: { faturamento: number; aReceber: number; emAtraso: number; mrr: number };
+    notas: { total: number; faturamento: number; aReceber: number; emAtraso: number; mrr: number };
     /** Quanto do faturamento do período vira nota fiscal. */
     nota: number;
     clientesAtivos: number;
@@ -135,8 +137,13 @@ export function DashboardView({ data }: { data: DashboardData }) {
       {/* ════════════════ NEGÓCIO — o que importa primeiro ════════════════ */}
       <GroupLabel>Negócio · {rangeLabel}</GroupLabel>
 
-      <div className={`mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 ${n.nota > 0 ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
-        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`recebido · ${rangeLabel}`} sobra={soSobra(n.liquidos.faturamento, n.faturamento, n.notas.faturamento)} />
+      {/* Quatro por linha: com oito cartões, espremer tudo numa fileira só deixa
+          o valor menor que o rótulo. */}
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+        {/* O total vem primeiro: é a resposta de "de quanto é este período".
+            O que já entrou e o que ainda vem são as duas metades dele. */}
+        <Kpi label={`Total · ${rangeLabel}`} value={brl(n.total)} hint={`${brl(n.aReceber)} ainda a receber`} sobra={soSobra(n.liquidos.total, n.total, n.notas.total)} />
+        <Kpi label="Faturamento" value={brl(n.faturamento)} tone="accent" hint={`já recebido · ${rangeLabel}`} sobra={soSobra(n.liquidos.faturamento, n.faturamento, n.notas.faturamento)} />
         <Kpi label="A receber" value={brl(n.aReceber)} hint={`no prazo · ${rangeLabel}`} sobra={soSobra(n.liquidos.aReceber, n.aReceber, n.notas.aReceber)} />
         <Kpi label="Em atraso" value={brl(n.emAtraso)} tone={n.emAtraso > 0 ? 'danger' : undefined} hint="vencido · total" sobra={soSobra(n.liquidos.emAtraso, n.emAtraso, n.notas.emAtraso)} />
         <Kpi label="MRR ativo" value={brl(n.mrr)} hint="recorrente/mês · hoje" sobra={soSobra(n.liquidos.mrr, n.mrr, n.notas.mrr)} />

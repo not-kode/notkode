@@ -164,6 +164,16 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const atrasadas = recs.filter((r) => r.status === 'atrasado' || (r.status === 'pendente' && r.due_date < todayStr));
   const ativos = engs.filter((e) => e.lifecycle === 'ativo');
 
+  // O período INTEIRO: o que já entrou junto com o que ainda vem, na mesma régua
+  // do cartão de mês do Financeiro. Sem ele, o painel mostrava as duas metades
+  // e deixava a soma por conta de quem lê — o total só existia no gráfico, e
+  // referente ao ano, não ao período escolhido. Cancelada fica de fora, que é
+  // dinheiro que não vem mais.
+  const doPeriodo = recs.filter(
+    (r) => r.status !== 'cancelado' && r.due_date >= fromStr && r.due_date <= toStr,
+  );
+
+  const total = somar(doPeriodo, recebidoDe);
   const faturamento = somar(recebidas, recebidoDe);
   const aReceber = somar(aReceberLinhas);
   const emAtraso = somar(atrasadas);
@@ -234,9 +244,10 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const data: DashboardData = {
     rangeLabel: range.label,
     negocio: {
-      faturamento, aReceber, emAtraso, mrr, clientesAtivos,
+      total, faturamento, aReceber, emAtraso, mrr, clientesAtivos,
       // O que sobra de cada número depois do repasse ao parceiro e da nota.
       liquidos: {
+        total: somarNet(doPeriodo, recebidoDe),
         faturamento: somarNet(recebidas, recebidoDe),
         aReceber: somarNet(aReceberLinhas),
         emAtraso: somarNet(atrasadas),
@@ -245,6 +256,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       // A parte de nota dentro de cada um: é o que deixa o cartão dizer se a
       // diferença veio do imposto, do repasse ao parceiro, ou dos dois.
       notas: {
+        total: somarNota(doPeriodo, recebidoDe),
         faturamento: notaDoPeriodo,
         aReceber: somarNota(aReceberLinhas),
         emAtraso: somarNota(atrasadas),
