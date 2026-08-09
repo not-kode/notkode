@@ -9,6 +9,7 @@ import {
   ACCESS_EMAIL,
   isQuestionVisible,
   prefilledIds,
+  templateQuestionIds,
   PREFILL_KEY,
   type OnboardingQuestion,
   type OnboardingSection,
@@ -58,7 +59,13 @@ export function OnboardingForm({
   // Mexeu no campo, deixou de ser "confira isto": sai da lista de
   // pré-preenchidas, o selo some e a resposta passa a ser do cliente. O que
   // sobrar em __prefill no envio é o que ele leu e deixou como estava.
-  const conferir = useMemo(() => new Set(prefilledIds(answers)), [answers]);
+  // Só conta o que ainda é pergunta deste template: quando uma pergunta sai do
+  // questionário, o pré-preenchimento dela vira resíduo e ninguém consegue
+  // limpar pela tela, então o aviso de "confira" apontaria para o nada.
+  const conferir = useMemo(() => {
+    const doTemplate = templateQuestionIds(tpl);
+    return new Set(prefilledIds(answers).filter((id) => doTemplate.has(id)));
+  }, [answers, tpl]);
   const semPrefill = (a: Answers, id: string): Answers => {
     const restantes = prefilledIds(a).filter((x) => x !== id);
     return { ...a, [PREFILL_KEY]: restantes };
