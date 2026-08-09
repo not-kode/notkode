@@ -55,6 +55,12 @@ export type OnboardingQuestion = {
   multi?: boolean;
   /** Condicional: só renderiza quando a dependência for satisfeita. */
   showIf?: ShowIf;
+  /**
+   * Só em `type: 'file'`: campo de link ao lado do anexo, na mesma linha, para
+   * quem prefere mandar a pasta em vez de subir arquivo. Grava em respostas[id]
+   * como qualquer outro campo, e o admin mostra os dois juntos.
+   */
+  link?: { id: string; ph?: string };
   /** Essencial para o start do dia 10 (uso interno). */
   star?: boolean;
 };
@@ -631,6 +637,11 @@ const CATALOGO_SECTIONS: OnboardingSection[] = [
         label: 'Horário de atendimento.' },
       { id: 'ct_email_revendedor', type: 'text', ph: 'comercial@...', star: true,
         label: 'Qual e-mail recebe os cadastros do formulário de revendedor?' },
+      { id: 'wa_numero', type: 'text', ph: '(00) 00000-0000', star: true,
+        label: 'Qual número de WhatsApp recebe as cotações do site?',
+        hint: 'O cliente monta a lista de produtos no site e envia tudo de uma vez para esse número.' },
+      { id: 'wa_extra', type: 'text', ph: 'Ex: nome da empresa e cidade',
+        label: 'Além do produto e da categoria, precisa vir mais alguma informação nessa mensagem?' },
     ],
   },
   {
@@ -672,36 +683,31 @@ const CATALOGO_SECTIONS: OnboardingSection[] = [
   {
     id: 'cat-catalogo',
     title: 'Catálogo de produtos',
-    lede: 'É o que mais demora a juntar e o que faz o prazo começar a contar. Cada campo de anexo aceita vários arquivos.',
+    lede: 'É o que faz o prazo começar a contar. Se der, mande tudo num arquivo só: categorias, produtos e setores na mesma planilha (ou no mesmo PDF). Cada campo aceita vários arquivos, ou o link da pasta.',
     questions: [
-      { id: 'cat_categorias', type: 'chips', multi: true, star: true,
-        options: [
-          'Abraçadeiras Metálicas', 'Eletrocalha e Acessórios', 'Perfilados e Acessórios',
-          'Fitas Metálicas', 'Barra Roscada', 'Parafusos e Acessórios', 'Trilho DIN', 'Chumbadores',
-        ],
-        label: 'Confirme as categorias que vão para o site.',
-        hint: 'Estas são as que identificamos no catálogo de vocês. Desmarque o que não entra.' },
-      { id: 'cat_categorias_extra', type: 'text', ph: 'Ex: eletrodutos',
-        label: 'Faltou alguma categoria? Escreva aqui.' },
-
       { id: 'cat_produtos_anexo', type: 'file', star: true,
-        label: 'Envie a lista dos produtos que vão para o site.',
-        hint: 'Planilha, catálogo em PDF ou os dois. Uma linha por produto, com nome, código, medidas e categoria, é o formato que mais acelera.' },
-      { id: 'cat_produtos_link', type: 'text', ph: 'https:// (Drive, Dropbox, WeTransfer...)',
-        label: '…ou cole o link da pasta com a lista.' },
+        link: { id: 'cat_produtos_link', ph: 'https:// (link da pasta)' },
+        label: 'Envie as categorias e os produtos que vão para o site.',
+        hint: 'Uma linha por produto, com nome, código, medidas e a categoria dele. Só entra no site o que estiver aqui.' },
 
       { id: 'cat_fotos_anexo', type: 'file', star: true,
+        link: { id: 'cat_fotos_link', ph: 'https:// (link da pasta)' },
         label: 'Envie as fotos dos produtos.',
         hint: 'Coloque o nome do produto no nome do arquivo, é assim que conseguimos ligar cada foto ao item certo.' },
-      { id: 'cat_fotos_link', type: 'text', ph: 'https:// (Drive, Dropbox, WeTransfer...)',
-        label: '…ou cole o link da pasta com as fotos.' },
-      { id: 'cat_fotos_faltando', type: 'chips',
-        options: ['Usar a foto da categoria', 'Vamos produzir as fotos que faltam'],
-        label: 'Se algum produto ficar sem foto, o que vocês preferem?' },
 
       { id: 'cat_fichas_anexo', type: 'file', star: true,
+        link: { id: 'cat_fichas_link', ph: 'https:// (link da pasta)' },
         label: 'Envie as fichas técnicas dos produtos.',
-        hint: 'Medidas, material, acabamento e norma. Pode anexar vários arquivos, um por vez.' },
+        hint: 'Medidas, material, acabamento e norma. Pode anexar vários arquivos.' },
+
+      { id: 'set_lista', type: 'area', star: true,
+        ph: 'Energia solar: perfilados e acessórios (categoria inteira), chumbadores mecânicos, barra roscada 3/8\nIndústria: eletrocalhas, abraçadeiras metálicas',
+        label: 'Quais setores devem aparecer no site e quais produtos entram em cada um?',
+        hint: 'Além da navegação por categoria, o site organiza os produtos por setor de atuação. Escreva um setor por linha, ou marque o setor direto na planilha de produtos que vocês enviaram acima.' },
+      { id: 'set_porque', type: 'area',
+        ph: 'Ex: na energia solar o que pega é fixar o trilho no telhado sem furar a telha',
+        label: 'Por que um cliente de cada setor procura vocês?',
+        hint: 'O texto de cada setor é escrito por nós; isso aqui é o que ele precisa dizer.' },
 
       { id: 'cat_promocao', type: 'area', star: true,
         ph: 'Ex: perfilado 38x38 está com condição especial junto da abraçadeira 1/2',
@@ -710,34 +716,6 @@ const CATALOGO_SECTIONS: OnboardingSection[] = [
       { id: 'cat_promocao_nome', type: 'chips',
         options: ['Leve também', 'Produtos que combinam', 'Acessórios recomendados'],
         label: 'Como preferem chamar essa sugestão no site?' },
-    ],
-  },
-  {
-    id: 'cat-setores',
-    title: 'Setores',
-    lede: 'Além da navegação por categoria, o site organiza os produtos por setor de atuação, para o cliente entrar pelo tipo de obra dele.',
-    questions: [
-      { id: 'set_lista', type: 'area', star: true,
-        ph: 'Energia solar: perfilados e acessórios (categoria inteira), chumbadores mecânicos, barra roscada 3/8\nIndústria: eletrocalhas, abraçadeiras metálicas',
-        label: 'Quais setores devem aparecer no site e quais produtos entram em cada um?',
-        hint: 'Escreva um setor por linha e, na frente, as categorias ou os produtos daquele setor. Um produto pode estar em mais de um setor. Se preferir, marque o setor direto na planilha de produtos e anexe abaixo.' },
-      { id: 'set_anexo', type: 'file',
-        label: 'Se preferir, anexe a planilha com o setor de cada produto.' },
-      { id: 'set_porque', type: 'area',
-        ph: 'Ex: na energia solar o que pega é fixar o trilho no telhado sem furar a telha',
-        label: 'Por que um cliente de cada setor procura vocês?',
-        hint: 'O texto de cada setor é escrito por nós; isso aqui é o que ele precisa dizer.' },
-    ],
-  },
-  {
-    id: 'cat-cotacao',
-    title: 'Atendimento & cotação',
-    lede: 'O cliente monta a lista de produtos no site e envia tudo de uma vez pelo WhatsApp de vocês.',
-    questions: [
-      { id: 'wa_numero', type: 'text', ph: '(00) 00000-0000', star: true,
-        label: 'Qual número recebe as cotações do site?' },
-      { id: 'wa_extra', type: 'text', ph: 'Ex: nome da empresa e cidade',
-        label: 'Além do produto e da categoria, precisa vir mais alguma informação na mensagem?' },
     ],
   },
   {
@@ -815,6 +793,8 @@ const CATALOGO_SECTIONS: OnboardingSection[] = [
         hint: 'Só o ID basta para instalar. Se quiserem que a gente confirme que os eventos estão chegando na conta, convide camila@notkode.com.br como leitor.' },
       { id: 'lgpd_email', type: 'text', ph: 'contato@...',
         label: 'Qual e-mail publicamos na Política de Privacidade para contato sobre dados?' },
+      { id: 'cat_livre', type: 'area',
+        label: 'Tem alguma coisa que a gente não perguntou e que vocês gostariam de informar?' },
     ],
   },
 ];

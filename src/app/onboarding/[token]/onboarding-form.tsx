@@ -423,23 +423,34 @@ function Section({
                   onChange={(e) => setText(q.id, e.target.value)}
                 />
               ) : q.type === 'file' ? (
-                <label className="filedrop">
-                  <input
-                    type="file"
-                    multiple
-                    className="sr-only"
-                    onChange={(e) => onFile(q.id, e.target.files)}
-                  />
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <path d="M17 8l-5-5-5 5" /><path d="M12 3v12" />
-                  </svg>
-                  <span>
-                    {uploading === q.id
-                      ? 'Enviando…'
-                      : resumoAnexos(answers[q.id]) || 'Escolher arquivos (PDF, planilha, fotos...)'}
-                  </span>
-                </label>
+                <div className={q.link ? 'fileRow' : undefined}>
+                  <label className="filedrop">
+                    <input
+                      type="file"
+                      multiple
+                      className="sr-only"
+                      onChange={(e) => onFile(q.id, e.target.files)}
+                    />
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <path d="M17 8l-5-5-5 5" /><path d="M12 3v12" />
+                    </svg>
+                    <span>
+                      {uploading === q.id
+                        ? 'Enviando…'
+                        : resumoAnexos(answers[q.id]) || 'Escolher arquivos (PDF, planilha, fotos...)'}
+                    </span>
+                  </label>
+                  {q.link ? (
+                    <input
+                      type="text"
+                      className="field"
+                      placeholder={q.link.ph ?? 'https:// (link da pasta)'}
+                      value={(answers[q.link.id] as string) ?? ''}
+                      onChange={(e) => setText(q.link!.id, e.target.value)}
+                    />
+                  ) : null}
+                </div>
               ) : (
                 <input
                   type="text"
@@ -519,6 +530,9 @@ function StyleBlock() {
         padding: 14px 16px; transition: all .15s;
       }
       .filedrop:hover { border-color: #3B82F6; color: hsl(var(--text-primary)); }
+      /* Anexo e link da pasta dividem a linha; no celular um cai embaixo do outro. */
+      .fileRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; }
+      @media (max-width: 640px) { .fileRow { grid-template-columns: 1fr; } }
       .sr-only {
         position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
         overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;

@@ -49,7 +49,13 @@ function answeredSections(respostas: Record<string, string | string[]>, template
   return getOnboardingTemplate(template).sections.map((section) => ({
     section,
     answered: section.questions
-      .map((q) => ({ q, val: answerText(respostas[q.id]), nossa: nossas.has(q.id) }))
+      .map((q) => {
+        // Pergunta de anexo com link da pasta: os dois campos são a mesma
+        // resposta para quem lê, então aparecem na mesma linha.
+        const link = q.link ? answerText(respostas[q.link.id]) : '';
+        const val = [answerText(respostas[q.id]), link].filter(Boolean).join(' · ');
+        return { q, val, nossa: nossas.has(q.id) };
+      })
       .filter((x) => x.val !== ''),
   })).filter((s) => s.answered.length > 0);
 }
