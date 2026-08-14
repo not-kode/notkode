@@ -1,18 +1,8 @@
 import type { InclusionGroup, PricingSchema } from '@/components/ui/pricing-form';
+import { OPCAO_NENHUMA } from '@/lib/pricing-multi';
 
-// Modo "a partir de": mostramos só o PISO por tipo (min = max = piso).
-// Landing e Site são coisas separadas. Perguntas de tamanho/prazo/necessidade
-// servem só pra qualificar o lead — não mexem mais no valor.
-const TYPE_FLOOR: Record<string, number> = {
-  landing: 1800,
-  site:    4000,
-};
-
-function calc(sel: Record<string, string | string[]>): [number, number] {
-  const type = (sel.type as string) ?? 'site';
-  const floor = TYPE_FLOOR[type] ?? TYPE_FLOOR.site;
-  return [floor, floor];
-}
+// Sem preço no formulário: as perguntas servem só para qualificar o lead. Valor sai na
+// conversa, com o escopo na mão, nunca de uma tabela que o site calcula sozinho.
 
 function inclusions(): InclusionGroup[] {
   // "O que já vem incluso" — só o que é SEMPRE verdadeiro num site da Notkode.
@@ -39,13 +29,12 @@ function reportTitle(sel: Record<string, string | string[]>): string {
 
 export const sitesPricingSchema: PricingSchema = {
   serviceTag: 'sites',
-  priceMode: 'from',
   copy: {
-    eyebrow: 'Orçamento de Site',
-    revealTitle: 'Investimento',
+    eyebrow: 'Seu site',
+    revealTitle: 'É isso que você precisa?',
     revealSubtitle:
-      'Piso pra esse tipo de projeto. O valor final a gente fecha numa conversa rápida, conforme o escopo. Deixe seu contato pra receber a proposta.',
-    submitLabel: 'Receber proposta',
+      'Confira o que anotamos. A gente volta com a proposta e o valor conforme o escopo, numa conversa rápida.',
+    submitLabel: 'Enviar para a Notkode',
   },
   fields: [
     {
@@ -77,12 +66,13 @@ export const sitesPricingSchema: PricingSchema = {
       label: 'O que o site precisa ter?',
       hint: 'Marque o que faz sentido pro seu objetivo.',
       default: [],
-      min: 0,
+      min: 1,
       options: [
         { value: 'contato', label: 'Gerar contato com a lead' },
         { value: 'blog',    label: 'Blog / conteúdo' },
         { value: 'crm',     label: 'Integração com CRM' },
         { value: 'trafego', label: 'Tráfego pra trazer visitantes' },
+        OPCAO_NENHUMA,
       ],
     },
     {
@@ -99,7 +89,6 @@ export const sitesPricingSchema: PricingSchema = {
       ],
     },
   ],
-  calc,
   inclusions,
   reportTitle,
 };

@@ -1,12 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircle, Sparkles } from 'lucide-react';
 import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analytics';
 import { WhatsAppFallback } from '@/components/ui/whatsapp-fallback';
 import { useFormView } from '@/components/ui/use-form-view';
 import { stepEventLabel, stepLabel } from '@/lib/form-steps';
+import { emailValido, formatarWhatsapp, sugestaoDeEmail, whatsappValido } from '@/lib/validacao-contato';
+import { alternarEscolha } from '@/lib/pricing-multi';
 
 // ── Schema types ──────────────────────────────────────────────────────────
 
@@ -70,8 +72,6 @@ export type TimelinePhase = {
 export type PricingSchema = {
   serviceTag: string;
   fields: PricingField[];
-  /** receives current selection and returns [min, max] in BRL */
-  calc: (selection: PricingSelection) => [number, number];
   /** optional: explain what's pushing the price on the reveal screen */
   breakdown?: (selection: PricingSelection) => BreakdownItem[];
   /** optional: build the "what's included" visual scope from selection */
@@ -80,8 +80,6 @@ export type PricingSchema = {
   timeline?: (selection: PricingSelection) => TimelinePhase[];
   /** optional: title shown on the reveal screen header (e.g. "Sua loja sob medida") */
   reportTitle?: (selection: PricingSelection) => string;
-  /** 'from' shows "a partir de <min>" (piso, sem teto) em vez da faixa. Default 'range'. */
-  priceMode?: 'range' | 'from';
   copy?: {
     /** small label above the heading on each step (e.g. "Orçamento") */
     eyebrow?: string;
@@ -96,21 +94,6 @@ export type PricingSchema = {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
-
-function formatWhatsApp(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 11);
-  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
-  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-}
-
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
 
 function buildInitialSelection(schema: PricingSchema): PricingSelection {
   const sel: PricingSelection = {};
@@ -150,33 +133,23 @@ type WaCopy = {
   greetingWithName: (name: string, tag: string) => string;
   greetingNoName: (tag: string) => string;
   scopeLabel: string;
-  rangeLabel: string;
-  rangeSeparator: string;
   closeQuestion: string;
 };
 
 function buildWhatsAppMessage(
   schema: PricingSchema,
   summary: SummaryRow[],
-  min: number,
-  max: number,
   name: string,
   wa: WaCopy,
-  isFrom: boolean,
 ): string {
   const greeting = name
     ? wa.greetingWithName(name, schema.serviceTag)
     : wa.greetingNoName(schema.serviceTag);
-  const priceLine = isFrom
-    ? `${wa.rangeLabel} a partir de ${fmt(min)}`
-    : `${wa.rangeLabel} ${fmt(min)} ${wa.rangeSeparator} ${fmt(max)}`;
   const lines = [
     greeting,
     '',
     wa.scopeLabel,
     ...summary.map((s) => `• ${s.label}: ${s.valueLabels.join(', ')}`),
-    '',
-    priceLine,
     '',
     wa.closeQuestion,
   ];
@@ -204,8 +177,6 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   const isIdentityStep = step === 0;
   const isRevealStep = step === totalSteps - 1;
   const currentField = !isIdentityStep && !isRevealStep ? schema.fields[step - 1] : null;
-  const [min, max] = useMemo(() => schema.calc(selection), [selection, schema]);
-  const isFrom = schema.priceMode === 'from';
 
   // Funil interno do formulário: marca início e cada etapa alcançada (p/ ver onde desistem).
   // Rótulo vem de lib/form-steps para o dashboard falar a mesma língua em todos os
@@ -272,20 +243,21 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
     markInteraction();
     setSelection((prev) => {
       const current = (prev[fieldId] as string[]) ?? [];
-      const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
-      return { ...prev, [fieldId]: next };
+      return { ...prev, [fieldId]: alternarEscolha(current, value) };
     });
   };
 
-  // Contato leve: nome + UM canal (WhatsApp ou e-mail), igual ao formulário de
-  // qualificação. Empresa e e-mail continuam opcionais; exigir tudo de uma vez era
-  // o maior atrito do funil.
-  const hasChannel = whatsapp.replace(/\D/g, '').length >= 10 || isValidEmail(email);
+  // Sem campo opcional: nome, empresa, WhatsApp e e-mail para sair da identificação, e
+  // a observação preenchida para enviar. Antes bastava UM canal (WhatsApp OU e-mail),
+  // mas a /api/lead exige nome, e-mail e WhatsApp e devolvia 400 quando faltava o e-mail,
+  // descartando o lead sem que a pessoa percebesse.
+  const hasWhatsapp = whatsappValido(whatsapp);
+  const hasEmail = emailValido(email);
   const canAdvance = isIdentityStep
-    ? Boolean(name.trim() && hasChannel)
+    ? Boolean(name.trim() && company.trim() && hasWhatsapp && hasEmail)
     : currentField
       ? isFieldComplete(currentField, selection[currentField.id])
-      : status !== 'submitting';
+      : status !== 'submitting' && Boolean(notes.trim());
 
   const goNext = useCallback(() => {
     if (!canAdvance) return;
@@ -328,7 +300,6 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
     const payload = {
       serviceTag: schema.serviceTag,
       selection,
-      estimatedRange: [min, max],
       lead: { name, whatsapp, email, notes, company },
       utm: getUtm(),
       session_id: getSessionId(),
@@ -351,14 +322,12 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   if (status === 'success') {
     const copy = schema.copy ?? {};
     const summary = summarizeSelection(schema, selection);
-    const waMessage = buildWhatsAppMessage(schema, summary, min, max, name, {
+    const waMessage = buildWhatsAppMessage(schema, summary, name, {
       greetingWithName: (n, tag) => t('waGreetingWithName', { name: n, tag }),
       greetingNoName: (tag) => t('waGreetingNoName', { tag }),
       scopeLabel: t('waScopeLabel'),
-      rangeLabel: t('waRangeLabel'),
-      rangeSeparator: t('waRangeSeparator'),
       closeQuestion: t('waCloseQuestion'),
-    }, isFrom);
+    });
     const waUrl = `https://wa.me/5511951381254?text=${encodeURIComponent(waMessage)}`;
 
     return (
@@ -377,21 +346,6 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
           <p className="text-[14px] text-text-secondary leading-relaxed max-w-md mx-auto">
             {name ? t('successBodyWithName', { name }) : t('successBodyNoName')}
           </p>
-        </div>
-
-        {/* Faixa de preço destacada */}
-        <div className="px-6 lg:px-10 pb-6">
-          <div
-            className="rounded-2xl border border-primary/30 px-6 py-6 text-center"
-            style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))' }}
-          >
-            <p className="font-mono text-[10px] uppercase tracking-widest text-primary mb-2">
-              {isFrom ? 'A partir de' : t('investmentLabel')}
-            </p>
-            <p className="font-bricolage text-[1.75rem] md:text-[2.25rem] font-bold text-text-primary leading-tight tracking-tight">
-              {isFrom ? fmt(min) : <>{fmt(min)} <span className="text-text-muted font-normal">{t('rangeSeparator')}</span> {fmt(max)}</>}
-            </p>
-          </div>
         </div>
 
         {/* Próximos passos */}
@@ -447,7 +401,6 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
           <span className="font-mono text-[10px] text-text-dim uppercase tracking-widest">
             {t('stepLabel', { step: step + 1, total: totalSteps })}
           </span>
-          <LiveEstimatePill min={min} max={max} from={isFrom} visible={step > 1 && !isRevealStep} />
         </div>
         <div className="flex gap-1.5">
           {Array.from({ length: totalSteps }).map((_, i) => (
@@ -496,9 +449,6 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
             <RevealStep
               schema={schema}
               selection={selection}
-              min={min}
-              max={max}
-              isFrom={isFrom}
               name={name}
               notes={notes}
               onNotes={setNotes}
@@ -676,44 +626,6 @@ function FieldStep({
   );
 }
 
-function LiveEstimatePill({ min, max, from, visible }: { min: number; max: number; from?: boolean; visible: boolean }) {
-  const t = useTranslations('PricingForm');
-  const prevRef = useRef<string>('');
-  const current = `${min}-${max}`;
-  const [pulse, setPulse] = useState(false);
-
-  useEffect(() => {
-    if (!visible) return;
-    if (prevRef.current && prevRef.current !== current) {
-      setPulse(true);
-      const t = setTimeout(() => setPulse(false), 320);
-      return () => clearTimeout(t);
-    }
-    prevRef.current = current;
-  }, [current, visible]);
-
-  if (!visible) return <span aria-hidden />;
-
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-transform duration-200"
-      style={{
-        background: 'rgba(59,130,246,0.10)',
-        border: '1px solid rgba(59,130,246,0.25)',
-        transform: pulse ? 'scale(1.05)' : 'scale(1)',
-      }}
-    >
-      <Sparkles className="w-3 h-3 text-primary" strokeWidth={2.2} />
-      <span className="font-mono text-[10px] text-primary uppercase tracking-widest">
-        {from ? 'a partir de' : 'estimativa'}
-      </span>
-      <span className="font-mono text-[11px] text-text-primary font-semibold">
-        {from ? fmt(min) : <>{fmt(min)} {t('rangeSeparator')} {fmt(max)}</>}
-      </span>
-    </span>
-  );
-}
-
 /**
  * Primeira etapa: quem é a pessoa. Fica antes das perguntas porque o rascunho
  * (lead_drafts) já nasce com nome e telefone, então quem some no meio do caminho
@@ -730,6 +642,10 @@ function IdentityStep({
 }) {
   const t = useTranslations('PricingForm');
   const [emailTouched, setEmailTouched] = useState(false);
+  const [whatsappTouched, setWhatsappTouched] = useState(false);
+  const emailOk = emailValido(email);
+  const whatsappOk = whatsappValido(whatsapp);
+  const emailSugerido = sugestaoDeEmail(email);
 
   return (
     <div>
@@ -771,11 +687,19 @@ function IdentityStep({
             <input
               type="tel"
               value={whatsapp}
-              onChange={(e) => onWhats(formatWhatsApp(e.target.value))}
+              onChange={(e) => onWhats(formatarWhatsapp(e.target.value))}
+              onBlur={() => setWhatsappTouched(true)}
               placeholder={t('fieldWhatsappPlaceholder')}
-              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-              style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+              className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
+              style={{
+                border: whatsappTouched && whatsapp && !whatsappOk
+                  ? '1px solid rgba(239,68,68,0.6)'
+                  : '1px solid rgba(25,25,24,0.10)',
+              }}
             />
+            {whatsappTouched && whatsapp && !whatsappOk && (
+              <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldWhatsappInvalid')}</span>
+            )}
           </Field>
           <Field label={t('fieldEmail')}>
             <input
@@ -786,13 +710,23 @@ function IdentityStep({
               placeholder={t('fieldEmailPlaceholder')}
               className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
               style={{
-                border: emailTouched && email && !isValidEmail(email)
+                border: emailTouched && email && !emailOk
                   ? '1px solid rgba(239,68,68,0.6)'
                   : '1px solid rgba(25,25,24,0.10)',
               }}
             />
-            {emailTouched && email && !isValidEmail(email) && (
+            {emailTouched && email && !emailOk && (
               <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldEmailInvalid')}</span>
+            )}
+            {/* Domínio com cara de erro de digitação: sugere, sem bloquear. */}
+            {emailTouched && emailOk && emailSugerido && (
+              <button
+                type="button"
+                onClick={() => onEmail(emailSugerido)}
+                className="font-mono text-[10px] text-primary mt-1 block underline"
+              >
+                {t('fieldEmailSuggestion', { email: emailSugerido })}
+              </button>
             )}
           </Field>
         </div>
@@ -803,25 +737,23 @@ function IdentityStep({
 
 function RevealStep({
   schema, selection,
-  min, max, isFrom, name, notes, onNotes,
+  name, notes, onNotes,
   title, subtitle,
 }: {
   schema: PricingSchema;
   selection: PricingSelection;
-  min: number; max: number; isFrom: boolean;
   name: string; notes: string;
   onNotes: (v: string) => void;
   title: string; subtitle: string;
 }) {
   const t = useTranslations('PricingForm');
-  const avg = Math.round(((min + max) / 2) / 100) * 100;
   const inclusions = schema.inclusions?.(selection) ?? [];
   const reportTitle = schema.reportTitle?.(selection) ?? t('reportTitleDefault');
 
   return (
     <div style={{ animation: 'priceReveal 600ms cubic-bezier(0.16, 1, 0.3, 1)' }}>
 
-      {/* ── Hero do valor (sem cabeçalho de protocolo — não é proposta) ── */}
+      {/* ── Abertura: o que a pessoa pediu. Sem valor: preço é conversa, não formulário. ── */}
       <div
         className="rounded-t-2xl border border-black/[0.08] border-b-0 px-6 lg:px-10 py-9 lg:py-11 text-center"
         style={{ background: 'linear-gradient(180deg, rgba(59,130,246,0.05) 0%, transparent 100%)' }}
@@ -833,19 +765,6 @@ function RevealStep({
           <Sparkles className="w-3 h-3" />
           {title}
         </p>
-        {isFrom && (
-          <p className="font-mono text-[11px] text-text-muted uppercase tracking-widest mb-1">
-            a partir de
-          </p>
-        )}
-        <div className="font-bricolage text-[2.5rem] md:text-[3rem] lg:text-[3.5rem] font-bold text-text-primary leading-none tracking-tight">
-          {isFrom ? fmt(min) : fmt(avg)}
-        </div>
-        {!isFrom && (
-          <p className="font-mono text-[11px] text-text-muted mt-3">
-            {t('rangeLabel')} {fmt(min)} {t('rangeSeparator')} {fmt(max)}
-          </p>
-        )}
         <p className="text-[12px] text-text-muted mt-4 max-w-md mx-auto leading-relaxed">
           {subtitle}
         </p>

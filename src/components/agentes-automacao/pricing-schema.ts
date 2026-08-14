@@ -1,38 +1,10 @@
 import type { InclusionGroup, PricingSchema, TimelinePhase } from '@/components/ui/pricing-form';
 
-// Faixas preliminares — ajustar com base no histórico real de propostas.
-// Estrutura: base + adicional por canal + adicional por integração + multiplicador por urgência.
-
-const SCOPE_BASE: Record<string, [number, number]> = {
-  simples:    [1500, 3000],   // 1 fluxo direto, sem IA
-  intermed:   [3500, 7000],   // 2–3 fluxos com IA leve (resposta automática, classificação)
-  avancado:   [8000, 18000],  // agente com IA + várias integrações + lógica condicional
-};
-
-const PER_CHANNEL = 600;       // por canal adicional além do primeiro
-const PER_INTEGRATION = 900;   // por integração adicional além da primeira
-
-const URGENCY_MULT: Record<string, number> = {
-  normal:   1.0,   // 2–3 semanas
-  rapido:   1.2,   // 1–2 semanas
-  urgente:  1.45,  // < 1 semana
-};
-
-function calc(sel: Record<string, string | string[]>): [number, number] {
-  const scope = (sel.scope as string) ?? 'intermed';
-  const channels = (sel.channels as string[]) ?? [];
-  const integrations = (sel.integrations as string[]) ?? [];
-  const urgency = (sel.urgency as string) ?? 'normal';
-
-  const [baseMin, baseMax] = SCOPE_BASE[scope] ?? SCOPE_BASE.intermed;
-  const extraChannels = Math.max(0, channels.length - 1) * PER_CHANNEL;
-  const extraIntegrations = Math.max(0, integrations.length - 1) * PER_INTEGRATION;
-  const mult = URGENCY_MULT[urgency] ?? 1;
-
-  const min = Math.round((baseMin + extraChannels + extraIntegrations) * mult);
-  const max = Math.round((baseMax + extraChannels * 1.4 + extraIntegrations * 1.4) * mult);
-  return [min, max];
-}
+// Este schema não desenha mais formulário nenhum: desde 13/07/2026 a página de Agentes
+// usa o formulário de qualificação. Ele sobrevive porque a /api/lead ainda tira daqui a
+// lista de "já vem incluso" e o título do e-mail do lead. A tabela de preço que existia
+// aqui (base por escopo, por canal, por integração e multiplicador de urgência) saiu
+// junto com o preço dos outros formulários.
 
 const CHANNEL_LABEL: Record<string, string> = {
   whatsapp:  'WhatsApp',
@@ -122,14 +94,14 @@ function reportTitle(sel: Record<string, string | string[]>): string {
 export const agentesPricingSchema: PricingSchema = {
   serviceTag: 'agentes-automacao',
   copy: {
-    eyebrow: 'Orçamento de Automação',
-    revealTitle: 'Investimento estimado',
+    eyebrow: 'Sua automação',
+    revealTitle: 'É isso que você precisa?',
     revealSubtitle:
-      'Faixa preliminar baseada nas suas escolhas. Deixe seu contato para receber a proposta detalhada, sem call obrigatória.',
-    submitLabel: 'Receber proposta',
+      'Confira o que anotamos. A gente volta com a proposta conforme o escopo.',
+    submitLabel: 'Enviar para a Notkode',
     successTitle: 'Recebemos seu pedido.',
     successBody:
-      'Em algumas horas você recebe a proposta detalhada no WhatsApp e e-mail, com escopo, prazo e investimento final.',
+      'Em algumas horas a gente volta no WhatsApp e no e-mail com escopo, prazo e valor.',
   },
   fields: [
     {
@@ -185,7 +157,6 @@ export const agentesPricingSchema: PricingSchema = {
       ],
     },
   ],
-  calc,
   inclusions,
   timeline,
   reportTitle,

@@ -1,35 +1,9 @@
 import type { InclusionGroup, PricingSchema } from '@/components/ui/pricing-form';
+import { escolhasReais, OPCAO_NENHUMA } from '@/lib/pricing-multi';
 
-const SCOPE_BASE: Record<string, [number, number]> = {
-  logo:      [1200, 2500],   // só logo + variações
-  essencial: [2500, 5000],   // logo + paleta + tipografia
-  completo:  [5000, 10000],  // brandbook completo + aplicações
-};
-
-const PER_APPLICATION = 450;
-
-const URGENCY_MULT: Record<string, number> = {
-  normal:   1.0,
-  rapido:   1.2,
-  urgente:  1.45,
-};
-
-function calc(sel: Record<string, string | string[]>): [number, number] {
-  const scope = (sel.scope as string) ?? 'essencial';
-  const applications = (sel.applications as string[]) ?? [];
-  const stage = (sel.stage as string) ?? 'nova';
-  const urgency = (sel.urgency as string) ?? 'normal';
-
-  const [baseMin, baseMax] = SCOPE_BASE[scope] ?? SCOPE_BASE.essencial;
-  const appsCost = applications.length * PER_APPLICATION;
-  // rebrand (revisão de marca) costuma exigir alinhamento extra: +10%
-  const stageMult = stage === 'rebrand' ? 1.1 : 1.0;
-  const urgMult = URGENCY_MULT[urgency] ?? 1;
-
-  const min = Math.round((baseMin + appsCost) * stageMult * urgMult);
-  const max = Math.round((baseMax + appsCost * 1.4) * stageMult * urgMult);
-  return [min, max];
-}
+// Sem preço no formulário: escopo, estágio e aplicações servem só para qualificar o
+// lead. Aqui havia uma tabela que somava por aplicação marcada e multiplicava por
+// urgência, e era o último formulário do site que ainda calculava faixa na tela.
 
 const APP_LABEL: Record<string, string> = {
   papelaria:     'Papelaria (cartão, assinatura de e-mail)',
@@ -42,7 +16,7 @@ const APP_LABEL: Record<string, string> = {
 
 function inclusions(sel: Record<string, string | string[]>): InclusionGroup[] {
   const scope = (sel.scope as string) ?? 'essencial';
-  const applications = (sel.applications as string[]) ?? [];
+  const applications = escolhasReais(sel.applications);
 
   const principal: string[] = [];
   if (scope === 'logo') {
@@ -92,11 +66,11 @@ function reportTitle(sel: Record<string, string | string[]>): string {
 export const brandbookPricingSchema: PricingSchema = {
   serviceTag: 'brandbook',
   copy: {
-    eyebrow: 'Orçamento de Identidade',
-    revealTitle: 'Investimento estimado',
+    eyebrow: 'Sua identidade',
+    revealTitle: 'É isso que você precisa?',
     revealSubtitle:
-      'Faixa preliminar baseada nas suas escolhas. O valor final a gente fecha numa conversa rápida. Deixe seu contato pra receber a proposta.',
-    submitLabel: 'Receber proposta',
+      'Confira o que anotamos. A gente volta com a proposta e o valor conforme o escopo, numa conversa rápida.',
+    submitLabel: 'Enviar para a Notkode',
   },
   fields: [
     {
@@ -126,9 +100,9 @@ export const brandbookPricingSchema: PricingSchema = {
       id: 'applications',
       type: 'multi',
       label: 'Quais aplicações você quer incluir?',
-      hint: 'Tudo opcional. Aplicações entregues prontas para uso.',
+      hint: 'Aplicações entregues prontas para uso.',
       default: [],
-      min: 0,
+      min: 1,
       options: [
         { value: 'papelaria',     label: 'Papelaria (cartão, assinatura e-mail)' },
         { value: 'social',        label: 'Templates de redes sociais' },
@@ -136,6 +110,7 @@ export const brandbookPricingSchema: PricingSchema = {
         { value: 'sinalizacao',   label: 'Sinalização / ambientação' },
         { value: 'embalagem',     label: 'Embalagem ou rótulo' },
         { value: 'merchandising', label: 'Merchandising (uniforme, brindes)' },
+        OPCAO_NENHUMA,
       ],
     },
     {
@@ -152,7 +127,6 @@ export const brandbookPricingSchema: PricingSchema = {
       ],
     },
   ],
-  calc,
   inclusions,
   reportTitle,
 };

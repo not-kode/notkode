@@ -1,19 +1,8 @@
 import type { InclusionGroup, PricingSchema } from '@/components/ui/pricing-form';
+import { escolhasReais, OPCAO_NENHUMA } from '@/lib/pricing-multi';
 
-// Modo "a partir de": só o PISO por tipo (min = max = piso).
-// Dois níveis: E-commerce (loja pronta pra vender) e E-commerce + sistema próprio
-// (CRM/cadastro de produto/operação sua). Catálogo, integrações e prazo servem
-// só pra qualificar o lead — não mexem no valor.
-const TYPE_FLOOR: Record<string, number> = {
-  ecommerce: 6000,
-  sistema:   10000,
-};
-
-function calc(sel: Record<string, string | string[]>): [number, number] {
-  const type = (sel.type as string) ?? 'ecommerce';
-  const floor = TYPE_FLOOR[type] ?? TYPE_FLOOR.ecommerce;
-  return [floor, floor];
-}
+// Sem preço no formulário: cenário, catálogo e integrações servem só para qualificar o
+// lead. O valor sai na conversa, depois de entender a operação.
 
 const TYPE_LABEL: Record<string, string> = {
   ecommerce: 'E-commerce',
@@ -40,7 +29,8 @@ const INTEG_LABEL: Record<string, string> = {
 function inclusions(sel: Record<string, string | string[]>): InclusionGroup[] {
   const type = (sel.type as string) ?? 'ecommerce';
   const catalog = (sel.catalog as string) ?? 'medio';
-  const integrations = (sel.integrations as string[]) ?? [];
+  // "Nenhuma dessas" é resposta, não integração: fora da lista de escopo.
+  const integrations = escolhasReais(sel.integrations);
 
   const principal: string[] = [];
   if (type === 'sistema') {
@@ -73,13 +63,12 @@ function reportTitle(sel: Record<string, string | string[]>): string {
 
 export const ecommercePricingSchema: PricingSchema = {
   serviceTag: 'ecommerce',
-  priceMode: 'from',
   copy: {
-    eyebrow: 'Orçamento de E-commerce',
-    revealTitle: 'Investimento',
+    eyebrow: 'Sua loja',
+    revealTitle: 'É isso que você precisa?',
     revealSubtitle:
-      'Piso pra esse tipo de loja. Validamos juntos numa conversa rápida antes de fechar o valor exato.',
-    submitLabel: 'Receber proposta',
+      'Confira o que anotamos. A gente volta com a proposta e o valor depois de entender sua operação.',
+    submitLabel: 'Enviar para a Notkode',
   },
   fields: [
     {
@@ -111,7 +100,7 @@ export const ecommercePricingSchema: PricingSchema = {
       label: 'Quais integrações você precisa?',
       hint: 'Marque tudo que precisa conectar à loja.',
       default: ['pagamento', 'frete'],
-      min: 0,
+      min: 1,
       options: [
         { value: 'pagamento',    label: 'Gateway de pagamento (Pagar.me, Stripe…)' },
         { value: 'frete',        label: 'Cálculo de frete (Correios, Melhor Envio…)' },
@@ -121,6 +110,7 @@ export const ecommercePricingSchema: PricingSchema = {
         { value: 'whatsapp',     label: 'WhatsApp (carrinho / atendimento)' },
         { value: 'agente_ia',    label: 'Agente de IA' },
         { value: 'trafego',      label: 'Tráfego pago (Meta/Google)' },
+        OPCAO_NENHUMA,
       ],
     },
     {
@@ -137,7 +127,6 @@ export const ecommercePricingSchema: PricingSchema = {
       ],
     },
   ],
-  calc,
   inclusions,
   reportTitle,
 };

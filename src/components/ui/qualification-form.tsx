@@ -7,6 +7,7 @@ import { track, getUtm, saveLeadDraft, getSessionId } from '@/components/analyti
 import { WhatsAppFallback } from '@/components/ui/whatsapp-fallback';
 import { useFormView } from '@/components/ui/use-form-view';
 import { stepEventLabel, stepLabel } from '@/lib/form-steps';
+import { emailValido, formatarWhatsapp, sugestaoDeEmail, whatsappValido } from '@/lib/validacao-contato';
 
 export type QualificationOption = { id: string; label: string };
 
@@ -34,18 +35,6 @@ interface FormData {
   timing: string;
 }
 
-function formatWhatsApp(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 11);
-  if (digits.length <= 2) return digits.length ? `(${digits}` : '';
-  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-}
-
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   const t = useTranslations('QualificationForm');
   const defaultSizes = [
@@ -58,6 +47,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   const [step, setStep] = useState<Step>(0);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [emailTouched, setEmailTouched] = useState(false);
+  const [whatsappTouched, setWhatsappTouched] = useState(false);
   const [data, setData] = useState<FormData>({
     needs: [],
     name: '',
@@ -148,13 +138,16 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
   // sessões paravam na 1ª etapa, então nem o contato nem as respostas chegavam.
   // Com o contato primeiro, quem preencher e desistir no meio já fica gravado em
   // lead_drafts e aparece no admin para a gente ligar.
-  const hasWhatsapp = data.whatsapp.replace(/\D/g, '').length >= 10;
-  const emailOkOuVazio = !data.email.trim() || isValidEmail(data.email);
+  const hasWhatsapp = whatsappValido(data.whatsapp);
+  const hasEmail = emailValido(data.email);
+  const emailSugerido = sugestaoDeEmail(data.email);
   const canContinue =
-    // Etapa 1 — contato: nome, empresa e WhatsApp obrigatórios; e-mail opcional.
-    (step === 0 && !!data.name.trim() && !!data.company.trim() && hasWhatsapp && emailOkOuVazio) ||
+    // Nenhum campo opcional em nenhuma etapa. O e-mail já era exigido pela /api/lead, que
+    // rejeitava o envio sem ele; deixá-lo opcional aqui só criava lead perdido em silêncio,
+    // porque o form mostra sucesso sem ler a resposta.
+    (step === 0 && !!data.name.trim() && !!data.company.trim() && !!data.companySize && hasWhatsapp && hasEmail) ||
     (step === 1 && data.needs.length > 0) ||
-    (step === 2 && !!data.timing);
+    (step === 2 && !!data.timing && !!data.description.trim());
 
   const submit = async () => {
     setStatus('submitting');
@@ -371,14 +364,22 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
                   <input
                     type="tel"
                     value={data.whatsapp}
-                    onChange={(e) => update('whatsapp', formatWhatsApp(e.target.value))}
+                    onChange={(e) => update('whatsapp', formatarWhatsapp(e.target.value))}
+                    onBlur={() => setWhatsappTouched(true)}
                     placeholder={t('fieldWhatsappPlaceholder')}
-                    className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none focus:border-primary/50 transition-colors"
-                    style={{ border: '1px solid rgba(25,25,24,0.10)' }}
+                    className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
+                    style={{
+                      border: whatsappTouched && data.whatsapp && !hasWhatsapp
+                        ? '1px solid rgba(239,68,68,0.6)'
+                        : '1px solid rgba(25,25,24,0.10)',
+                    }}
                   />
+                  {whatsappTouched && data.whatsapp && !hasWhatsapp && (
+                    <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldWhatsappInvalid')}</span>
+                  )}
                 </Field>
 
-                <Field label={t('fieldEmailOptional')}>
+                <Field label={t('fieldEmail')}>
                   <input
                     type="email"
                     value={data.email}
@@ -387,13 +388,23 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
                     placeholder={t('fieldEmailPlaceholder')}
                     className="w-full px-4 py-2.5 rounded-lg text-[14px] bg-white/60 focus:outline-none transition-colors"
                     style={{
-                      border: emailTouched && data.email && !isValidEmail(data.email)
+                      border: emailTouched && data.email && !hasEmail
                         ? '1px solid rgba(239,68,68,0.6)'
                         : '1px solid rgba(25,25,24,0.10)',
                     }}
                   />
-                  {emailTouched && data.email && !isValidEmail(data.email) && (
+                  {emailTouched && data.email && !hasEmail && (
                     <span className="font-mono text-[10px] text-red-500 mt-1 block">{t('fieldEmailInvalid')}</span>
+                  )}
+                  {/* Domínio com cara de erro de digitação: sugere, sem bloquear. */}
+                  {emailTouched && hasEmail && emailSugerido && (
+                    <button
+                      type="button"
+                      onClick={() => update('email', emailSugerido)}
+                      className="font-mono text-[10px] text-primary mt-1 block underline"
+                    >
+                      {t('fieldEmailSuggestion', { email: emailSugerido })}
+                    </button>
                   )}
                 </Field>
               </div>

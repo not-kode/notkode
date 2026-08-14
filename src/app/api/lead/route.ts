@@ -4,13 +4,13 @@ import { remetenteDaNotkode } from '@/lib/email-remetente';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { getPricingSchema } from '@/lib/lead-schemas';
 import { buildLeadEmail } from '@/lib/lead-email';
+import { emailValido, whatsappValido } from '@/lib/validacao-contato';
 
 // ── Payload types ──────────────────────────────────────────────────────────
 
 type PricingPayload = {
   serviceTag: string;
   selection: Record<string, string | string[]>;
-  estimatedRange: [number, number];
   lead: { name: string; whatsapp: string; email: string; notes?: string; company?: string };
 };
 
@@ -42,8 +42,6 @@ type NormalizedLead = {
   whatsapp: string;
   notes: string | null;
   selection: Record<string, string | string[]> | null;
-  estimated_min: number | null;
-  estimated_max: number | null;
   session_id: string | null;
   utm_source: string | null;
   utm_medium: string | null;
@@ -88,8 +86,6 @@ function normalize(
       whatsapp: d.whatsapp,
       notes: d.description ?? null,
       selection,
-      estimated_min: null,
-      estimated_max: null,
       session_id,
       ...utm,
     };
@@ -97,7 +93,6 @@ function normalize(
 
   const p = body as PricingPayload;
   if (!p.lead?.name || !p.lead?.email || !p.lead?.whatsapp) return null;
-  const [min, max] = p.estimatedRange ?? [null, null];
   const selection: Record<string, string | string[]> = {
     ...(p.selection ?? {}),
     ...(p.lead.company ? { company: p.lead.company } : {}),
@@ -110,8 +105,6 @@ function normalize(
     whatsapp: p.lead.whatsapp,
     notes: p.lead.notes ?? null,
     selection,
-    estimated_min: typeof min === 'number' ? min : null,
-    estimated_max: typeof max === 'number' ? max : null,
     session_id,
     ...utm,
   };
@@ -131,8 +124,6 @@ function renderEmails(row: NormalizedLead) {
   const base = {
     serviceTag: row.service_tag,
     reportTitle,
-    estimatedMin: row.estimated_min,
-    estimatedMax: row.estimated_max,
     inclusions,
     timeline,
     lead: { name: row.name, email: row.email, whatsapp: row.whatsapp, notes: row.notes },
@@ -143,6 +134,44 @@ function renderEmails(row: NormalizedLead) {
     internal: buildLeadEmail({ ...base, audience: 'internal' }),
     forLead:  buildLeadEmail({ ...base, audience: 'lead' }),
   };
+}
+
+/**
+ * Aviso interno de que um lead quase se perdeu.
+ *
+ * Quem preencheu continua vendo a tela de sucesso, sempre: erro nosso não é problema
+ * dela. Mas alguém precisa saber, com os dados na mão, para retomar o contato no braço.
+ * Vai para LEAD_ALERT_EMAIL, ou para o mesmo endereço das notificações de lead.
+ */
+async function avisarFalhaInterna(motivo: string, dados: unknown) {
+  const resendKey = process.env.RESEND_API_KEY;
+  const fromEmail = remetenteDaNotkode();
+  const paraEmail = process.env.LEAD_ALERT_EMAIL ?? process.env.LEAD_NOTIFICATION_EMAIL;
+  const corpo = JSON.stringify(dados, null, 2);
+
+  // O log fica de qualquer jeito: se o próprio Resend for o que caiu, é o que sobra.
+  console.error(`[lead][ALERTA] ${motivo}\n${corpo}`);
+  if (!resendKey || !fromEmail || !paraEmail) return;
+
+  try {
+    const resend = new Resend(resendKey);
+    await resend.emails.send({
+      from: fromEmail,
+      to: paraEmail,
+      subject: `[ALERTA] Lead não registrado: ${motivo}`,
+      text: [
+        'Um formulário do site foi enviado e a gente não conseguiu registrar direito.',
+        'A pessoa viu a tela de sucesso normalmente, então o retorno precisa partir da gente.',
+        '',
+        `Motivo: ${motivo}`,
+        '',
+        'Dados recebidos:',
+        corpo,
+      ].join('\n'),
+    });
+  } catch (e) {
+    console.error('[lead][ALERTA] falhou até o e-mail de alerta:', e instanceof Error ? e.message : e);
+  }
 }
 
 function prettifyServiceTag(tag: string): string {
@@ -165,7 +194,14 @@ export async function POST(req: Request) {
   const pageOrigin = req.headers.get('referer') ?? null;
   const row = normalize(body, pageOrigin);
   if (!row) {
+    // O formulário já trava sem nome, e-mail e WhatsApp. Se chegou assim, algo furou o
+    // caminho: avisa em vez de descartar em silêncio, que foi o que sempre aconteceu.
+    await avisarFalhaInterna('faltou nome, e-mail ou WhatsApp', body);
     return NextResponse.json({ error: 'missing required fields' }, { status: 400 });
+  }
+  if (!emailValido(row.email) || !whatsappValido(row.whatsapp)) {
+    await avisarFalhaInterna('e-mail ou WhatsApp em formato inválido', row);
+    return NextResponse.json({ error: 'invalid contact' }, { status: 400 });
   }
 
   // 1. Insert into Supabase
@@ -230,6 +266,17 @@ export async function POST(req: Request) {
   const persisted = supabaseError == null;
   const notified  = internalEmailError == null;
   const leadCopy  = leadEmailError == null && resendKey != null;
+
+  // Gravou mas não avisou, ou avisou mas não gravou: o lead existe pela metade e alguém
+  // precisa saber com os dados em mãos. Quem preencheu segue vendo sucesso.
+  if (!persisted || !notified) {
+    const motivo = !persisted && !notified
+      ? 'falhou gravar no banco e avisar por e-mail'
+      : !persisted
+        ? `falhou gravar no banco (${supabaseError})`
+        : `falhou o e-mail de notificação (${internalEmailError})`;
+    await avisarFalhaInterna(motivo, row);
+  }
 
   if (!persisted && !notified) {
     return NextResponse.json(

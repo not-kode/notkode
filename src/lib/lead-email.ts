@@ -1,8 +1,5 @@
 import type { InclusionGroup, TimelinePhase } from '@/components/ui/pricing-form';
 
-const fmtBRL = (n: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
-
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -19,8 +16,6 @@ export type LeadEmailInput = {
   serviceTag: string;
   reportTitle: string;
   // Faixa
-  estimatedMin: number | null;
-  estimatedMax: number | null;
   // Escopo + cronograma (do schema)
   inclusions: InclusionGroup[];
   timeline: TimelinePhase[];
@@ -30,14 +25,7 @@ export type LeadEmailInput = {
 };
 
 export function buildLeadEmail(input: LeadEmailInput): { subject: string; html: string; text: string } {
-  const { audience, serviceTag, reportTitle, estimatedMin, estimatedMax, inclusions, timeline, lead, pageOrigin } = input;
-
-  const avg = estimatedMin != null && estimatedMax != null
-    ? Math.round(((estimatedMin + estimatedMax) / 2) / 100) * 100
-    : null;
-  const range = estimatedMin != null && estimatedMax != null
-    ? `${fmtBRL(estimatedMin)} – ${fmtBRL(estimatedMax)}`
-    : null;
+  const { audience, serviceTag, reportTitle, inclusions, timeline, lead, pageOrigin } = input;
 
   const protocol = `#NTK-${Math.abs(hashString(JSON.stringify({ serviceTag, lead, inclusions }))) % 9000 + 1000}`;
   const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -46,13 +34,13 @@ export function buildLeadEmail(input: LeadEmailInput): { subject: string; html: 
 
   const subject = audience === 'internal'
     ? `[Notkode] Lead novo · ${serviceTag} · ${lead.name}`
-    : `Sua proposta preliminar · ${reportTitle}`;
+    : `Recebemos seu pedido · ${reportTitle}`;
 
   // ── HTML ──
   const header = `
     <div style="padding:18px 28px;border-bottom:1px solid rgba(0,0,0,0.06);background:rgba(25,25,24,0.025);display:flex;justify-content:space-between;align-items:center">
       <div style="font-family:'JetBrains Mono',Menlo,monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#666">
-        proposta-preliminar.${serviceTag}
+        pedido-recebido.${serviceTag}
       </div>
       <div style="font-family:'JetBrains Mono',Menlo,monospace;font-size:10px;color:#999">
         ${protocol} · ${today}
@@ -62,17 +50,9 @@ export function buildLeadEmail(input: LeadEmailInput): { subject: string; html: 
   const heroValue = `
     <div style="padding:36px 28px 28px;text-align:center;background:linear-gradient(180deg,rgba(59,130,246,0.05) 0%,transparent 100%);border-bottom:1px solid rgba(0,0,0,0.06)">
       <h1 style="font-size:24px;font-weight:600;color:#191918;letter-spacing:-0.02em;margin:0 0 24px">${escapeHtml(reportTitle)}</h1>
-      ${avg != null && range ? `
-        <div style="font-family:'JetBrains Mono',Menlo,monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#3b82f6;margin-bottom:10px">
-          ❯ investimento médio estimado
-        </div>
-        <div style="font-size:38px;font-weight:700;color:#191918;letter-spacing:-0.025em;line-height:1">${fmtBRL(avg)}</div>
-        <div style="font-family:'JetBrains Mono',Menlo,monospace;font-size:11px;color:#999;margin-top:10px">faixa ${range}</div>
-      ` : `
-        <div style="font-family:'JetBrains Mono',Menlo,monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#3b82f6">
-          ❯ esboço preliminar
-        </div>
-      `}
+      <div style="font-family:'JetBrains Mono',Menlo,monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#3b82f6">
+        ❯ o que você nos contou
+      </div>
     </div>`;
 
   const contactBlock = audience === 'internal' ? `
@@ -131,7 +111,7 @@ export function buildLeadEmail(input: LeadEmailInput): { subject: string; html: 
     <div style="padding:22px 28px;border-bottom:1px solid rgba(0,0,0,0.06)">
       <div style="font-size:15px;line-height:1.6;color:#333">
         Oi, ${escapeHtml(lead.name.split(' ')[0] || lead.name)}.<br><br>
-        Esse é o <strong>esboço do seu projeto</strong> que você acabou de montar no site da Notkode. A gente já está olhando aqui e vai te chamar pelo WhatsApp pra validar o escopo e fechar o investimento exato com base no contexto da sua operação.<br><br>
+        Esse é o <strong>resumo do que você nos contou</strong> no site da Notkode. A gente já está olhando aqui e vai te chamar pelo WhatsApp pra entender o contexto da sua operação e fechar escopo, prazo e valor junto com você.<br><br>
         Resposta em até <strong>24 horas</strong>.
       </div>
     </div>` : '';
@@ -176,18 +156,13 @@ export function buildLeadEmail(input: LeadEmailInput): { subject: string; html: 
   if (audience === 'lead') {
     textLines.push(`Oi, ${lead.name.split(' ')[0]}.`);
     textLines.push('');
-    textLines.push('Esse é o esboço do seu projeto. A gente já está olhando e vai te chamar pelo WhatsApp pra validar.');
+    textLines.push('Esse é o resumo do que você nos contou. A gente já está olhando e vai te chamar pelo WhatsApp.');
     textLines.push('');
   } else {
     textLines.push(`Lead: ${lead.name}`);
     textLines.push(`E-mail: ${lead.email}`);
     textLines.push(`WhatsApp: ${lead.whatsapp} (${wppLink})`);
     if (pageOrigin) textLines.push(`Origem: ${pageOrigin}`);
-    textLines.push('');
-  }
-  if (avg != null && range) {
-    textLines.push(`Investimento médio estimado: ${fmtBRL(avg)}`);
-    textLines.push(`Faixa: ${range}`);
     textLines.push('');
   }
   if (inclusions.length > 0) {
