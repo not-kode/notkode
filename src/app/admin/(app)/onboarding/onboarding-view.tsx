@@ -311,8 +311,8 @@ export function ApagarBriefing({ row }: { row: BriefingRow }) {
 
   const confirmacao =
     respondidas === 0
-      ? 'apagar de vez?'
-      : `apagar com ${respondidas} ${respondidas === 1 ? 'resposta' : 'respostas'}?`;
+      ? 'Clique de novo para apagar'
+      : `Clique de novo: apaga ${respondidas} ${respondidas === 1 ? 'resposta' : 'respostas'}`;
 
   return (
     <button
@@ -329,13 +329,13 @@ export function ApagarBriefing({ row }: { row: BriefingRow }) {
           setConfirmando(false);
         });
       }}
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-xs transition-colors ${
+      className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
         confirmando
-          ? 'border-danger/50 bg-danger/[0.08] text-danger'
-          : 'border-border-subtle text-text-muted hover:border-danger/40 hover:text-danger'
+          ? 'border-danger bg-danger text-white'
+          : 'border-danger/30 text-danger hover:border-danger/60 hover:bg-danger/[0.06]'
       }`}
     >
-      {pending ? 'apagando…' : confirmando ? confirmacao : '⌫ apagar briefing'}
+      {pending ? 'Apagando…' : confirmando ? confirmacao : 'Apagar briefing'}
     </button>
   );
 }
@@ -360,26 +360,33 @@ export function AbrirComoCliente({ url }: { url: string }) {
 }
 
 /**
- * As três datas do briefing: quando mandamos o link, quando o cliente abriu e
- * quando respondeu. Sem a do meio não se sabia se o silêncio era link nunca
- * aberto ou pergunta que travou.
+ * As datas do briefing. A que importa no dia a dia é a última resposta: é a
+ * data que se usa para falar com o cliente que preencheu e não enviou. A
+ * abertura do link só aparece quando existe medição (começou em 17/08/2026);
+ * antes disso ela dizia "ainda não abriu" em briefing cheio de resposta.
  */
 export function BriefingDatas({ row }: { row: BriefingRow }) {
+  const { respondidas } = progressoBriefing(row);
+  const enviado = row.status === 'enviado';
+
   const itens: { k: string; v: string }[] = [
     { k: 'Link criado', v: fmtDate(row.created_at) },
     {
-      k: 'Aberto pelo cliente',
-      v: row.first_opened_at ? fmtDate(row.first_opened_at) : 'ainda não abriu',
+      k: 'Última resposta do cliente',
+      v:
+        respondidas === 0
+          ? 'nenhuma resposta ainda'
+          : `${fmtDate(row.updated_at ?? row.created_at)} · ${desde(row.updated_at ?? row.created_at)}`,
     },
     {
-      k: 'Respondido',
-      v: row.submitted_at
-        ? fmtDate(row.submitted_at)
-        : rascunhoVivo(row)
-          ? `não enviou · mexeu ${desde(row.updated_at ?? row.created_at)}`
-          : 'não enviou',
+      k: 'Enviado',
+      v: enviado ? fmtDate(row.submitted_at) : 'não enviou',
     },
   ];
+
+  if (row.first_opened_at) {
+    itens.push({ k: 'Abriu o link', v: fmtDate(row.first_opened_at) });
+  }
 
   return (
     <div className="flex flex-wrap gap-x-6 gap-y-1.5">
@@ -393,14 +400,16 @@ export function BriefingDatas({ row }: { row: BriefingRow }) {
   );
 }
 
-/** Botão de copiar do tamanho de um ícone, para uma resposta só. */
+/**
+ * Botão de copiar pequeno, mas escrito: um ícone solto de copiar não diz o que
+ * faz, e ninguém clica no que não entende.
+ */
 function CopyMini({ text, titulo }: { text: string; titulo: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
       type="button"
       title={titulo}
-      aria-label={titulo}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(text);
@@ -410,13 +419,13 @@ function CopyMini({ text, titulo }: { text: string; titulo: string }) {
           /* ignore */
         }
       }}
-      className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] leading-none transition-colors ${
+      className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] leading-none transition-colors ${
         copied
-          ? 'text-success'
-          : 'text-text-muted/60 hover:bg-primary/[0.08] hover:text-primary'
+          ? 'border-success/40 text-success'
+          : 'border-border-subtle text-text-muted hover:border-primary hover:text-primary'
       }`}
     >
-      {copied ? '✓' : '⧉'}
+      {copied ? '✓ copiado' : 'copiar'}
     </button>
   );
 }
@@ -550,7 +559,8 @@ export function OnboardingView({
                   className="text-left text-sm text-text-secondary hover:text-primary"
                 >
                   <b className="font-medium text-text-primary">{r.orgName}</b> respondeu{' '}
-                  {p.respondidas} de {p.total} · mexeu {desde(r.updated_at ?? r.created_at)} · abrir →
+                  {p.respondidas} de {p.total} · última resposta em{' '}
+                  {fmtDate(r.updated_at ?? r.created_at)} ({desde(r.updated_at ?? r.created_at)}) · abrir →
                 </button>
               );
             })}
@@ -568,9 +578,8 @@ export function OnboardingView({
               <th className="px-4 py-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">Status</th>
               <th className="px-4 py-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">Respondidas</th>
               <th className="px-4 py-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">Link criado</th>
-              <th className="px-4 py-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">Abriu</th>
-              <th className="px-4 py-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">Respondeu</th>
-              <th className="px-4 py-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">Mexeu</th>
+              <th className="px-4 py-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">Última resposta</th>
+              <th className="px-4 py-3 font-label text-[10px] uppercase tracking-[0.14em] text-text-muted">Enviado</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -602,12 +611,11 @@ export function OnboardingView({
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-text-muted">{fmtDateShort(r.created_at)}</td>
                   <td className="px-4 py-3 font-mono text-xs text-text-muted">
-                    {r.first_opened_at ? fmtDateShort(r.first_opened_at) : '—'}
+                    {p.respondidas === 0
+                      ? '—'
+                      : `${fmtDateShort(r.updated_at ?? r.created_at)} · ${desde(r.updated_at ?? r.created_at)}`}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-text-muted">{fmtDateShort(r.submitted_at)}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-text-muted">
-                    {enviado ? '—' : desde(r.updated_at ?? r.created_at)}
-                  </td>
                   <td className="px-4 py-3">
                     {/* O link de responder fica na própria linha: é o que se manda
                         pro cliente, e vivia escondido dentro do briefing aberto. */}
@@ -706,10 +714,21 @@ function BriefingDrawer({
 export function BriefingConteudo({ row }: { row: BriefingRow }) {
   const lido = useMemo(() => lerBriefing(row), [row]);
 
+  // As perguntas em branco, com a seção de cada uma: é o que se cobra do
+  // cliente, então vem escrito de uma vez e pronto para colar no WhatsApp.
+  const emBranco = lido.secoes.flatMap(({ section, linhas }) =>
+    linhas.filter((l) => l.vazia).map((l) => ({ secao: section.title, label: l.q.label })),
+  );
+  const textoCobranca = [
+    `Faltou responder no briefing${row.product_name ? ` do ${row.product_name}` : ''}:`,
+    '',
+    ...emBranco.map((x) => `- ${x.label}`),
+  ].join('\n');
+
   return (
     <div className="px-6 py-5">
       {/* Quanto do questionário veio respondido, e o que falta cobrar. */}
-      <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
         <span className="font-mono text-xs text-text-secondary">
           {lido.respondidas} de {lido.total} perguntas respondidas
         </span>
@@ -719,12 +738,34 @@ export function BriefingConteudo({ row }: { row: BriefingRow }) {
             style={{ width: `${lido.pct}%` }}
           />
         </span>
-        {lido.total > lido.respondidas && (
-          <span className="font-mono text-xs text-warning">
-            {lido.total - lido.respondidas} em branco
-          </span>
-        )}
       </div>
+
+      {emBranco.length > 0 && (
+        <div className="mb-6 rounded-lg border border-warning/40 bg-warning/[0.06] px-4 py-3.5">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-text-primary">
+              Falta o cliente responder {emBranco.length}{' '}
+              {emBranco.length === 1 ? 'pergunta' : 'perguntas'}
+            </p>
+            <CopyMini titulo="Copiar a lista para cobrar o cliente" text={textoCobranca} />
+          </div>
+          <ol className="flex flex-col gap-1.5">
+            {emBranco.map((x, i) => (
+              <li key={`${x.secao}-${x.label}`} className="flex gap-2 text-sm text-text-secondary">
+                <span className="font-mono text-[11px] text-text-muted">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span>
+                  {x.label}
+                  <span className="ml-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-text-muted">
+                    {x.secao}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       {/* Respostas por seção, separadas por filete */}
       {lido.total === 0 ? (
