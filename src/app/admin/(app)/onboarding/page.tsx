@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { ONBOARDING_TEMPLATES } from '@/lib/onboarding-schema';
+import { ONBOARDING_TEMPLATES, briefingProgress, getOnboardingTemplate } from '@/lib/onboarding-schema';
 import { OnboardingView, type BriefingRow } from './onboarding-view';
 import { NewBriefing } from './new-briefing';
 
@@ -10,11 +10,14 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://notkode.com.br';
 type Row = {
   id: string;
   token: string;
+  organization_id: string | null;
   product_name: string | null;
   scope: string | null;
   status: string;
   submitted_at: string | null;
   created_at: string;
+  updated_at: string | null;
+  first_opened_at: string | null;
   respostas: Record<string, string | string[]> | null;
   template_key: string | null;
   organizations: { name?: string } | { name?: string }[] | null;
@@ -32,7 +35,7 @@ export default async function OnboardingAdminPage() {
   const [{ data }, { data: orgData }] = await Promise.all([
     supabase
       .from('onboarding_briefings')
-      .select('id, token, product_name, scope, status, submitted_at, created_at, respostas, template_key, organizations(name)')
+      .select('id, token, organization_id, product_name, scope, status, submitted_at, created_at, updated_at, first_opened_at, respostas, template_key, organizations(name)')
       .order('created_at', { ascending: false }),
     supabase.from('organizations').select('id, name').order('name'),
   ]);
@@ -63,6 +66,17 @@ export default async function OnboardingAdminPage() {
 
   const enviados = rows.filter((r) => r.status === 'enviado').length;
 
+  // Rascunho que o cliente ainda pode responder: o formulário de novo briefing
+  // avisa antes de abrir um segundo link para o mesmo cliente.
+  const emAberto = rows.flatMap((r) => {
+    if (r.status !== 'rascunho' || !r.organization_id) return [];
+    const p = briefingProgress(getOnboardingTemplate(r.template_key), r.respostas ?? {});
+    return [{
+      orgId: r.organization_id,
+      label: `${r.product_name ?? 'briefing'} · ${p.respondidas}/${p.total} respondidas`,
+    }];
+  });
+
   const briefings: BriefingRow[] = rows.map((r) => ({
     id: r.id,
     token: r.token,
@@ -72,6 +86,8 @@ export default async function OnboardingAdminPage() {
     status: r.status,
     submitted_at: r.submitted_at,
     created_at: r.created_at,
+    updated_at: r.updated_at,
+    first_opened_at: r.first_opened_at,
     respostas: r.respostas ?? {},
     files: files[r.id] ?? [],
   }));
@@ -85,7 +101,7 @@ export default async function OnboardingAdminPage() {
             {rows.length} briefing{rows.length === 1 ? '' : 's'} · {enviados} respondido{enviados === 1 ? '' : 's'}
           </p>
         </div>
-        <NewBriefing orgs={orgs} templates={templates} />
+        <NewBriefing orgs={orgs} templates={templates} emAberto={emAberto} />
       </header>
 
       <OnboardingView rows={briefings} siteUrl={SITE_URL} />

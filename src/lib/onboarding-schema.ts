@@ -836,6 +836,75 @@ export function isQuestionVisible(
   return typeof dep === 'string' && q.showIf.in.includes(dep);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Régua de leitura do briefing respondido. Mora aqui porque a tela do admin
+// e a notificação por e-mail precisam contar a mesma coisa: se cada lado
+// tivesse a sua conta, o e-mail diria 18 e a tela 20.
+// ─────────────────────────────────────────────────────────────────────────
+
+function filled(v: string | string[] | undefined): boolean {
+  if (Array.isArray(v)) return v.some((x) => x.trim() !== '');
+  return typeof v === 'string' && v.trim() !== '';
+}
+
+/** A pergunta tem resposta? Conta o campo de link ao lado do anexo. */
+export function hasAnswer(
+  q: OnboardingQuestion,
+  answers: Record<string, string | string[]>,
+): boolean {
+  return filled(answers[q.id]) || (q.link ? filled(answers[q.link.id]) : false);
+}
+
+/**
+ * Perguntas que valem para este briefing: as visíveis pelo showIf, mais as
+ * que já têm resposta. A segunda parte importa porque o cliente pode
+ * responder e depois mudar a pergunta-dependência — sem isso, a resposta
+ * dele ficaria gravada no banco e invisível na tela.
+ */
+export function briefingQuestions(
+  section: OnboardingSection,
+  answers: Record<string, string | string[]>,
+): OnboardingQuestion[] {
+  return section.questions.filter((q) => isQuestionVisible(q, answers) || hasAnswer(q, answers));
+}
+
+/** Quanto do briefing está respondido (pergunta a pergunta, não chave do jsonb). */
+export function briefingProgress(
+  template: OnboardingTemplate,
+  answers: Record<string, string | string[]>,
+): { respondidas: number; total: number; pct: number } {
+  let respondidas = 0;
+  let total = 0;
+  for (const section of template.sections) {
+    for (const q of briefingQuestions(section, answers)) {
+      total += 1;
+      if (hasAnswer(q, answers)) respondidas += 1;
+    }
+  }
+  return { respondidas, total, pct: total === 0 ? 0 : Math.round((respondidas / total) * 100) };
+}
+
+/**
+ * Respostas que estão no banco e não pertencem a nenhuma pergunta do template
+ * — pergunta que saiu do questionário depois de o cliente responder. São dado
+ * real: quem lê o briefing precisa vê-las em algum lugar.
+ */
+export function orphanAnswers(
+  template: OnboardingTemplate,
+  answers: Record<string, string | string[]>,
+): { id: string; value: string | string[] }[] {
+  const conhecidos = new Set<string>([PREFILL_KEY]);
+  for (const s of template.sections) {
+    for (const q of s.questions) {
+      conhecidos.add(q.id);
+      if (q.link) conhecidos.add(q.link.id);
+    }
+  }
+  return Object.keys(answers)
+    .filter((k) => !conhecidos.has(k) && filled(answers[k]))
+    .map((k) => ({ id: k, value: answers[k] }));
+}
+
 /** Total de perguntas marcadas como essenciais (⭐) — uso interno. */
 export const ESSENTIAL_COUNT = ONBOARDING_SECTIONS
   .flatMap((s) => s.questions)

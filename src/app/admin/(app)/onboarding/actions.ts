@@ -26,3 +26,32 @@ export async function createBriefing(formData: FormData): Promise<void> {
 
   revalidatePath('/admin/onboarding');
 }
+
+/**
+ * Apaga um briefing de vez, com os anexos dele. Existe porque link criado
+ * errado ou em dobro ficava na tela para sempre: o cliente recebia dois links
+ * do mesmo projeto e respondia metade em cada um. A confirmação é na tela, e
+ * ela diz quantas respostas vão embora.
+ */
+export async function apagarBriefing(id: string): Promise<void> {
+  if (!id) return;
+  const supabase = getSupabaseAdmin();
+
+  const { data } = await supabase
+    .from('onboarding_briefings')
+    .select('token')
+    .eq('id', id)
+    .maybeSingle();
+
+  // Os anexos moram numa pasta por token; sem isso eles ficariam órfãos no bucket.
+  if (data?.token) {
+    const { data: arquivos } = await supabase.storage.from('onboarding').list(data.token);
+    const paths = (arquivos ?? []).filter((f) => f.name).map((f) => `${data.token}/${f.name}`);
+    if (paths.length > 0) await supabase.storage.from('onboarding').remove(paths);
+  }
+
+  await supabase.from('onboarding_briefings').delete().eq('id', id);
+
+  revalidatePath('/admin/onboarding');
+  revalidatePath('/admin/clientes');
+}

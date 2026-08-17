@@ -11,16 +11,38 @@ export type BriefingRow = {
   respostas: Record<string, string | string[]>;
 };
 
-/** Lê um briefing pelo token público (server-only, service-role). */
-export async function getBriefingByToken(token: string): Promise<BriefingRow | null> {
+/**
+ * Lê um briefing pelo token público (server-only, service-role).
+ *
+ * `carimbarAbertura` grava quando o cliente abriu o link: é a diferença entre
+ * "ele nunca abriu" e "abriu e travou em alguma pergunta". Quando nós mesmos
+ * abrimos o link pelo admin, para ver o briefing como o cliente vê, a abertura
+ * não é carimbada.
+ */
+export async function getBriefingByToken(
+  token: string,
+  carimbarAbertura = false,
+): Promise<BriefingRow | null> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('onboarding_briefings')
-    .select('id, product_name, scope, status, respostas, template_key, organizations(name)')
+    .select('id, product_name, scope, status, respostas, template_key, first_opened_at, organizations(name)')
     .eq('token', token)
     .maybeSingle();
 
   if (error || !data) return null;
+
+  if (carimbarAbertura) {
+    const agora = new Date().toISOString();
+    const { error: erro } = await supabase
+      .from('onboarding_briefings')
+      .update({
+        last_opened_at: agora,
+        ...(data.first_opened_at ? {} : { first_opened_at: agora }),
+      })
+      .eq('id', data.id);
+    if (erro) console.error('[onboarding] carimbo de abertura:', erro.message);
+  }
 
   const org = data.organizations as { name?: string } | { name?: string }[] | null;
   const cliente = Array.isArray(org) ? org[0]?.name : org?.name;

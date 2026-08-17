@@ -9,11 +9,16 @@ export const metadata: Metadata = {
 
 export default async function OnboardingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ nk?: string }>;
 }) {
   const { token } = await params;
-  const briefing = await getBriefingByToken(token);
+  const { nk } = await searchParams;
+  // ?nk=interno é a nossa visita (o botão "abrir como o cliente vê" no admin):
+  // ela não pode virar "aberto pelo cliente" na ficha do briefing.
+  const briefing = await getBriefingByToken(token, nk !== 'interno');
 
   if (!briefing) {
     return (

@@ -10,20 +10,25 @@ const labelCls = 'mb-1 block font-label text-[10px] uppercase tracking-[0.12em] 
 
 type Org = { id: string; name: string };
 type Template = { key: string; label: string };
+/** Rascunho que o cliente ainda pode responder, para avisar antes de criar outro. */
+type EmAberto = { orgId: string; label: string };
 
 /**
  * Botão "+ Novo briefing": escolhe cliente, produto e o template de perguntas.
  * Dentro da ficha de um cliente (aba Onboarding) o cliente já está definido,
  * então passa `org` e o campo some do formulário.
  */
-export function NewBriefing({ orgs, templates, org, discreto }: {
+export function NewBriefing({ orgs, templates, org, emAberto = [], discreto }: {
   orgs: Org[];
   templates: Template[];
   org?: Org;
+  emAberto?: EmAberto[];
   discreto?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [orgId, setOrgId] = useState(org?.id ?? '');
   const [pending, start] = useTransition();
+  const duplicados = emAberto.filter((b) => b.orgId === orgId);
 
   return (
     <>
@@ -72,7 +77,13 @@ export function NewBriefing({ orgs, templates, org, discreto }: {
                 <label className={labelCls}>
                   Cliente<span className="text-danger"> *</span>
                 </label>
-                <select name="organization_id" required defaultValue="" className={inputCls}>
+                <select
+                  name="organization_id"
+                  required
+                  value={orgId}
+                  onChange={(e) => setOrgId(e.target.value)}
+                  className={inputCls}
+                >
                   <option value="" disabled>
                     Escolha o cliente…
                   </option>
@@ -82,6 +93,24 @@ export function NewBriefing({ orgs, templates, org, discreto }: {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* Dois briefings abertos do mesmo cliente já aconteceram duas vezes:
+                o cliente responde metade em cada link e ninguém vê o conjunto. */}
+            {duplicados.length > 0 && (
+              <div className="rounded-md border border-warning/40 bg-warning/[0.07] px-3 py-2.5">
+                <p className="font-label text-[10px] uppercase tracking-[0.12em] text-warning">
+                  ⚠ Este cliente já tem briefing em aberto
+                </p>
+                <ul className="mt-1 flex flex-col gap-0.5">
+                  {duplicados.map((b) => (
+                    <li key={b.label} className="text-xs text-text-secondary">{b.label}</li>
+                  ))}
+                </ul>
+                <p className="mt-1.5 text-xs text-text-muted">
+                  Criar outro gera um segundo link. Se este for o certo, descarte o antigo depois.
+                </p>
               </div>
             )}
 

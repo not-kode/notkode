@@ -14,7 +14,8 @@ import { definirModeloDoContrato } from './modelos-actions';
 import { NewBriefing } from '../onboarding/new-briefing';
 import { CopyLink } from '../onboarding/copy-link';
 import {
-  BriefingConteudo, CopyButton, StatusBadge, buildCopyBlock, fmtDateShort as fmtBriefingDate,
+  AbrirComoCliente, ApagarBriefing, BriefingConteudo, BriefingDatas, CopyButton, StatusBadge,
+  buildCopyBlock, progressoBriefing, rascunhoVivo,
   type BriefingRow,
 } from '../onboarding/onboarding-view';
 
@@ -1301,6 +1302,15 @@ function OnboardingTab({ client, templates, abertoId, onAbrir }: {
           orgs={[]}
           templates={templates}
           org={{ id: client.id, name: client.name ?? 'Cliente' }}
+          emAberto={client.briefings
+            .filter((b) => b.status === 'rascunho')
+            .map((b) => {
+              const p = progressoBriefing(b);
+              return {
+                orgId: client.id,
+                label: `${b.product_name ?? 'briefing'} · ${p.respondidas}/${p.total} respondidas`,
+              };
+            })}
           discreto
         />
       </div>
@@ -1314,36 +1324,52 @@ function OnboardingTab({ client, templates, abertoId, onAbrir }: {
           {client.briefings.map((b) => {
             const enviado = b.status === 'enviado';
             const ativo = b.id === abertoId;
+            const andamento = rascunhoVivo(b);
+            const p = progressoBriefing(b);
             return (
               <li key={b.id}>
-                {/* O link do cliente fica na linha, sem precisar abrir o briefing:
-                    enquanto ninguém respondeu, é a ação principal daqui. */}
+                {/* A ficha do briefing: título, quanto veio respondido e as três
+                    datas que dizem em que pé está (link criado, cliente abriu,
+                    respondeu). As respostas ficam num dropdown embaixo. */}
                 <div
-                  className={`flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 transition-colors ${
+                  className={`rounded-md border px-3 py-2.5 transition-colors ${
                     ativo ? 'border-primary/40 bg-primary/[0.04]' : 'border-black/[0.06] bg-white hover:border-black/15'
                   }`}
                 >
-                  <button
-                    onClick={() => onAbrir(ativo ? null : b.id)}
-                    className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-left"
-                  >
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
                       {b.product_name ?? 'Briefing'}
                     </span>
-                    <StatusBadge enviado={enviado} />
-                    <span className="font-label text-[10px] text-text-muted">
-                      {enviado ? `respondido em ${fmtBriefingDate(b.submitted_at)}` : `criado em ${fmtBriefingDate(b.created_at)}`}
+                    <StatusBadge status={b.status} andamento={andamento} />
+                    <span className="font-mono text-[10px] text-text-muted">
+                      {p.respondidas}/{p.total} respondidas
                     </span>
-                  </button>
-                  {!enviado && <CopyLink url={`${SITE_URL_CLIENTE}/onboarding/${b.token}`} destaque />}
+                    {!enviado && <CopyLink url={`${SITE_URL_CLIENTE}/onboarding/${b.token}`} destaque />}
+                  </div>
+
+                  <div className="mt-2.5 border-t border-black/[0.06] pt-2.5">
+                    <BriefingDatas row={b} />
+                  </div>
+
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => onAbrir(ativo ? null : b.id)}
+                      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-xs transition-colors ${
+                        ativo
+                          ? 'border-primary/40 bg-primary text-white'
+                          : 'border-border-subtle text-text-secondary hover:border-primary hover:text-primary'
+                      }`}
+                    >
+                      {ativo ? '▴ esconder respostas' : '▾ ver respostas'}
+                    </button>
+                    <CopyButton text={buildCopyBlock(b)} label="copiar tudo" />
+                    <AbrirComoCliente url={`${SITE_URL_CLIENTE}/onboarding/${b.token}`} />
+                    <ApagarBriefing row={b} />
+                  </div>
                 </div>
 
                 {ativo && (
                   <div className="mt-2 overflow-hidden rounded-md border border-black/[0.06] bg-white">
-                    <div className="flex flex-wrap items-center gap-2 border-b border-black/[0.06] px-4 py-2.5">
-                      <CopyButton text={buildCopyBlock(b)} label="copiar tudo" />
-                      <CopyLink url={`${SITE_URL_CLIENTE}/onboarding/${b.token}`} />
-                    </div>
                     <BriefingConteudo row={b} />
                   </div>
                 )}

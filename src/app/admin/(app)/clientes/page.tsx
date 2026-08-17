@@ -37,6 +37,7 @@ type CoRow = {
 type BriefRow = {
   id: string; organization_id: string | null; token: string; status: string;
   product_name: string | null; submitted_at: string | null; created_at: string;
+  updated_at: string | null; first_opened_at: string | null;
   template_key: string | null; respostas: Record<string, string | string[]> | null;
 };
 type DealRow = { id: string; organization_id: string | null };
@@ -88,7 +89,7 @@ export default async function ClientesPage() {
       .select('organization_id, role, contacts(id, name, contact_channels(kind, value, is_primary))'),
     supabase
       .from('onboarding_briefings')
-      .select('id, organization_id, token, status, product_name, submitted_at, created_at, template_key, respostas')
+      .select('id, organization_id, token, status, product_name, submitted_at, created_at, updated_at, first_opened_at, template_key, respostas')
       .order('created_at', { ascending: false }),
     supabase
       .from('deals')
@@ -175,6 +176,8 @@ export default async function ClientesPage() {
         status: b.status,
         submitted_at: b.submitted_at,
         created_at: b.created_at,
+        updated_at: b.updated_at,
+        first_opened_at: b.first_opened_at,
         respostas: b.respostas ?? {},
         files: arquivos[b.id] ?? [],
       })),
