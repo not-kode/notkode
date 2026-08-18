@@ -8,14 +8,17 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronRight, GripVertical, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
-import { bulkTasks, createPhase, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
+import {
+  apagarTag, atualizarTag, bulkTasks, createPhase, createTask, criarTagNaTarefa, deleteTask,
+  moveTask, toggleTimer, updateTask,
+} from './actions';
 import {
   PHASE_LABELS, PRIORITIES, PRIORITY_LABELS, TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM,
   type TaskStatus,
 } from './status';
 import { donoDaTarefa, porPrazo } from './types';
 import type {
-  Agrupamento, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto,
+  Agrupamento, Coluna, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto,
 } from './types';
 import {
   ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, Sigla, TagsSelect, TimerChip, fmtCurto, hoje,
@@ -24,7 +27,6 @@ import { TaskDrawer } from './task-drawer';
 
 // A lista tem uma ordem só dentro do grupo, `porPrazo`: o que vence antes em
 // cima, empate pela prioridade, sem prazo no fim.
-type Coluna = 'titulo' | 'tags' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'status' | 'tempo' | 'projeto';
 
 /** A ordem dos blocos de status: o que está em jogo primeiro, feito no fim. */
 const BLOCOS: TaskStatus[] = ['a_fazer', 'fazendo', 'revisao', 'backlog', 'feito'];
@@ -59,7 +61,7 @@ type Grupo = {
 
 export function ListView({
   tasks, comentarios, phasesDe, tagsDe, projectId, projectKind, pessoas, mostrarProjeto,
-  agrupar, onAbrirProjeto, send,
+  agrupar, colunas: visiveis, onAbrirProjeto, send,
 }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
@@ -71,6 +73,8 @@ export function ListView({
   mostrarProjeto: boolean;
   /** Por status (o jeito de todo dia) ou por sprint (o ciclo de entrega). */
   agrupar: Agrupamento;
+  /** As colunas ligadas neste projeto; o que está fora daqui não aparece. */
+  colunas: Coluna[];
   /** Clique no nome da empresa: fecha a visão "Todos" e abre só aquele projeto. */
   onAbrirProjeto: (id: string) => void;
   send: Send;
@@ -110,19 +114,22 @@ export function ListView({
   // Com vários projetos juntos, a coluna que identifica a tarefa é a EMPRESA, não
   // o responsável (que hoje é sempre a mesma pessoa). O responsável continua
   // editável dentro da tarefa, na gaveta. Num projeto só, vale o contrário.
-  const colunas: { id: Coluna; label: string; cls: string }[] = [
+  const ver = (c: Coluna) => visiveis.includes(c);
+  const colunas: { id: string; label: string; cls: string }[] = [
     { id: 'titulo', label: 'Tarefa', cls: 'min-w-[14rem]' },
-    { id: 'tags', label: 'Tags', cls: 'w-40' },
-    mostrarProjeto
-      ? { id: 'projeto', label: 'Empresa', cls: 'w-44' }
-      : { id: 'quem', label: 'Quem', cls: 'w-32' },
-    { id: 'inicio', label: 'Início', cls: 'w-28' },
-    { id: 'prazo', label: 'Prazo', cls: 'w-28' },
-    { id: 'prioridade', label: 'Prioridade', cls: 'w-28' },
+    ...(ver('tags') ? [{ id: 'tags', label: 'Tags', cls: 'w-40' }] : []),
+    // A empresa identifica a linha na visão geral e não é opcional ali; num
+    // projeto só, o lugar dessa coluna é do responsável.
+    ...(mostrarProjeto
+      ? [{ id: 'projeto', label: 'Empresa', cls: 'w-44' }]
+      : ver('quem') ? [{ id: 'quem', label: 'Quem', cls: 'w-32' }] : []),
+    ...(ver('inicio') ? [{ id: 'inicio', label: 'Início', cls: 'w-28' }] : []),
+    ...(ver('prazo') ? [{ id: 'prazo', label: 'Prazo', cls: 'w-28' }] : []),
+    ...(ver('prioridade') ? [{ id: 'prioridade', label: 'Prioridade', cls: 'w-28' }] : []),
     // Agrupada por sprint, a lista mistura estados no mesmo grupo: aí o status
     // precisa de coluna. Agrupada por status, o grupo já é a resposta.
-    ...(porSprint ? [{ id: 'status' as Coluna, label: 'Status', cls: 'w-32' }] : []),
-    { id: 'tempo', label: 'Tempo', cls: 'w-32' },
+    ...(porSprint ? [{ id: 'status', label: 'Status', cls: 'w-32' }] : []),
+    ...(ver('tempo') ? [{ id: 'tempo', label: 'Tempo', cls: 'w-32' }] : []),
   ];
   const colspan = colunas.length + 4;
 
@@ -343,14 +350,25 @@ export function ListView({
           </div>
         </td>
 
-        <td className="px-3 py-2">
-          <TagsSelect
-            value={t.tagIds}
-            tags={tagsDe(t.projetoId)}
-            onChange={(ids) => send(updateTask, { id: t.id, tag_ids: ids.join(',') })}
-            compacto={filha}
-          />
-        </td>
+        {ver('tags') && (
+          <td className="px-3 py-2">
+            <TagsSelect
+              value={t.tagIds}
+              tags={tagsDe(t.projetoId)}
+              onChange={(ids) => send(updateTask, { id: t.id, tag_ids: ids.join(',') })}
+              onCriar={(nome, cor) => send(criarTagNaTarefa, {
+                engagement_id: t.projetoId, task_id: t.id, name: nome, color: cor,
+              })}
+              onCor={(id, cor) => send(atualizarTag, { id, color: cor })}
+              onApagar={(tag) => {
+                if (confirm(`Apagar a tag "${tag.nome}"? Ela sai das tarefas que a usam.`)) {
+                  send(apagarTag, { id: tag.id, engagement_id: t.projetoId });
+                }
+              }}
+              compacto={filha}
+            />
+          </td>
+        )}
 
         {mostrarProjeto ? (
           <td className="px-3 py-2">
@@ -366,7 +384,7 @@ export function ListView({
               </span>
             </button>
           </td>
-        ) : (
+        ) : ver('quem') ? (
           <td className="px-3 py-2">
             <PessoaSelect
               value={t.assignee}
@@ -374,17 +392,23 @@ export function ListView({
               onChange={(v) => send(updateTask, { id: t.id, assignee: v })}
             />
           </td>
-        )}
+        ) : null}
 
-        <td className="px-3 py-2">
-          <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} placeholder="início" />
-        </td>
-        <td className="px-3 py-2">
-          <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} />
-        </td>
-        <td className="px-3 py-2">
-          <PriorityChip value={t.priority} onChange={(v) => send(updateTask, { id: t.id, priority: v })} />
-        </td>
+        {ver('inicio') && (
+          <td className="px-3 py-2">
+            <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} placeholder="início" />
+          </td>
+        )}
+        {ver('prazo') && (
+          <td className="px-3 py-2">
+            <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} />
+          </td>
+        )}
+        {ver('prioridade') && (
+          <td className="px-3 py-2">
+            <PriorityChip value={t.priority} onChange={(v) => send(updateTask, { id: t.id, priority: v })} />
+          </td>
+        )}
 
         {porSprint && (
           <td className="px-3 py-2">
@@ -398,14 +422,16 @@ export function ListView({
           </td>
         )}
 
-        <td className="px-3 py-2">
-          <TimerChip
-            segundos={t.tempoSegundos}
-            rodandoDesde={t.timerDesde}
-            onToggle={() => send(toggleTimer, { id: t.id })}
-            desabilitado={t.status === 'feito'}
-          />
-        </td>
+        {ver('tempo') && (
+          <td className="px-3 py-2">
+            <TimerChip
+              segundos={t.tempoSegundos}
+              rodandoDesde={t.timerDesde}
+              onToggle={() => send(toggleTimer, { id: t.id })}
+              desabilitado={t.status === 'feito'}
+            />
+          </td>
+        )}
 
         {/* Apagar mora no botão direito da linha: é ação de
             exceção e não precisa de uma coluna inteira. */}

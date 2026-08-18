@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { EntregasView } from './entregas-view';
-import { VISAO_CLIENTE_PADRAO, lerVisaoCliente } from './types';
+import { VISAO_PADRAO, lerVisao } from './types';
 import type { ComentarioView, NotaView, Pessoa, ProjectView, TagView } from './types';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
 
@@ -116,7 +116,7 @@ export default async function EntregasPage() {
     tags: tagRows
       .filter((tg) => tg.engagement_id === e.id)
       .map((tg): TagView => ({ id: tg.id, nome: tg.name, cor: tg.color, sort: tg.sort })),
-    visaoCliente: lerVisaoCliente(e.client_view),
+    visao: lerVisao(e.client_view),
   }));
 
   // Contrato encerrado sem nenhuma tarefa/etapa é ruído: não tem entrega para
@@ -152,7 +152,7 @@ export default async function EntregasPage() {
         archivedAt: null,
         phases: [],
         tags: [],
-        visaoCliente: VISAO_CLIENTE_PADRAO,
+        visao: VISAO_PADRAO,
         tasks: daqueles
           .filter((t) => t.deal_id === d.id)
           .map((t) => ({

@@ -41,58 +41,6 @@ export type Agrupamento = 'status' | 'sprint';
 export type TagView = { id: string; nome: string; cor: string; sort: number };
 
 /**
- * As colunas que o cliente pode ver no link de acompanhamento. A ordem daqui é a
- * ordem na tela; `titulo` não entra porque não faz sentido esconder a tarefa.
- */
-export const COLUNAS_CLIENTE = ['tags', 'inicio', 'prazo', 'urgencia', 'responsavel', 'status'] as const;
-export type ColunaCliente = (typeof COLUNAS_CLIENTE)[number];
-
-export const COLUNA_CLIENTE_LABELS: Record<ColunaCliente, string> = {
-  tags: 'Tags',
-  inicio: 'Início',
-  prazo: 'Prazo',
-  urgencia: 'Urgência',
-  responsavel: 'Responsável',
-  status: 'Status',
-};
-
-/** Como o cliente lê a lista: o que aparece e por onde está separada. */
-export type VisaoCliente = {
-  colunas: ColunaCliente[];
-  agrupar: 'sprint' | 'status' | 'nenhum';
-  /** Mostrar também o desenho do cronograma (o Gantt), numa aba ao lado da lista. */
-  cronograma: boolean;
-};
-
-/**
- * O padrão de quem nunca configurou nada: o essencial que o cliente pergunta,
- * sem responsável (que é sempre a casa) e sem urgência (que é conversa interna).
- */
-export const VISAO_CLIENTE_PADRAO: VisaoCliente = {
-  colunas: ['tags', 'inicio', 'prazo', 'status'],
-  agrupar: 'sprint',
-  cronograma: true,
-};
-
-/** Lê o jsonb do contrato sem confiar no que está lá dentro. */
-export function lerVisaoCliente(bruto: unknown): VisaoCliente {
-  const v = (bruto ?? {}) as Partial<Record<keyof VisaoCliente, unknown>>;
-  const colunas = Array.isArray(v.colunas)
-    ? (v.colunas.filter((c) => (COLUNAS_CLIENTE as readonly unknown[]).includes(c)) as ColunaCliente[])
-    : null;
-  const agrupar = v.agrupar === 'sprint' || v.agrupar === 'status' || v.agrupar === 'nenhum'
-    ? v.agrupar
-    : VISAO_CLIENTE_PADRAO.agrupar;
-  return {
-    // Configuração salva sem nenhuma coluna é escolha legítima (lista limpa, só
-    // os títulos); só o campo ausente cai no padrão.
-    colunas: colunas ?? VISAO_CLIENTE_PADRAO.colunas,
-    agrupar,
-    cronograma: typeof v.cronograma === 'boolean' ? v.cronograma : VISAO_CLIENTE_PADRAO.cronograma,
-  };
-}
-
-/**
  * A ordem das tarefas, igual em toda tela: o que vence antes vem primeiro,
  * empate no mesmo dia vai pela prioridade e o que não tem prazo fica no fim.
  *
@@ -108,7 +56,6 @@ export function porPrazo(a: TaskView, b: TaskView): number {
     || a.sort - b.sort;
 }
 
-
 /**
  * De quem é a tarefa nova. O quadro mostra contratos e negócios ganhos ainda sem
  * contrato, e o campo muda conforme o caso — sem isso, tarefa criada dentro de
@@ -116,6 +63,63 @@ export function porPrazo(a: TaskView, b: TaskView): number {
  */
 export function donoDaTarefa(projectId: string, kind: ProjectKind): Record<string, string> {
   return kind === 'negocio' ? { deal_id: projectId } : { engagement_id: projectId };
+}
+
+/**
+ * As colunas da tabela de tarefas, na ordem em que aparecem. É UMA lista só: o
+ * que você esconde aqui sai da sua lista e sai do link do cliente junto — foi o
+ * pedido, e evita duas configurações dizendo coisas diferentes sobre a mesma
+ * tela. `titulo` não entra porque esconder o nome da tarefa não faz sentido, e
+ * `tempo` é o cronômetro da casa: nunca vai para o cliente, esteja ligado ou não.
+ */
+export const COLUNAS = ['tags', 'quem', 'inicio', 'prazo', 'prioridade', 'tempo'] as const;
+export type Coluna = (typeof COLUNAS)[number];
+
+export const COLUNA_LABELS: Record<Coluna, string> = {
+  tags: 'Tags',
+  quem: 'Quem',
+  inicio: 'Início',
+  prazo: 'Prazo',
+  prioridade: 'Prioridade',
+  tempo: 'Tempo',
+};
+
+/** O que o cliente lê como rótulo, quando a coluna chega no link dele. */
+export const COLUNA_LABELS_CLIENTE: Partial<Record<Coluna, string>> = {
+  tags: 'Tags',
+  quem: 'Responsável',
+  inicio: 'Início',
+  prazo: 'Prazo',
+  prioridade: 'Urgência',
+};
+
+/** O cronômetro é conversa interna: não existe do lado do cliente. */
+export const COLUNAS_DO_CLIENTE = COLUNAS.filter((c) => c !== 'tempo');
+
+/** Como esta tela está montada neste projeto. Fica no contrato, em `client_view`. */
+export type VisaoProjeto = {
+  colunas: Coluna[];
+  /** O desenho do cronograma entra no link do cliente, numa aba ao lado da lista. */
+  cronogramaNoLink: boolean;
+};
+
+export const VISAO_PADRAO: VisaoProjeto = {
+  colunas: [...COLUNAS],
+  cronogramaNoLink: true,
+};
+
+/** Lê o jsonb do contrato sem confiar no que está lá dentro. */
+export function lerVisao(bruto: unknown): VisaoProjeto {
+  const v = (bruto ?? {}) as Record<string, unknown>;
+  const colunas = Array.isArray(v.colunas)
+    ? (v.colunas.filter((c) => (COLUNAS as readonly unknown[]).includes(c)) as Coluna[])
+    : null;
+  return {
+    // Salvar sem nenhuma coluna é escolha legítima (lista só de títulos); campo
+    // ausente é que cai no padrão.
+    colunas: colunas ?? VISAO_PADRAO.colunas,
+    cronogramaNoLink: typeof v.cronograma === 'boolean' ? v.cronograma : VISAO_PADRAO.cronogramaNoLink,
+  };
 }
 
 export type ProjectView = {
@@ -133,8 +137,8 @@ export type ProjectView = {
   /** Arquivado: sai da barra lateral, mas o histórico continua aqui. */
   archivedAt: string | null;
   phases: PhaseView[]; tasks: TaskView[]; tags: TagView[];
-  /** O recorte que o cliente vê pelo link. */
-  visaoCliente: VisaoCliente;
+  /** Colunas visíveis e o que vai no link do cliente. */
+  visao: VisaoProjeto;
 };
 
 /** O que uma visualização precisa para editar uma tarefa. */

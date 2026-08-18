@@ -6,8 +6,11 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, Check, ChevronDown, Pause, Play, Plus } from 'lucide-react';
-import { PRIORITIES, PRIORITY_LABELS, TAG_TOM, corDaTag, type Priority } from './status';
+import { Calendar, Check, ChevronDown, Pause, Play, Plus, X } from 'lucide-react';
+import {
+  PRIORITIES, PRIORITY_LABELS, TAG_COLORS, TAG_COLOR_LABELS, TAG_TOM, corDaTag,
+  type Priority, type TagColor,
+} from './status';
 import type { Pessoa, TagView } from './types';
 
 export const inputCls =
@@ -621,33 +624,54 @@ export function TagChip({ nome, cor, compacto = false }: { nome: string; cor: st
 }
 
 /**
- * As tags de uma tarefa: mostra as marcadas e abre a lista do projeto para
- * marcar e desmarcar. Só escolhe entre as tags cadastradas — nome novo se cria
- * em "Tags do projeto", para o vocabulário não virar cada dia um sinônimo.
+ * As tags de uma tarefa. O popover é onde a tag VIVE: marca, desmarca, cria uma
+ * nova ali mesmo (digitando o nome e escolhendo a cor), troca a cor de uma que
+ * já existe e apaga do projeto. Não existe tela de cadastro à parte — tag nasce
+ * dentro da tarefa, que é onde você percebe que precisa dela.
  */
-export function TagsSelect({ value, tags, onChange, compacto = false }: {
+export function TagsSelect({ value, tags, onChange, onCriar, onCor, onApagar, compacto = false }: {
   value: string[];
   tags: TagView[];
   onChange: (ids: string[]) => void;
+  /** Cria a tag no projeto e já marca esta tarefa com ela. */
+  onCriar?: (nome: string, cor: string) => void;
+  onCor?: (id: string, cor: string) => void;
+  onApagar?: (tag: TagView) => void;
   compacto?: boolean;
 }) {
   const [aberto, setAberto] = useState(false);
+  const [busca, setBusca] = useState('');
+  const [cor, setCor] = useState<TagColor>('azul');
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
-  const pos = usePosicaoMenu(aberto, botaoRef, 208, 260);
+  const pos = usePosicaoMenu(aberto, botaoRef, 224, 300);
   useFechaAoRolar(aberto, () => setAberto(false));
 
   const marcadas = tags.filter((t) => value.includes(t.id));
   const alternar = (id: string) =>
     onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
 
+  const limpo = busca.trim();
+  const filtradas = limpo
+    ? tags.filter((t) => t.nome.toLowerCase().includes(limpo.toLowerCase()))
+    : tags;
+  // Nome que ainda não existe: o popover oferece criar em vez de dizer "nada encontrado".
+  const podeCriar = !!limpo && !tags.some((t) => t.nome.toLowerCase() === limpo.toLowerCase());
+
+  const criar = () => {
+    if (!podeCriar || !onCriar) return;
+    onCriar(limpo, cor);
+    setBusca('');
+    setAberto(false);
+  };
+
   return (
     <div className="relative" ref={ref}>
       <button
         ref={botaoRef}
         onClick={() => setAberto((v) => !v)}
-        title={tags.length === 0 ? 'Este projeto ainda não tem tags cadastradas' : 'Tags da tarefa'}
+        title="Tags da tarefa"
         className="flex max-w-full flex-wrap items-center gap-1 rounded-sm px-1 py-0.5 text-left transition-colors hover:bg-black/[0.04]"
       >
         {marcadas.length > 0 ? (
@@ -666,25 +690,87 @@ export function TagsSelect({ value, tags, onChange, compacto = false }: {
       {aberto && pos && createPortal(
         <div
           ref={menuRef}
-          className="fixed z-50 max-h-64 w-52 overflow-y-auto rounded-md border border-black/[0.08] bg-white py-1 shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
+          className="fixed z-50 w-56 overflow-hidden rounded-md border border-black/[0.08] bg-white shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
           style={{ left: pos.left, top: pos.top }}
         >
-          {tags.length === 0 ? (
-            <p className="px-2.5 py-2 text-[11px] leading-snug text-text-muted">
-              Nenhuma tag neste projeto ainda. Cadastre em “Tags” na barra de cima.
-            </p>
-          ) : (
-            tags.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => alternar(t.id)}
-                className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition-colors hover:bg-black/[0.04]"
-              >
-                <TagChip nome={t.nome} cor={t.cor} />
-                {value.includes(t.id) && <Check className="ml-auto h-3 w-3 shrink-0 text-primary" />}
-              </button>
-            ))
+          {onCriar && (
+            <div className="border-b border-black/[0.06] px-2 py-2">
+              <input
+                autoFocus
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') criar(); }}
+                placeholder="Buscar ou criar tag"
+                className="w-full text-[12px] text-text-primary outline-none placeholder:text-text-muted"
+              />
+              {podeCriar && (
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {TAG_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setCor(c)}
+                        title={TAG_COLOR_LABELS[c]}
+                        aria-label={TAG_COLOR_LABELS[c]}
+                        className={`h-3.5 w-3.5 rounded-full ${TAG_TOM[c].split(' ')[0]} ${
+                          cor === c ? 'ring-2 ring-text-primary/40' : ''
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    onClick={criar}
+                    className="ml-auto rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-white transition hover:opacity-90"
+                  >
+                    criar “{limpo.slice(0, 12)}”
+                  </button>
+                </div>
+              )}
+            </div>
           )}
+
+          <div className="max-h-56 overflow-y-auto py-1">
+            {filtradas.length === 0 ? (
+              <p className="px-2.5 py-2 text-[11px] leading-snug text-text-muted">
+                {onCriar ? 'Digite o nome para criar a primeira tag.' : 'Nenhuma tag neste projeto.'}
+              </p>
+            ) : (
+              filtradas.map((t) => (
+                <div key={t.id} className="group/tag flex items-center gap-1 px-2 py-1 hover:bg-black/[0.03]">
+                  <button onClick={() => alternar(t.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                    <TagChip nome={t.nome} cor={t.cor} />
+                    {value.includes(t.id) && <Check className="ml-auto h-3 w-3 shrink-0 text-primary" />}
+                  </button>
+
+                  {/* Cor e apagar aparecem só com o mouse na linha: a ação de todo
+                      dia é marcar, não administrar a tag. */}
+                  {(onCor || onApagar) && (
+                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/tag:opacity-100">
+                      {onCor && TAG_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => onCor(t.id, c)}
+                          title={`Pintar de ${TAG_COLOR_LABELS[c].toLowerCase()}`}
+                          aria-label={`Pintar de ${TAG_COLOR_LABELS[c].toLowerCase()}`}
+                          className={`h-2.5 w-2.5 rounded-full ${TAG_TOM[c].split(' ')[0]}`}
+                        />
+                      ))}
+                      {onApagar && (
+                        <button
+                          onClick={() => onApagar(t)}
+                          title="Apagar a tag do projeto"
+                          aria-label={`Apagar a tag ${t.nome}`}
+                          className="ml-0.5 rounded p-0.5 text-text-muted/60 transition-colors hover:text-danger"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>,
         document.body,
       )}

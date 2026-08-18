@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import type { PhaseStatus, TaskStatus } from '@/app/admin/(app)/entregas/status';
 import type { Priority } from '@/app/admin/(app)/entregas/status';
-import { lerVisaoCliente } from '@/app/admin/(app)/entregas/types';
+import { lerVisao } from '@/app/admin/(app)/entregas/types';
 import { Acompanhamento, type TagCliente } from './lista';
 
 // Acompanhamento do cliente: as entregas do projeto dele, por link com token e
@@ -73,7 +73,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
   const tags: TagCliente[] = ((tagData ?? []) as TagRow[]).map((t) => ({
     id: t.id, nome: t.name, cor: t.color,
   }));
-  const visao = lerVisaoCliente((eng as unknown as { client_view: unknown }).client_view);
+  const visao = lerVisao((eng as unknown as { client_view: unknown }).client_view);
 
   // Sem sprints montadas, quem conta o andamento são as próprias entregas: é o
   // caso normal dos projetos daqui, e sem isso a barra de progresso ficava
@@ -163,8 +163,10 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
       ) : (
         <Acompanhamento
           colunas={visao.colunas}
-          agrupar={visao.agrupar}
-          cronograma={visao.cronograma}
+          // Com sprint montada, é ela que organiza a leitura; sem sprint, a lista
+          // corrida por prazo é mais honesta do que grupos de status inventados.
+          agrupar={phases.length > 0 ? 'sprint' : 'nenhum'}
+          cronograma={visao.cronogramaNoLink}
           tags={tags}
           phases={phases.map((p) => ({
             id: p.id, name: p.name, description: p.description, status: p.status,

@@ -9,7 +9,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Plus, Trash2, X } from 'lucide-react';
-import { apagarComentario, createTask, criarComentario, deleteTask, toggleTimer, updateTask } from './actions';
+import {
+  apagarComentario, apagarTag, atualizarTag, createTask, criarComentario, criarTagNaTarefa,
+  deleteTask, toggleTimer, updateTask,
+} from './actions';
 import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
 import { donoDaTarefa } from './types';
 import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskView } from './types';
@@ -158,6 +161,15 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
                 value={task.tagIds}
                 tags={tags}
                 onChange={(ids) => send(updateTask, { id: task.id, tag_ids: ids.join(',') })}
+                onCriar={(nome, cor) => send(criarTagNaTarefa, {
+                  engagement_id: projectId, task_id: task.id, name: nome, color: cor,
+                })}
+                onCor={(id, cor) => send(atualizarTag, { id, color: cor })}
+                onApagar={(tag) => {
+                  if (confirm(`Apagar a tag "${tag.nome}"? Ela sai das tarefas que a usam.`)) {
+                    send(apagarTag, { id: tag.id, engagement_id: projectId });
+                  }
+                }}
               />
             </dd>
 

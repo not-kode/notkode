@@ -11,7 +11,8 @@
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { PRIORITY_LABELS, TAG_TOM, corDaTag, type Priority, type TaskStatus } from '@/app/admin/(app)/entregas/status';
-import type { ColunaCliente, PhaseView, TaskView } from '@/app/admin/(app)/entregas/types';
+import { COLUNA_LABELS_CLIENTE } from '@/app/admin/(app)/entregas/types';
+import type { Coluna, PhaseView, TaskView } from '@/app/admin/(app)/entregas/types';
 import { Gantt } from '@/app/admin/(app)/entregas/gantt';
 
 /** Status em português de cliente: ninguém de fora fala "backlog" nem "review". */
@@ -67,7 +68,8 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
   phases: PhaseView[];
   tasks: TaskView[];
   tags: TagCliente[];
-  colunas: ColunaCliente[];
+  /** As mesmas colunas que a casa vê na lista dela, menos as internas. */
+  colunas: Coluna[];
   agrupar: 'sprint' | 'status' | 'nenhum';
   cronograma: boolean;
 }) {
@@ -81,10 +83,11 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
   // (ou responsável, ou data), ela não aparece.
   const usadas = colunas.filter((c) => {
     if (c === 'tags') return tasks.some((t) => t.tagIds.length > 0) && tags.length > 0;
-    if (c === 'responsavel') return tasks.some((t) => !!t.assignee);
+    if (c === 'quem') return tasks.some((t) => !!t.assignee);
     if (c === 'inicio') return tasks.some((t) => !!t.startDate);
     if (c === 'prazo') return tasks.some((t) => !!t.dueDate);
-    return true;
+    // O cronômetro é da casa: não existe deste lado.
+    return c !== 'tempo';
   });
 
   const passa = (t: TaskView) =>
@@ -215,7 +218,7 @@ function montarGrupos(
 
 function Grupo({ grupo, colunas, tags, subs, passa, comCabecalho }: {
   grupo: GrupoLista;
-  colunas: ColunaCliente[];
+  colunas: Coluna[];
   tags: TagCliente[];
   subs: (id: string) => TaskView[];
   passa: (t: TaskView) => boolean;
@@ -260,20 +263,21 @@ function Grupo({ grupo, colunas, tags, subs, passa, comCabecalho }: {
               {colunas.includes('tags') && <col className="w-40" />}
               {colunas.includes('inicio') && <col className="w-20" />}
               {colunas.includes('prazo') && <col className="w-20" />}
-              {colunas.includes('urgencia') && <col className="w-24" />}
-              {colunas.includes('responsavel') && <col className="w-36" />}
-              {colunas.includes('status') && <col className="w-36" />}
+              {colunas.includes('prioridade') && <col className="w-24" />}
+              {colunas.includes('quem') && <col className="w-36" />}
+              <col className="w-36" />
             </colgroup>
             {comCabecalho && (
               <thead>
                 <tr className="border-b border-black/[0.05]">
                   <Th>Entrega</Th>
-                  {colunas.includes('tags') && <Th>Tags</Th>}
-                  {colunas.includes('inicio') && <Th>Início</Th>}
-                  {colunas.includes('prazo') && <Th>Prazo</Th>}
-                  {colunas.includes('urgencia') && <Th>Urgência</Th>}
-                  {colunas.includes('responsavel') && <Th>Responsável</Th>}
-                  {colunas.includes('status') && <Th>Status</Th>}
+                  {colunas.includes('tags') && <Th>{COLUNA_LABELS_CLIENTE.tags}</Th>}
+                  {colunas.includes('inicio') && <Th>{COLUNA_LABELS_CLIENTE.inicio}</Th>}
+                  {colunas.includes('prazo') && <Th>{COLUNA_LABELS_CLIENTE.prazo}</Th>}
+                  {colunas.includes('prioridade') && <Th>{COLUNA_LABELS_CLIENTE.prioridade}</Th>}
+                  {colunas.includes('quem') && <Th>{COLUNA_LABELS_CLIENTE.quem}</Th>}
+                  {/* O status é a resposta que ele veio buscar: não se esconde. */}
+                  <Th>Status</Th>
                 </tr>
               </thead>
             )}
@@ -305,7 +309,7 @@ function Th({ children, className = '' }: { children: React.ReactNode; className
 
 function Linha({ task, colunas, tags, filhas, filha = false }: {
   task: TaskView;
-  colunas: ColunaCliente[];
+  colunas: Coluna[];
   tags: TagCliente[];
   filhas: number;
   filha?: boolean;
@@ -355,7 +359,7 @@ function Linha({ task, colunas, tags, filhas, filha = false }: {
       {colunas.includes('inicio') && <Td>{fmtData(task.startDate)}</Td>}
       {colunas.includes('prazo') && <Td>{fmtData(task.dueDate)}</Td>}
 
-      {colunas.includes('urgencia') && (
+      {colunas.includes('prioridade') && (
         <td className="px-3 py-2.5">
           <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${URGENCIA_TOM[task.priority]}`}>
             {PRIORITY_LABELS[task.priority]}
@@ -363,20 +367,18 @@ function Linha({ task, colunas, tags, filhas, filha = false }: {
         </td>
       )}
 
-      {colunas.includes('responsavel') && (
+      {colunas.includes('quem') && (
         <td className="truncate px-3 py-2.5 text-[12px] text-text-secondary" title={task.assignee ?? undefined}>
           {task.assignee ?? '—'}
         </td>
       )}
 
-      {colunas.includes('status') && (
-        <td className="px-3 py-2.5">
+      <td className="px-3 py-2.5">
           <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_TOM[task.status]}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[task.status]}`} />
             {STATUS_LABELS[task.status]}
           </span>
-        </td>
-      )}
+      </td>
     </tr>
   );
 }

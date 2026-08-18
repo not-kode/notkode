@@ -6,7 +6,7 @@ import {
   PHASE_STATUSES, PRIORITIES, RESPONSAVEL_PADRAO, TAG_COLORS, TASK_STATUSES,
   type PhaseStatus, type Priority, type TagColor, type TaskStatus,
 } from './status';
-import { COLUNAS_CLIENTE, type ColunaCliente } from './types';
+import { COLUNAS, type Coluna } from './types';
 
 const str = (fd: FormData, key: string, max = 500): string | null => {
   const v = fd.get(key);
@@ -522,6 +522,69 @@ export async function criarTag(formData: FormData): Promise<void> {
   revalidar();
 }
 
+/**
+ * Cria a tag e já marca a tarefa com ela, num passo. É assim que a tag nasce no
+ * dia a dia: você está numa tarefa, o nome da frente ainda não existe, digita e
+ * pronto. Nome repetido reaproveita a tag que já existe em vez de duplicar.
+ */
+export async function criarTagNaTarefa(formData: FormData): Promise<void> {
+  const engagement_id = str(formData, 'engagement_id', 64);
+  const task_id = str(formData, 'task_id', 64);
+  const name = str(formData, 'name', 60);
+  if (!engagement_id || !task_id || !name) return;
+
+  const supabase = getSupabaseAdmin();
+  const cor = str(formData, 'color', 16);
+
+  const { data: igual } = await supabase
+    .from('project_tags')
+    .select('id')
+    .eq('engagement_id', engagement_id)
+    .ilike('name', name)
+    .maybeSingle();
+
+  let tagId = (igual as { id: string } | null)?.id ?? null;
+
+  if (!tagId) {
+    const { data: ultima } = await supabase
+      .from('project_tags')
+      .select('sort')
+      .eq('engagement_id', engagement_id)
+      .order('sort', { ascending: false })
+      .limit(1);
+
+    const { data: criada } = await supabase
+      .from('project_tags')
+      .insert({
+        engagement_id,
+        name,
+        color: cor && TAG_COLORS.includes(cor as TagColor) ? cor : 'azul',
+        sort: ((ultima?.[0]?.sort as number | undefined) ?? -1) + 1,
+      })
+      .select('id')
+      .maybeSingle();
+    tagId = (criada as { id: string } | null)?.id ?? null;
+  }
+
+  if (!tagId) return;
+
+  const { data: tarefa } = await supabase
+    .from('project_tasks')
+    .select('tag_ids')
+    .eq('id', task_id)
+    .maybeSingle();
+
+  const atuais = ((tarefa as { tag_ids: string[] | null } | null)?.tag_ids ?? []);
+  if (!atuais.includes(tagId)) {
+    await supabase
+      .from('project_tasks')
+      .update({ tag_ids: [...atuais, tagId], updated_at: new Date().toISOString() })
+      .eq('id', task_id);
+  }
+
+  revalidar();
+}
+
 export async function atualizarTag(formData: FormData): Promise<void> {
   const id = str(formData, 'id', 64);
   if (!id) return;
@@ -566,30 +629,23 @@ export async function apagarTag(formData: FormData): Promise<void> {
   revalidar();
 }
 
-// ── O que o cliente vê ───────────────────────────────────────────────────────
+// ── Como esta tela está montada ──────────────────────────────────────────────
 
 /**
- * Salva o recorte da visão do cliente: quais colunas aparecem no link, como as
- * tarefas ficam separadas e se o desenho do cronograma entra junto. Cada
- * contrato tem o seu, porque cada cliente pergunta uma coisa diferente.
+ * Salva as colunas visíveis do projeto e se o cronograma entra no link do
+ * cliente. A mesma lista vale para a sua tela e para o link: coluna escondida
+ * some dos dois lados.
  */
-export async function salvarVisaoCliente(formData: FormData): Promise<void> {
+export async function salvarColunas(formData: FormData): Promise<void> {
   const engagement_id = str(formData, 'engagement_id', 64);
   if (!engagement_id) return;
 
   const brutas = (str(formData, 'colunas', 300) ?? '').split(',').map((c) => c.trim());
-  const colunas = COLUNAS_CLIENTE.filter((c) => brutas.includes(c)) as ColunaCliente[];
-  const agrupar = str(formData, 'agrupar', 16);
+  const colunas = COLUNAS.filter((c) => brutas.includes(c)) as Coluna[];
 
   await getSupabaseAdmin()
     .from('engagements')
-    .update({
-      client_view: {
-        colunas,
-        agrupar: agrupar === 'sprint' || agrupar === 'status' || agrupar === 'nenhum' ? agrupar : 'sprint',
-        cronograma: formData.get('cronograma') === 'on',
-      },
-    })
+    .update({ client_view: { colunas, cronograma: formData.get('cronograma') === 'on' } })
     .eq('id', engagement_id);
 
   revalidar();

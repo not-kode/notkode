@@ -11,25 +11,21 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { salvarColunas, setProjectArchived, generateClientToken, revokeClientToken } from './actions';
 import {
-  apagarTag, atualizarTag, criarTag, salvarVisaoCliente,
-  setProjectArchived, generateClientToken, revokeClientToken,
-} from './actions';
-import {
-  Archive, ArchiveRestore, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid,
-  Link2, List, PanelLeftClose, PanelLeftOpen, Settings2, Tag, Trash2, X,
+  Archive, ArchiveRestore, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
+  LayoutGrid, Link2, List, PanelLeftClose, PanelLeftOpen, X,
 } from 'lucide-react';
-import { COLUNAS_CLIENTE, COLUNA_CLIENTE_LABELS } from './types';
+import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS } from './types';
 import type {
-  Agrupamento, ColunaCliente, ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send,
+  Agrupamento, Coluna, ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send,
   TagView, TaskComProjeto, TaskView,
 } from './types';
-import { TAG_COLORS, TAG_COLOR_LABELS, TAG_TOM, corDaTag } from './status';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
 import { NotasView } from './notas-view';
-import { ChipSelect, DateChip, InlineText, TagChip, fmtDuracao, hoje, inputCls, somaDias } from './ui';
+import { ChipSelect, DateChip, InlineText, fmtDuracao, hoje, inputCls, somaDias } from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
 
@@ -37,6 +33,14 @@ const PREF_VISAO = 'notkode.entregas.visao';
 const PREF_PROJETO = 'notkode.entregas.projeto';
 const PREF_LISTA_PROJETOS = 'notkode.entregas.lista-projetos';
 const PREF_AGRUPAR = 'notkode.entregas.agrupar';
+
+/** Botão só de ícone, para o que se reconhece pela forma (quadro, lista). */
+const iconeCls = (ativo: boolean) =>
+  `rounded-sm p-1.5 transition-colors ${
+    ativo
+      ? 'bg-white text-text-primary shadow-[0_1px_2px_rgba(16,24,40,0.08)]'
+      : 'text-text-muted hover:text-text-primary'
+  }`;
 
 const tabCls = (ativo: boolean) =>
   `inline-flex max-w-[12rem] items-center gap-1.5 truncate rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
@@ -129,6 +133,8 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
   const abrirProjeto = (id: string) => {
     setAbertoId(id);
     localStorage.setItem(PREF_PROJETO, id);
+    // Clicar num projeto é dizer "quero este": sai da visão geral sozinho.
+    setEscopo('projeto');
   };
   const alternarLista = () => {
     setListaProjetos((v) => {
@@ -190,13 +196,31 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
     );
   }
 
+  const nomeAberto = aberto ? aberto.orgName ?? aberto.title ?? 'Sem cliente' : 'Tasks';
+  const geral = escopo === 'todos';
+
   return (
     <div>
+      {/* O topo diz DE QUEM é a tela e guarda o que é do projeto inteiro (link do
+          cliente, arquivar). Antes isso morava na mesma fileira dos controles de
+          visualização, e "revogar link" acabava do lado de "Kanban". */}
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="eyebrow mb-1"><span className="status-dot" />Projetos e cronograma</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
+        <div className="min-w-0">
+          <p className="eyebrow mb-1">
+            <span className="status-dot" />
+            {geral ? 'Tudo em aberto' : 'Projeto'}
+          </p>
+          <h1 className="truncate text-2xl font-semibold tracking-tight">
+            {geral ? 'Visão geral' : nomeAberto}
+          </h1>
         </div>
+
+        {!geral && aberto && aberto.kind === 'contrato' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <ClientLink project={aberto} pending={pending} send={send} />
+            <ArquivarProjeto project={aberto} pending={pending} send={send} />
+          </div>
+        )}
       </header>
 
       <div className="flex flex-col gap-5 lg:flex-row">
@@ -226,6 +250,24 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
               </button>
             </div>
             <nav className="flex flex-col gap-4">
+              {/* A visão geral não é "um projeto a mais": é a sua fila do dia,
+                  todos os clientes juntos. Por isso mora aqui em cima e não num
+                  botão colado no nome de um cliente, onde parecia recorte dele. */}
+              <button
+                onClick={() => setEscopo('todos')}
+                className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[13px] transition-colors ${
+                  escopo === 'todos'
+                    ? 'bg-primary/[0.08] font-medium text-primary'
+                    : 'text-text-secondary hover:bg-black/[0.04] hover:text-text-primary'
+                }`}
+              >
+                <CheckSquare className="h-3.5 w-3.5 shrink-0" />
+                Tudo em aberto
+                <span className="ml-auto text-[11px] tabular-nums text-text-muted">
+                  {ativos.flatMap((p) => p.tasks).filter((t) => !t.parentId && t.status !== 'feito').length}
+                </span>
+              </button>
+
               {grupos.map((g) => (
                 <div key={g.titulo}>
                   <p className="mb-1.5 px-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
@@ -426,16 +468,19 @@ function ProjectPanel({
   // Cronograma, notas, link do cliente e arquivamento são coisas do contrato,
   // que nasce no "Gerar contrato" e leva essas tarefas junto.
   const soChecklist = project.kind === 'negocio';
+  // Na visão geral não existe "o projeto": cronograma e notas são de um cliente,
+  // e ali a tela é só a fila de tarefas de todos.
+  const geral = escopo === 'todos';
   // Trocar de um contrato (numa aba de cronograma) para um negócio não pode
   // deixar a tela numa aba que aquele projeto não tem.
-  const abaAtual: Aba = soChecklist ? 'tasks' : aba;
+  const abaAtual: Aba = soChecklist || geral ? 'tasks' : aba;
 
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
           <button onClick={() => setAba('tasks')} className={tabCls(aba === 'tasks')}>Tasks</button>
-          {!soChecklist && (
+          {!soChecklist && !geral && (
             <>
               <button onClick={() => setAba('cronograma')} className={tabCls(aba === 'cronograma')}>Cronograma</button>
               <button onClick={() => setAba('notas')} className={tabCls(aba === 'notas')}>
@@ -450,41 +495,49 @@ function ProjectPanel({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {abaAtual === 'tasks' && (
-            <>
-              {/* Um projeto por vez, ou o dia inteiro de uma vez. */}
-              <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
-                <button onClick={() => setEscopo('projeto')} className={tabCls(escopo === 'projeto')} title={nome}>{nome}</button>
-                <button onClick={() => setEscopo('todos')} className={tabCls(escopo === 'todos')}>Todos</button>
-              </div>
+        {/* Só o jeito de OLHAR a lista mora aqui: quadro ou lista, por status ou
+            por sprint, e quais colunas. Nada que mexa no projeto. */}
+        {abaAtual === 'tasks' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-0.5 rounded-md bg-black/[0.05] p-0.5">
+              <button
+                onClick={() => setVisao('lista')}
+                title="Ver em lista"
+                aria-label="Ver em lista"
+                className={iconeCls(visao === 'lista')}
+              >
+                <List className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setVisao('kanban')}
+                title="Ver em quadro"
+                aria-label="Ver em quadro"
+                className={iconeCls(visao === 'kanban')}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+            </div>
 
-              <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
-                <button onClick={() => setVisao('kanban')} className={tabCls(visao === 'kanban')}>
-                  <LayoutGrid className="h-3.5 w-3.5" />Kanban
-                </button>
-                <button onClick={() => setVisao('lista')} className={tabCls(visao === 'lista')}>
-                  <List className="h-3.5 w-3.5" />Lista
-                </button>
-              </div>
+            {/* Agrupar é só um jeito de olhar, não um tipo de tarefa: a sprint é
+                um campo da tarefa, e trocar aqui não mexe em dado nenhum. */}
+            {visao === 'lista' && !geral && (
+              <ChipSelect
+                value={agrupar}
+                tone="bg-black/[0.05] text-text-secondary"
+                titulo="Como separar a lista"
+                onChange={(v) => setAgrupar(v as Agrupamento)}
+                options={[
+                  { value: 'status', label: 'Agrupar: status' },
+                  { value: 'sprint', label: 'Agrupar: sprint' },
+                ]}
+              />
+            )}
 
-              {/* Por status é o dia de trabalho; por sprint é o ciclo de entrega.
-                  Só faz sentido na lista de um projeto: em "Todos", cada tarefa
-                  tem o cronograma dela. */}
-              {visao === 'lista' && !soChecklist && escopo === 'projeto' && (
-                <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
-                  <button onClick={() => setAgrupar('status')} className={tabCls(agrupar === 'status')}>Status</button>
-                  <button onClick={() => setAgrupar('sprint')} className={tabCls(agrupar === 'sprint')}>Sprint</button>
-                </div>
-              )}
-
-              {!soChecklist && <BotaoTags project={project} pending={pending} send={send} />}
-            </>
-          )}
-
-          {!soChecklist && <ClientLink project={project} pending={pending} send={send} />}
-          {!soChecklist && <ArquivarProjeto project={project} pending={pending} send={send} />}
-        </div>
+            {!soChecklist && !geral && (
+              <BotaoColunas project={project} pending={pending} send={send} />
+            )}
+          </div>
+        )}
       </div>
 
       {soChecklist && (
@@ -556,6 +609,7 @@ function ProjectPanel({
               projectKind={project.kind}
               pessoas={pessoas}
               agrupar={agrupar}
+              colunas={project.visao.colunas}
               mostrarProjeto={escopo === 'todos'}
               onAbrirProjeto={onAbrirProjeto}
               send={send}
@@ -622,7 +676,6 @@ function ClientLink({ project, pending, send }: { project: ProjectView; pending:
 
   return (
     <div className="inline-flex items-center gap-1">
-      <BotaoVisaoCliente project={project} pending={pending} send={send} />
       <button
         onClick={() => {
           navigator.clipboard?.writeText(project.clientUrl!);
@@ -696,216 +749,90 @@ function Painel({ titulo, descricao, fechar, children }: {
   );
 }
 
-/** As tags do projeto: cadastrar, renomear, trocar a cor, apagar. */
-function BotaoTags({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
-  const [aberto, setAberto] = useState(false);
-  const [nome, setNome] = useState('');
-  const [cor, setCor] = useState<string>('azul');
-
-  const criar = () => {
-    const limpo = nome.trim();
-    if (!limpo) return;
-    send(criarTag, { engagement_id: project.id, name: limpo, color: cor });
-    setNome('');
-  };
-
-  return (
-    <>
-      <button
-        onClick={() => setAberto(true)}
-        title="Tags deste projeto"
-        className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-[12px] font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
-      >
-        <Tag className="h-3.5 w-3.5" />
-        Tags
-        {project.tags.length > 0 && (
-          <span className="rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
-            {project.tags.length}
-          </span>
-        )}
-      </button>
-
-      {aberto && (
-        <Painel
-          titulo="Tags do projeto"
-          descricao="O vocabulário deste cliente. A tarefa escolhe entre estas, e o cliente lê os mesmos nomes no link de acompanhamento."
-          fechar={() => setAberto(false)}
-        >
-          <div className="flex flex-col gap-3">
-            {project.tags.length > 0 && (
-              <ul className="flex flex-col divide-y divide-black/[0.05] rounded-md border border-black/[0.07]">
-                {project.tags.map((t) => (
-                  <li key={t.id} className="flex items-center gap-2 px-2.5 py-2">
-                    <InlineText
-                      value={t.nome}
-                      onSave={(v) => send(atualizarTag, { id: t.id, name: v })}
-                      className="min-w-0 flex-1 text-[13px] text-text-primary"
-                    />
-                    <SeletorCor valor={t.cor} onChange={(v) => send(atualizarTag, { id: t.id, color: v })} />
-                    <button
-                      onClick={() => {
-                        if (confirm(`Apagar a tag "${t.nome}"? Ela sai das tarefas que a usam.`)) {
-                          send(apagarTag, { id: t.id, engagement_id: project.id });
-                        }
-                      }}
-                      disabled={pending}
-                      title="Apagar tag"
-                      aria-label={`Apagar tag ${t.nome}`}
-                      className="rounded p-1 text-text-muted/60 transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="flex items-center gap-2">
-              <input
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') criar(); }}
-                placeholder="Nova tag (ex.: Site, Agente, Conteúdo)"
-                className={inputCls}
-              />
-              <SeletorCor valor={cor} onChange={setCor} />
-              <button
-                onClick={criar}
-                disabled={pending || !nome.trim()}
-                className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-[12px] font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-              >
-                Criar
-              </button>
-            </div>
-
-            {project.tags.length === 0 && (
-              <p className="text-[12px] leading-snug text-text-muted">
-                Sem tags ainda. Elas servem para o cliente entender de que frente é cada tarefa
-                (site, agente, conteúdo) sem precisar perguntar.
-              </p>
-            )}
-          </div>
-        </Painel>
-      )}
-    </>
-  );
-}
-
-/** As seis cores possíveis de uma tag, em bolinhas. */
-function SeletorCor({ valor, onChange }: { valor: string; onChange: (v: string) => void }) {
-  return (
-    <div className="flex shrink-0 items-center gap-1">
-      {TAG_COLORS.map((c) => (
-        <button
-          key={c}
-          onClick={() => onChange(c)}
-          title={TAG_COLOR_LABELS[c]}
-          aria-label={TAG_COLOR_LABELS[c]}
-          className={`h-4 w-4 rounded-full transition ${TAG_TOM[c].split(' ')[0]} ${
-            corDaTag(valor) === c ? 'ring-2 ring-text-primary/40' : 'hover:scale-110'
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
-
 /**
- * O recorte do link do cliente: quais colunas ele vê, por onde a lista fica
- * separada e se o desenho do cronograma entra junto. É por projeto porque cada
- * cliente pergunta uma coisa diferente.
+ * As colunas desta tela. Uma configuração só: o que você desliga sai da sua
+ * lista e sai do link do cliente. O cronômetro é exceção nos dois sentidos —
+ * fica na sua lista e nunca vai para o cliente.
  */
-function BotaoVisaoCliente({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
+function BotaoColunas({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
   const [aberto, setAberto] = useState(false);
-  const [colunas, setColunas] = useState<ColunaCliente[]>(project.visaoCliente.colunas);
-  const [agrupar, setAgrupar] = useState(project.visaoCliente.agrupar);
-  const [cronograma, setCronograma] = useState(project.visaoCliente.cronograma);
+  const visiveis = project.visao.colunas;
 
-  const alternar = (c: ColunaCliente) =>
-    setColunas((atual) => (atual.includes(c) ? atual.filter((x) => x !== c) : [...atual, c]));
-
-  const salvar = () => {
-    send(salvarVisaoCliente, {
+  const salvar = (colunas: Coluna[], cronograma: boolean) =>
+    send(salvarColunas, {
       engagement_id: project.id,
       colunas: colunas.join(','),
-      agrupar,
       cronograma: cronograma ? 'on' : '',
     });
-    setAberto(false);
-  };
+
+  const alternar = (c: Coluna) =>
+    salvar(
+      visiveis.includes(c) ? visiveis.filter((x) => x !== c) : [...visiveis, c],
+      project.visao.cronogramaNoLink,
+    );
 
   return (
     <>
       <button
         onClick={() => setAberto(true)}
-        title="O que o cliente vê no link"
-        aria-label="O que o cliente vê no link"
-        className="rounded-md border border-black/[0.1] bg-white p-1.5 text-text-muted shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
+        title="Colunas desta tela (e do link do cliente)"
+        className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-[12px] font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
       >
-        <Settings2 className="h-3.5 w-3.5" />
+        <Columns3 className="h-3.5 w-3.5" />
+        Colunas
       </button>
 
       {aberto && (
         <Painel
-          titulo="O que o cliente vê"
-          descricao="Vale só para este projeto. A tarefa marcada como interna continua fora do link, aconteça o que acontecer aqui."
+          titulo="Colunas"
+          descricao="Vale para esta tela e para o link do cliente: coluna desligada aqui ele também não vê. Tarefa marcada como interna continua fora do link de qualquer jeito."
           fechar={() => setAberto(false)}
         >
           <div className="flex flex-col gap-4">
-            <div>
-              <p className="mb-2 font-label text-[10px] uppercase tracking-wider text-text-muted">Colunas</p>
-              <div className="flex flex-wrap gap-1.5">
-                {COLUNAS_CLIENTE.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => alternar(c)}
-                    className={`rounded-full border px-2.5 py-1 text-[12px] font-medium transition ${
-                      colunas.includes(c)
-                        ? 'border-primary/40 bg-primary/[0.08] text-primary'
-                        : 'border-black/[0.1] text-text-muted hover:text-text-primary'
-                    }`}
-                  >
-                    {COLUNA_CLIENTE_LABELS[c]}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-1.5 text-[11px] text-text-muted">
-                O nome da tarefa aparece sempre; o resto é escolha sua.
-              </p>
-            </div>
-
-            <div>
-              <p className="mb-2 font-label text-[10px] uppercase tracking-wider text-text-muted">Separar por</p>
-              <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
-                <button onClick={() => setAgrupar('sprint')} className={tabCls(agrupar === 'sprint')}>Sprint</button>
-                <button onClick={() => setAgrupar('status')} className={tabCls(agrupar === 'status')}>Status</button>
-                <button onClick={() => setAgrupar('nenhum')} className={tabCls(agrupar === 'nenhum')}>Lista única</button>
-              </div>
-            </div>
+            <ul className="flex flex-col divide-y divide-black/[0.05] rounded-md border border-black/[0.07]">
+              {COLUNAS.map((c) => {
+                const ligada = visiveis.includes(c);
+                return (
+                  <li key={c} className="flex items-center gap-2 px-3 py-2">
+                    <button
+                      onClick={() => alternar(c)}
+                      disabled={pending}
+                      className="flex flex-1 items-center gap-2 text-left disabled:opacity-60"
+                    >
+                      {ligada
+                        ? <Eye className="h-3.5 w-3.5 text-primary" />
+                        : <EyeOff className="h-3.5 w-3.5 text-text-muted/60" />}
+                      <span className={`text-[13px] ${ligada ? 'text-text-primary' : 'text-text-muted'}`}>
+                        {COLUNA_LABELS[c]}
+                      </span>
+                    </button>
+                    <span className="shrink-0 text-[11px] text-text-muted">
+                      {(COLUNAS_DO_CLIENTE as readonly Coluna[]).includes(c)
+                        ? ligada ? 'você e o cliente' : 'escondida'
+                        : 'só você'}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
 
             <label className="flex items-center gap-2 text-[13px] text-text-secondary">
               <input
                 type="checkbox"
-                checked={cronograma}
-                onChange={(e) => setCronograma(e.target.checked)}
+                checked={project.visao.cronogramaNoLink}
+                onChange={(e) => salvar(visiveis, e.target.checked)}
                 className="h-3.5 w-3.5 accent-primary"
               />
-              Mostrar também o desenho do cronograma, numa aba ao lado da lista
+              Mostrar o cronograma (Gantt) no link do cliente, numa aba ao lado da lista
             </label>
 
-            <div className="flex items-center justify-end gap-2 border-t border-black/[0.06] pt-3">
+            <div className="flex items-center justify-between border-t border-black/[0.06] pt-3">
+              <p className="text-[11px] text-text-muted">O status sempre aparece para o cliente.</p>
               <button
                 onClick={() => setAberto(false)}
-                className="px-2 py-1.5 text-[12px] text-text-muted transition hover:text-text-primary"
+                className="rounded-md bg-primary px-3 py-1.5 text-[12px] font-semibold text-white transition hover:opacity-90"
               >
-                Cancelar
-              </button>
-              <button
-                onClick={salvar}
-                disabled={pending}
-                className="rounded-md bg-primary px-3 py-1.5 text-[12px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-              >
-                Salvar
+                Pronto
               </button>
             </div>
           </div>
