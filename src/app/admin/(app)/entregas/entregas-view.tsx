@@ -11,10 +11,12 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { salvarColunas, setProjectArchived, generateClientToken, revokeClientToken } from './actions';
+import {
+  createPhase, salvarColunas, setProjectArchived, generateClientToken, revokeClientToken,
+} from './actions';
 import {
   Archive, ArchiveRestore, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
-  LayoutGrid, Link2, List, PanelLeftClose, PanelLeftOpen, X,
+  LayoutGrid, Link2, List, PanelLeftClose, PanelLeftOpen, Rows3, X,
 } from 'lucide-react';
 import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS } from './types';
 import type {
@@ -506,22 +508,8 @@ function ProjectPanel({
 
             {/* Agrupar é só um jeito de olhar, não um tipo de tarefa: a sprint é
                 um campo da tarefa, e trocar aqui não mexe em dado nenhum. */}
-            {visao === 'lista' && !geral && (
-              <ChipSelect
-                value={project.visao.agrupar}
-                tone="bg-black/[0.05] text-text-secondary"
-                titulo="Como separar a lista (vale também para o link do cliente)"
-                onChange={(v) => send(salvarColunas, {
-                  engagement_id: project.id,
-                  colunas: project.visao.colunas.join(','),
-                  agrupar: v,
-                  cronograma: project.visao.cronogramaNoLink ? 'on' : '',
-                })}
-                options={[
-                  { value: 'status', label: 'Agrupar: status' },
-                  { value: 'sprint', label: 'Agrupar: sprint' },
-                ]}
-              />
+            {visao === 'lista' && !geral && !soChecklist && (
+              <Agrupamento project={project} send={send} />
             )}
 
             {!soChecklist && !geral && (
@@ -737,6 +725,146 @@ function Painel({ titulo, descricao, fechar, children }: {
       </div>
     </div>,
     document.body,
+  );
+}
+
+/**
+ * Separar a lista por status ou por sprint, em dois ícones — é a mesma natureza
+ * do par lista/quadro ao lado, e o rótulo por extenso ocupava a barra sem
+ * ensinar nada que o desenho não diga.
+ *
+ * Escolher sprint num projeto que ainda não tem nenhuma abre a conversa em vez
+ * de trocar para uma tela vazia: "quer criar a primeira?", com nome e período já
+ * preenchidos. Cancelar deixa tudo como estava.
+ */
+function Agrupamento({ project, send }: { project: ProjectView; send: Send }) {
+  const [perguntando, setPerguntando] = useState(false);
+  const semSprint = project.phases.length === 0;
+  const atual = project.visao.agrupar;
+
+  const gravar = (agrupar: 'status' | 'sprint') =>
+    send(salvarColunas, {
+      engagement_id: project.id,
+      colunas: project.visao.colunas.join(','),
+      agrupar,
+      cronograma: project.visao.cronogramaNoLink ? 'on' : '',
+    });
+
+  return (
+    <>
+      <div className="flex items-center gap-0.5 rounded-md bg-black/[0.05] p-0.5">
+        <button
+          onClick={() => gravar('status')}
+          title="Separar por status"
+          aria-label="Separar por status"
+          className={iconeCls(atual === 'status')}
+        >
+          <Rows3 className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => (semSprint ? setPerguntando(true) : gravar('sprint'))}
+          title="Separar por sprint"
+          aria-label="Separar por sprint"
+          className={iconeCls(atual === 'sprint')}
+        >
+          <Layers className="h-4 w-4" />
+        </button>
+      </div>
+
+      {perguntando && (
+        <NovaSprintPainel
+          project={project}
+          send={send}
+          fechar={() => setPerguntando(false)}
+          aoCriar={() => gravar('sprint')}
+        />
+      )}
+    </>
+  );
+}
+
+/** A conversa de "quer gerar a lista em sprint?": nome, período e pronto. */
+function NovaSprintPainel({ project, send, fechar, aoCriar }: {
+  project: ProjectView;
+  send: Send;
+  fechar: () => void;
+  aoCriar: () => void;
+}) {
+  const inicioPadrao = hoje();
+  const fimPadrao = somaDias(inicioPadrao, 13);
+  const [nome, setNome] = useState('Sprint 1');
+  const [inicio, setInicio] = useState(inicioPadrao);
+  const [fim, setFim] = useState(fimPadrao);
+
+  const criar = () => {
+    const limpo = nome.trim();
+    if (!limpo) return;
+    send(createPhase, {
+      engagement_id: project.id,
+      name: limpo,
+      start_date: inicio,
+      end_date: fim,
+    });
+    aoCriar();
+    fechar();
+  };
+
+  return (
+    <Painel
+      titulo="Separar por sprint"
+      descricao="Este projeto ainda não tem sprint. Quer criar a primeira agora? Depois é só arrastar as tarefas para dentro dela; o que ficar de fora aparece em “Sem sprint”."
+      fechar={fechar}
+    >
+      <div className="flex flex-col gap-3">
+        <div>
+          <p className="mb-1 font-label text-[10px] uppercase tracking-wider text-text-muted">Nome</p>
+          <input
+            autoFocus
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') criar(); }}
+            placeholder="Sprint 1, Agosto, Fase de dados…"
+            className={inputCls}
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <p className="mb-1 font-label text-[10px] uppercase tracking-wider text-text-muted">Começa</p>
+            <input
+              type="date"
+              value={inicio}
+              onChange={(e) => setInicio(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+          <div className="flex-1">
+            <p className="mb-1 font-label text-[10px] uppercase tracking-wider text-text-muted">Termina</p>
+            <input
+              type="date"
+              value={fim}
+              onChange={(e) => setFim(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-black/[0.06] pt-3">
+          <button
+            onClick={fechar}
+            className="px-2 py-1.5 text-[12px] text-text-muted transition hover:text-text-primary"
+          >
+            Agora não
+          </button>
+          <button
+            onClick={criar}
+            className="rounded-md bg-primary px-3 py-1.5 text-[12px] font-semibold text-white transition hover:opacity-90"
+          >
+            Criar sprint
+          </button>
+        </div>
+      </div>
+    </Painel>
   );
 }
 
