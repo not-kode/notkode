@@ -7,16 +7,18 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, ChevronRight, GripVertical, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
+import {
+  ArrowDown, ArrowUp, Check, ChevronRight, ChevronsUpDown, GripVertical, MoreHorizontal, Plus, Trash2,
+} from 'lucide-react';
 import {
   apagarTag, atualizarTag, bulkTasks, createPhase, createTask, criarTagNaTarefa, deletePhase,
   deleteTask, moveTask, toggleTimer, updatePhase, updateTask,
 } from './actions';
 import {
-  PHASE_LABELS, PHASE_STATUSES, PRIORITIES, PRIORITY_LABELS, TASK_DOT, TASK_LABELS, TASK_STATUSES,
-  TASK_TOM, type PhaseStatus, type TaskStatus,
+  PHASE_LABELS, PHASE_STATUSES, PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS,
+  TASK_STATUSES, TASK_TOM, type PhaseStatus, type TaskStatus,
 } from './status';
-import { donoDaTarefa, porPrazo } from './types';
+import { COLUNA_LABELS, donoDaTarefa, porPrazo } from './types';
 import type {
   Agrupamento, Coluna, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto,
 } from './types';
@@ -97,6 +99,15 @@ export function ListView({
   // Subtarefa nasce à vista, aninhada na mãe: quem lê a lista entende o que é
   // cada tarefa sem abrir uma por uma. Aqui ficam só as que você mandou recolher.
   const [recolhidas, setRecolhidas] = useState<string[]>([]);
+  /**
+   * Ordem da lista. Sem escolha sua, vale a de sempre: vence antes em cima,
+   * empate pela prioridade. Clicar no nome da coluna passa a ordenar por ela e
+   * o segundo clique inverte — é o gesto de planilha, e cada tela pode ficar
+   * ordenada de um jeito sem virar configuração do projeto.
+   */
+  const [ordem, setOrdem] = useState<{ col: Coluna | 'titulo'; desc: boolean } | null>(null);
+  /** Última linha marcada: serve de âncora para o Shift+clique pegar o intervalo. */
+  const [ancora, setAncora] = useState<string | null>(null);
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
@@ -116,25 +127,54 @@ export function ListView({
   // o responsável (que hoje é sempre a mesma pessoa). O responsável continua
   // editável dentro da tarefa, na gaveta. Num projeto só, vale o contrário.
   const ver = (c: Coluna) => visiveis.includes(c);
-  const colunas: { id: string; label: string; cls: string }[] = [
-    { id: 'titulo', label: 'Tarefa', cls: 'min-w-[14rem]' },
+  const colunas: { id: string; label: string; cls: string; ordenavel?: Coluna | 'titulo' }[] = [
+    { id: 'titulo', label: 'Tarefa', cls: 'min-w-[14rem]', ordenavel: 'titulo' },
     ...(ver('tags') ? [{ id: 'tags', label: 'Tags', cls: 'w-40' }] : []),
     // A empresa identifica a linha na visão geral e não é opcional ali; num
     // projeto só, o lugar dessa coluna é do responsável.
     ...(mostrarProjeto
       ? [{ id: 'projeto', label: 'Empresa', cls: 'w-44' }]
-      : ver('quem') ? [{ id: 'quem', label: 'Quem', cls: 'w-32' }] : []),
-    ...(ver('inicio') ? [{ id: 'inicio', label: 'Início', cls: 'w-28' }] : []),
-    ...(ver('prazo') ? [{ id: 'prazo', label: 'Prazo', cls: 'w-28' }] : []),
-    ...(ver('prioridade') ? [{ id: 'prioridade', label: 'Prioridade', cls: 'w-28' }] : []),
+      : ver('quem') ? [{ id: 'quem', label: COLUNA_LABELS.quem, cls: 'w-16', ordenavel: 'quem' as const }] : []),
+    ...(ver('inicio') ? [{ id: 'inicio', label: COLUNA_LABELS.inicio, cls: 'w-28', ordenavel: 'inicio' as const }] : []),
+    ...(ver('prazo') ? [{ id: 'prazo', label: COLUNA_LABELS.prazo, cls: 'w-28', ordenavel: 'prazo' as const }] : []),
+    ...(ver('prioridade') ? [{ id: 'prioridade', label: COLUNA_LABELS.prioridade, cls: 'w-28', ordenavel: 'prioridade' as const }] : []),
     // Agrupada por sprint, a lista mistura estados no mesmo grupo: aí o status
     // precisa de coluna. Agrupada por status, o grupo já é a resposta.
     ...(porSprint ? [{ id: 'status', label: 'Status', cls: 'w-32' }] : []),
-    ...(ver('tempo') ? [{ id: 'tempo', label: 'Tempo', cls: 'w-32' }] : []),
+    ...(ver('tempo') ? [{ id: 'tempo', label: COLUNA_LABELS.tempo, cls: 'w-32', ordenavel: 'tempo' as const }] : []),
   ];
   const colspan = colunas.length + 4;
+  /** Com alguma tarefa marcada, a lista entra em modo seleção e mostra as caixas. */
+  const selecionando = selecao.length > 0;
 
-  const ordenar = (lista: TaskComProjeto[]) => [...lista].sort(porPrazo);
+  const valorDe = (t: TaskComProjeto, col: Coluna | 'titulo'): string | number => {
+    switch (col) {
+      case 'titulo': return t.title.toLowerCase();
+      case 'quem': return (t.assignee ?? '').toLowerCase() || 'zzz';
+      case 'inicio': return t.startDate ?? '9999-99-99';
+      case 'prazo': return t.dueDate ?? '9999-99-99';
+      case 'prioridade': return PRIORITY_ORDER[t.priority];
+      case 'tempo': return t.tempoSegundos;
+      case 'tags': return t.tagIds.length;
+      default: return 0;
+    }
+  };
+
+  const ordenar = (lista: TaskComProjeto[]) => {
+    if (!ordem) return [...lista].sort(porPrazo);
+    return [...lista].sort((a, b) => {
+      const x = valorDe(a, ordem.col);
+      const y = valorDe(b, ordem.col);
+      const dif = typeof x === 'number' && typeof y === 'number'
+        ? x - y
+        : String(x).localeCompare(String(y), 'pt-BR');
+      return ordem.desc ? -dif : dif;
+    });
+  };
+
+  /** Clicou no nome da coluna: ordena por ela, inverte, e no terceiro volta ao padrão. */
+  const alternarOrdem = (col: Coluna | 'titulo') =>
+    setOrdem((o) => (o?.col !== col ? { col, desc: false } : o.desc ? null : { col, desc: true }));
   /**
    * Dentro de uma sprint convivem tarefas em qualquer estado, então o que já foi
    * entregue desce para o fim: senão o começo do bloco é um paredão de riscado e
@@ -272,6 +312,23 @@ export function ListView({
           e.preventDefault();
           setMenu({ task: t, x: e.clientX, y: e.clientY });
         }}
+        onClick={(e) => {
+          // ⌘/Ctrl marca uma; Shift pega o intervalo desde a última marcada.
+          // Clique simples não seleciona: senão você abriria a gaveta e marcaria
+          // a linha ao mesmo tempo.
+          if (e.metaKey || e.ctrlKey) {
+            alternar(t.id);
+            setAncora(t.id);
+          } else if (e.shiftKey && ancora) {
+            const ids = grupo.tarefas.map((x) => x.id);
+            const de = ids.indexOf(ancora);
+            const ate = ids.indexOf(t.id);
+            if (de >= 0 && ate >= 0) {
+              const faixa = ids.slice(Math.min(de, ate), Math.max(de, ate) + 1);
+              setSelecao((sel) => [...new Set([...sel, ...faixa])]);
+            }
+          }
+        }}
         className={`group border-b border-black/[0.04] transition-colors last:border-0 ${
           // O lote inteiro esmaece: dá para ver o que vai junto.
           arrastando && (arrastando === t.id || (marcada(arrastando) && marcada(t.id))) ? 'opacity-40' : ''
@@ -290,21 +347,21 @@ export function ListView({
           {!filha && <GripVertical className="h-3.5 w-3.5" />}
         </td>
 
-        {/* Duas caixas na mesma linha confundiam qual era a de
-            concluir. A de selecionar só aparece com o mouse em
-            cima (ou quando já está marcada); em repouso fica a
-            de concluir, que é a de todo dia. */}
-        <td className="py-2 pl-1 pr-0">
-          <input
-            type="checkbox"
-            checked={marcada(t.id)}
-            onChange={() => alternar(t.id)}
-            aria-label={`Selecionar ${t.title}`}
-            className={`h-3.5 w-3.5 accent-primary transition-opacity focus:opacity-100 group-hover:opacity-100 ${
-              marcada(t.id) ? 'opacity-100' : 'opacity-0'
-            }`}
-          />
-        </td>
+        {/* Duas caixas na mesma linha (uma de marcar, outra de concluir) era a
+            maior confusão da tela. Em repouso existe UMA: a de concluir. A de
+            selecionar só aparece quando o modo seleção já está ligado — pelo
+            checkbox do grupo, ou por ⌘/Ctrl+clique numa linha. */}
+        {selecionando && (
+          <td className="py-2 pl-1 pr-0">
+            <input
+              type="checkbox"
+              checked={marcada(t.id)}
+              onChange={() => alternar(t.id)}
+              aria-label={`Selecionar ${t.title}`}
+              className="h-3.5 w-3.5 accent-primary"
+            />
+          </td>
+        )}
 
         <td className="py-2 pl-2 pr-0">
           <button
@@ -392,9 +449,13 @@ export function ListView({
           </td>
         ) : ver('quem') ? (
           <td className="px-3 py-2">
+            {/* Só o avatar: o nome por extenso repetido em cinquenta linhas era
+                a coluna mais larga da tabela para dizer sempre a mesma coisa.
+                O nome aparece ao passar o mouse. */}
             <PessoaSelect
               value={t.assignee}
               pessoas={pessoas}
+              compacto
               onChange={(v) => send(updateTask, { id: t.id, assignee: v })}
             />
           </td>
@@ -495,7 +556,7 @@ export function ListView({
                     return grupoTodo ? s.filter((x) => !ids.includes(x)) : [...new Set([...s, ...ids])];
                   })
                 }
-                title="Selecionar todas deste grupo"
+                title="Selecionar todas deste grupo (⌘+clique marca uma a uma)"
                 aria-label="Selecionar todas deste grupo"
                 className="h-3.5 w-3.5 accent-primary disabled:opacity-30"
               />
@@ -579,16 +640,40 @@ export function ListView({
                   <thead>
                     <tr className="border-b border-black/[0.05]">
                       <th className="w-6" />
-                      <th className="w-8" />
+                      {selecionando && <th className="w-8" />}
                       <th className="w-9" />
-                      {colunas.map((c) => (
-                        <th
-                          key={c.id}
-                          className={`${c.cls} px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-text-muted`}
-                        >
-                          {c.label}
-                        </th>
-                      ))}
+                      {colunas.map((c) => {
+                        const ativa = !!c.ordenavel && ordem?.col === c.ordenavel;
+                        return (
+                          <th
+                            key={c.id}
+                            className={`${c.cls} px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-text-muted`}
+                          >
+                            {c.ordenavel ? (
+                              <button
+                                onClick={() => alternarOrdem(c.ordenavel!)}
+                                title={
+                                  ativa && ordem?.desc
+                                    ? 'Voltar à ordem normal (prazo mais perto primeiro)'
+                                    : ativa
+                                      ? `Inverter: ${c.label.toLowerCase()} do maior para o menor`
+                                      : `Ordenar por ${c.label.toLowerCase()}`
+                                }
+                                className={`group/ord inline-flex items-center gap-1 uppercase transition-colors hover:text-text-primary ${
+                                  ativa ? 'text-text-primary' : ''
+                                }`}
+                              >
+                                {c.label}
+                                {ativa
+                                  ? (ordem?.desc
+                                    ? <ArrowDown className="h-3 w-3" />
+                                    : <ArrowUp className="h-3 w-3" />)
+                                  : <ChevronsUpDown className="h-3 w-3 opacity-0 transition-opacity group-hover/ord:opacity-60" />}
+                              </button>
+                            ) : c.label}
+                          </th>
+                        );
+                      })}
                       <th className="w-10" />
                     </tr>
                   </thead>

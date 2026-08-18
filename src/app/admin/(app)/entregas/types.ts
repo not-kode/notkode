@@ -75,11 +75,16 @@ export function donoDaTarefa(projectId: string, kind: ProjectKind): Record<strin
 export const COLUNAS = ['tags', 'quem', 'inicio', 'prazo', 'prioridade', 'tempo'] as const;
 export type Coluna = (typeof COLUNAS)[number];
 
+/**
+ * "Início" e "Prazo" não diziam que são as duas pontas da MESMA atividade: dava
+ * para ler "prazo" como o dia de começar a correr atrás. "Começa" e "Termina"
+ * resolvem sem precisar de legenda.
+ */
 export const COLUNA_LABELS: Record<Coluna, string> = {
   tags: 'Tags',
   quem: 'Quem',
-  inicio: 'Início',
-  prazo: 'Prazo',
+  inicio: 'Começa',
+  prazo: 'Termina',
   prioridade: 'Prioridade',
   tempo: 'Tempo',
 };
@@ -88,8 +93,8 @@ export const COLUNA_LABELS: Record<Coluna, string> = {
 export const COLUNA_LABELS_CLIENTE: Partial<Record<Coluna, string>> = {
   tags: 'Tags',
   quem: 'Responsável',
-  inicio: 'Início',
-  prazo: 'Prazo',
+  inicio: 'Começa',
+  prazo: 'Entrega',
   prioridade: 'Urgência',
 };
 

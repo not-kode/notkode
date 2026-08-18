@@ -15,7 +15,7 @@ import {
   createPhase, salvarColunas, setProjectArchived, generateClientToken, revokeClientToken,
 } from './actions';
 import {
-  Archive, ArchiveRestore, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
+  Archive, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
   LayoutGrid, Link2, List, PanelLeftClose, PanelLeftOpen, Rows3, X,
 } from 'lucide-react';
 import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS } from './types';
@@ -27,7 +27,7 @@ import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
 import { NotasView } from './notas-view';
-import { ChipSelect, DateChip, InlineText, fmtDuracao, hoje, inputCls, somaDias } from './ui';
+import { ChipSelect, DateChip, InlineText, MenuContexto, fmtDuracao, hoje, inputCls, somaDias } from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
 
@@ -81,6 +81,9 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
   // A lista de projetos come 15rem da largura; em "Todos" a tabela é que precisa
   // do espaço. Recolher fica guardado, como as outras preferências de trabalho.
   const [listaProjetos, setListaProjetos] = useState(true);
+  // Botão direito num projeto da lateral: arquivar é ação de exceção e não
+  // precisa de um botão fixo competindo com o resto da barra.
+  const [menuProjeto, setMenuProjeto] = useState<{ projeto: ProjectView; x: number; y: number } | null>(null);
   const [pending, start] = useTransition();
 
   const router = useRouter();
@@ -203,17 +206,16 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
             <span className="status-dot" />
             {geral ? 'Tudo em aberto' : 'Projeto'}
           </p>
-          <h1 className="truncate text-2xl font-semibold tracking-tight">
-            {geral ? 'Visão geral' : nomeAberto}
-          </h1>
-        </div>
-
-        {!geral && aberto && aberto.kind === 'contrato' && (
+          {/* O link do cliente é do projeto, então anda junto com o nome dele. */}
           <div className="flex flex-wrap items-center gap-2">
-            <ClientLink project={aberto} pending={pending} send={send} />
-            <ArquivarProjeto project={aberto} pending={pending} send={send} />
+            <h1 className="truncate text-2xl font-semibold tracking-tight">
+              {geral ? 'Visão geral' : nomeAberto}
+            </h1>
+            {!geral && aberto && aberto.kind === 'contrato' && (
+              <ClientLink project={aberto} pending={pending} send={send} />
+            )}
           </div>
-        )}
+        </div>
       </header>
 
       <div className="flex flex-col gap-5 lg:flex-row">
@@ -269,7 +271,12 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
                   <ul className="flex flex-col gap-0.5">
                     {g.itens.map((p) => (
                       <li key={p.id}>
-                        <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => abrirProjeto(p.id)} />
+                        <ItemProjeto
+                          projeto={p}
+                          ativo={p.id === aberto?.id}
+                          onClick={() => abrirProjeto(p.id)}
+                          onMenu={(x, y) => setMenuProjeto({ projeto: p, x, y })}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -290,7 +297,12 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
                     <ul className="mt-1 flex flex-col gap-0.5">
                       {arquivados.map((p) => (
                         <li key={p.id}>
-                          <ItemProjeto projeto={p} ativo={p.id === aberto?.id} onClick={() => abrirProjeto(p.id)} />
+                          <ItemProjeto
+                            projeto={p}
+                            ativo={p.id === aberto?.id}
+                            onClick={() => abrirProjeto(p.id)}
+                            onMenu={(x, y) => setMenuProjeto({ projeto: p, x, y })}
+                          />
                         </li>
                       ))}
                     </ul>
@@ -328,6 +340,29 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
           )}
         </div>
       </div>
+
+      {menuProjeto && (
+        <MenuContexto
+          em={{ x: menuProjeto.x, y: menuProjeto.y }}
+          fechar={() => setMenuProjeto(null)}
+          itens={[
+            {
+              label: menuProjeto.projeto.archivedAt ? 'Desarquivar projeto' : 'Arquivar projeto',
+              onClick: () => {
+                const p = menuProjeto.projeto;
+                const nome = p.orgName ?? p.title ?? 'este projeto';
+                if (p.archivedAt) {
+                  send(setProjectArchived, { engagement_id: p.id, arquivar: 'off' });
+                  return;
+                }
+                if (confirm(`Arquivar "${nome}"? Ele sai da lista de projetos, sem apagar nada.`)) {
+                  send(setProjectArchived, { engagement_id: p.id, arquivar: 'on' });
+                }
+              },
+            },
+          ]}
+        />
+      )}
     </div>
   );
 }
@@ -357,11 +392,19 @@ function recortar(tarefas: TaskComProjeto[], periodo: Periodo): TaskComProjeto[]
   return tarefas.filter((t) => (t.parentId ? raizes.has(t.parentId) : raizes.has(t.id)));
 }
 
-function ItemProjeto({ projeto, ativo, onClick }: { projeto: ProjectView; ativo: boolean; onClick: () => void }) {
+function ItemProjeto({ projeto, ativo, onClick, onMenu }: {
+  projeto: ProjectView;
+  ativo: boolean;
+  onClick: () => void;
+  /** Botão direito: arquivar e desarquivar moram aqui. */
+  onMenu: (x: number, y: number) => void;
+}) {
   const abertas = projeto.tasks.filter((t) => t.status !== 'feito').length;
   return (
     <button
       onClick={onClick}
+      onContextMenu={(e) => { e.preventDefault(); onMenu(e.clientX, e.clientY); }}
+      title={projeto.archivedAt ? 'Arquivado — clique com o botão direito para desarquivar' : 'Clique com o botão direito para arquivar'}
       className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors ${
         ativo
           ? 'bg-primary/10 font-semibold text-primary'
@@ -605,29 +648,6 @@ function ProjectPanel({
         </div>
       )}
     </div>
-  );
-}
-
-/** Arquivar tira o projeto da frente aqui e no SimbOS, sem apagar nada. */
-function ArquivarProjeto({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
-  const arquivado = !!project.archivedAt;
-  const nome = project.orgName ?? project.title ?? 'este projeto';
-
-  return (
-    <button
-      onClick={() => {
-        if (arquivado) { send(setProjectArchived, { engagement_id: project.id, arquivar: 'off' }); return; }
-        if (confirm(`Arquivar "${nome}"? Ele sai da lista de projetos aqui e no SimbOS. Nada é apagado, e dá para desarquivar depois.`)) {
-          send(setProjectArchived, { engagement_id: project.id, arquivar: 'on' });
-        }
-      }}
-      disabled={pending}
-      title={arquivado ? 'Desarquivar projeto' : 'Arquivar projeto (aqui e no SimbOS)'}
-      className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-xs font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary disabled:opacity-60"
-    >
-      {arquivado ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
-      {arquivado ? 'Desarquivar' : 'Arquivar'}
-    </button>
   );
 }
 
@@ -896,10 +916,10 @@ function BotaoColunas({ project, pending, send }: { project: ProjectView; pendin
       <button
         onClick={() => setAberto(true)}
         title="Colunas desta tela (e do link do cliente)"
-        className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-[12px] font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
+        aria-label="Colunas desta tela e do link do cliente"
+        className="rounded-md border border-black/[0.1] bg-white p-1.5 text-text-muted shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
       >
-        <Columns3 className="h-3.5 w-3.5" />
-        Colunas
+        <Columns3 className="h-4 w-4" />
       </button>
 
       {aberto && (

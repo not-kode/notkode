@@ -210,7 +210,32 @@ export async function updateTask(formData: FormData): Promise<void> {
     if (status === 'feito') Object.assign(patch, await fecharRelogio(id));
   }
 
-  await getSupabaseAdmin().from('project_tasks').update(patch).eq('id', id);
+  const supabase = getSupabaseAdmin();
+  await supabase.from('project_tasks').update(patch).eq('id', id);
+
+  // Concluir a tarefa-mãe conclui as partes dela: ninguém entrega o todo e deixa
+  // pedaço aberto atrás. Reabrir NÃO reabre as filhas — o que já ficou pronto
+  // continua pronto, e reabrir uma coisa não desfaz o trabalho das outras.
+  if (patch.status === 'feito') {
+    const { data: filhas } = await supabase
+      .from('project_tasks')
+      .select('id, timer_started_at')
+      .eq('parent_task_id', id)
+      .neq('status', 'feito');
+
+    for (const f of (filhas ?? []) as { id: string; timer_started_at: string | null }[]) {
+      await supabase
+        .from('project_tasks')
+        .update({
+          status: 'feito',
+          done_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(f.timer_started_at ? await fecharRelogio(f.id) : {}),
+        })
+        .eq('id', f.id);
+    }
+  }
+
   revalidar();
 }
 
