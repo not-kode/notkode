@@ -138,11 +138,11 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
               />
             </dd>
 
-            <dt className="text-text-muted">Início</dt>
-            <dd><DateChip value={task.startDate} onSave={(v) => send(updateTask, { id: task.id, start_date: v })} placeholder="sem início" /></dd>
+            <dt className="text-text-muted">Começa</dt>
+            <dd><DateChip value={task.startDate} onSave={(v) => send(updateTask, { id: task.id, start_date: v })} placeholder="sem começo" /></dd>
 
-            <dt className="text-text-muted">Prazo</dt>
-            <dd><DateChip value={task.dueDate} onSave={(v) => send(updateTask, { id: task.id, due_date: v })} atrasada={atrasada} placeholder="sem prazo" /></dd>
+            <dt className="text-text-muted">Termina</dt>
+            <dd><DateChip value={task.dueDate} onSave={(v) => send(updateTask, { id: task.id, due_date: v })} atrasada={atrasada} placeholder="sem fim" /></dd>
 
             <dt className="text-text-muted">Sprint</dt>
             <dd>

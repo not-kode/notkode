@@ -463,12 +463,12 @@ export function ListView({
 
         {ver('inicio') && (
           <td className="px-3 py-2">
-            <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} placeholder="início" />
+            <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} placeholder="começa" />
           </td>
         )}
         {ver('prazo') && (
           <td className="px-3 py-2">
-            <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} />
+            <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} placeholder="termina" />
           </td>
         )}
         {ver('prioridade') && (
