@@ -468,7 +468,10 @@ export function DateTag({ value, atrasada, placeholder = 'prazo', curto = true }
   placeholder?: string;
   curto?: boolean;
 }) {
-  const proxima = !!value && !atrasada && diffDias(hoje(), value) <= 1;
+  // "Próxima" é hoje ou amanhã, não qualquer coisa no passado: sem o piso em
+  // zero, um prazo de duas semanas atrás saía em âmbar como se fosse pra já.
+  const dias = value ? diffDias(hoje(), value) : null;
+  const proxima = dias !== null && !atrasada && dias >= 0 && dias <= 1;
   const tom = atrasada
     ? 'bg-danger/12 text-danger'
     : proxima
@@ -496,7 +499,8 @@ export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto
   placeholder?: string;
   curto?: boolean;
 }) {
-  const proxima = !!value && !atrasada && diffDias(hoje(), value) <= 1;
+  const dias = value ? diffDias(hoje(), value) : null;
+  const proxima = dias !== null && !atrasada && dias >= 0 && dias <= 1;
 
   // whitespace-nowrap no chip: "12 mai" quebrando em duas linhas empilhava a data
   // e esticava a altura da linha inteira da tabela.
