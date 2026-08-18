@@ -134,6 +134,13 @@ export function ListView({
   const colspan = colunas.length + 4;
 
   const ordenar = (lista: TaskComProjeto[]) => [...lista].sort(porPrazo);
+  /**
+   * Dentro de uma sprint convivem tarefas em qualquer estado, então o que já foi
+   * entregue desce para o fim: senão o começo do bloco é um paredão de riscado e
+   * o que falta fazer fica escondido no meio.
+   */
+  const ordenarNaSprint = (lista: TaskComProjeto[]) =>
+    ordenar(lista).sort((a, b) => Number(a.status === 'feito') - Number(b.status === 'feito'));
 
   const raizes = tasks.filter((t) => !t.parentId);
   const marcada = (id: string) => selecao.includes(id);
@@ -174,7 +181,7 @@ export function ListView({
         phaseId: p.id,
         aceitaSprint: true,
         fechaSozinho: p.status === 'concluida',
-        tarefas: ordenar(raizes.filter((t) => t.phaseId === p.id)),
+        tarefas: ordenarNaSprint(raizes.filter((t) => t.phaseId === p.id)),
       })),
       {
         chave: 'sem-sprint',
@@ -186,7 +193,7 @@ export function ListView({
         phaseId: null,
         aceitaSprint: true,
         fechaSozinho: false,
-        tarefas: ordenar(raizes.filter((t) => !t.phaseId)),
+        tarefas: ordenarNaSprint(raizes.filter((t) => !t.phaseId)),
       },
     ]
     : BLOCOS.map((s): Grupo => ({
@@ -455,8 +462,30 @@ export function ListView({
     return [linha(t, grupo, false), ...filhas.map((f) => linha(f, grupo, true))];
   };
 
+  // Sem nenhuma sprint criada, agrupar por sprint não separa nada: viraria um
+  // bloco só com o projeto inteiro dentro, que é pior do que a lista por status.
+  const semSprintNenhuma = porSprint && phasesDe(projectId).length === 0;
+
   return (
     <div className="flex flex-col gap-3">
+      {semSprintNenhuma && (
+        <div className="flex flex-wrap items-center gap-3 rounded-md border border-dashed border-primary/30 bg-primary/[0.04] px-3 py-2.5">
+          <p className="text-[12px] leading-snug text-text-secondary">
+            Este projeto ainda não tem sprint. Crie a primeira e arraste as tarefas para dentro dela:
+            enquanto isso, tudo aparece junto em “Sem sprint”.
+          </p>
+          {!criandoSprint && (
+            <button
+              onClick={() => setCriandoSprint(true)}
+              className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-[12px] font-semibold text-white transition hover:opacity-90"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Criar a primeira sprint
+            </button>
+          )}
+        </div>
+      )}
+
       {grupos.map((grupo) => {
         const doGrupo = grupo.tarefas;
         // Vazio (e Done, e sprint concluída) fecha sozinho; o que você abriu ou
