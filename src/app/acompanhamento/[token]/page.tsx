@@ -83,9 +83,11 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
   const emAndamento = macros.filter((t) => t.status === 'fazendo' || t.status === 'revisao');
 
   const sprintAtual = phases.find((p) => p.status === 'em_andamento') ?? null;
-  const concluidas = phases.length > 0 ? phases.filter((p) => p.status === 'concluida').length : feitas;
-  const total = phases.length > 0 ? phases.length : macros.length;
-  const pct = total ? Math.round((concluidas / total) * 100) : 0;
+  const sprintsProntas = phases.filter((p) => p.status === 'concluida').length;
+  // O progresso conta ENTREGAS, não sprints. Contando sprints, um projeto com 25
+  // de 41 entregas prontas aparecia em 0% só porque o status da sprint não tinha
+  // sido virado à mão — e é a barra que o cliente olha primeiro.
+  const pct = macros.length ? Math.round((feitas / macros.length) * 100) : 0;
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-5 py-12 sm:py-16">
@@ -99,23 +101,37 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
         {eng.title && <p className="mt-1 text-base text-text-secondary">{eng.title}</p>}
       </header>
 
-      {total > 0 && (
+      {macros.length > 0 && (
         <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {/* O que está acontecendo agora, que é a primeira pergunta de quem abre
-              o link. Depois o número frio e o que já saiu. */}
+              o link. Depois o número frio do que já saiu. */}
           <div className="rounded-lg border border-black/[0.07] bg-white p-4 sm:col-span-2">
             <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Agora</p>
-            <p className="mt-1 text-[15px] leading-snug text-text-primary">
+            <div className="mt-1 text-[15px] leading-snug text-text-primary">
               {sprintAtual ? (
                 <strong className="font-medium">{sprintAtual.name}</strong>
               ) : emAndamento.length > 0 ? (
-                <strong className="font-medium">{emAndamento.map((t) => t.title).join(' · ')}</strong>
-              ) : concluidas === total ? (
+                // No máximo duas: "agora" com seis títulos emendados por ponto
+                // virava um parágrafo, e ninguém lê parágrafo em cartão.
+                <ul className="flex flex-col gap-0.5">
+                  {emAndamento.slice(0, 2).map((t) => (
+                    <li key={t.id} className="flex items-baseline gap-2">
+                      <span className="text-primary">◐</span>
+                      <span className="font-medium">{t.title}</span>
+                    </li>
+                  ))}
+                  {emAndamento.length > 2 && (
+                    <li className="text-[13px] text-text-muted">
+                      e mais {emAndamento.length - 2} em andamento
+                    </li>
+                  )}
+                </ul>
+              ) : feitas === macros.length ? (
                 <strong className="font-medium text-success">Projeto concluído</strong>
               ) : (
                 'Em andamento'
               )}
-            </p>
+            </div>
             <div className="mt-3 flex items-center gap-3">
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
                 <div className="h-full rounded-full bg-success transition-all" style={{ width: `${pct}%` }} />
@@ -125,14 +141,16 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
           </div>
 
           <div className="rounded-lg border border-black/[0.07] bg-white p-4">
-            <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">
-              {phases.length > 0 ? 'Sprints' : 'Entregas'}
-            </p>
+            <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Entregas</p>
             <p className="mt-1 font-mono text-2xl tabular-nums text-text-primary">
-              {concluidas}<span className="text-base text-text-muted">/{total}</span>
+              {feitas}<span className="text-base text-text-muted">/{macros.length}</span>
             </p>
             <p className="mt-1 text-[12px] text-text-muted">
-              {phases.length > 0 ? `${feitas} de ${macros.length} entregas prontas` : 'concluídas'}
+              {phases.length > 0
+                ? `em ${phases.length} ${phases.length === 1 ? 'sprint' : 'sprints'}${
+                  sprintsProntas > 0 ? `, ${sprintsProntas} concluída${sprintsProntas === 1 ? '' : 's'}` : ''
+                }`
+                : 'concluídas'}
             </p>
           </div>
         </div>

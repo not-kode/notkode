@@ -77,6 +77,16 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
   const macros = tasks.filter((t) => !t.parentId);
   const subs = (id: string) => tasks.filter((t) => t.parentId === id).sort(porPrazo);
 
+  // Coluna configurada mas sem nada dentro é buraco na tela: se ninguém tem tag
+  // (ou responsável, ou data), ela não aparece.
+  const usadas = colunas.filter((c) => {
+    if (c === 'tags') return tasks.some((t) => t.tagIds.length > 0) && tags.length > 0;
+    if (c === 'responsavel') return tasks.some((t) => !!t.assignee);
+    if (c === 'inicio') return tasks.some((t) => !!t.startDate);
+    if (c === 'prazo') return tasks.some((t) => !!t.dueDate);
+    return true;
+  });
+
   const passa = (t: TaskView) =>
     filtro === 'tudo' || (filtro === 'entregue' ? t.status === 'feito' : t.status !== 'feito');
 
@@ -128,8 +138,18 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
         </p>
       ) : (
         <div className="flex flex-col gap-3">
-          {grupos.map((g) => (
-            <Grupo key={g.chave} grupo={g} colunas={colunas} tags={tags} subs={subs} passa={passa} />
+          {grupos.map((g, i) => (
+            <Grupo
+              key={g.chave}
+              grupo={g}
+              colunas={usadas}
+              tags={tags}
+              subs={subs}
+              passa={passa}
+              // O nome das colunas aparece uma vez, no topo: repetido em cada
+              // grupo, virava ruído com dez sprints na tela.
+              comCabecalho={i === 0}
+            />
           ))}
         </div>
       )}
@@ -193,12 +213,13 @@ function montarGrupos(
     : [];
 }
 
-function Grupo({ grupo, colunas, tags, subs, passa }: {
+function Grupo({ grupo, colunas, tags, subs, passa, comCabecalho }: {
   grupo: GrupoLista;
   colunas: ColunaCliente[];
   tags: TagCliente[];
   subs: (id: string) => TaskView[];
   passa: (t: TaskView) => boolean;
+  comCabecalho: boolean;
 }) {
   const [fechado, setFechado] = useState(false);
   const prontas = grupo.tarefas.filter((t) => t.status === 'feito').length;
@@ -231,20 +252,31 @@ function Grupo({ grupo, colunas, tags, subs, passa }: {
 
       {!fechado && (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-black/[0.05]">
-                <th className="min-w-[16rem] px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-                  Entrega
-                </th>
-                {colunas.includes('tags') && <Th>Tags</Th>}
-                {colunas.includes('inicio') && <Th className="w-24">Início</Th>}
-                {colunas.includes('prazo') && <Th className="w-24">Prazo</Th>}
-                {colunas.includes('urgencia') && <Th className="w-24">Urgência</Th>}
-                {colunas.includes('responsavel') && <Th className="w-32">Responsável</Th>}
-                {colunas.includes('status') && <Th className="w-32">Status</Th>}
-              </tr>
-            </thead>
+          {/* Largura fixa por coluna: assim um grupo não desalinha do outro,
+              mesmo cada grupo sendo a sua própria tabela. */}
+          <table className="w-full min-w-[44rem] table-fixed border-collapse text-sm">
+            <colgroup>
+              <col />
+              {colunas.includes('tags') && <col className="w-40" />}
+              {colunas.includes('inicio') && <col className="w-20" />}
+              {colunas.includes('prazo') && <col className="w-20" />}
+              {colunas.includes('urgencia') && <col className="w-24" />}
+              {colunas.includes('responsavel') && <col className="w-36" />}
+              {colunas.includes('status') && <col className="w-36" />}
+            </colgroup>
+            {comCabecalho && (
+              <thead>
+                <tr className="border-b border-black/[0.05]">
+                  <Th>Entrega</Th>
+                  {colunas.includes('tags') && <Th>Tags</Th>}
+                  {colunas.includes('inicio') && <Th>Início</Th>}
+                  {colunas.includes('prazo') && <Th>Prazo</Th>}
+                  {colunas.includes('urgencia') && <Th>Urgência</Th>}
+                  {colunas.includes('responsavel') && <Th>Responsável</Th>}
+                  {colunas.includes('status') && <Th>Status</Th>}
+                </tr>
+              </thead>
+            )}
             <tbody>
               {grupo.tarefas.flatMap((t) => {
                 const filhas = subs(t.id).filter((f) => passa(f) || t.status !== 'feito');
@@ -325,19 +357,21 @@ function Linha({ task, colunas, tags, filhas, filha = false }: {
 
       {colunas.includes('urgencia') && (
         <td className="px-3 py-2.5">
-          <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${URGENCIA_TOM[task.priority]}`}>
+          <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${URGENCIA_TOM[task.priority]}`}>
             {PRIORITY_LABELS[task.priority]}
           </span>
         </td>
       )}
 
       {colunas.includes('responsavel') && (
-        <td className="px-3 py-2.5 text-[12px] text-text-secondary">{task.assignee ?? '—'}</td>
+        <td className="truncate px-3 py-2.5 text-[12px] text-text-secondary" title={task.assignee ?? undefined}>
+          {task.assignee ?? '—'}
+        </td>
       )}
 
       {colunas.includes('status') && (
         <td className="px-3 py-2.5">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_TOM[task.status]}`}>
+          <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_TOM[task.status]}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[task.status]}`} />
             {STATUS_LABELS[task.status]}
           </span>
