@@ -73,6 +73,11 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
   // caso normal dos projetos daqui, e sem isso a barra de progresso ficava
   // parada em zero mesmo com metade do trabalho entregue.
   const macros = tasks.filter((t) => !t.parent_task_id);
+  /** As subtarefas de uma entrega, na ordem em que vencem. */
+  const subs = (id: string) =>
+    tasks
+      .filter((t) => t.parent_task_id === id)
+      .sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'));
   const feitas = macros.filter((t) => t.status === 'feito');
   const proximas = macros
     .filter((t) => t.status !== 'feito')
@@ -157,15 +162,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
             ) : (
               <ul className="flex flex-col gap-2">
                 {feitas.map((t) => (
-                  <li key={t.id} className="flex items-baseline gap-2 text-sm">
-                    <span className="text-success">✓</span>
-                    <span className="text-text-secondary">{t.title}</span>
-                    {t.due_date && (
-                      <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-text-muted">
-                        {fmtDataCurta(t.due_date)}
-                      </span>
-                    )}
-                  </li>
+                  <Entrega key={t.id} task={t} partes={subs(t.id)} />
                 ))}
               </ul>
             )}
@@ -181,17 +178,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
             ) : (
               <ul className="flex flex-col gap-2">
                 {proximas.map((t) => (
-                  <li key={t.id} className="flex items-baseline gap-2 text-sm">
-                    <span className={t.status === 'fazendo' ? 'text-primary' : 'text-text-muted'}>
-                      {t.status === 'fazendo' ? '◐' : '○'}
-                    </span>
-                    <span className="text-text-secondary">{t.title}</span>
-                    {t.due_date && (
-                      <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-text-muted">
-                        {fmtDataCurta(t.due_date)}
-                      </span>
-                    )}
-                  </li>
+                  <Entrega key={t.id} task={t} partes={subs(t.id)} />
                 ))}
               </ul>
             )}
@@ -205,5 +192,58 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
         </p>
       </footer>
     </main>
+  );
+}
+
+/** O marcador de estado de uma linha: feito, em andamento, ainda por fazer. */
+function Marca({ status }: { status: TaskStatus }) {
+  if (status === 'feito') return <span className="text-success">✓</span>;
+  if (status === 'fazendo') return <span className="text-primary">◐</span>;
+  return <span className="text-text-muted">○</span>;
+}
+
+/**
+ * Uma entrega e o que ela tem dentro. As subtarefas ficam à vista, recuadas: é o
+ * que faz o cliente entender o que é aquela linha sem precisar perguntar. Quando
+ * a entrega tem partes, o contador diz quantas já saíram.
+ */
+function Entrega({ task, partes }: { task: TaskRow; partes: TaskRow[] }) {
+  const prontas = partes.filter((p) => p.status === 'feito').length;
+
+  return (
+    <li className="text-sm">
+      <div className="flex items-baseline gap-2">
+        <Marca status={task.status} />
+        <span className="text-text-secondary">{task.title}</span>
+        {partes.length > 0 && (
+          <span className="shrink-0 font-mono text-[10px] tabular-nums text-text-muted">
+            {prontas}/{partes.length}
+          </span>
+        )}
+        {task.due_date && (
+          <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-text-muted">
+            {fmtDataCurta(task.due_date)}
+          </span>
+        )}
+      </div>
+
+      {partes.length > 0 && (
+        <ul className="mt-1.5 flex flex-col gap-1 border-l border-black/[0.08] pl-3 sm:ml-4">
+          {partes.map((p) => (
+            <li key={p.id} className="flex items-baseline gap-2 text-[13px]">
+              <Marca status={p.status} />
+              <span className={p.status === 'feito' ? 'text-text-muted' : 'text-text-secondary'}>
+                {p.title}
+              </span>
+              {p.due_date && (
+                <span className="ml-auto shrink-0 font-mono text-[10px] tabular-nums text-text-muted">
+                  {fmtDataCurta(p.due_date)}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }

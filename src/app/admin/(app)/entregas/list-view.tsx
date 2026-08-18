@@ -57,6 +57,10 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
   const [selecao, setSelecao] = useState<string[]>([]);
   // Botão direito numa linha: onde abrir o menu e sobre qual tarefa.
   const [menu, setMenu] = useState<{ task: TaskComProjeto; x: number; y: number } | null>(null);
+  // Subtarefa nasce à vista, aninhada na mãe: quem lê a lista (ou o cliente no
+  // link de acompanhamento) entende o que é cada tarefa sem abrir uma por uma.
+  // Aqui ficam só as que você mandou recolher.
+  const [recolhidas, setRecolhidas] = useState<string[]>([]);
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
@@ -92,8 +96,8 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
   // Toda ação em lote encerra a seleção: a barra sumir é o sinal de que a ação
   // foi para o banco, e barra parada na tela vira clique sem querer.
   const editarLote = (campos: Record<string, string>) => {
-    // Responsável vale para a tarefa e para as subtarefas dela: elas não estão
-    // na lista para serem marcadas, e quem toca a mãe toca as filhas.
+    // Responsável vale para a tarefa e para as subtarefas dela: quem toca a mãe
+    // toca as filhas, mesmo as que estiverem recolhidas na hora da seleção.
     const ids = 'assignee' in campos
       ? [...new Set(selecao.flatMap((id) => [id, ...subs(id).map((s) => s.id)]))]
       : selecao;
@@ -127,6 +131,190 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
     if (ids.includes(before)) return;
     send(moveTask, { ids: ids.join(','), status, before });
     if (lote) setSelecao([]);
+  };
+
+
+  /**
+   * Uma linha da tabela. A mesma para tarefa e subtarefa: a filha entra
+   * recuada, com o pontinho do próprio status (o bloco é o da mãe) e sem punho
+   * de arrastar — subtarefa se move mudando de mãe, não de bloco.
+   */
+  const linha = (t: TaskComProjeto, filha: boolean) => {
+    const atrasada = !!t.dueDate && t.dueDate < hoje() && t.status !== 'feito';
+    const filhas = filha ? [] : subs(t.id);
+    const aberto = filhas.length > 0 && !recolhidas.includes(t.id);
+
+    return (
+      <tr
+        key={t.id}
+        // Só o punho puxa: linha inteira arrastável impede
+        // selecionar texto e editar os campos de dentro.
+        draggable={punho === t.id}
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/plain', t.id);
+          e.dataTransfer.effectAllowed = 'move';
+          setArrastando(t.id);
+        }}
+        onDragEnd={() => { setArrastando(null); setAlvo(null); setPunho(null); }}
+        onDragOver={(e) => {
+          if (!filha && arrastando && arrastando !== t.id) { e.preventDefault(); setAlvo(t.id); }
+        }}
+        onDrop={(e) => {
+          if (filha) return;
+          e.preventDefault();
+          e.stopPropagation();
+          soltar(e.dataTransfer.getData('text/plain'), t.status, t.id);
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setMenu({ task: t, x: e.clientX, y: e.clientY });
+        }}
+        className={`group border-b border-black/[0.04] transition-colors last:border-0 ${
+          // O lote inteiro esmaece: dá para ver o que vai junto.
+          arrastando && (arrastando === t.id || (marcada(arrastando) && marcada(t.id))) ? 'opacity-40' : ''
+        } ${alvo === t.id && arrastando && arrastando !== t.id ? 'border-t-2 border-t-primary' : ''} ${
+          marcada(t.id) ? 'bg-primary/[0.05]' : filha ? 'bg-neutral-50/40 hover:bg-neutral-50' : 'hover:bg-neutral-50/70'
+        }`}
+      >
+        <td
+          onMouseDown={() => { if (!filha) setPunho(t.id); }}
+          onMouseUp={() => setPunho(null)}
+          title={filha ? undefined : 'Arraste para reordenar ou mudar de bloco'}
+          className={`py-2 pl-2 pr-0 text-text-muted/40 transition-colors ${
+            filha ? '' : 'cursor-grab hover:text-text-muted active:cursor-grabbing'
+          }`}
+        >
+          {!filha && <GripVertical className="h-3.5 w-3.5" />}
+        </td>
+
+        {/* Duas caixas na mesma linha confundiam qual era a de
+            concluir. A de selecionar só aparece com o mouse em
+            cima (ou quando já está marcada); em repouso fica a
+            de concluir, que é a de todo dia. */}
+        <td className="py-2 pl-1 pr-0">
+          <input
+            type="checkbox"
+            checked={marcada(t.id)}
+            onChange={() => alternar(t.id)}
+            aria-label={`Selecionar ${t.title}`}
+            className={`h-3.5 w-3.5 accent-primary transition-opacity focus:opacity-100 group-hover:opacity-100 ${
+              marcada(t.id) ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        </td>
+
+        <td className="py-2 pl-2 pr-0">
+          <button
+            onClick={() => send(updateTask, { id: t.id, status: t.status === 'feito' ? 'a_fazer' : 'feito' })}
+            title={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
+            aria-label={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
+            className={`flex h-4 w-4 items-center justify-center rounded-[4px] border transition-colors ${
+              t.status === 'feito'
+                ? 'border-success bg-success text-white'
+                : 'border-black/25 bg-white text-transparent hover:border-success hover:text-success/40'
+            }`}
+          >
+            <Check className="h-3 w-3" strokeWidth={3} />
+          </button>
+        </td>
+
+        <td className="px-3 py-2">
+          <div className={`flex min-w-0 items-center gap-2 ${filha ? 'pl-5' : ''}`}>
+            {filha && (
+              <span
+                title={TASK_LABELS[t.status]}
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${TASK_DOT[t.status]}`}
+              />
+            )}
+            <button
+              onClick={() => setAberta(t.id)}
+              className={`flex min-w-0 items-center text-left transition-colors hover:text-primary ${
+                filha ? 'text-[12.5px]' : 'text-[13px]'
+              } ${t.status === 'feito' ? 'text-text-muted line-through' : filha ? 'text-text-secondary' : 'text-text-primary'}`}
+              title="Abrir tarefa"
+            >
+              <span className="min-w-0 truncate">{t.title}</span>
+            </button>
+            {filhas.length > 0 && (
+              // O contador abre e fecha as subtarefas ali mesmo, sem tirar
+              // ninguém da lista para ir ver o que tem dentro.
+              <button
+                onClick={() =>
+                  setRecolhidas((r) => (r.includes(t.id) ? r.filter((x) => x !== t.id) : [...r, t.id]))
+                }
+                title={aberto ? 'Esconder as subtarefas' : 'Mostrar as subtarefas'}
+                aria-expanded={aberto}
+                className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-black/[0.06] py-0.5 pl-0.5 pr-1.5 text-[10px] tabular-nums text-text-muted transition-colors hover:bg-black/[0.1] hover:text-text-primary"
+              >
+                <ChevronRight className={`h-3 w-3 transition-transform ${aberto ? 'rotate-90' : ''}`} />
+                {filhas.filter((s) => s.status === 'feito').length}/{filhas.length}
+              </button>
+            )}
+          </div>
+        </td>
+
+        {mostrarProjeto ? (
+          <td className="px-3 py-2">
+            {/* Clicar na empresa sai de "Todos" e abre só as tarefas dela. */}
+            <button
+              onClick={() => onAbrirProjeto(t.projetoId)}
+              title={`Ver só as tarefas de ${t.projetoNome}`}
+              className="flex w-full min-w-0 items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors hover:bg-black/[0.04]"
+            >
+              <Sigla nome={t.projetoNome} />
+              <span className="min-w-0 truncate text-[12px] font-medium text-text-secondary">
+                {t.projetoNome}
+              </span>
+            </button>
+          </td>
+        ) : (
+          <td className="px-3 py-2">
+            <PessoaSelect
+              value={t.assignee}
+              pessoas={pessoas}
+              onChange={(v) => send(updateTask, { id: t.id, assignee: v })}
+            />
+          </td>
+        )}
+
+        <td className="px-3 py-2">
+          <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} placeholder="início" />
+        </td>
+        <td className="px-3 py-2">
+          <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} />
+        </td>
+        <td className="px-3 py-2">
+          <PriorityChip value={t.priority} onChange={(v) => send(updateTask, { id: t.id, priority: v })} />
+        </td>
+        <td className="px-3 py-2">
+          <TimerChip
+            segundos={t.tempoSegundos}
+            rodandoDesde={t.timerDesde}
+            onToggle={() => send(toggleTimer, { id: t.id })}
+            desabilitado={t.status === 'feito'}
+          />
+        </td>
+
+        {/* Apagar mora no botão direito da linha: é ação de
+            exceção e não precisa de uma coluna inteira. */}
+        <td className="px-2 py-2 text-right">
+          <button
+            onClick={(e) => setMenu({ task: t, x: e.clientX, y: e.clientY })}
+            className="rounded p-1 text-text-muted/45 opacity-0 transition group-hover:opacity-100 hover:bg-black/[0.05] hover:text-text-primary"
+            aria-label="Mais ações"
+            title="Mais ações (ou clique com o botão direito)"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </button>
+        </td>
+      </tr>
+    );
+  };
+
+  /** A tarefa e, logo abaixo, as subtarefas dela quando não estão recolhidas. */
+  const linhas = (t: TaskComProjeto) => {
+    const filhas = recolhidas.includes(t.id) ? [] : ordenar(subs(t.id));
+    return [linha(t, false), ...filhas.map((f) => linha(f, true))];
   };
 
   return (
@@ -210,154 +398,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
                     </tr>
                   </thead>
                   <tbody>
-                    {doBloco.map((t) => {
-                      const atrasada = !!t.dueDate && t.dueDate < hoje() && t.status !== 'feito';
-                      const filhas = subs(t.id);
-                      return (
-                        <tr
-                          key={t.id}
-                          // Só o punho puxa: linha inteira arrastável impede
-                          // selecionar texto e editar os campos de dentro.
-                          draggable={punho === t.id}
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData('text/plain', t.id);
-                            e.dataTransfer.effectAllowed = 'move';
-                            setArrastando(t.id);
-                          }}
-                          onDragEnd={() => { setArrastando(null); setAlvo(null); setPunho(null); }}
-                          onDragOver={(e) => {
-                            if (arrastando && arrastando !== t.id) { e.preventDefault(); setAlvo(t.id); }
-                          }}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            soltar(e.dataTransfer.getData('text/plain'), status, t.id);
-                          }}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            setMenu({ task: t, x: e.clientX, y: e.clientY });
-                          }}
-                          className={`group border-b border-black/[0.04] transition-colors last:border-0 ${
-                            // O lote inteiro esmaece: dá para ver o que vai junto.
-                            arrastando && (arrastando === t.id || (marcada(arrastando) && marcada(t.id))) ? 'opacity-40' : ''
-                          } ${alvo === t.id && arrastando && arrastando !== t.id ? 'border-t-2 border-t-primary' : ''} ${
-                            marcada(t.id) ? 'bg-primary/[0.05]' : 'hover:bg-neutral-50/70'
-                          }`}
-                        >
-                          <td
-                            onMouseDown={() => setPunho(t.id)}
-                            onMouseUp={() => setPunho(null)}
-                            title="Arraste para reordenar ou mudar de bloco"
-                            className="cursor-grab py-2 pl-2 pr-0 text-text-muted/40 transition-colors hover:text-text-muted active:cursor-grabbing"
-                          >
-                            <GripVertical className="h-3.5 w-3.5" />
-                          </td>
-
-                          {/* Duas caixas na mesma linha confundiam qual era a de
-                              concluir. A de selecionar só aparece com o mouse em
-                              cima (ou quando já está marcada); em repouso fica a
-                              de concluir, que é a de todo dia. */}
-                          <td className="py-2 pl-1 pr-0">
-                            <input
-                              type="checkbox"
-                              checked={marcada(t.id)}
-                              onChange={() => alternar(t.id)}
-                              aria-label={`Selecionar ${t.title}`}
-                              className={`h-3.5 w-3.5 accent-primary transition-opacity focus:opacity-100 group-hover:opacity-100 ${
-                                marcada(t.id) ? 'opacity-100' : 'opacity-0'
-                              }`}
-                            />
-                          </td>
-
-                          <td className="py-2 pl-2 pr-0">
-                            <button
-                              onClick={() => send(updateTask, { id: t.id, status: t.status === 'feito' ? 'a_fazer' : 'feito' })}
-                              title={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
-                              aria-label={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
-                              className={`flex h-4 w-4 items-center justify-center rounded-[4px] border transition-colors ${
-                                t.status === 'feito'
-                                  ? 'border-success bg-success text-white'
-                                  : 'border-black/25 bg-white text-transparent hover:border-success hover:text-success/40'
-                              }`}
-                            >
-                              <Check className="h-3 w-3" strokeWidth={3} />
-                            </button>
-                          </td>
-
-                          <td className="px-3 py-2">
-                            <button
-                              onClick={() => setAberta(t.id)}
-                              className={`flex w-full items-center gap-2 text-left text-[13px] transition-colors hover:text-primary ${
-                                t.status === 'feito' ? 'text-text-muted line-through' : 'text-text-primary'
-                              }`}
-                              title="Abrir tarefa"
-                            >
-                              <span className="min-w-0 truncate">{t.title}</span>
-                              {filhas.length > 0 && (
-                                <span className="shrink-0 rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
-                                  {filhas.filter((s) => s.status === 'feito').length}/{filhas.length}
-                                </span>
-                              )}
-                            </button>
-                          </td>
-
-                          {mostrarProjeto ? (
-                            <td className="px-3 py-2">
-                              {/* Clicar na empresa sai de "Todos" e abre só as tarefas dela. */}
-                              <button
-                                onClick={() => onAbrirProjeto(t.projetoId)}
-                                title={`Ver só as tarefas de ${t.projetoNome}`}
-                                className="flex w-full min-w-0 items-center gap-1.5 rounded-sm px-1 py-0.5 text-left transition-colors hover:bg-black/[0.04]"
-                              >
-                                <Sigla nome={t.projetoNome} />
-                                <span className="min-w-0 truncate text-[12px] font-medium text-text-secondary">
-                                  {t.projetoNome}
-                                </span>
-                              </button>
-                            </td>
-                          ) : (
-                            <td className="px-3 py-2">
-                              <PessoaSelect
-                                value={t.assignee}
-                                pessoas={pessoas}
-                                onChange={(v) => send(updateTask, { id: t.id, assignee: v })}
-                              />
-                            </td>
-                          )}
-
-                          <td className="px-3 py-2">
-                            <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} placeholder="início" />
-                          </td>
-                          <td className="px-3 py-2">
-                            <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} />
-                          </td>
-                          <td className="px-3 py-2">
-                            <PriorityChip value={t.priority} onChange={(v) => send(updateTask, { id: t.id, priority: v })} />
-                          </td>
-                          <td className="px-3 py-2">
-                            <TimerChip
-                              segundos={t.tempoSegundos}
-                              rodandoDesde={t.timerDesde}
-                              onToggle={() => send(toggleTimer, { id: t.id })}
-                              desabilitado={t.status === 'feito'}
-                            />
-                          </td>
-
-                          {/* Apagar mora no botão direito da linha: é ação de
-                              exceção e não precisa de uma coluna inteira. */}
-                          <td className="px-2 py-2 text-right">
-                            <button
-                              onClick={(e) => setMenu({ task: t, x: e.clientX, y: e.clientY })}
-                              className="rounded p-1 text-text-muted/45 opacity-0 transition group-hover:opacity-100 hover:bg-black/[0.05] hover:text-text-primary"
-                              aria-label="Mais ações"
-                              title="Mais ações (ou clique com o botão direito)"
-                            >
-                              <MoreHorizontal className="h-3.5 w-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {doBloco.flatMap((t) => linhas(t))}
 
                     {criandoEm === status && (
                       <tr>
