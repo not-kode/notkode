@@ -89,6 +89,10 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
 }) {
   const [periodo, setPeriodo] = useState<Periodo>('tudo');
   const [dobra, setDobra] = useState<Record<string, boolean>>({});
+  // As partes de uma entrega nascem escondidas aqui: quem abre o link quer
+  // primeiro a lista do que foi combinado, e abre o detalhe da entrega que
+  // interessa. Na tela da casa é o contrário, porque lá o detalhe é o trabalho.
+  const [abertas, setAbertas] = useState<string[]>([]);
 
   const macros = tasks.filter((t) => !t.parentId);
   const subs = (id: string) => ordenar(tasks.filter((t) => t.parentId === id));
@@ -218,27 +222,36 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
                       </tr>
                     </thead>
                     <tbody>
-                      {g.tarefas.flatMap((t) => [
-                        <Linha
-                          key={t.id}
-                          task={t}
-                          colunas={usadas}
-                          tags={tags}
-                          comStatus={agrupar === 'sprint'}
-                          filhas={subs(t.id).length}
-                        />,
-                        ...subs(t.id).map((f) => (
+                      {g.tarefas.flatMap((t) => {
+                        const partes = subs(t.id);
+                        const aberta = abertas.includes(t.id);
+                        return [
                           <Linha
-                            key={f.id}
-                            task={f}
+                            key={t.id}
+                            task={t}
                             colunas={usadas}
                             tags={tags}
                             comStatus={agrupar === 'sprint'}
-                            filhas={0}
-                            filha
-                          />
-                        )),
-                      ])}
+                            filhas={partes.length}
+                            prontas={partes.filter((f) => f.status === 'feito').length}
+                            aberta={aberta}
+                            onAbrir={() =>
+                              setAbertas((a) => (a.includes(t.id) ? a.filter((x) => x !== t.id) : [...a, t.id]))
+                            }
+                          />,
+                          ...(aberta ? partes.map((f) => (
+                            <Linha
+                              key={f.id}
+                              task={f}
+                              colunas={usadas}
+                              tags={tags}
+                              comStatus={agrupar === 'sprint'}
+                              filhas={0}
+                              filha
+                            />
+                          )) : []),
+                        ];
+                      })}
 
                       {g.tarefas.length === 0 && (
                         <tr>
@@ -288,12 +301,16 @@ function Th({ children, className = '' }: { children: React.ReactNode; className
   );
 }
 
-function Linha({ task, colunas, tags, comStatus, filhas, filha = false }: {
+function Linha({ task, colunas, tags, comStatus, filhas, prontas = 0, aberta = false, onAbrir, filha = false }: {
   task: TaskView;
   colunas: Coluna[];
   tags: TagCliente[];
   comStatus: boolean;
   filhas: number;
+  /** Quantas partes já saíram, para o contador dizer 2/5 e não só "5 partes". */
+  prontas?: number;
+  aberta?: boolean;
+  onAbrir?: () => void;
   filha?: boolean;
 }) {
   const minhasTags = tags.filter((tg) => task.tagIds.includes(tg.id));
@@ -333,9 +350,15 @@ function Linha({ task, colunas, tags, comStatus, filhas, filha = false }: {
             {task.title}
           </span>
           {filhas > 0 && (
-            <span className="shrink-0 rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
-              {filhas} {filhas === 1 ? 'parte' : 'partes'}
-            </span>
+            <button
+              onClick={onAbrir}
+              aria-expanded={aberta}
+              title={aberta ? 'Esconder as partes desta entrega' : 'Ver as partes desta entrega'}
+              className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-black/[0.06] py-0.5 pl-0.5 pr-1.5 text-[10px] tabular-nums text-text-muted transition-colors hover:bg-black/[0.1] hover:text-text-primary"
+            >
+              <ChevronRight className={`h-3 w-3 transition-transform ${aberta ? 'rotate-90' : ''}`} />
+              {prontas}/{filhas}
+            </button>
           )}
         </div>
       </td>
