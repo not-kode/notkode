@@ -99,12 +99,18 @@ export const COLUNAS_DO_CLIENTE = COLUNAS.filter((c) => c !== 'tempo');
 /** Como esta tela está montada neste projeto. Fica no contrato, em `client_view`. */
 export type VisaoProjeto = {
   colunas: Coluna[];
-  /** O desenho do cronograma entra no link do cliente, numa aba ao lado da lista. */
+  /**
+   * Como a lista fica separada. Mora no projeto (e não no navegador) de
+   * propósito: é assim que a tela do cliente sai igual à sua, que foi o pedido.
+   */
+  agrupar: Agrupamento;
+  /** O desenho do cronograma entra no fim da página do cliente. */
   cronogramaNoLink: boolean;
 };
 
 export const VISAO_PADRAO: VisaoProjeto = {
   colunas: [...COLUNAS],
+  agrupar: 'status',
   cronogramaNoLink: true,
 };
 
@@ -118,6 +124,7 @@ export function lerVisao(bruto: unknown): VisaoProjeto {
     // Salvar sem nenhuma coluna é escolha legítima (lista só de títulos); campo
     // ausente é que cai no padrão.
     colunas: colunas ?? VISAO_PADRAO.colunas,
+    agrupar: v.agrupar === 'sprint' ? 'sprint' : 'status',
     cronogramaNoLink: typeof v.cronograma === 'boolean' ? v.cronograma : VISAO_PADRAO.cronogramaNoLink,
   };
 }

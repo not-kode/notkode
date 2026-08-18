@@ -32,7 +32,6 @@ export type { PhaseView, ProjectView, TaskView } from './types';
 const PREF_VISAO = 'notkode.entregas.visao';
 const PREF_PROJETO = 'notkode.entregas.projeto';
 const PREF_LISTA_PROJETOS = 'notkode.entregas.lista-projetos';
-const PREF_AGRUPAR = 'notkode.entregas.agrupar';
 
 /** Botão só de ícone, para o que se reconhece pela forma (quadro, lista). */
 const iconeCls = (ativo: boolean) =>
@@ -74,7 +73,6 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
   const [abertoId, setAbertoId] = useState<string | null>(ativos[0]?.id ?? projects[0]?.id ?? null);
   const [aba, setAba] = useState<Aba>('tasks');
   const [visao, setVisao] = useState<'kanban' | 'lista'>('lista');
-  const [agrupar, setAgrupar] = useState<Agrupamento>('status');
   const [escopo, setEscopo] = useState<'projeto' | 'todos'>('projeto');
   const [periodo, setPeriodo] = useState<Periodo>('tudo');
   const [verArquivados, setVerArquivados] = useState(false);
@@ -122,9 +120,6 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
     const projeto = localStorage.getItem(PREF_PROJETO);
     if (projeto && projects.some((p) => p.id === projeto)) setAbertoId(projeto);
 
-    const grupo = localStorage.getItem(PREF_AGRUPAR);
-    if (grupo === 'status' || grupo === 'sprint') setAgrupar(grupo);
-
     if (localStorage.getItem(PREF_LISTA_PROJETOS) === 'fechada') setListaProjetos(false);
     // Só na montagem: depois disso quem manda é o clique.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,10 +146,6 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
   const trocarVisao = (v: 'kanban' | 'lista') => {
     setVisao(v);
     localStorage.setItem(PREF_VISAO, v);
-  };
-  const trocarAgrupamento = (v: Agrupamento) => {
-    setAgrupar(v);
-    localStorage.setItem(PREF_AGRUPAR, v);
   };
 
   // Escopo "todos" ignora arquivados: arquivar existe justamente para tirar da frente.
@@ -324,8 +315,6 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
               setAba={setAba}
               visao={visao}
               setVisao={trocarVisao}
-              agrupar={agrupar}
-              setAgrupar={trocarAgrupamento}
               escopo={escopo}
               setEscopo={setEscopo}
               onAbrirProjeto={abrirSoDoProjeto}
@@ -437,8 +426,7 @@ function Numeros({ tarefas }: { tarefas: TaskComProjeto[] }) {
 
 function ProjectPanel({
   project, comentarios, notas, pessoas, tarefas, tarefasDoEscopo, phasesDe, tagsDe, aba, setAba,
-  visao, setVisao, agrupar, setAgrupar, escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo,
-  pending, send,
+  visao, setVisao, escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo, pending, send,
 }: {
   project: ProjectView;
   comentarios: ComentarioView[];
@@ -452,8 +440,6 @@ function ProjectPanel({
   setAba: (v: Aba) => void;
   visao: 'kanban' | 'lista';
   setVisao: (v: 'kanban' | 'lista') => void;
-  agrupar: Agrupamento;
-  setAgrupar: (v: Agrupamento) => void;
   escopo: 'projeto' | 'todos';
   setEscopo: (v: 'projeto' | 'todos') => void;
   onAbrirProjeto: (id: string) => void;
@@ -522,10 +508,15 @@ function ProjectPanel({
                 um campo da tarefa, e trocar aqui não mexe em dado nenhum. */}
             {visao === 'lista' && !geral && (
               <ChipSelect
-                value={agrupar}
+                value={project.visao.agrupar}
                 tone="bg-black/[0.05] text-text-secondary"
-                titulo="Como separar a lista"
-                onChange={(v) => setAgrupar(v as Agrupamento)}
+                titulo="Como separar a lista (vale também para o link do cliente)"
+                onChange={(v) => send(salvarColunas, {
+                  engagement_id: project.id,
+                  colunas: project.visao.colunas.join(','),
+                  agrupar: v,
+                  cronograma: project.visao.cronogramaNoLink ? 'on' : '',
+                })}
                 options={[
                   { value: 'status', label: 'Agrupar: status' },
                   { value: 'sprint', label: 'Agrupar: sprint' },
@@ -608,7 +599,7 @@ function ProjectPanel({
               projectId={project.id}
               projectKind={project.kind}
               pessoas={pessoas}
-              agrupar={agrupar}
+              agrupar={project.visao.agrupar}
               colunas={project.visao.colunas}
               mostrarProjeto={escopo === 'todos'}
               onAbrirProjeto={onAbrirProjeto}
@@ -762,6 +753,7 @@ function BotaoColunas({ project, pending, send }: { project: ProjectView; pendin
     send(salvarColunas, {
       engagement_id: project.id,
       colunas: colunas.join(','),
+      agrupar: project.visao.agrupar,
       cronograma: cronograma ? 'on' : '',
     });
 

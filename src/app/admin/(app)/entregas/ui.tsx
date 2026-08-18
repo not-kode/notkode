@@ -170,6 +170,23 @@ const PRIORITY_CHIP: Record<Priority, string> = {
   urgente: 'bg-danger/12 text-danger',
 };
 
+/**
+ * A prioridade só de ler. Existe separada do chip clicável porque a mesma
+ * linguagem visual vale para a tela do cliente, onde nada se edita — e um chip
+ * que parece botão e não faz nada é pior do que texto.
+ */
+export function PriorityTag({ value, compacto }: { value: Priority; compacto?: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${PRIORITY_CHIP[value]}`}
+      title={PRIORITY_LABELS[value]}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${PRIORITY_DOT[value]}`} />
+      {!compacto && PRIORITY_LABELS[value]}
+    </span>
+  );
+}
+
 /** Chip de prioridade que abre a escolha ao clicar. */
 export function PriorityChip({ value, onChange, compacto }: {
   value: Priority;
@@ -437,6 +454,39 @@ export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] t
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Data só de ler, com o mesmo desenho do chip editável: calendário, vermelho
+ * quando venceu, âmbar quando é hoje ou amanhã.
+ *
+ * whitespace-nowrap: "12 mai" quebrando em duas linhas empilhava a data e
+ * esticava a altura da linha inteira da tabela.
+ */
+export function DateTag({ value, atrasada, placeholder = 'prazo', curto = true }: {
+  value: string | null;
+  atrasada?: boolean;
+  placeholder?: string;
+  curto?: boolean;
+}) {
+  const proxima = !!value && !atrasada && diffDias(hoje(), value) <= 1;
+  const tom = atrasada
+    ? 'bg-danger/12 text-danger'
+    : proxima
+      ? 'bg-warning/15 text-[#B45309]'
+      : value
+        ? 'bg-black/[0.04] text-text-secondary'
+        : 'text-text-muted';
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums ${tom}`}
+      title={(value ? fmtDate(value) : undefined) ?? undefined}
+    >
+      <Calendar className="h-3 w-3" />
+      {(curto ? fmtCurto(value) : fmtDate(value)) ?? placeholder}
+    </span>
+  );
+}
 
 /** Prazo como chip com calendário: vermelho quando venceu, âmbar quando é hoje ou amanhã. */
 export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto = true }: {

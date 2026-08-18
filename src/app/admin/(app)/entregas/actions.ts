@@ -642,10 +642,11 @@ export async function salvarColunas(formData: FormData): Promise<void> {
 
   const brutas = (str(formData, 'colunas', 300) ?? '').split(',').map((c) => c.trim());
   const colunas = COLUNAS.filter((c) => brutas.includes(c)) as Coluna[];
+  const agrupar = str(formData, 'agrupar', 16) === 'sprint' ? 'sprint' : 'status';
 
   await getSupabaseAdmin()
     .from('engagements')
-    .update({ client_view: { colunas, cronograma: formData.get('cronograma') === 'on' } })
+    .update({ client_view: { colunas, agrupar, cronograma: formData.get('cronograma') === 'on' } })
     .eq('id', engagement_id);
 
   revalidar();

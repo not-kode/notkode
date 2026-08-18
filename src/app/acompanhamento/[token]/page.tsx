@@ -83,7 +83,6 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
   const emAndamento = macros.filter((t) => t.status === 'fazendo' || t.status === 'revisao');
 
   const sprintAtual = phases.find((p) => p.status === 'em_andamento') ?? null;
-  const sprintsProntas = phases.filter((p) => p.status === 'concluida').length;
   // O progresso conta ENTREGAS, não sprints. Contando sprints, um projeto com 25
   // de 41 entregas prontas aparecia em 0% só porque o status da sprint não tinha
   // sido virado à mão — e é a barra que o cliente olha primeiro.
@@ -102,56 +101,31 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
       </header>
 
       {macros.length > 0 && (
-        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {/* O que está acontecendo agora, que é a primeira pergunta de quem abre
-              o link. Depois o número frio do que já saiu. */}
-          <div className="rounded-lg border border-black/[0.07] bg-white p-4 sm:col-span-2">
-            <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Agora</p>
-            <div className="mt-1 text-[15px] leading-snug text-text-primary">
+        <div className="mb-6 rounded-lg border border-black/[0.07] bg-white px-4 py-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-sm text-text-secondary">
               {sprintAtual ? (
-                <strong className="font-medium">{sprintAtual.name}</strong>
+                <>Agora em <strong className="font-medium text-text-primary">{sprintAtual.name}</strong></>
               ) : emAndamento.length > 0 ? (
-                // No máximo duas: "agora" com seis títulos emendados por ponto
-                // virava um parágrafo, e ninguém lê parágrafo em cartão.
-                <ul className="flex flex-col gap-0.5">
-                  {emAndamento.slice(0, 2).map((t) => (
-                    <li key={t.id} className="flex items-baseline gap-2">
-                      <span className="text-primary">◐</span>
-                      <span className="font-medium">{t.title}</span>
-                    </li>
-                  ))}
-                  {emAndamento.length > 2 && (
-                    <li className="text-[13px] text-text-muted">
-                      e mais {emAndamento.length - 2} em andamento
-                    </li>
+                <>
+                  Agora em{' '}
+                  <strong className="font-medium text-text-primary">{emAndamento[0].title}</strong>
+                  {emAndamento.length > 1 && (
+                    <span className="text-text-muted"> e mais {emAndamento.length - 1}</span>
                   )}
-                </ul>
+                </>
               ) : feitas === macros.length ? (
                 <strong className="font-medium text-success">Projeto concluído</strong>
               ) : (
                 'Em andamento'
               )}
-            </div>
-            <div className="mt-3 flex items-center gap-3">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
-                <div className="h-full rounded-full bg-success transition-all" style={{ width: `${pct}%` }} />
-              </div>
-              <span className="shrink-0 font-mono text-xs tabular-nums text-text-muted">{pct}%</span>
-            </div>
+            </p>
+            <p className="font-mono text-xs tabular-nums text-text-muted">
+              {feitas}/{macros.length} entregas · {pct}%
+            </p>
           </div>
-
-          <div className="rounded-lg border border-black/[0.07] bg-white p-4">
-            <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Entregas</p>
-            <p className="mt-1 font-mono text-2xl tabular-nums text-text-primary">
-              {feitas}<span className="text-base text-text-muted">/{macros.length}</span>
-            </p>
-            <p className="mt-1 text-[12px] text-text-muted">
-              {phases.length > 0
-                ? `em ${phases.length} ${phases.length === 1 ? 'sprint' : 'sprints'}${
-                  sprintsProntas > 0 ? `, ${sprintsProntas} concluída${sprintsProntas === 1 ? '' : 's'}` : ''
-                }`
-                : 'concluídas'}
-            </p>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
+            <div className="h-full rounded-full bg-success transition-all" style={{ width: `${pct}%` }} />
           </div>
         </div>
       )}
@@ -163,9 +137,8 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
       ) : (
         <Acompanhamento
           colunas={visao.colunas}
-          // Com sprint montada, é ela que organiza a leitura; sem sprint, a lista
-          // corrida por prazo é mais honesta do que grupos de status inventados.
-          agrupar={phases.length > 0 ? 'sprint' : 'nenhum'}
+          // O mesmo agrupamento escolhido na lista da casa.
+          agrupar={visao.agrupar}
           cronograma={visao.cronogramaNoLink}
           tags={tags}
           phases={phases.map((p) => ({

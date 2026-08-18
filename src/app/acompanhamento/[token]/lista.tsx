@@ -1,18 +1,20 @@
 'use client';
 
-// A lista de tarefas como o cliente lê: mesma leitura da lista do /admin (grupos,
-// tags, datas, status), sem nada de dentro de casa. Aqui não se edita nada, então
-// cada linha é texto e chip, não campo.
+// A mesma lista que a casa usa no /admin, do lado do cliente e só de ler: os
+// mesmos números em cima, o mesmo filtro de prazo, os mesmos grupos e as mesmas
+// colunas, com os mesmos chips. Foi o pedido, e faz sentido: quem explica o
+// projeto no WhatsApp e quem acompanha estão olhando a mesma coisa.
 //
-// O que aparece é escolha do projeto (colunas e agrupamento vêm do /admin), e o
-// desenho do cronograma, quando ligado, fica numa aba ao lado: a pergunta do
-// cliente quase sempre é "o que falta", e isso é lista, não gráfico.
+// O que muda deste lado: nada se edita, o cronômetro não existe, os rótulos
+// falam português de cliente ("Em andamento", não "In progress") e o desenho do
+// cronograma fecha a página, embaixo da lista.
 
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { PRIORITY_LABELS, TAG_TOM, corDaTag, type Priority, type TaskStatus } from '@/app/admin/(app)/entregas/status';
+import { TASK_DOT, type TaskStatus } from '@/app/admin/(app)/entregas/status';
 import { COLUNA_LABELS_CLIENTE } from '@/app/admin/(app)/entregas/types';
 import type { Coluna, PhaseView, TaskView } from '@/app/admin/(app)/entregas/types';
+import { DateTag, PriorityTag, Sigla, TagChip, hoje, somaDias } from '@/app/admin/(app)/entregas/ui';
 import { Gantt } from '@/app/admin/(app)/entregas/gantt';
 
 /** Status em português de cliente: ninguém de fora fala "backlog" nem "review". */
@@ -25,64 +27,75 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
 };
 
 const STATUS_TOM: Record<TaskStatus, string> = {
-  backlog: 'bg-black/[0.04] text-text-muted',
-  a_fazer: 'bg-black/[0.05] text-text-secondary',
+  backlog: 'bg-black/[0.03] text-text-muted',
+  a_fazer: 'bg-neutral-100 text-text-secondary',
   fazendo: 'bg-primary/10 text-primary',
   revisao: 'bg-warning/15 text-[#B45309]',
   feito: 'bg-success/12 text-[#15803D]',
 };
 
-const STATUS_DOT: Record<TaskStatus, string> = {
-  backlog: 'bg-neutral-300',
-  a_fazer: 'bg-neutral-400',
-  fazendo: 'bg-primary',
-  revisao: 'bg-warning',
-  feito: 'bg-success',
-};
-
-const URGENCIA_TOM: Record<Priority, string> = {
-  baixa: 'bg-black/[0.04] text-text-muted',
-  media: 'bg-black/[0.05] text-text-secondary',
-  alta: 'bg-warning/15 text-[#B45309]',
-  urgente: 'bg-danger/10 text-danger',
-};
+/** A ordem dos blocos, igual à da casa: o que está em jogo primeiro. */
+const BLOCOS: TaskStatus[] = ['a_fazer', 'fazendo', 'revisao', 'backlog', 'feito'];
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-const fmtData = (d: string | null): string => {
-  if (!d) return '—';
+const fmtCurto = (d: string | null): string | null => {
+  if (!d) return null;
   const [, m, dia] = d.split('-');
   return `${Number(dia)} ${MESES[Number(m) - 1]}`;
 };
 
 export type TagCliente = { id: string; nome: string; cor: string };
 
-type Filtro = 'aberto' | 'entregue' | 'tudo';
-
-const FILTROS: { id: Filtro; label: string }[] = [
-  { id: 'aberto', label: 'Em aberto' },
-  { id: 'entregue', label: 'Entregue' },
+const PERIODOS = [
   { id: 'tudo', label: 'Tudo' },
-];
+  { id: 'hoje', label: 'Hoje' },
+  { id: 'semana', label: 'Semana' },
+  { id: 'mes', label: 'Mês' },
+  { id: 'sem_prazo', label: 'Sem prazo' },
+] as const;
+type Periodo = (typeof PERIODOS)[number]['id'];
+
+/** Recorte por prazo, igual ao da casa (sem "atrasadas", que é cobrança interna). */
+function recortar(tarefas: TaskView[], periodo: Periodo): TaskView[] {
+  const hj = hoje();
+  const fimSemana = somaDias(hj, 7);
+  const mes = hj.slice(0, 7);
+
+  return tarefas.filter((t) => {
+    switch (periodo) {
+      case 'tudo': return true;
+      case 'hoje': return t.dueDate === hj;
+      case 'semana': return !!t.dueDate && t.dueDate >= hj && t.dueDate <= fimSemana;
+      case 'mes': return !!t.dueDate && t.dueDate.slice(0, 7) === mes;
+      case 'sem_prazo': return !t.dueDate;
+      default: return true;
+    }
+  });
+}
+
+const porPrazo = (a: TaskView, b: TaskView) =>
+  (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999') || a.sort - b.sort;
+
+const ordenar = (lista: TaskView[]) => [...lista].sort(porPrazo);
 
 export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronograma }: {
   phases: PhaseView[];
   tasks: TaskView[];
   tags: TagCliente[];
-  /** As mesmas colunas que a casa vê na lista dela, menos as internas. */
+  /** As mesmas colunas ligadas na lista da casa, menos as internas. */
   colunas: Coluna[];
-  agrupar: 'sprint' | 'status' | 'nenhum';
+  agrupar: 'sprint' | 'status';
   cronograma: boolean;
 }) {
-  const [aba, setAba] = useState<'lista' | 'cronograma'>('lista');
-  const [filtro, setFiltro] = useState<Filtro>('aberto');
+  const [periodo, setPeriodo] = useState<Periodo>('tudo');
+  const [dobra, setDobra] = useState<Record<string, boolean>>({});
 
   const macros = tasks.filter((t) => !t.parentId);
-  const subs = (id: string) => tasks.filter((t) => t.parentId === id).sort(porPrazo);
+  const subs = (id: string) => ordenar(tasks.filter((t) => t.parentId === id));
 
-  // Coluna configurada mas sem nada dentro é buraco na tela: se ninguém tem tag
-  // (ou responsável, ou data), ela não aparece.
+  // Coluna ligada mas sem nada dentro é buraco na tela.
   const usadas = colunas.filter((c) => {
-    if (c === 'tags') return tasks.some((t) => t.tagIds.length > 0) && tags.length > 0;
+    if (c === 'tags') return tags.length > 0 && tasks.some((t) => t.tagIds.length > 0);
     if (c === 'quem') return tasks.some((t) => !!t.assignee);
     if (c === 'inicio') return tasks.some((t) => !!t.startDate);
     if (c === 'prazo') return tasks.some((t) => !!t.dueDate);
@@ -90,212 +103,180 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
     return c !== 'tempo';
   });
 
-  const passa = (t: TaskView) =>
-    filtro === 'tudo' || (filtro === 'entregue' ? t.status === 'feito' : t.status !== 'feito');
+  const filtradas = recortar(macros, periodo);
+  const conta = (s: TaskStatus) => macros.filter((t) => t.status === s).length;
 
-  // Entrega entregue com filho em aberto continua aparecendo em "em aberto": o
-  // que interessa é se ainda tem trabalho ali dentro.
-  const visiveis = macros.filter((t) => passa(t) || subs(t.id).some(passa));
-
-  const grupos = montarGrupos(visiveis, phases, agrupar);
-  const abertas = macros.filter((t) => t.status !== 'feito').length;
-  const entregues = macros.length - abertas;
+  const grupos = agrupar === 'sprint' && phases.length > 0
+    ? [
+      ...phases.map((p) => ({
+        chave: p.id,
+        titulo: p.name,
+        periodo: p.startDate || p.endDate
+          ? `${fmtCurto(p.startDate) ?? '—'} a ${fmtCurto(p.endDate) ?? '—'}`
+          : null,
+        tom: 'bg-neutral-100 text-text-secondary',
+        dot: null as string | null,
+        tarefas: ordenar(filtradas.filter((t) => t.phaseId === p.id)),
+      })),
+      {
+        chave: 'outras',
+        titulo: 'Outras entregas',
+        periodo: null,
+        tom: 'bg-black/[0.03] text-text-muted',
+        dot: null as string | null,
+        tarefas: ordenar(filtradas.filter((t) => !t.phaseId || !phases.some((p) => p.id === t.phaseId))),
+      },
+    ]
+    : BLOCOS.map((s) => ({
+      chave: s,
+      titulo: STATUS_LABELS[s],
+      periodo: null,
+      tom: STATUS_TOM[s],
+      dot: TASK_DOT[s] as string | null,
+      tarefas: ordenar(filtradas.filter((t) => t.status === s)),
+    }));
 
   return (
-    <section>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        {cronograma ? (
-          <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
-            <button onClick={() => setAba('lista')} className={abaCls(aba === 'lista')}>Tarefas</button>
-            <button onClick={() => setAba('cronograma')} className={abaCls(aba === 'cronograma')}>Cronograma</button>
-          </div>
-        ) : (
-          <h2 className="text-sm font-semibold text-text-primary">Tarefas</h2>
-        )}
-
-        {aba === 'lista' && (
-          <div className="flex items-center gap-1 rounded-md border border-black/[0.07] bg-white p-1">
-            {FILTROS.map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setFiltro(f.id)}
-                className={`rounded-sm px-2.5 py-1 text-[12px] font-medium transition-colors ${
-                  filtro === f.id ? 'bg-black/[0.06] text-text-primary' : 'text-text-muted hover:text-text-primary'
-                }`}
-              >
-                {f.label}
-                <span className="ml-1.5 text-[10px] tabular-nums text-text-muted">
-                  {f.id === 'aberto' ? abertas : f.id === 'entregue' ? entregues : macros.length}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+    <>
+      {/* Os mesmos cartões de cima da lista da casa, sem o cronômetro e sem
+          "atrasadas": prazo estourado é conversa nossa com o cliente, não um
+          carimbo vermelho que ele encontra sozinho. */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Numero titulo="A fazer" valor={conta('a_fazer') + conta('backlog')} />
+        <Numero titulo="Em andamento" valor={conta('fazendo')} tom="text-primary" />
+        <Numero titulo="Em revisão" valor={conta('revisao')} />
+        <Numero titulo="Entregues" valor={conta('feito')} tom="text-success" />
       </div>
 
-      {aba === 'cronograma' ? (
-        <Gantt modoCliente titulo="Cronograma" phases={phases} tasks={tasks} />
-      ) : grupos.length === 0 ? (
-        <p className="rounded-lg border border-black/[0.07] bg-white px-4 py-10 text-center text-sm text-text-muted">
-          {filtro === 'entregue' ? 'Nada entregue ainda.' : 'Nada em aberto por aqui.'}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {grupos.map((g, i) => (
-            <Grupo
+      <div className="mb-3 flex flex-wrap items-center gap-1 rounded-md border border-black/[0.07] bg-white px-2 py-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+        {PERIODOS.map((p) => {
+          const n = recortar(macros, p.id).length;
+          const ativo = periodo === p.id;
+          return (
+            <button
+              key={p.id}
+              onClick={() => setPeriodo(p.id)}
+              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                ativo ? 'bg-black/[0.06] text-text-primary' : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
+              {p.label}
+              <span className="rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">{n}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {grupos.map((g) => {
+          // Grupo vazio (e o de entregues) nasce fechado: uma faixa fina em vez
+          // de um "nada aqui" ocupando a tela.
+          const fechado = dobra[g.chave] ?? (g.tarefas.length === 0 || g.chave === 'feito');
+          const prontas = g.tarefas.filter((t) => t.status === 'feito').length;
+
+          return (
+            <section
               key={g.chave}
-              grupo={g}
-              colunas={usadas}
-              tags={tags}
-              subs={subs}
-              passa={passa}
-              // O nome das colunas aparece uma vez, no topo: repetido em cada
-              // grupo, virava ruído com dez sprints na tela.
-              comCabecalho={i === 0}
-            />
-          ))}
+              className="overflow-hidden rounded-md border border-black/[0.07] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)]"
+            >
+              <header className="flex items-center gap-2 border-b border-black/[0.06] bg-neutral-50 px-3 py-2">
+                <button
+                  onClick={() => setDobra((d) => ({ ...d, [g.chave]: !fechado }))}
+                  aria-label={fechado ? 'Abrir grupo' : 'Fechar grupo'}
+                  aria-expanded={!fechado}
+                  className="rounded p-0.5 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
+                >
+                  <ChevronRight className={`h-3.5 w-3.5 transition-transform ${fechado ? '' : 'rotate-90'}`} />
+                </button>
+
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${g.tom}`}>
+                  {g.dot && <span className={`h-1.5 w-1.5 rounded-full ${g.dot}`} />}
+                  {g.titulo}
+                </span>
+                {g.periodo && <span className="text-[11px] text-text-muted">{g.periodo}</span>}
+                <span className="text-[11px] tabular-nums text-text-muted">
+                  {agrupar === 'sprint' && g.tarefas.length > 0 ? `${prontas}/${g.tarefas.length}` : g.tarefas.length}
+                </span>
+              </header>
+
+              {!fechado && (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[44rem] border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-black/[0.05]">
+                        <th className="w-8" />
+                        <th className="min-w-[16rem] px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                          Tarefa
+                        </th>
+                        {usadas.includes('tags') && <Th className="w-40">{COLUNA_LABELS_CLIENTE.tags}</Th>}
+                        {usadas.includes('quem') && <Th className="w-36">{COLUNA_LABELS_CLIENTE.quem}</Th>}
+                        {usadas.includes('inicio') && <Th className="w-24">{COLUNA_LABELS_CLIENTE.inicio}</Th>}
+                        {usadas.includes('prazo') && <Th className="w-24">{COLUNA_LABELS_CLIENTE.prazo}</Th>}
+                        {usadas.includes('prioridade') && <Th className="w-28">{COLUNA_LABELS_CLIENTE.prioridade}</Th>}
+                        {/* Agrupada por sprint, o grupo não diz o estado: aí o status vira coluna. */}
+                        {agrupar === 'sprint' && <Th className="w-32">Status</Th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {g.tarefas.flatMap((t) => [
+                        <Linha
+                          key={t.id}
+                          task={t}
+                          colunas={usadas}
+                          tags={tags}
+                          comStatus={agrupar === 'sprint'}
+                          filhas={subs(t.id).length}
+                        />,
+                        ...subs(t.id).map((f) => (
+                          <Linha
+                            key={f.id}
+                            task={f}
+                            colunas={usadas}
+                            tags={tags}
+                            comStatus={agrupar === 'sprint'}
+                            filhas={0}
+                            filha
+                          />
+                        )),
+                      ])}
+
+                      {g.tarefas.length === 0 && (
+                        <tr>
+                          <td colSpan={usadas.length + 3} className="px-3 py-4 text-center text-[12px] text-text-muted">
+                            Nada aqui.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          );
+        })}
+      </div>
+
+      {/* O cronograma fecha a página: primeiro a lista, que responde "o que
+          falta"; depois o desenho, para quem quer ver o mês inteiro de uma vez. */}
+      {cronograma && (
+        <div className="mt-8">
+          <Gantt modoCliente titulo="Cronograma" phases={phases} tasks={tasks} />
         </div>
       )}
-    </section>
+    </>
   );
 }
 
-const abaCls = (ativo: boolean) =>
-  `rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
-    ativo ? 'bg-white text-text-primary shadow-[0_1px_2px_rgba(16,24,40,0.08)]' : 'text-text-muted hover:text-text-primary'
-  }`;
-
-const porPrazo = (a: TaskView, b: TaskView) =>
-  (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999') || a.sort - b.sort;
-
-type GrupoLista = {
-  chave: string;
+function Numero({ titulo, valor, tom = 'text-text-primary' }: {
   titulo: string;
-  periodo: string | null;
-  tarefas: TaskView[];
-};
-
-/** Os grupos da lista, do jeito que o projeto pediu. */
-function montarGrupos(
-  macros: TaskView[],
-  phases: PhaseView[],
-  agrupar: 'sprint' | 'status' | 'nenhum',
-): GrupoLista[] {
-  const ordenadas = [...macros].sort(porPrazo);
-
-  if (agrupar === 'sprint' && phases.length > 0) {
-    const grupos = phases.map((p) => ({
-      chave: p.id,
-      titulo: p.name,
-      periodo: p.startDate || p.endDate
-        ? `${fmtData(p.startDate)} a ${fmtData(p.endDate)}`
-        : null,
-      tarefas: ordenadas.filter((t) => t.phaseId === p.id),
-    }));
-    const soltas = ordenadas.filter((t) => !t.phaseId || !phases.some((p) => p.id === t.phaseId));
-    if (soltas.length > 0) {
-      grupos.push({ chave: 'outras', titulo: 'Outras entregas', periodo: null, tarefas: soltas });
-    }
-    return grupos.filter((g) => g.tarefas.length > 0);
-  }
-
-  if (agrupar === 'status') {
-    const ordem: TaskStatus[] = ['fazendo', 'revisao', 'a_fazer', 'backlog', 'feito'];
-    return ordem
-      .map((s) => ({
-        chave: s,
-        titulo: STATUS_LABELS[s],
-        periodo: null,
-        tarefas: ordenadas.filter((t) => t.status === s),
-      }))
-      .filter((g) => g.tarefas.length > 0);
-  }
-
-  return ordenadas.length > 0
-    ? [{ chave: 'tudo', titulo: 'Entregas', periodo: null, tarefas: ordenadas }]
-    : [];
-}
-
-function Grupo({ grupo, colunas, tags, subs, passa, comCabecalho }: {
-  grupo: GrupoLista;
-  colunas: Coluna[];
-  tags: TagCliente[];
-  subs: (id: string) => TaskView[];
-  passa: (t: TaskView) => boolean;
-  comCabecalho: boolean;
+  valor: number;
+  tom?: string;
 }) {
-  const [fechado, setFechado] = useState(false);
-  const prontas = grupo.tarefas.filter((t) => t.status === 'feito').length;
-  const total = grupo.tarefas.length;
-
   return (
-    <section className="overflow-hidden rounded-lg border border-black/[0.07] bg-white shadow-[0_1px_2px_rgba(16,24,40,0.05)]">
-      <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-black/[0.06] bg-neutral-50/80 px-3 py-2.5">
-        <button
-          onClick={() => setFechado((v) => !v)}
-          aria-label={fechado ? 'Abrir grupo' : 'Fechar grupo'}
-          aria-expanded={!fechado}
-          className="rounded p-0.5 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
-        >
-          <ChevronRight className={`h-3.5 w-3.5 transition-transform ${fechado ? '' : 'rotate-90'}`} />
-        </button>
-        <h3 className="text-[13px] font-semibold text-text-primary">{grupo.titulo}</h3>
-        {grupo.periodo && <span className="text-[11px] text-text-muted">{grupo.periodo}</span>}
-
-        <div className="ml-auto flex items-center gap-2">
-          <span className="font-mono text-[11px] tabular-nums text-text-muted">{prontas}/{total}</span>
-          <div className="h-1 w-16 overflow-hidden rounded-full bg-black/[0.07]">
-            <div
-              className="h-full rounded-full bg-success transition-all"
-              style={{ width: `${total ? (prontas / total) * 100 : 0}%` }}
-            />
-          </div>
-        </div>
-      </header>
-
-      {!fechado && (
-        <div className="overflow-x-auto">
-          {/* Largura fixa por coluna: assim um grupo não desalinha do outro,
-              mesmo cada grupo sendo a sua própria tabela. */}
-          <table className="w-full min-w-[44rem] table-fixed border-collapse text-sm">
-            <colgroup>
-              <col />
-              {colunas.includes('tags') && <col className="w-40" />}
-              {colunas.includes('inicio') && <col className="w-20" />}
-              {colunas.includes('prazo') && <col className="w-20" />}
-              {colunas.includes('prioridade') && <col className="w-24" />}
-              {colunas.includes('quem') && <col className="w-36" />}
-              <col className="w-36" />
-            </colgroup>
-            {comCabecalho && (
-              <thead>
-                <tr className="border-b border-black/[0.05]">
-                  <Th>Entrega</Th>
-                  {colunas.includes('tags') && <Th>{COLUNA_LABELS_CLIENTE.tags}</Th>}
-                  {colunas.includes('inicio') && <Th>{COLUNA_LABELS_CLIENTE.inicio}</Th>}
-                  {colunas.includes('prazo') && <Th>{COLUNA_LABELS_CLIENTE.prazo}</Th>}
-                  {colunas.includes('prioridade') && <Th>{COLUNA_LABELS_CLIENTE.prioridade}</Th>}
-                  {colunas.includes('quem') && <Th>{COLUNA_LABELS_CLIENTE.quem}</Th>}
-                  {/* O status é a resposta que ele veio buscar: não se esconde. */}
-                  <Th>Status</Th>
-                </tr>
-              </thead>
-            )}
-            <tbody>
-              {grupo.tarefas.flatMap((t) => {
-                const filhas = subs(t.id).filter((f) => passa(f) || t.status !== 'feito');
-                return [
-                  <Linha key={t.id} task={t} colunas={colunas} tags={tags} filhas={filhas.length} />,
-                  ...filhas.map((f) => (
-                    <Linha key={f.id} task={f} colunas={colunas} tags={tags} filhas={0} filha />
-                  )),
-                ];
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
+    <div className="rounded-md border border-black/[0.07] bg-white px-4 py-3 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+      <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">{titulo}</p>
+      <p className={`mt-1 font-mono text-2xl tabular-nums ${tom}`}>{valor}</p>
+    </div>
   );
 }
 
@@ -307,34 +288,52 @@ function Th({ children, className = '' }: { children: React.ReactNode; className
   );
 }
 
-function Linha({ task, colunas, tags, filhas, filha = false }: {
+function Linha({ task, colunas, tags, comStatus, filhas, filha = false }: {
   task: TaskView;
   colunas: Coluna[];
   tags: TagCliente[];
+  comStatus: boolean;
   filhas: number;
   filha?: boolean;
 }) {
   const minhasTags = tags.filter((tg) => task.tagIds.includes(tg.id));
+  const pronta = task.status === 'feito';
 
   return (
     <tr className={`border-b border-black/[0.04] last:border-0 ${filha ? 'bg-neutral-50/40' : ''}`}>
-      <td className="px-3 py-2.5">
-        <div className={`flex min-w-0 items-start gap-2 ${filha ? 'pl-5' : ''}`}>
-          <span
-            title={STATUS_LABELS[task.status]}
-            className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT[task.status]}`}
-          />
-          <span
-            className={`text-[13px] leading-snug ${
-              task.status === 'feito'
-                ? 'text-text-muted'
-                : filha ? 'text-text-secondary' : 'text-text-primary'
-            }`}
-          >
+      {/* No lugar da caixa de concluir da casa, o mesmo sinal em leitura: o que
+          está pronto vem marcado de verde. */}
+      <td className="py-2 pl-3 pr-0">
+        <span
+          title={STATUS_LABELS[task.status]}
+          className={`flex h-3.5 w-3.5 items-center justify-center rounded-full ${
+            pronta ? 'bg-success text-white' : `${TASK_DOT[task.status]} opacity-70`
+          }`}
+        >
+          {pronta && (
+            <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" aria-hidden>
+              <path
+                d="M2.5 6.2l2.4 2.4 4.6-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </span>
+      </td>
+
+      <td className="px-3 py-2">
+        <div className={`flex min-w-0 items-center gap-2 ${filha ? 'pl-5' : ''}`}>
+          <span className={`text-[13px] ${
+            pronta ? 'text-text-muted line-through' : filha ? 'text-text-secondary' : 'text-text-primary'
+          }`}>
             {task.title}
           </span>
           {filhas > 0 && (
-            <span className="mt-0.5 shrink-0 rounded-full bg-black/[0.05] px-1.5 text-[10px] tabular-nums text-text-muted">
+            <span className="shrink-0 rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
               {filhas} {filhas === 1 ? 'parte' : 'partes'}
             </span>
           )}
@@ -342,47 +341,50 @@ function Linha({ task, colunas, tags, filhas, filha = false }: {
       </td>
 
       {colunas.includes('tags') && (
-        <td className="px-3 py-2.5">
+        <td className="px-3 py-2">
           <div className="flex flex-wrap gap-1">
-            {minhasTags.map((tg) => (
-              <span
-                key={tg.id}
-                className={`inline-flex max-w-[8rem] items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${TAG_TOM[corDaTag(tg.cor)]}`}
-              >
-                <span className="truncate">{tg.nome}</span>
-              </span>
-            ))}
+            {minhasTags.map((tg) => <TagChip key={tg.id} nome={tg.nome} cor={tg.cor} compacto={filha} />)}
           </div>
         </td>
       )}
 
-      {colunas.includes('inicio') && <Td>{fmtData(task.startDate)}</Td>}
-      {colunas.includes('prazo') && <Td>{fmtData(task.dueDate)}</Td>}
-
-      {colunas.includes('prioridade') && (
-        <td className="px-3 py-2.5">
-          <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${URGENCIA_TOM[task.priority]}`}>
-            {PRIORITY_LABELS[task.priority]}
-          </span>
-        </td>
-      )}
-
       {colunas.includes('quem') && (
-        <td className="truncate px-3 py-2.5 text-[12px] text-text-secondary" title={task.assignee ?? undefined}>
-          {task.assignee ?? '—'}
+        <td className="px-3 py-2">
+          {task.assignee ? (
+            <div className="flex min-w-0 items-center gap-1.5">
+              <Sigla nome={task.assignee} />
+              <span className="min-w-0 truncate text-[12px] text-text-secondary">{task.assignee}</span>
+            </div>
+          ) : (
+            <span className="text-[12px] text-text-muted">—</span>
+          )}
         </td>
       )}
 
-      <td className="px-3 py-2.5">
+      {colunas.includes('inicio') && (
+        <td className="px-3 py-2">
+          <DateTag value={task.startDate} placeholder="—" />
+        </td>
+      )}
+      {colunas.includes('prazo') && (
+        <td className="px-3 py-2">
+          <DateTag value={task.dueDate} placeholder="—" />
+        </td>
+      )}
+      {colunas.includes('prioridade') && (
+        <td className="px-3 py-2">
+          <PriorityTag value={task.priority} />
+        </td>
+      )}
+
+      {comStatus && (
+        <td className="px-3 py-2">
           <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_TOM[task.status]}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[task.status]}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${TASK_DOT[task.status]}`} />
             {STATUS_LABELS[task.status]}
           </span>
-      </td>
+        </td>
+      )}
     </tr>
   );
-}
-
-function Td({ children }: { children: React.ReactNode }) {
-  return <td className="px-3 py-2.5 font-mono text-[11px] tabular-nums text-text-muted">{children}</td>;
 }
