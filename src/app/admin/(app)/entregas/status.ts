@@ -76,3 +76,34 @@ export const PRIORITY_ORDER: Record<Priority, number> = {
   media: 2,
   baixa: 3,
 };
+
+// ── Tags ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Paleta das tags. A tag guarda a chave da cor, não o hex: assim a tag
+ * acompanha o tema do sistema e do link do cliente sem precisar migrar dado.
+ */
+export const TAG_COLORS = ['azul', 'verde', 'ambar', 'vermelho', 'violeta', 'cinza'] as const;
+export type TagColor = (typeof TAG_COLORS)[number];
+
+export const TAG_COLOR_LABELS: Record<TagColor, string> = {
+  azul: 'Azul',
+  verde: 'Verde',
+  ambar: 'Âmbar',
+  vermelho: 'Vermelho',
+  violeta: 'Violeta',
+  cinza: 'Cinza',
+};
+
+/** Chip da tag: fundo lavado, texto forte, sem borda gritando. */
+export const TAG_TOM: Record<TagColor, string> = {
+  azul: 'bg-primary/10 text-primary',
+  verde: 'bg-success/12 text-[#15803D]',
+  ambar: 'bg-warning/15 text-[#B45309]',
+  vermelho: 'bg-danger/10 text-danger',
+  violeta: 'bg-[#7C3AED]/10 text-[#6D28D9]',
+  cinza: 'bg-black/[0.06] text-text-secondary',
+};
+
+export const corDaTag = (cor: string): TagColor =>
+  (TAG_COLORS as readonly string[]).includes(cor) ? (cor as TagColor) : 'cinza';

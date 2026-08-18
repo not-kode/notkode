@@ -12,14 +12,15 @@ import { Check, Plus, Trash2, X } from 'lucide-react';
 import { apagarComentario, createTask, criarComentario, deleteTask, toggleTimer, updateTask } from './actions';
 import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
 import { donoDaTarefa } from './types';
-import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TaskView } from './types';
-import { ChipSelect, DateChip, PessoaSelect, PriorityChip, TimerChip, hoje } from './ui';
+import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskView } from './types';
+import { ChipSelect, DateChip, PessoaSelect, PriorityChip, TagsSelect, TimerChip, hoje } from './ui';
 
-export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, projectKind, pessoas, send, onFechar }: {
+export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projectId, projectKind, pessoas, send, onFechar }: {
   task: TaskView;
   comentarios: ComentarioView[];
   subtarefas: TaskView[];
   phases: PhaseView[];
+  tags: TagView[];
   projectId: string;
   projectKind: ProjectKind;
   pessoas: Pessoa[];
@@ -140,14 +141,23 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, projectId, p
             <dt className="text-text-muted">Prazo</dt>
             <dd><DateChip value={task.dueDate} onSave={(v) => send(updateTask, { id: task.id, due_date: v })} atrasada={atrasada} placeholder="sem prazo" /></dd>
 
-            <dt className="text-text-muted">Etapa</dt>
+            <dt className="text-text-muted">Sprint</dt>
             <dd>
               <ChipSelect
                 value={task.phaseId ?? ''}
                 onChange={(v) => send(updateTask, { id: task.id, phase_id: v })}
-                titulo="Etapa do cronograma"
-                placeholder="sem etapa"
-                options={[{ value: '', label: 'sem etapa' }, ...phases.map((p) => ({ value: p.id, label: p.name }))]}
+                titulo="Sprint do cronograma"
+                placeholder="sem sprint"
+                options={[{ value: '', label: 'sem sprint' }, ...phases.map((p) => ({ value: p.id, label: p.name }))]}
+              />
+            </dd>
+
+            <dt className="text-text-muted">Tags</dt>
+            <dd>
+              <TagsSelect
+                value={task.tagIds}
+                tags={tags}
+                onChange={(ids) => send(updateTask, { id: task.id, tag_ids: ids.join(',') })}
               />
             </dd>
 

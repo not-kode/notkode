@@ -2,11 +2,14 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import type { PhaseStatus, TaskStatus } from '@/app/admin/(app)/entregas/status';
-import { Gantt } from '@/app/admin/(app)/entregas/gantt';
+import type { Priority } from '@/app/admin/(app)/entregas/status';
+import { lerVisaoCliente } from '@/app/admin/(app)/entregas/types';
+import { Acompanhamento, type TagCliente } from './lista';
 
-// Acompanhamento do cliente: o cronograma do projeto dele, por link com token e
-// sem login. Mostra SÓ o que estiver marcado como visível no /admin — etapa
-// interna e tarefa interna não aparecem aqui.
+// Acompanhamento do cliente: as entregas do projeto dele, por link com token e
+// sem login. Mostra SÓ o que estiver marcado como visível no /admin — sprint
+// interna e tarefa interna não aparecem aqui —, e no recorte de colunas que
+// aquele projeto configurou.
 
 export const dynamic = 'force-dynamic';
 
@@ -22,16 +25,10 @@ type PhaseRow = {
 };
 type TaskRow = {
   id: string; phase_id: string | null; title: string; status: TaskStatus;
-  start_date: string | null; due_date: string | null; assignee: string | null;
-  parent_task_id: string | null;
+  priority: Priority | null; start_date: string | null; due_date: string | null;
+  assignee: string | null; parent_task_id: string | null; tag_ids: string[] | null; sort: number | null;
 };
-
-/** "12 ago" — data curta, do jeito que se lê num acompanhamento. */
-const MESES_CURTOS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-function fmtDataCurta(d: string): string {
-  const [, m, dia] = d.split('-');
-  return `${Number(dia)} ${MESES_CURTOS[Number(m) - 1]}`;
-}
+type TagRow = { id: string; name: string; color: string; sort: number };
 
 export default async function AcompanhamentoPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -39,7 +36,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
 
   const { data: eng } = await supabase
     .from('engagements')
-    .select('id, title, start_date, end_date, organizations(name)')
+    .select('id, title, start_date, end_date, client_view, organizations(name)')
     .eq('client_token', token)
     .maybeSingle();
 
@@ -51,7 +48,7 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
     .organizations;
   const org = Array.isArray(orgRaw) ? orgRaw[0] ?? null : orgRaw ?? null;
 
-  const [{ data: phaseData }, { data: taskData }] = await Promise.all([
+  const [{ data: phaseData }, { data: taskData }, { data: tagData }] = await Promise.all([
     supabase
       .from('project_phases')
       .select('id, name, description, status, start_date, end_date, sort')
@@ -60,37 +57,39 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
       .order('sort'),
     supabase
       .from('project_tasks')
-      .select('id, phase_id, title, status, start_date, due_date, assignee, parent_task_id')
+      .select('id, phase_id, title, status, priority, start_date, due_date, assignee, parent_task_id, tag_ids, sort')
       .eq('engagement_id', eng.id)
       .eq('client_visible', true)
+      .order('sort'),
+    supabase
+      .from('project_tags')
+      .select('id, name, color, sort')
+      .eq('engagement_id', eng.id)
       .order('sort'),
   ]);
 
   const phases = (phaseData ?? []) as PhaseRow[];
   const tasks = (taskData ?? []) as TaskRow[];
+  const tags: TagCliente[] = ((tagData ?? []) as TagRow[]).map((t) => ({
+    id: t.id, nome: t.name, cor: t.color,
+  }));
+  const visao = lerVisaoCliente((eng as unknown as { client_view: unknown }).client_view);
 
-  // Sem etapas montadas, quem conta o andamento são as próprias tarefas: é o
+  // Sem sprints montadas, quem conta o andamento são as próprias entregas: é o
   // caso normal dos projetos daqui, e sem isso a barra de progresso ficava
   // parada em zero mesmo com metade do trabalho entregue.
   const macros = tasks.filter((t) => !t.parent_task_id);
-  /** As subtarefas de uma entrega, na ordem em que vencem. */
-  const subs = (id: string) =>
-    tasks
-      .filter((t) => t.parent_task_id === id)
-      .sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'));
-  const feitas = macros.filter((t) => t.status === 'feito');
-  const proximas = macros
-    .filter((t) => t.status !== 'feito')
-    .sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'));
+  const feitas = macros.filter((t) => t.status === 'feito').length;
+  const emAndamento = macros.filter((t) => t.status === 'fazendo' || t.status === 'revisao');
 
-  const concluidas = phases.length > 0 ? phases.filter((p) => p.status === 'concluida').length : feitas.length;
+  const sprintAtual = phases.find((p) => p.status === 'em_andamento') ?? null;
+  const concluidas = phases.length > 0 ? phases.filter((p) => p.status === 'concluida').length : feitas;
   const total = phases.length > 0 ? phases.length : macros.length;
-  const atual = phases.find((p) => p.status === 'em_andamento') ?? null;
-  const fazendo = macros.find((t) => t.status === 'fazendo') ?? null;
+  const pct = total ? Math.round((concluidas / total) * 100) : 0;
 
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-5 py-12 sm:py-16">
-      <header className="mb-10">
+    <main className="mx-auto min-h-screen max-w-5xl px-5 py-12 sm:py-16">
+      <header className="mb-8">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-text-muted">
           Notkode · Acompanhamento
         </p>
@@ -98,152 +97,76 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
           {org?.name ?? 'Seu projeto'}
         </h1>
         {eng.title && <p className="mt-1 text-base text-text-secondary">{eng.title}</p>}
+      </header>
 
-        {total > 0 && (
-          <div className="mt-5 rounded-lg border border-black/[0.07] bg-white px-4 py-3">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm text-text-secondary">
-                {atual ? (
-                  <>Agora em <strong className="font-medium text-text-primary">{atual.name}</strong></>
-                ) : fazendo ? (
-                  <>Agora em <strong className="font-medium text-text-primary">{fazendo.title}</strong></>
-                ) : concluidas === total ? (
-                  <strong className="font-medium text-success">Projeto concluído</strong>
-                ) : (
-                  'Em andamento'
-                )}
-              </p>
-              <p className="font-mono text-xs tabular-nums text-text-muted">
-                {concluidas}/{total} {phases.length > 0 ? 'etapas' : 'entregas'}
-              </p>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
-              <div
-                className="h-full rounded-full bg-success transition-all"
-                style={{ width: `${total ? (concluidas / total) * 100 : 0}%` }}
-              />
+      {total > 0 && (
+        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {/* O que está acontecendo agora, que é a primeira pergunta de quem abre
+              o link. Depois o número frio e o que já saiu. */}
+          <div className="rounded-lg border border-black/[0.07] bg-white p-4 sm:col-span-2">
+            <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">Agora</p>
+            <p className="mt-1 text-[15px] leading-snug text-text-primary">
+              {sprintAtual ? (
+                <strong className="font-medium">{sprintAtual.name}</strong>
+              ) : emAndamento.length > 0 ? (
+                <strong className="font-medium">{emAndamento.map((t) => t.title).join(' · ')}</strong>
+              ) : concluidas === total ? (
+                <strong className="font-medium text-success">Projeto concluído</strong>
+              ) : (
+                'Em andamento'
+              )}
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.06]">
+                <div className="h-full rounded-full bg-success transition-all" style={{ width: `${pct}%` }} />
+              </div>
+              <span className="shrink-0 font-mono text-xs tabular-nums text-text-muted">{pct}%</span>
             </div>
           </div>
-        )}
-      </header>
+
+          <div className="rounded-lg border border-black/[0.07] bg-white p-4">
+            <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">
+              {phases.length > 0 ? 'Sprints' : 'Entregas'}
+            </p>
+            <p className="mt-1 font-mono text-2xl tabular-nums text-text-primary">
+              {concluidas}<span className="text-base text-text-muted">/{total}</span>
+            </p>
+            <p className="mt-1 text-[12px] text-text-muted">
+              {phases.length > 0 ? `${feitas} de ${macros.length} entregas prontas` : 'concluídas'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {macros.length === 0 && phases.length === 0 ? (
         <p className="rounded-lg border border-black/[0.07] bg-white px-4 py-12 text-center text-sm text-text-muted">
-          O cronograma está sendo montado. Em breve as etapas aparecem aqui.
+          O cronograma está sendo montado. Em breve as entregas aparecem aqui.
         </p>
       ) : (
-        <Gantt
-          modoCliente
-          titulo="Cronograma"
+        <Acompanhamento
+          colunas={visao.colunas}
+          agrupar={visao.agrupar}
+          cronograma={visao.cronograma}
+          tags={tags}
           phases={phases.map((p) => ({
             id: p.id, name: p.name, description: p.description, status: p.status,
             startDate: p.start_date, endDate: p.end_date, clientVisible: true,
           }))}
           tasks={tasks.map((t) => ({
             id: t.id, phaseId: t.phase_id, title: t.title, notes: null, status: t.status,
-            priority: 'media' as const, startDate: t.start_date, dueDate: t.due_date,
-            assignee: t.assignee, clientVisible: true, parentId: t.parent_task_id, sort: 0,
+            priority: t.priority ?? 'media', startDate: t.start_date, dueDate: t.due_date,
+            assignee: t.assignee, clientVisible: true, parentId: t.parent_task_id,
+            tagIds: t.tag_ids ?? [], sort: t.sort ?? 0,
             tempoSegundos: 0, timerDesde: null, createdAt: '',
           }))}
         />
       )}
 
-      {/* Depois do desenho, a leitura em palavras: o que já ficou pronto e o que
-          vem agora. É o que o cliente pergunta no WhatsApp. */}
-      {macros.length > 0 && (
-        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <section className="rounded-lg border border-black/[0.07] bg-white p-4">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-text-primary">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />
-              Já entregue ({feitas.length})
-            </h2>
-            {feitas.length === 0 ? (
-              <p className="text-sm text-text-muted">Nada concluído ainda.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {feitas.map((t) => (
-                  <Entrega key={t.id} task={t} partes={subs(t.id)} />
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="rounded-lg border border-black/[0.07] bg-white p-4">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-text-primary">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-              Próximos ({proximas.length})
-            </h2>
-            {proximas.length === 0 ? (
-              <p className="text-sm text-text-muted">Tudo em dia por aqui.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {proximas.map((t) => (
-                  <Entrega key={t.id} task={t} partes={subs(t.id)} />
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
-      )}
-
       <footer className="mt-12 border-t border-black/[0.07] pt-5">
         <p className="text-xs text-text-muted">
-          Dúvida sobre alguma etapa? É só chamar a gente no WhatsApp.
+          Dúvida sobre alguma entrega? É só chamar a gente no WhatsApp.
         </p>
       </footer>
     </main>
-  );
-}
-
-/** O marcador de estado de uma linha: feito, em andamento, ainda por fazer. */
-function Marca({ status }: { status: TaskStatus }) {
-  if (status === 'feito') return <span className="text-success">✓</span>;
-  if (status === 'fazendo') return <span className="text-primary">◐</span>;
-  return <span className="text-text-muted">○</span>;
-}
-
-/**
- * Uma entrega e o que ela tem dentro. As subtarefas ficam à vista, recuadas: é o
- * que faz o cliente entender o que é aquela linha sem precisar perguntar. Quando
- * a entrega tem partes, o contador diz quantas já saíram.
- */
-function Entrega({ task, partes }: { task: TaskRow; partes: TaskRow[] }) {
-  const prontas = partes.filter((p) => p.status === 'feito').length;
-
-  return (
-    <li className="text-sm">
-      <div className="flex items-baseline gap-2">
-        <Marca status={task.status} />
-        <span className="text-text-secondary">{task.title}</span>
-        {partes.length > 0 && (
-          <span className="shrink-0 font-mono text-[10px] tabular-nums text-text-muted">
-            {prontas}/{partes.length}
-          </span>
-        )}
-        {task.due_date && (
-          <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums text-text-muted">
-            {fmtDataCurta(task.due_date)}
-          </span>
-        )}
-      </div>
-
-      {partes.length > 0 && (
-        <ul className="mt-1.5 flex flex-col gap-1 border-l border-black/[0.08] pl-3 sm:ml-4">
-          {partes.map((p) => (
-            <li key={p.id} className="flex items-baseline gap-2 text-[13px]">
-              <Marca status={p.status} />
-              <span className={p.status === 'feito' ? 'text-text-muted' : 'text-text-secondary'}>
-                {p.title}
-              </span>
-              {p.due_date && (
-                <span className="ml-auto shrink-0 font-mono text-[10px] tabular-nums text-text-muted">
-                  {fmtDataCurta(p.due_date)}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </li>
   );
 }

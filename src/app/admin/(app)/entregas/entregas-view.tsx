@@ -9,24 +9,34 @@
 // cima são os números do trabalho e o tempo médio por tarefa.
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { setProjectArchived, generateClientToken, revokeClientToken } from './actions';
+import {
+  apagarTag, atualizarTag, criarTag, salvarVisaoCliente,
+  setProjectArchived, generateClientToken, revokeClientToken,
+} from './actions';
 import {
   Archive, ArchiveRestore, ChevronDown, ChevronUp, Eye, EyeOff, LayoutGrid,
-  Link2, List, PanelLeftClose, PanelLeftOpen,
+  Link2, List, PanelLeftClose, PanelLeftOpen, Settings2, Tag, Trash2, X,
 } from 'lucide-react';
-import type { ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send, TaskComProjeto, TaskView } from './types';
+import { COLUNAS_CLIENTE, COLUNA_CLIENTE_LABELS } from './types';
+import type {
+  Agrupamento, ColunaCliente, ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send,
+  TagView, TaskComProjeto, TaskView,
+} from './types';
+import { TAG_COLORS, TAG_COLOR_LABELS, TAG_TOM, corDaTag } from './status';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
 import { NotasView } from './notas-view';
-import { ChipSelect, DateChip, InlineText, fmtDuracao, hoje, inputCls, somaDias } from './ui';
+import { ChipSelect, DateChip, InlineText, TagChip, fmtDuracao, hoje, inputCls, somaDias } from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
 
 const PREF_VISAO = 'notkode.entregas.visao';
 const PREF_PROJETO = 'notkode.entregas.projeto';
 const PREF_LISTA_PROJETOS = 'notkode.entregas.lista-projetos';
+const PREF_AGRUPAR = 'notkode.entregas.agrupar';
 
 const tabCls = (ativo: boolean) =>
   `inline-flex max-w-[12rem] items-center gap-1.5 truncate rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors ${
@@ -60,6 +70,7 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
   const [abertoId, setAbertoId] = useState<string | null>(ativos[0]?.id ?? projects[0]?.id ?? null);
   const [aba, setAba] = useState<Aba>('tasks');
   const [visao, setVisao] = useState<'kanban' | 'lista'>('lista');
+  const [agrupar, setAgrupar] = useState<Agrupamento>('status');
   const [escopo, setEscopo] = useState<'projeto' | 'todos'>('projeto');
   const [periodo, setPeriodo] = useState<Periodo>('tudo');
   const [verArquivados, setVerArquivados] = useState(false);
@@ -107,6 +118,9 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
     const projeto = localStorage.getItem(PREF_PROJETO);
     if (projeto && projects.some((p) => p.id === projeto)) setAbertoId(projeto);
 
+    const grupo = localStorage.getItem(PREF_AGRUPAR);
+    if (grupo === 'status' || grupo === 'sprint') setAgrupar(grupo);
+
     if (localStorage.getItem(PREF_LISTA_PROJETOS) === 'fechada') setListaProjetos(false);
     // Só na montagem: depois disso quem manda é o clique.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,6 +146,10 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
     setVisao(v);
     localStorage.setItem(PREF_VISAO, v);
   };
+  const trocarAgrupamento = (v: Agrupamento) => {
+    setAgrupar(v);
+    localStorage.setItem(PREF_AGRUPAR, v);
+  };
 
   // Escopo "todos" ignora arquivados: arquivar existe justamente para tirar da frente.
   const doEscopo = useMemo<TaskComProjeto[]>(() => {
@@ -146,6 +164,8 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
 
   const fasesPorProjeto = useMemo(() => new Map(projects.map((p) => [p.id, p.phases])), [projects]);
   const phasesDe = (id: string) => fasesPorProjeto.get(id) ?? [];
+  const tagsPorProjeto = useMemo(() => new Map(projects.map((p) => [p.id, p.tags])), [projects]);
+  const tagsDe = (id: string) => tagsPorProjeto.get(id) ?? [];
 
   // Cliente de um lado, casa do outro: são dois modos de trabalho diferentes.
   // Fechamento vem antes dos dois: é venda ganha esperando virar projeto, e o
@@ -257,10 +277,13 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
               tarefas={filtradas}
               tarefasDoEscopo={doEscopo}
               phasesDe={phasesDe}
+              tagsDe={tagsDe}
               aba={aba}
               setAba={setAba}
               visao={visao}
               setVisao={trocarVisao}
+              agrupar={agrupar}
+              setAgrupar={trocarAgrupamento}
               escopo={escopo}
               setEscopo={setEscopo}
               onAbrirProjeto={abrirSoDoProjeto}
@@ -371,8 +394,9 @@ function Numeros({ tarefas }: { tarefas: TaskComProjeto[] }) {
 }
 
 function ProjectPanel({
-  project, comentarios, notas, pessoas, tarefas, tarefasDoEscopo, phasesDe, aba, setAba, visao, setVisao,
-  escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo, pending, send,
+  project, comentarios, notas, pessoas, tarefas, tarefasDoEscopo, phasesDe, tagsDe, aba, setAba,
+  visao, setVisao, agrupar, setAgrupar, escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo,
+  pending, send,
 }: {
   project: ProjectView;
   comentarios: ComentarioView[];
@@ -381,10 +405,13 @@ function ProjectPanel({
   tarefas: TaskComProjeto[];
   tarefasDoEscopo: TaskComProjeto[];
   phasesDe: (id: string) => PhaseView[];
+  tagsDe: (id: string) => TagView[];
   aba: Aba;
   setAba: (v: Aba) => void;
   visao: 'kanban' | 'lista';
   setVisao: (v: 'kanban' | 'lista') => void;
+  agrupar: Agrupamento;
+  setAgrupar: (v: Agrupamento) => void;
   escopo: 'projeto' | 'todos';
   setEscopo: (v: 'projeto' | 'todos') => void;
   onAbrirProjeto: (id: string) => void;
@@ -440,6 +467,18 @@ function ProjectPanel({
                   <List className="h-3.5 w-3.5" />Lista
                 </button>
               </div>
+
+              {/* Por status é o dia de trabalho; por sprint é o ciclo de entrega.
+                  Só faz sentido na lista de um projeto: em "Todos", cada tarefa
+                  tem o cronograma dela. */}
+              {visao === 'lista' && !soChecklist && escopo === 'projeto' && (
+                <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
+                  <button onClick={() => setAgrupar('status')} className={tabCls(agrupar === 'status')}>Status</button>
+                  <button onClick={() => setAgrupar('sprint')} className={tabCls(agrupar === 'sprint')}>Sprint</button>
+                </div>
+              )}
+
+              {!soChecklist && <BotaoTags project={project} pending={pending} send={send} />}
             </>
           )}
 
@@ -498,6 +537,7 @@ function ProjectPanel({
               comentarios={comentarios}
               tasks={tarefas}
               phasesDe={phasesDe}
+              tagsDe={tagsDe}
               projectId={project.id}
               projectKind={project.kind}
               pessoas={pessoas}
@@ -511,9 +551,11 @@ function ProjectPanel({
               comentarios={comentarios}
               tasks={tarefas}
               phasesDe={phasesDe}
+              tagsDe={tagsDe}
               projectId={project.id}
               projectKind={project.kind}
               pessoas={pessoas}
+              agrupar={agrupar}
               mostrarProjeto={escopo === 'todos'}
               onAbrirProjeto={onAbrirProjeto}
               send={send}
@@ -580,6 +622,7 @@ function ClientLink({ project, pending, send }: { project: ProjectView; pending:
 
   return (
     <div className="inline-flex items-center gap-1">
+      <BotaoVisaoCliente project={project} pending={pending} send={send} />
       <button
         onClick={() => {
           navigator.clipboard?.writeText(project.clientUrl!);
@@ -608,3 +651,266 @@ function ClientLink({ project, pending, send }: { project: ProjectView; pending:
   );
 }
 
+/**
+ * Painel em cima da tela, para o que não cabe num chip: cadastro de tags e o
+ * recorte do que o cliente vê. Fecha no Esc, no clique fora e no X.
+ */
+function Painel({ titulo, descricao, fechar, children }: {
+  titulo: string;
+  descricao: string;
+  fechar: () => void;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') fechar(); };
+    document.addEventListener('keydown', esc);
+    return () => document.removeEventListener('keydown', esc);
+  }, [fechar]);
+
+  return createPortal(
+    <div
+      onClick={fechar}
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/20 px-4 py-16 backdrop-blur-[1px]"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-lg border border-black/[0.08] bg-white shadow-[0_16px_48px_rgba(16,24,40,0.18)]"
+      >
+        <header className="flex items-start gap-3 border-b border-black/[0.06] px-4 py-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-text-primary">{titulo}</h2>
+            <p className="mt-0.5 text-[12px] leading-snug text-text-muted">{descricao}</p>
+          </div>
+          <button
+            onClick={fechar}
+            aria-label="Fechar"
+            className="ml-auto shrink-0 rounded p-1 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+        <div className="px-4 py-4">{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** As tags do projeto: cadastrar, renomear, trocar a cor, apagar. */
+function BotaoTags({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
+  const [aberto, setAberto] = useState(false);
+  const [nome, setNome] = useState('');
+  const [cor, setCor] = useState<string>('azul');
+
+  const criar = () => {
+    const limpo = nome.trim();
+    if (!limpo) return;
+    send(criarTag, { engagement_id: project.id, name: limpo, color: cor });
+    setNome('');
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setAberto(true)}
+        title="Tags deste projeto"
+        className="inline-flex items-center gap-1.5 rounded-md border border-black/[0.1] bg-white px-2.5 py-1.5 text-[12px] font-medium text-text-secondary shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
+      >
+        <Tag className="h-3.5 w-3.5" />
+        Tags
+        {project.tags.length > 0 && (
+          <span className="rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">
+            {project.tags.length}
+          </span>
+        )}
+      </button>
+
+      {aberto && (
+        <Painel
+          titulo="Tags do projeto"
+          descricao="O vocabulário deste cliente. A tarefa escolhe entre estas, e o cliente lê os mesmos nomes no link de acompanhamento."
+          fechar={() => setAberto(false)}
+        >
+          <div className="flex flex-col gap-3">
+            {project.tags.length > 0 && (
+              <ul className="flex flex-col divide-y divide-black/[0.05] rounded-md border border-black/[0.07]">
+                {project.tags.map((t) => (
+                  <li key={t.id} className="flex items-center gap-2 px-2.5 py-2">
+                    <InlineText
+                      value={t.nome}
+                      onSave={(v) => send(atualizarTag, { id: t.id, name: v })}
+                      className="min-w-0 flex-1 text-[13px] text-text-primary"
+                    />
+                    <SeletorCor valor={t.cor} onChange={(v) => send(atualizarTag, { id: t.id, color: v })} />
+                    <button
+                      onClick={() => {
+                        if (confirm(`Apagar a tag "${t.nome}"? Ela sai das tarefas que a usam.`)) {
+                          send(apagarTag, { id: t.id, engagement_id: project.id });
+                        }
+                      }}
+                      disabled={pending}
+                      title="Apagar tag"
+                      aria-label={`Apagar tag ${t.nome}`}
+                      className="rounded p-1 text-text-muted/60 transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="flex items-center gap-2">
+              <input
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') criar(); }}
+                placeholder="Nova tag (ex.: Site, Agente, Conteúdo)"
+                className={inputCls}
+              />
+              <SeletorCor valor={cor} onChange={setCor} />
+              <button
+                onClick={criar}
+                disabled={pending || !nome.trim()}
+                className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-[12px] font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+              >
+                Criar
+              </button>
+            </div>
+
+            {project.tags.length === 0 && (
+              <p className="text-[12px] leading-snug text-text-muted">
+                Sem tags ainda. Elas servem para o cliente entender de que frente é cada tarefa
+                (site, agente, conteúdo) sem precisar perguntar.
+              </p>
+            )}
+          </div>
+        </Painel>
+      )}
+    </>
+  );
+}
+
+/** As seis cores possíveis de uma tag, em bolinhas. */
+function SeletorCor({ valor, onChange }: { valor: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex shrink-0 items-center gap-1">
+      {TAG_COLORS.map((c) => (
+        <button
+          key={c}
+          onClick={() => onChange(c)}
+          title={TAG_COLOR_LABELS[c]}
+          aria-label={TAG_COLOR_LABELS[c]}
+          className={`h-4 w-4 rounded-full transition ${TAG_TOM[c].split(' ')[0]} ${
+            corDaTag(valor) === c ? 'ring-2 ring-text-primary/40' : 'hover:scale-110'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * O recorte do link do cliente: quais colunas ele vê, por onde a lista fica
+ * separada e se o desenho do cronograma entra junto. É por projeto porque cada
+ * cliente pergunta uma coisa diferente.
+ */
+function BotaoVisaoCliente({ project, pending, send }: { project: ProjectView; pending: boolean; send: Send }) {
+  const [aberto, setAberto] = useState(false);
+  const [colunas, setColunas] = useState<ColunaCliente[]>(project.visaoCliente.colunas);
+  const [agrupar, setAgrupar] = useState(project.visaoCliente.agrupar);
+  const [cronograma, setCronograma] = useState(project.visaoCliente.cronograma);
+
+  const alternar = (c: ColunaCliente) =>
+    setColunas((atual) => (atual.includes(c) ? atual.filter((x) => x !== c) : [...atual, c]));
+
+  const salvar = () => {
+    send(salvarVisaoCliente, {
+      engagement_id: project.id,
+      colunas: colunas.join(','),
+      agrupar,
+      cronograma: cronograma ? 'on' : '',
+    });
+    setAberto(false);
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setAberto(true)}
+        title="O que o cliente vê no link"
+        aria-label="O que o cliente vê no link"
+        className="rounded-md border border-black/[0.1] bg-white p-1.5 text-text-muted shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition hover:border-primary/40 hover:text-primary"
+      >
+        <Settings2 className="h-3.5 w-3.5" />
+      </button>
+
+      {aberto && (
+        <Painel
+          titulo="O que o cliente vê"
+          descricao="Vale só para este projeto. A tarefa marcada como interna continua fora do link, aconteça o que acontecer aqui."
+          fechar={() => setAberto(false)}
+        >
+          <div className="flex flex-col gap-4">
+            <div>
+              <p className="mb-2 font-label text-[10px] uppercase tracking-wider text-text-muted">Colunas</p>
+              <div className="flex flex-wrap gap-1.5">
+                {COLUNAS_CLIENTE.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => alternar(c)}
+                    className={`rounded-full border px-2.5 py-1 text-[12px] font-medium transition ${
+                      colunas.includes(c)
+                        ? 'border-primary/40 bg-primary/[0.08] text-primary'
+                        : 'border-black/[0.1] text-text-muted hover:text-text-primary'
+                    }`}
+                  >
+                    {COLUNA_CLIENTE_LABELS[c]}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[11px] text-text-muted">
+                O nome da tarefa aparece sempre; o resto é escolha sua.
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 font-label text-[10px] uppercase tracking-wider text-text-muted">Separar por</p>
+              <div className="flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
+                <button onClick={() => setAgrupar('sprint')} className={tabCls(agrupar === 'sprint')}>Sprint</button>
+                <button onClick={() => setAgrupar('status')} className={tabCls(agrupar === 'status')}>Status</button>
+                <button onClick={() => setAgrupar('nenhum')} className={tabCls(agrupar === 'nenhum')}>Lista única</button>
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 text-[13px] text-text-secondary">
+              <input
+                type="checkbox"
+                checked={cronograma}
+                onChange={(e) => setCronograma(e.target.checked)}
+                className="h-3.5 w-3.5 accent-primary"
+              />
+              Mostrar também o desenho do cronograma, numa aba ao lado da lista
+            </label>
+
+            <div className="flex items-center justify-end gap-2 border-t border-black/[0.06] pt-3">
+              <button
+                onClick={() => setAberto(false)}
+                className="px-2 py-1.5 text-[12px] text-text-muted transition hover:text-text-primary"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvar}
+                disabled={pending}
+                className="rounded-md bg-primary px-3 py-1.5 text-[12px] font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </Painel>
+      )}
+    </>
+  );
+}

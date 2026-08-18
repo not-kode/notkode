@@ -7,8 +7,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar, Check, ChevronDown, Pause, Play, Plus } from 'lucide-react';
-import { PRIORITIES, PRIORITY_LABELS, type Priority } from './status';
-import type { Pessoa } from './types';
+import { PRIORITIES, PRIORITY_LABELS, TAG_TOM, corDaTag, type Priority } from './status';
+import type { Pessoa, TagView } from './types';
 
 export const inputCls =
   'w-full rounded-sm border border-black/[0.08] bg-white px-2.5 py-1.5 text-sm text-text-primary ' +
@@ -601,5 +601,93 @@ export function InlineText({
     >
       {value || <span className="text-text-muted">{placeholder ?? '—'}</span>}
     </button>
+  );
+}
+
+// ── Tags ─────────────────────────────────────────────────────────────────────
+
+/** A tag como o mundo vê: nome curto num chip da cor escolhida no cadastro. */
+export function TagChip({ nome, cor, compacto = false }: { nome: string; cor: string; compacto?: boolean }) {
+  return (
+    <span
+      className={`inline-flex max-w-[8rem] items-center rounded-full font-medium ${TAG_TOM[corDaTag(cor)]} ${
+        compacto ? 'px-1.5 py-0 text-[10px]' : 'px-2 py-0.5 text-[11px]'
+      }`}
+      title={nome}
+    >
+      <span className="truncate">{nome}</span>
+    </span>
+  );
+}
+
+/**
+ * As tags de uma tarefa: mostra as marcadas e abre a lista do projeto para
+ * marcar e desmarcar. Só escolhe entre as tags cadastradas — nome novo se cria
+ * em "Tags do projeto", para o vocabulário não virar cada dia um sinônimo.
+ */
+export function TagsSelect({ value, tags, onChange, compacto = false }: {
+  value: string[];
+  tags: TagView[];
+  onChange: (ids: string[]) => void;
+  compacto?: boolean;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const botaoRef = useRef<HTMLButtonElement>(null);
+  const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 208, 260);
+  useFechaAoRolar(aberto, () => setAberto(false));
+
+  const marcadas = tags.filter((t) => value.includes(t.id));
+  const alternar = (id: string) =>
+    onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        ref={botaoRef}
+        onClick={() => setAberto((v) => !v)}
+        title={tags.length === 0 ? 'Este projeto ainda não tem tags cadastradas' : 'Tags da tarefa'}
+        className="flex max-w-full flex-wrap items-center gap-1 rounded-sm px-1 py-0.5 text-left transition-colors hover:bg-black/[0.04]"
+      >
+        {marcadas.length > 0 ? (
+          marcadas.slice(0, 2).map((t) => <TagChip key={t.id} nome={t.nome} cor={t.cor} compacto={compacto} />)
+        ) : (
+          <span className="inline-flex items-center gap-0.5 text-[11px] text-text-muted/70">
+            <Plus className="h-3 w-3" />
+            tag
+          </span>
+        )}
+        {marcadas.length > 2 && (
+          <span className="text-[10px] tabular-nums text-text-muted">+{marcadas.length - 2}</span>
+        )}
+      </button>
+
+      {aberto && pos && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-50 max-h-64 w-52 overflow-y-auto rounded-md border border-black/[0.08] bg-white py-1 shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
+          style={{ left: pos.left, top: pos.top }}
+        >
+          {tags.length === 0 ? (
+            <p className="px-2.5 py-2 text-[11px] leading-snug text-text-muted">
+              Nenhuma tag neste projeto ainda. Cadastre em “Tags” na barra de cima.
+            </p>
+          ) : (
+            tags.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => alternar(t.id)}
+                className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition-colors hover:bg-black/[0.04]"
+              >
+                <TagChip nome={t.nome} cor={t.cor} />
+                {value.includes(t.id) && <Check className="ml-auto h-3 w-3 shrink-0 text-primary" />}
+              </button>
+            ))
+          )}
+        </div>,
+        document.body,
+      )}
+    </div>
   );
 }

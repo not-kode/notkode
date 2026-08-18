@@ -3,9 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import {
-  PHASE_STATUSES, PRIORITIES, RESPONSAVEL_PADRAO, TASK_STATUSES,
-  type PhaseStatus, type Priority, type TaskStatus,
+  PHASE_STATUSES, PRIORITIES, RESPONSAVEL_PADRAO, TAG_COLORS, TASK_STATUSES,
+  type PhaseStatus, type Priority, type TagColor, type TaskStatus,
 } from './status';
+import { COLUNAS_CLIENTE, type ColunaCliente } from './types';
 
 const str = (fd: FormData, key: string, max = 500): string | null => {
   const v = fd.get(key);
@@ -16,6 +17,16 @@ const str = (fd: FormData, key: string, max = 500): string | null => {
 const date = (fd: FormData, key: string): string | null => {
   const s = str(fd, key, 10);
   return s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
+};
+
+/** Lista de uuids separada por vírgula, como as tags chegam do formulário. */
+const uuids = (fd: FormData, key: string): string[] | null => {
+  if (!fd.has(key)) return null;
+  const bruto = fd.get(key);
+  if (typeof bruto !== 'string') return null;
+  return [...new Set(
+    bruto.split(',').map((s) => s.trim()).filter((s) => /^[0-9a-f-]{36}$/i.test(s)),
+  )].slice(0, 20);
 };
 
 function revalidar(): void {
@@ -165,6 +176,7 @@ export async function createTask(formData: FormData): Promise<void> {
     status: status && TASK_STATUSES.includes(status as TaskStatus) ? status : 'a_fazer',
     priority: priority && PRIORITIES.includes(priority as Priority) ? priority : 'media',
     sort: ((ultima?.[0]?.sort as number | undefined) ?? -1) + 1,
+    tag_ids: uuids(formData, 'tag_ids') ?? [],
   });
 
   revalidar();
@@ -183,6 +195,8 @@ export async function updateTask(formData: FormData): Promise<void> {
   if (formData.has('assignee')) patch.assignee = str(formData, 'assignee', 120);
   if (formData.has('phase_id')) patch.phase_id = str(formData, 'phase_id', 64);
   if (formData.has('client_visible')) patch.client_visible = formData.get('client_visible') === 'on';
+  const tags = uuids(formData, 'tag_ids');
+  if (tags) patch.tag_ids = tags;
 
   const priority = str(formData, 'priority', 16);
   if (priority && PRIORITIES.includes(priority as Priority)) patch.priority = priority;
@@ -299,6 +313,8 @@ export async function bulkTasks(formData: FormData): Promise<void> {
   if (formData.has('assignee')) patch.assignee = str(formData, 'assignee', 120);
   if (formData.has('due_date')) patch.due_date = date(formData, 'due_date');
   if (formData.has('phase_id')) patch.phase_id = str(formData, 'phase_id', 64);
+  const tagsLote = uuids(formData, 'tag_ids');
+  if (tagsLote) patch.tag_ids = tagsLote;
   if (Object.keys(patch).length === 1) return;
 
   // Um update para o lote inteiro: em massa, uma consulta por tarefa estoura o
@@ -466,5 +482,115 @@ export async function apagarNota(formData: FormData): Promise<void> {
   const id = str(formData, 'id', 64);
   if (!id) return;
   await getSupabaseAdmin().from('notes').delete().eq('id', id);
+  revalidar();
+}
+
+// ── Tags do projeto ──────────────────────────────────────────────────────────
+
+/** Cadastra uma tag no projeto. Nome repetido não cria outra: reaproveita. */
+export async function criarTag(formData: FormData): Promise<void> {
+  const engagement_id = str(formData, 'engagement_id', 64);
+  const name = str(formData, 'name', 60);
+  if (!engagement_id || !name) return;
+
+  const cor = str(formData, 'color', 16);
+  const supabase = getSupabaseAdmin();
+
+  // Mesmo nome (sem olhar maiúscula) já existe: não cria a segunda "Site".
+  const { data: igual } = await supabase
+    .from('project_tags')
+    .select('id')
+    .eq('engagement_id', engagement_id)
+    .ilike('name', name)
+    .maybeSingle();
+  if (igual) return;
+
+  const { data: ultima } = await supabase
+    .from('project_tags')
+    .select('sort')
+    .eq('engagement_id', engagement_id)
+    .order('sort', { ascending: false })
+    .limit(1);
+
+  await supabase.from('project_tags').insert({
+    engagement_id,
+    name,
+    color: cor && TAG_COLORS.includes(cor as TagColor) ? cor : 'azul',
+    sort: ((ultima?.[0]?.sort as number | undefined) ?? -1) + 1,
+  });
+
+  revalidar();
+}
+
+export async function atualizarTag(formData: FormData): Promise<void> {
+  const id = str(formData, 'id', 64);
+  if (!id) return;
+
+  const patch: Record<string, unknown> = {};
+  const name = str(formData, 'name', 60);
+  if (name) patch.name = name;
+  const cor = str(formData, 'color', 16);
+  if (cor && TAG_COLORS.includes(cor as TagColor)) patch.color = cor;
+  if (!Object.keys(patch).length) return;
+
+  await getSupabaseAdmin().from('project_tags').update(patch).eq('id', id);
+  revalidar();
+}
+
+/**
+ * Apaga a tag e a tira das tarefas que a usavam. Sem a limpeza, o id ficaria no
+ * array das tarefas e a tag apagada voltaria como chip fantasma.
+ */
+export async function apagarTag(formData: FormData): Promise<void> {
+  const id = str(formData, 'id', 64);
+  const engagement_id = str(formData, 'engagement_id', 64);
+  if (!id) return;
+
+  const supabase = getSupabaseAdmin();
+  if (engagement_id) {
+    const { data: usando } = await supabase
+      .from('project_tasks')
+      .select('id, tag_ids')
+      .eq('engagement_id', engagement_id)
+      .contains('tag_ids', [id]);
+
+    for (const t of (usando ?? []) as { id: string; tag_ids: string[] | null }[]) {
+      await supabase
+        .from('project_tasks')
+        .update({ tag_ids: (t.tag_ids ?? []).filter((x) => x !== id) })
+        .eq('id', t.id);
+    }
+  }
+
+  await supabase.from('project_tags').delete().eq('id', id);
+  revalidar();
+}
+
+// ── O que o cliente vê ───────────────────────────────────────────────────────
+
+/**
+ * Salva o recorte da visão do cliente: quais colunas aparecem no link, como as
+ * tarefas ficam separadas e se o desenho do cronograma entra junto. Cada
+ * contrato tem o seu, porque cada cliente pergunta uma coisa diferente.
+ */
+export async function salvarVisaoCliente(formData: FormData): Promise<void> {
+  const engagement_id = str(formData, 'engagement_id', 64);
+  if (!engagement_id) return;
+
+  const brutas = (str(formData, 'colunas', 300) ?? '').split(',').map((c) => c.trim());
+  const colunas = COLUNAS_CLIENTE.filter((c) => brutas.includes(c)) as ColunaCliente[];
+  const agrupar = str(formData, 'agrupar', 16);
+
+  await getSupabaseAdmin()
+    .from('engagements')
+    .update({
+      client_view: {
+        colunas,
+        agrupar: agrupar === 'sprint' || agrupar === 'status' || agrupar === 'nenhum' ? agrupar : 'sprint',
+        cronograma: formData.get('cronograma') === 'on',
+      },
+    })
+    .eq('id', engagement_id);
+
   revalidar();
 }

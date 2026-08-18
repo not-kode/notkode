@@ -9,8 +9,8 @@ import { Check, MoreHorizontal, Plus } from 'lucide-react';
 import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
 import { donoDaTarefa, porPrazo } from './types';
-import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TaskComProjeto, TaskView } from './types';
-import { ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, TimerChip, hoje } from './ui';
+import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto, TaskView } from './types';
+import { ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, TagChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
 /** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
@@ -22,10 +22,11 @@ const COLUNA_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success',
 };
 
-export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKind, pessoas, mostrarProjeto, onAbrirProjeto, pending, send }: {
+export function KanbanView({ tasks, comentarios, phasesDe, tagsDe, projectId, projectKind, pessoas, mostrarProjeto, onAbrirProjeto, pending, send }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
+  tagsDe: (projetoId: string) => TagView[];
   projectId: string;
   projectKind: ProjectKind;
   pessoas: Pessoa[];
@@ -91,6 +92,7 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
                   key={t.id}
                   task={t}
                   phases={phasesDe(t.projetoId)}
+                  tags={tagsDe(t.projetoId)}
                   pessoas={pessoas}
                   projeto={mostrarProjeto ? t.projetoNome : null}
                   onAbrirProjeto={() => onAbrirProjeto(t.projetoId)}
@@ -135,6 +137,7 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
           comentarios={comentarios.filter((c) => c.taskId === aberta.id)}
           subtarefas={subs(aberta.id)}
           phases={phasesDe(aberta.projetoId)}
+          tags={tagsDe(aberta.projetoId)}
           projectId={aberta.projetoId}
           projectKind={aberta.projetoKind}
           pessoas={pessoas}
@@ -146,9 +149,10 @@ export function KanbanView({ tasks, comentarios, phasesDe, projectId, projectKin
   );
 }
 
-function TaskCard({ task, phases, pessoas, projeto, onAbrirProjeto, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
+function TaskCard({ task, phases, tags, pessoas, projeto, onAbrirProjeto, send, onDragStart, onDragEnd, onDropBefore, arrastando, onAbrir, subtarefas }: {
   task: TaskView;
   phases: PhaseView[];
+  tags: TagView[];
   pessoas: Pessoa[];
   /** Nome do projeto, só quando o quadro mostra vários juntos. */
   projeto: string | null;
@@ -163,6 +167,7 @@ function TaskCard({ task, phases, pessoas, projeto, onAbrirProjeto, send, onDrag
 }) {
   const atrasada = !!task.dueDate && task.dueDate < hoje() && task.status !== 'feito';
   const etapa = phases.find((p) => p.id === task.phaseId);
+  const minhasTags = tags.filter((tg) => task.tagIds.includes(tg.id));
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
   return (
@@ -218,6 +223,12 @@ function TaskCard({ task, phases, pessoas, projeto, onAbrirProjeto, send, onDrag
           <MoreHorizontal className="h-3 w-3" />
         </button>
       </div>
+
+      {minhasTags.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1 pl-[1.375rem]">
+          {minhasTags.map((tg) => <TagChip key={tg.id} nome={tg.nome} cor={tg.cor} compacto />)}
+        </div>
+      )}
 
       {menu && (
         <MenuContexto
@@ -292,8 +303,8 @@ function TaskCard({ task, phases, pessoas, projeto, onAbrirProjeto, send, onDrag
             value={task.phaseId ?? ''}
             onChange={(v) => send(updateTask, { id: task.id, phase_id: v })}
             titulo="Etapa do cronograma"
-            placeholder="etapa"
-            options={[{ value: '', label: 'sem etapa' }, ...phases.map((p) => ({ value: p.id, label: p.name }))]}
+            placeholder="sprint"
+            options={[{ value: '', label: 'sem sprint' }, ...phases.map((p) => ({ value: p.id, label: p.name }))]}
           />
         )}
       </div>

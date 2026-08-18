@@ -1,27 +1,32 @@
 'use client';
 
-// Lista de tarefas em blocos: um por status (a fazer, fazendo, revisão, backlog,
-// feito). O status não é mais uma coluna nem um menu — é a separação da lista,
-// que é como se lê um dia de trabalho. Etapa também saiu daqui: quem quiser
-// mexer nela abre a tarefa.
+// Lista de tarefas em grupos. O agrupamento é escolha sua: por STATUS (a fazer,
+// fazendo, revisão, backlog, feito), que é como se lê um dia de trabalho, ou por
+// SPRINT — as etapas do cronograma do projeto —, que é como se lê um ciclo de
+// entrega. Tarefa solta, sem sprint, cai num grupo próprio no fim.
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronRight, GripVertical, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
-import { bulkTasks, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
+import { bulkTasks, createPhase, createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import {
-  PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS, TASK_STATUSES, type TaskStatus,
+  PHASE_LABELS, PRIORITIES, PRIORITY_LABELS, TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM,
+  type TaskStatus,
 } from './status';
 import { donoDaTarefa, porPrazo } from './types';
-import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TaskComProjeto } from './types';
-import { ChipSelect, DateChip, InlineText, MenuContexto, PessoaSelect, PriorityChip, Sigla, TimerChip, hoje } from './ui';
+import type {
+  Agrupamento, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto,
+} from './types';
+import {
+  ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, Sigla, TagsSelect, TimerChip, fmtCurto, hoje,
+} from './ui';
 import { TaskDrawer } from './task-drawer';
 
-// A lista tem uma ordem só, `porPrazo`: o que vence antes em cima, empate pela
-// prioridade, sem prazo no fim. Arrastar continua servindo para trocar de bloco.
-type Coluna = 'titulo' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'tempo' | 'projeto';
+// A lista tem uma ordem só dentro do grupo, `porPrazo`: o que vence antes em
+// cima, empate pela prioridade, sem prazo no fim.
+type Coluna = 'titulo' | 'tags' | 'quem' | 'inicio' | 'prazo' | 'prioridade' | 'status' | 'tempo' | 'projeto';
 
-/** A ordem dos blocos: o que está em jogo primeiro, feito no fim. */
+/** A ordem dos blocos de status: o que está em jogo primeiro, feito no fim. */
 const BLOCOS: TaskStatus[] = ['a_fazer', 'fazendo', 'revisao', 'backlog', 'feito'];
 
 const BLOCO_TOM: Record<TaskStatus, string> = {
@@ -32,14 +37,40 @@ const BLOCO_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success/12 text-[#15803D]',
 };
 
-export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind, pessoas, mostrarProjeto, onAbrirProjeto, send }: {
+/**
+ * Um grupo da lista. `status` preenchido: arrastar para cá muda o status da
+ * tarefa. `phaseId` preenchido (ou nulo explícito, no grupo "Sem sprint"):
+ * arrastar para cá muda de sprint.
+ */
+type Grupo = {
+  chave: string;
+  titulo: string;
+  /** Segunda linha do cabeçalho: o período da sprint, quando tem. */
+  periodo: string | null;
+  tom: string;
+  dot: string | null;
+  status: TaskStatus | null;
+  phaseId: string | null;
+  /** Grupo de sprint aceita arrastar mesmo com phaseId nulo ("Sem sprint"). */
+  aceitaSprint: boolean;
+  fechaSozinho: boolean;
+  tarefas: TaskComProjeto[];
+};
+
+export function ListView({
+  tasks, comentarios, phasesDe, tagsDe, projectId, projectKind, pessoas, mostrarProjeto,
+  agrupar, onAbrirProjeto, send,
+}: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
   phasesDe: (projetoId: string) => PhaseView[];
+  tagsDe: (projetoId: string) => TagView[];
   projectId: string;
   projectKind: ProjectKind;
   pessoas: Pessoa[];
   mostrarProjeto: boolean;
+  /** Por status (o jeito de todo dia) ou por sprint (o ciclo de entrega). */
+  agrupar: Agrupamento;
   /** Clique no nome da empresa: fecha a visão "Todos" e abre só aquele projeto. */
   onAbrirProjeto: (id: string) => void;
   send: Send;
@@ -47,23 +78,27 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
   const [arrastando, setArrastando] = useState<string | null>(null);
   const [alvo, setAlvo] = useState<string | null>(null);
   const [punho, setPunho] = useState<string | null>(null);
-  const [criandoEm, setCriandoEm] = useState<TaskStatus | null>(null);
-  // Bloco aberto ou fechado, só quando você mandou. Sem dito seu vale o padrão:
-  // bloco vazio nasce fechado (uma faixa fina em vez de "nada aqui" ocupando a
-  // tela) e Done também, que é histórico, não fila.
-  const [dobra, setDobra] = useState<Partial<Record<TaskStatus, boolean>>>({});
+  const [criandoEm, setCriandoEm] = useState<string | null>(null);
+  const [criandoSprint, setCriandoSprint] = useState(false);
+  // Grupo aberto ou fechado, só quando você mandou. Sem dito seu vale o padrão:
+  // grupo vazio nasce fechado (uma faixa fina em vez de "nada aqui" ocupando a
+  // tela), e Done e sprint concluída também, que são histórico, não fila.
+  const [dobra, setDobra] = useState<Record<string, boolean>>({});
   const [abertaId, setAberta] = useState<string | null>(null);
   // Seleção para agir em lote: concluir dez tarefas uma a uma é trabalho à toa.
   const [selecao, setSelecao] = useState<string[]>([]);
   // Botão direito numa linha: onde abrir o menu e sobre qual tarefa.
   const [menu, setMenu] = useState<{ task: TaskComProjeto; x: number; y: number } | null>(null);
-  // Subtarefa nasce à vista, aninhada na mãe: quem lê a lista (ou o cliente no
-  // link de acompanhamento) entende o que é cada tarefa sem abrir uma por uma.
-  // Aqui ficam só as que você mandou recolher.
+  // Subtarefa nasce à vista, aninhada na mãe: quem lê a lista entende o que é
+  // cada tarefa sem abrir uma por uma. Aqui ficam só as que você mandou recolher.
   const [recolhidas, setRecolhidas] = useState<string[]>([]);
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
+
+  // Sprint é o cronograma de UM projeto: na visão "Todos", cada tarefa pertence
+  // a um cronograma diferente e não existe grupo comum. Ali vale sempre status.
+  const porSprint = agrupar === 'sprint' && !mostrarProjeto;
 
   // Esc larga a seleção: é a saída sem risco de esbarrar num botão da barra.
   useEffect(() => {
@@ -77,12 +112,16 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
   // editável dentro da tarefa, na gaveta. Num projeto só, vale o contrário.
   const colunas: { id: Coluna; label: string; cls: string }[] = [
     { id: 'titulo', label: 'Tarefa', cls: 'min-w-[14rem]' },
+    { id: 'tags', label: 'Tags', cls: 'w-40' },
     mostrarProjeto
       ? { id: 'projeto', label: 'Empresa', cls: 'w-44' }
       : { id: 'quem', label: 'Quem', cls: 'w-32' },
     { id: 'inicio', label: 'Início', cls: 'w-28' },
     { id: 'prazo', label: 'Prazo', cls: 'w-28' },
     { id: 'prioridade', label: 'Prioridade', cls: 'w-28' },
+    // Agrupada por sprint, a lista mistura estados no mesmo grupo: aí o status
+    // precisa de coluna. Agrupada por status, o grupo já é a resposta.
+    ...(porSprint ? [{ id: 'status' as Coluna, label: 'Status', cls: 'w-32' }] : []),
     { id: 'tempo', label: 'Tempo', cls: 'w-32' },
   ];
   const colspan = colunas.length + 4;
@@ -109,37 +148,88 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
     setSelecao([]);
   };
 
-  /** As selecionadas na ordem em que aparecem na tela, bloco a bloco. */
+  /** Os grupos da lista, na ordem em que aparecem na tela. */
+  const grupos: Grupo[] = porSprint
+    ? [
+      ...phasesDe(projectId).map((p): Grupo => ({
+        chave: p.id,
+        titulo: p.name,
+        periodo: p.startDate || p.endDate
+          ? `${p.startDate ? fmtCurto(p.startDate) : '—'} a ${p.endDate ? fmtCurto(p.endDate) : '—'}`
+          : PHASE_LABELS[p.status],
+        tom: p.status === 'concluida'
+          ? 'bg-success/12 text-[#15803D]'
+          : p.status === 'em_andamento'
+            ? 'bg-primary/10 text-primary'
+            : 'bg-neutral-100 text-text-secondary',
+        dot: null,
+        status: null,
+        phaseId: p.id,
+        aceitaSprint: true,
+        fechaSozinho: p.status === 'concluida',
+        tarefas: ordenar(raizes.filter((t) => t.phaseId === p.id)),
+      })),
+      {
+        chave: 'sem-sprint',
+        titulo: 'Sem sprint',
+        periodo: null,
+        tom: 'bg-black/[0.03] text-text-muted',
+        dot: null,
+        status: null,
+        phaseId: null,
+        aceitaSprint: true,
+        fechaSozinho: false,
+        tarefas: ordenar(raizes.filter((t) => !t.phaseId)),
+      },
+    ]
+    : BLOCOS.map((s): Grupo => ({
+      chave: s,
+      titulo: TASK_LABELS[s],
+      periodo: null,
+      tom: BLOCO_TOM[s],
+      dot: TASK_DOT[s],
+      status: s,
+      phaseId: null,
+      aceitaSprint: false,
+      fechaSozinho: s === 'feito',
+      tarefas: ordenar(raizes.filter((t) => t.status === s)),
+    }));
+
+  /** As selecionadas na ordem em que aparecem na tela, grupo a grupo. */
   const selecaoEmOrdem = () =>
-    BLOCOS.flatMap((s) => ordenar(raizes.filter((t) => t.status === s)))
-      .map((t) => t.id)
-      .filter((id) => selecao.includes(id));
+    grupos.flatMap((g) => g.tarefas).map((t) => t.id).filter((id) => selecao.includes(id));
 
   /**
-   * Soltou: as tarefas vão para o status do bloco de destino, na posição em que
-   * foram soltas (`before` vazio = fim do bloco). Arrastar uma linha que está
-   * marcada leva o lote inteiro junto — foi para isso que ele foi selecionado.
-   * A posição dentro do bloco fica guardada e serve de desempate, mas quem manda
-   * na ordem da lista é o prazo.
+   * Soltou num grupo. Agrupada por status, as tarefas vão para o status do grupo
+   * de destino, na posição em que foram soltas (`before` vazio = fim do grupo).
+   * Agrupada por sprint, o que muda é a sprint — o status fica como estava, que é
+   * o certo: mover trabalho de ciclo não é dizer que ele andou.
+   *
+   * Arrastar uma linha que está marcada leva o lote inteiro junto: foi para isso
+   * que ele foi selecionado.
    */
-  const soltar = (id: string, status: TaskStatus, before: string) => {
+  const soltar = (id: string, grupo: Grupo, before: string) => {
     setArrastando(null);
     setAlvo(null);
     if (!id || id === before) return;
     const lote = marcada(id) && selecao.length > 1;
     const ids = lote ? selecaoEmOrdem() : [id];
     if (ids.includes(before)) return;
-    send(moveTask, { ids: ids.join(','), status, before });
+
+    if (grupo.aceitaSprint) {
+      send(bulkTasks, { acao: 'editar', ids: ids.join(','), phase_id: grupo.phaseId ?? '' });
+    } else if (grupo.status) {
+      send(moveTask, { ids: ids.join(','), status: grupo.status, before });
+    }
     if (lote) setSelecao([]);
   };
 
-
   /**
    * Uma linha da tabela. A mesma para tarefa e subtarefa: a filha entra
-   * recuada, com o pontinho do próprio status (o bloco é o da mãe) e sem punho
-   * de arrastar — subtarefa se move mudando de mãe, não de bloco.
+   * recuada, com o pontinho do próprio status (o grupo é o da mãe) e sem punho
+   * de arrastar — subtarefa se move mudando de mãe, não de grupo.
    */
-  const linha = (t: TaskComProjeto, filha: boolean) => {
+  const linha = (t: TaskComProjeto, grupo: Grupo, filha: boolean) => {
     const atrasada = !!t.dueDate && t.dueDate < hoje() && t.status !== 'feito';
     const filhas = filha ? [] : subs(t.id);
     const aberto = filhas.length > 0 && !recolhidas.includes(t.id);
@@ -163,7 +253,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
           if (filha) return;
           e.preventDefault();
           e.stopPropagation();
-          soltar(e.dataTransfer.getData('text/plain'), t.status, t.id);
+          soltar(e.dataTransfer.getData('text/plain'), grupo, t.id);
         }}
         onContextMenu={(e) => {
           e.preventDefault();
@@ -179,7 +269,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
         <td
           onMouseDown={() => { if (!filha) setPunho(t.id); }}
           onMouseUp={() => setPunho(null)}
-          title={filha ? undefined : 'Arraste para reordenar ou mudar de bloco'}
+          title={filha ? undefined : 'Arraste para reordenar ou mudar de grupo'}
           className={`py-2 pl-2 pr-0 text-text-muted/40 transition-colors ${
             filha ? '' : 'cursor-grab hover:text-text-muted active:cursor-grabbing'
           }`}
@@ -253,6 +343,15 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
           </div>
         </td>
 
+        <td className="px-3 py-2">
+          <TagsSelect
+            value={t.tagIds}
+            tags={tagsDe(t.projetoId)}
+            onChange={(ids) => send(updateTask, { id: t.id, tag_ids: ids.join(',') })}
+            compacto={filha}
+          />
+        </td>
+
         {mostrarProjeto ? (
           <td className="px-3 py-2">
             {/* Clicar na empresa sai de "Todos" e abre só as tarefas dela. */}
@@ -286,6 +385,19 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
         <td className="px-3 py-2">
           <PriorityChip value={t.priority} onChange={(v) => send(updateTask, { id: t.id, priority: v })} />
         </td>
+
+        {porSprint && (
+          <td className="px-3 py-2">
+            <ChipSelect
+              value={t.status}
+              tone={TASK_TOM[t.status]}
+              titulo="Status da tarefa"
+              onChange={(v) => send(updateTask, { id: t.id, status: v })}
+              options={TASK_STATUSES.map((s) => ({ value: s, label: TASK_LABELS[s], dot: TASK_DOT[s] }))}
+            />
+          </td>
+        )}
+
         <td className="px-3 py-2">
           <TimerChip
             segundos={t.tempoSegundos}
@@ -312,64 +424,71 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
   };
 
   /** A tarefa e, logo abaixo, as subtarefas dela quando não estão recolhidas. */
-  const linhas = (t: TaskComProjeto) => {
+  const linhas = (t: TaskComProjeto, grupo: Grupo) => {
     const filhas = recolhidas.includes(t.id) ? [] : ordenar(subs(t.id));
-    return [linha(t, false), ...filhas.map((f) => linha(f, true))];
+    return [linha(t, grupo, false), ...filhas.map((f) => linha(f, grupo, true))];
   };
 
   return (
     <div className="flex flex-col gap-3">
-      {BLOCOS.map((status) => {
-        const doBloco = ordenar(raizes.filter((t) => t.status === status));
-        // Vazio (e Done) fecha sozinho; o que você abriu ou fechou na mão vence.
-        const fechado = dobra[status] ?? (doBloco.length === 0 || status === 'feito');
-        const blocoTodo = doBloco.length > 0 && doBloco.every((t) => marcada(t.id));
+      {grupos.map((grupo) => {
+        const doGrupo = grupo.tarefas;
+        // Vazio (e Done, e sprint concluída) fecha sozinho; o que você abriu ou
+        // fechou na mão vence.
+        const fechado = dobra[grupo.chave] ?? (doGrupo.length === 0 || grupo.fechaSozinho);
+        const grupoTodo = doGrupo.length > 0 && doGrupo.every((t) => marcada(t.id));
+        const prontas = doGrupo.filter((t) => t.status === 'feito').length;
 
         return (
           <section
-            key={status}
-            onDragOver={(e) => { if (arrastando) { e.preventDefault(); setAlvo(status); } }}
-            onDragLeave={() => setAlvo((a) => (a === status ? null : a))}
+            key={grupo.chave}
+            onDragOver={(e) => { if (arrastando) { e.preventDefault(); setAlvo(grupo.chave); } }}
+            onDragLeave={() => setAlvo((a) => (a === grupo.chave ? null : a))}
             onDrop={(e) => {
               e.preventDefault();
-              soltar(e.dataTransfer.getData('text/plain'), status, '');
+              soltar(e.dataTransfer.getData('text/plain'), grupo, '');
             }}
             className={`overflow-hidden rounded-md border bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)] transition-colors ${
-              arrastando && alvo === status ? 'border-primary/50' : 'border-black/[0.07]'
+              arrastando && alvo === grupo.chave ? 'border-primary/50' : 'border-black/[0.07]'
             }`}
           >
             <header className="flex items-center gap-2 border-b border-black/[0.06] bg-neutral-50 px-3 py-2">
               <input
                 type="checkbox"
-                checked={blocoTodo}
-                disabled={doBloco.length === 0}
+                checked={grupoTodo}
+                disabled={doGrupo.length === 0}
                 onChange={() =>
                   setSelecao((s) => {
-                    const ids = doBloco.map((t) => t.id);
-                    return blocoTodo ? s.filter((x) => !ids.includes(x)) : [...new Set([...s, ...ids])];
+                    const ids = doGrupo.map((t) => t.id);
+                    return grupoTodo ? s.filter((x) => !ids.includes(x)) : [...new Set([...s, ...ids])];
                   })
                 }
-                title="Selecionar todas deste bloco"
-                aria-label="Selecionar todas deste bloco"
+                title="Selecionar todas deste grupo"
+                aria-label="Selecionar todas deste grupo"
                 className="h-3.5 w-3.5 accent-primary disabled:opacity-30"
               />
               <button
-                onClick={() => setDobra((d) => ({ ...d, [status]: !fechado }))}
-                aria-label={fechado ? 'Abrir bloco' : 'Fechar bloco'}
+                onClick={() => setDobra((d) => ({ ...d, [grupo.chave]: !fechado }))}
+                aria-label={fechado ? 'Abrir grupo' : 'Fechar grupo'}
                 className="rounded p-0.5 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
               >
                 <ChevronRight className={`h-3.5 w-3.5 transition-transform ${fechado ? '' : 'rotate-90'}`} />
               </button>
 
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${BLOCO_TOM[status]}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${TASK_DOT[status]}`} />
-                {TASK_LABELS[status]}
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${grupo.tom}`}>
+                {grupo.dot && <span className={`h-1.5 w-1.5 rounded-full ${grupo.dot}`} />}
+                {grupo.titulo}
               </span>
-              <span className="text-[11px] tabular-nums text-text-muted">{doBloco.length}</span>
+              {grupo.periodo && (
+                <span className="text-[11px] text-text-muted">{grupo.periodo}</span>
+              )}
+              <span className="text-[11px] tabular-nums text-text-muted">
+                {porSprint && doGrupo.length > 0 ? `${prontas}/${doGrupo.length}` : doGrupo.length}
+              </span>
 
               <div className="ml-auto flex items-center gap-3">
                 <button
-                  onClick={() => { setCriandoEm(status); setDobra((d) => ({ ...d, [status]: false })); }}
+                  onClick={() => { setCriandoEm(grupo.chave); setDobra((d) => ({ ...d, [grupo.chave]: false })); }}
                   className="inline-flex items-center gap-1 text-[12px] text-text-muted transition-colors hover:text-primary"
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -380,7 +499,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
 
             {!fechado && (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[48rem] border-collapse text-sm">
+                <table className="w-full min-w-[52rem] border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-black/[0.05]">
                       <th className="w-6" />
@@ -398,17 +517,27 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
                     </tr>
                   </thead>
                   <tbody>
-                    {doBloco.flatMap((t) => linhas(t))}
+                    {doGrupo.flatMap((t) => linhas(t, grupo))}
 
-                    {criandoEm === status && (
+                    {criandoEm === grupo.chave && (
                       <tr>
                         <td colSpan={colspan} className="px-3 py-2">
-                          <NovaLinha projectId={projectId} projectKind={projectKind} status={status} send={send} onFim={() => setCriandoEm(null)} />
+                          <NovaLinha
+                            projectId={projectId}
+                            projectKind={projectKind}
+                            // A tarefa nasce dentro do grupo em que foi criada:
+                            // no bloco de status, com aquele status; na sprint,
+                            // presa naquela sprint.
+                            status={grupo.status ?? 'a_fazer'}
+                            phaseId={grupo.aceitaSprint ? grupo.phaseId : null}
+                            send={send}
+                            onFim={() => setCriandoEm(null)}
+                          />
                         </td>
                       </tr>
                     )}
 
-                    {doBloco.length === 0 && criandoEm !== status && (
+                    {doGrupo.length === 0 && criandoEm !== grupo.chave && (
                       <tr>
                         <td colSpan={colspan} className="px-3 py-4 text-center text-[12px] text-text-muted">
                           Nada aqui.
@@ -423,11 +552,30 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
         );
       })}
 
+      {/* Criar sprint mora no fim da lista de sprints: é o gesto de "abrir o
+          próximo ciclo", e não faz sentido na lista por status. */}
+      {porSprint && (
+        <div>
+          {criandoSprint ? (
+            <NovaSprint projectId={projectId} send={send} onFim={() => setCriandoSprint(false)} />
+          ) : (
+            <button
+              onClick={() => setCriandoSprint(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-black/[0.12] px-3 py-1.5 text-[12px] text-text-muted transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nova sprint
+            </button>
+          )}
+        </div>
+      )}
+
       {selecao.length > 0 && (
         <BarraSelecao
           quantas={selecao.length}
           pessoas={pessoas}
           etapas={mostrarProjeto ? null : phasesDe(projectId)}
+          tags={mostrarProjeto ? [] : tagsDe(projectId)}
           editar={editarLote}
           apagar={apagarLote}
           limpar={() => setSelecao([])}
@@ -466,6 +614,7 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
           comentarios={comentarios.filter((c) => c.taskId === aberta.id)}
           subtarefas={subs(aberta.id)}
           phases={phasesDe(aberta.projetoId)}
+          tags={tagsDe(aberta.projetoId)}
           projectId={aberta.projetoId}
           projectKind={aberta.projetoKind}
           pessoas={pessoas}
@@ -482,13 +631,14 @@ export function ListView({ tasks, comentarios, phasesDe, projectId, projectKind,
  * está marcado. Depois de uma mudança a seleção continua de pé: mudar o
  * responsável e o prazo do mesmo lote é a sequência normal, não duas tarefas.
  *
- * A etapa só entra quando a lista é de um projeto só: em "Todos", cada tarefa
- * pertence a um cronograma diferente e não existe etapa comum para aplicar.
+ * A sprint e as tags só entram quando a lista é de um projeto só: em "Todos",
+ * cada tarefa pertence a um cronograma e a um vocabulário diferentes.
  */
-function BarraSelecao({ quantas, pessoas, etapas, editar, apagar, limpar }: {
+function BarraSelecao({ quantas, pessoas, etapas, tags, editar, apagar, limpar }: {
   quantas: number;
   pessoas: Pessoa[];
   etapas: PhaseView[] | null;
+  tags: TagView[];
   editar: (campos: Record<string, string>) => void;
   apagar: () => void;
   limpar: () => void;
@@ -515,7 +665,7 @@ function BarraSelecao({ quantas, pessoas, etapas, editar, apagar, limpar }: {
       <ChipSelect
         value=""
         placeholder="Mover para"
-        titulo="Mover as selecionadas para outro bloco"
+        titulo="Mover as selecionadas para outro status"
         onChange={(v) => editar({ status: v })}
         options={TASK_STATUSES.map((s) => ({ value: s, label: TASK_LABELS[s], dot: TASK_DOT[s] }))}
       />
@@ -531,12 +681,24 @@ function BarraSelecao({ quantas, pessoas, etapas, editar, apagar, limpar }: {
       {etapas && etapas.length > 0 && (
         <ChipSelect
           // Nenhuma opção casa com este valor, então o chip mostra o rótulo em
-          // vez de fingir que as selecionadas já estão numa etapa.
+          // vez de fingir que as selecionadas já estão numa sprint.
           value="—"
-          placeholder="Etapa"
-          titulo="Etapa do cronograma"
+          placeholder="Sprint"
+          titulo="Sprint do cronograma"
           onChange={(v) => editar({ phase_id: v })}
-          options={[{ value: '', label: 'sem etapa' }, ...etapas.map((e) => ({ value: e.id, label: e.name }))]}
+          options={[{ value: '', label: 'sem sprint' }, ...etapas.map((e) => ({ value: e.id, label: e.name }))]}
+        />
+      )}
+
+      {tags.length > 0 && (
+        <ChipSelect
+          value="—"
+          placeholder="Tags"
+          // Troca as tags do lote pela escolhida: em massa, somar tag a tag daria
+          // um resultado diferente em cada tarefa, e ninguém confere depois.
+          titulo="Trocar as tags das selecionadas por esta"
+          onChange={(v) => editar({ tag_ids: v })}
+          options={[{ value: '', label: 'sem tag' }, ...tags.map((t) => ({ value: t.id, label: t.nome }))]}
         />
       )}
 
@@ -580,10 +742,11 @@ function BarraSelecao({ quantas, pessoas, etapas, editar, apagar, limpar }: {
   );
 }
 
-function NovaLinha({ projectId, projectKind, status, send, onFim }: {
+function NovaLinha({ projectId, projectKind, status, phaseId, send, onFim }: {
   projectId: string;
   projectKind: ProjectKind;
   status: TaskStatus;
+  phaseId: string | null;
   send: Send;
   onFim: () => void;
 }) {
@@ -591,7 +754,14 @@ function NovaLinha({ projectId, projectKind, status, send, onFim }: {
 
   const criar = (continuar: boolean) => {
     const limpo = titulo.trim();
-    if (limpo) send(createTask, { ...donoDaTarefa(projectId, projectKind), title: limpo, status });
+    if (limpo) {
+      send(createTask, {
+        ...donoDaTarefa(projectId, projectKind),
+        title: limpo,
+        status,
+        ...(phaseId ? { phase_id: phaseId } : {}),
+      });
+    }
     setTitulo('');
     if (!continuar || !limpo) onFim();
   };
@@ -609,5 +779,55 @@ function NovaLinha({ projectId, projectKind, status, send, onFim }: {
       placeholder={`O que precisa ser feito? (entra em ${TASK_LABELS[status].toLowerCase()})`}
       className="w-full text-[13px] text-text-primary outline-none placeholder:text-text-muted"
     />
+  );
+}
+
+/** Abre uma sprint: nome e o período dela, que é o que o cliente lê no link. */
+function NovaSprint({ projectId, send, onFim }: { projectId: string; send: Send; onFim: () => void }) {
+  const [nome, setNome] = useState('');
+  const [inicio, setInicio] = useState('');
+  const [fim, setFim] = useState('');
+
+  const criar = () => {
+    const limpo = nome.trim();
+    if (!limpo) { onFim(); return; }
+    send(createPhase, { engagement_id: projectId, name: limpo, start_date: inicio, end_date: fim });
+    onFim();
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-md border border-black/[0.08] bg-white px-3 py-2 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
+      <input
+        autoFocus
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') criar(); if (e.key === 'Escape') onFim(); }}
+        placeholder="Nome da sprint (ex.: Sprint 1, Agosto, Fase de dados)"
+        className="min-w-[16rem] flex-1 text-[13px] text-text-primary outline-none placeholder:text-text-muted"
+      />
+      <input
+        type="date"
+        value={inicio}
+        onChange={(e) => setInicio(e.target.value)}
+        title="Começa em"
+        className="rounded-sm border border-black/[0.1] px-2 py-1 text-[12px] text-text-secondary outline-none focus:border-primary/40"
+      />
+      <input
+        type="date"
+        value={fim}
+        onChange={(e) => setFim(e.target.value)}
+        title="Termina em"
+        className="rounded-sm border border-black/[0.1] px-2 py-1 text-[12px] text-text-secondary outline-none focus:border-primary/40"
+      />
+      <button
+        onClick={criar}
+        className="rounded-full bg-primary px-3 py-1 text-[12px] font-semibold text-white transition hover:opacity-90"
+      >
+        Criar
+      </button>
+      <button onClick={onFim} className="px-2 py-1 text-[12px] text-text-muted transition hover:text-text-primary">
+        Cancelar
+      </button>
+    </div>
   );
 }
