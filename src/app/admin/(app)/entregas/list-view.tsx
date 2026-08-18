@@ -9,19 +9,20 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronRight, GripVertical, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
 import {
-  apagarTag, atualizarTag, bulkTasks, createPhase, createTask, criarTagNaTarefa, deleteTask,
-  moveTask, toggleTimer, updateTask,
+  apagarTag, atualizarTag, bulkTasks, createPhase, createTask, criarTagNaTarefa, deletePhase,
+  deleteTask, moveTask, toggleTimer, updatePhase, updateTask,
 } from './actions';
 import {
-  PHASE_LABELS, PRIORITIES, PRIORITY_LABELS, TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM,
-  type TaskStatus,
+  PHASE_LABELS, PHASE_STATUSES, PRIORITIES, PRIORITY_LABELS, TASK_DOT, TASK_LABELS, TASK_STATUSES,
+  TASK_TOM, type PhaseStatus, type TaskStatus,
 } from './status';
 import { donoDaTarefa, porPrazo } from './types';
 import type {
   Agrupamento, Coluna, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto,
 } from './types';
 import {
-  ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, Sigla, TagsSelect, TimerChip, fmtCurto, hoje,
+  ChipSelect, DateChip, InlineText, MenuContexto, PessoaSelect, PriorityChip, Sigla, TagsSelect,
+  TimerChip, hoje,
 } from './ui';
 import { TaskDrawer } from './task-drawer';
 
@@ -47,8 +48,8 @@ const BLOCO_TOM: Record<TaskStatus, string> = {
 type Grupo = {
   chave: string;
   titulo: string;
-  /** Segunda linha do cabeçalho: o período da sprint, quando tem. */
-  periodo: string | null;
+  /** A sprint deste grupo, quando ele é uma: dá para renomear e datar no lugar. */
+  sprint: PhaseView | null;
   tom: string;
   dot: string | null;
   status: TaskStatus | null;
@@ -168,9 +169,7 @@ export function ListView({
       ...phasesDe(projectId).map((p): Grupo => ({
         chave: p.id,
         titulo: p.name,
-        periodo: p.startDate || p.endDate
-          ? `${p.startDate ? fmtCurto(p.startDate) : '—'} a ${p.endDate ? fmtCurto(p.endDate) : '—'}`
-          : PHASE_LABELS[p.status],
+        sprint: p,
         tom: p.status === 'concluida'
           ? 'bg-success/12 text-[#15803D]'
           : p.status === 'em_andamento'
@@ -186,7 +185,7 @@ export function ListView({
       {
         chave: 'sem-sprint',
         titulo: 'Sem sprint',
-        periodo: null,
+        sprint: null,
         tom: 'bg-black/[0.03] text-text-muted',
         dot: null,
         status: null,
@@ -199,7 +198,7 @@ export function ListView({
     : BLOCOS.map((s): Grupo => ({
       chave: s,
       titulo: TASK_LABELS[s],
-      periodo: null,
+      sprint: null,
       tom: BLOCO_TOM[s],
       dot: TASK_DOT[s],
       status: s,
@@ -530,12 +529,41 @@ export function ListView({
                 <ChevronRight className={`h-3.5 w-3.5 transition-transform ${fechado ? '' : 'rotate-90'}`} />
               </button>
 
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${grupo.tom}`}>
-                {grupo.dot && <span className={`h-1.5 w-1.5 rounded-full ${grupo.dot}`} />}
-                {grupo.titulo}
-              </span>
-              {grupo.periodo && (
-                <span className="text-[11px] text-text-muted">{grupo.periodo}</span>
+              {grupo.sprint ? (
+                // A sprint se edita onde ela aparece: nome, começo, fim e em que
+                // pé está. Ir até a aba Cronograma para trocar uma data era o
+                // tipo de caminho que faz ninguém manter o cronograma em dia.
+                <>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 ${grupo.tom}`}>
+                    <InlineText
+                      value={grupo.sprint.name}
+                      onSave={(v) => send(updatePhase, { id: grupo.sprint!.id, name: v })}
+                      title="Renomear a sprint"
+                      className="text-[11px] font-semibold uppercase tracking-wide"
+                    />
+                  </span>
+                  <DateChip
+                    value={grupo.sprint.startDate}
+                    onSave={(v) => send(updatePhase, { id: grupo.sprint!.id, start_date: v })}
+                    placeholder="começo"
+                  />
+                  <DateChip
+                    value={grupo.sprint.endDate}
+                    onSave={(v) => send(updatePhase, { id: grupo.sprint!.id, end_date: v })}
+                    placeholder="fim"
+                  />
+                  <ChipSelect
+                    value={grupo.sprint.status}
+                    titulo="Em que pé está a sprint"
+                    onChange={(v) => send(updatePhase, { id: grupo.sprint!.id, status: v })}
+                    options={PHASE_STATUSES.map((st) => ({ value: st, label: PHASE_LABELS[st as PhaseStatus] }))}
+                  />
+                </>
+              ) : (
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${grupo.tom}`}>
+                  {grupo.dot && <span className={`h-1.5 w-1.5 rounded-full ${grupo.dot}`} />}
+                  {grupo.titulo}
+                </span>
               )}
               <span className="text-[11px] tabular-nums text-text-muted">
                 {porSprint && doGrupo.length > 0 ? `${prontas}/${doGrupo.length}` : doGrupo.length}
@@ -549,6 +577,21 @@ export function ListView({
                   <Plus className="h-3.5 w-3.5" />
                   Tarefa
                 </button>
+
+                {grupo.sprint && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`Apagar a sprint "${grupo.sprint!.name}"? As ${doGrupo.length} tarefas dela não somem: voltam para "Sem sprint".`)) {
+                        send(deletePhase, { id: grupo.sprint!.id });
+                      }
+                    }}
+                    title="Apagar a sprint (as tarefas ficam)"
+                    aria-label="Apagar a sprint"
+                    className="rounded p-1 text-text-muted/50 transition-colors hover:bg-danger/10 hover:text-danger"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
             </header>
 
