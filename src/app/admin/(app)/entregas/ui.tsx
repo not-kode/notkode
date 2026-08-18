@@ -8,7 +8,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Calendar, Check, ChevronDown, Pause, Play, Plus, X } from 'lucide-react';
 import {
-  PRIORITIES, PRIORITY_LABELS, TAG_COLORS, TAG_COLOR_LABELS, TAG_TOM, corDaTag,
+  PRIORITIES, PRIORITY_LABELS, TAG_COLORS, TAG_COLOR_LABELS, TAG_DOT, TAG_TOM, corDaTag,
   type Priority, type TagColor,
 } from './status';
 import type { Pessoa, TagView } from './types';
@@ -712,8 +712,8 @@ export function TagsSelect({ value, tags, onChange, onCriar, onCor, onApagar, co
                         onClick={() => setCor(c)}
                         title={TAG_COLOR_LABELS[c]}
                         aria-label={TAG_COLOR_LABELS[c]}
-                        className={`h-3.5 w-3.5 rounded-full ${TAG_TOM[c].split(' ')[0]} ${
-                          cor === c ? 'ring-2 ring-text-primary/40' : ''
+                        className={`h-3.5 w-3.5 rounded-full ${TAG_DOT[c]} ${
+                          cor === c ? 'ring-2 ring-offset-1 ring-text-primary/50' : ''
                         }`}
                       />
                     ))}
@@ -752,7 +752,9 @@ export function TagsSelect({ value, tags, onChange, onCriar, onCor, onApagar, co
                           onClick={() => onCor(t.id, c)}
                           title={`Pintar de ${TAG_COLOR_LABELS[c].toLowerCase()}`}
                           aria-label={`Pintar de ${TAG_COLOR_LABELS[c].toLowerCase()}`}
-                          className={`h-2.5 w-2.5 rounded-full ${TAG_TOM[c].split(' ')[0]}`}
+                          className={`h-2.5 w-2.5 rounded-full ${TAG_DOT[c]} ${
+                            corDaTag(t.cor) === c ? 'ring-1 ring-text-primary/50' : ''
+                          }`}
                         />
                       ))}
                       {onApagar && (

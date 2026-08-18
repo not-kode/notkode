@@ -105,5 +105,15 @@ export const TAG_TOM: Record<TagColor, string> = {
   cinza: 'bg-black/[0.06] text-text-secondary',
 };
 
+/** Bolinha cheia da cor, para o seletor: o tom lavado do chip não se vê num ponto. */
+export const TAG_DOT: Record<TagColor, string> = {
+  azul: 'bg-primary',
+  verde: 'bg-success',
+  ambar: 'bg-warning',
+  vermelho: 'bg-danger',
+  violeta: 'bg-[#7C3AED]',
+  cinza: 'bg-neutral-400',
+};
+
 export const corDaTag = (cor: string): TagColor =>
   (TAG_COLORS as readonly string[]).includes(cor) ? (cor as TagColor) : 'cinza';
