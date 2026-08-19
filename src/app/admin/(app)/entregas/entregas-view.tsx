@@ -917,6 +917,20 @@ function BotaoColunas({ project, pending, send }: { project: ProjectView; pendin
       project.visao.cronogramaNoLink,
     );
 
+  /**
+   * Sobe e desce a coluna na ordem da tabela. O arraste no cabeçalho faz o
+   * mesmo, mas nem todo mundo descobre que dá para arrastar — e no trackpad
+   * arrastar cabeçalho é gesto ingrato.
+   */
+  const mover = (c: Coluna, passo: -1 | 1) => {
+    const de = visiveis.indexOf(c);
+    const para = de + passo;
+    if (de < 0 || para < 0 || para >= visiveis.length) return;
+    const nova = [...visiveis];
+    [nova[de], nova[para]] = [nova[para], nova[de]];
+    salvar(nova, project.visao.cronogramaNoLink);
+  };
+
   return (
     <>
       <button
@@ -931,15 +945,18 @@ function BotaoColunas({ project, pending, send }: { project: ProjectView; pendin
       {aberto && (
         <Painel
           titulo="Colunas"
-          descricao="Vale para esta tela e para o link do cliente: coluna desligada aqui ele também não vê. Tarefa marcada como interna continua fora do link de qualquer jeito."
+          descricao="A ordem daqui é a ordem da tabela (dá para arrastar o cabeçalho também). Coluna desligada some da sua lista e do link do cliente; tarefa marcada como interna continua fora do link de qualquer jeito."
           fechar={() => setAberto(false)}
         >
           <div className="flex flex-col gap-4">
+            {/* Na ordem em que aparecem na tabela: as ligadas primeiro, que dá
+                para subir e descer aqui, e as escondidas embaixo. */}
             <ul className="flex flex-col divide-y divide-black/[0.05] rounded-md border border-black/[0.07]">
-              {COLUNAS.map((c) => {
+              {[...visiveis, ...COLUNAS.filter((c) => !visiveis.includes(c))].map((c) => {
                 const ligada = visiveis.includes(c);
+                const pos = visiveis.indexOf(c);
                 return (
-                  <li key={c} className="flex items-center gap-2 px-3 py-2">
+                  <li key={c} className="flex items-center gap-1 px-3 py-2">
                     <button
                       onClick={() => alternar(c)}
                       disabled={pending}
@@ -952,11 +969,35 @@ function BotaoColunas({ project, pending, send }: { project: ProjectView; pendin
                         {COLUNA_LABELS[c]}
                       </span>
                     </button>
+
                     <span className="shrink-0 text-[11px] text-text-muted">
                       {(COLUNAS_DO_CLIENTE as readonly Coluna[]).includes(c)
                         ? ligada ? 'você e o cliente' : 'escondida'
                         : 'só você'}
                     </span>
+
+                    {ligada && (
+                      <span className="ml-1 flex shrink-0 items-center">
+                        <button
+                          onClick={() => mover(c, -1)}
+                          disabled={pending || pos === 0}
+                          title="Mover para a esquerda na tabela"
+                          aria-label={`Mover ${COLUNA_LABELS[c]} para a esquerda`}
+                          className="rounded p-0.5 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary disabled:opacity-25"
+                        >
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => mover(c, 1)}
+                          disabled={pending || pos === visiveis.length - 1}
+                          title="Mover para a direita na tabela"
+                          aria-label={`Mover ${COLUNA_LABELS[c]} para a direita`}
+                          className="rounded p-0.5 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary disabled:opacity-25"
+                        >
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    )}
                   </li>
                 );
               })}
