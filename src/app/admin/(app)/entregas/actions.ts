@@ -665,8 +665,12 @@ export async function salvarColunas(formData: FormData): Promise<void> {
   const engagement_id = str(formData, 'engagement_id', 64);
   if (!engagement_id) return;
 
-  const brutas = (str(formData, 'colunas', 300) ?? '').split(',').map((c) => c.trim());
-  const colunas = COLUNAS.filter((c) => brutas.includes(c)) as Coluna[];
+  // A ORDEM que veio é a ordem da tabela (arrastar o cabeçalho reescreve esta
+  // lista), então filtra pelo que é válido sem reordenar nada.
+  const colunas = (str(formData, 'colunas', 300) ?? '')
+    .split(',')
+    .map((c) => c.trim())
+    .filter((c, i, todas) => (COLUNAS as readonly string[]).includes(c) && todas.indexOf(c) === i) as Coluna[];
   const agrupar = str(formData, 'agrupar', 16) === 'sprint' ? 'sprint' : 'status';
 
   await getSupabaseAdmin()

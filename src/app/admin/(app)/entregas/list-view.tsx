@@ -64,7 +64,7 @@ type Grupo = {
 
 export function ListView({
   tasks, comentarios, phasesDe, tagsDe, projectId, projectKind, pessoas, mostrarProjeto,
-  agrupar, colunas: visiveis, onAbrirProjeto, send,
+  agrupar, colunas: visiveis, onReordenarColunas, onAbrirProjeto, send,
 }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
@@ -76,8 +76,10 @@ export function ListView({
   mostrarProjeto: boolean;
   /** Por status (o jeito de todo dia) ou por sprint (o ciclo de entrega). */
   agrupar: Agrupamento;
-  /** As colunas ligadas neste projeto; o que está fora daqui não aparece. */
+  /** As colunas ligadas neste projeto, na ordem em que aparecem na tabela. */
   colunas: Coluna[];
+  /** Arrastou um cabeçalho: guarda a ordem nova. Sem isso, a tabela não se move. */
+  onReordenarColunas?: (colunas: Coluna[]) => void;
   /** Clique no nome da empresa: fecha a visão "Todos" e abre só aquele projeto. */
   onAbrirProjeto: (id: string) => void;
   send: Send;
@@ -108,6 +110,9 @@ export function ListView({
   const [ordem, setOrdem] = useState<{ col: Coluna | 'titulo'; desc: boolean } | null>(null);
   /** Última linha marcada: serve de âncora para o Shift+clique pegar o intervalo. */
   const [ancora, setAncora] = useState<string | null>(null);
+  /** Cabeçalho sendo arrastado e sobre qual ele está, para o realce. */
+  const [colArrastada, setColArrastada] = useState<Coluna | null>(null);
+  const [colAlvo, setColAlvo] = useState<Coluna | null>(null);
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
@@ -127,22 +132,56 @@ export function ListView({
   // o responsável (que hoje é sempre a mesma pessoa). O responsável continua
   // editável dentro da tarefa, na gaveta. Num projeto só, vale o contrário.
   const ver = (c: Coluna) => visiveis.includes(c);
-  const colunas: { id: string; label: string; cls: string; ordenavel?: Coluna | 'titulo' }[] = [
+
+  /**
+   * As colunas na ORDEM em que você deixou: a lista salva no projeto é a ordem
+   * da tabela, e arrastar o cabeçalho reescreve essa lista. Tarefa fica sempre
+   * na frente (é o que identifica a linha) e Status entra no fim quando a lista
+   * está separada por sprint.
+   */
+  const LARGURA: Record<Coluna, string> = {
+    tags: 'w-40', quem: 'w-16', inicio: 'w-28', prazo: 'w-28', prioridade: 'w-28', tempo: 'w-32',
+  };
+
+  type ColunaTabela = {
+    id: string;
+    label: string;
+    cls: string;
+    ordenavel?: Coluna | 'titulo';
+    /** Só as que vêm da configuração se arrastam. */
+    movel?: Coluna;
+  };
+
+  const colunas: ColunaTabela[] = [
     { id: 'titulo', label: 'Tarefa', cls: 'min-w-[14rem]', ordenavel: 'titulo' },
-    ...(ver('tags') ? [{ id: 'tags', label: 'Tags', cls: 'w-40' }] : []),
     // A empresa identifica a linha na visão geral e não é opcional ali; num
-    // projeto só, o lugar dessa coluna é do responsável.
-    ...(mostrarProjeto
-      ? [{ id: 'projeto', label: 'Empresa', cls: 'w-44' }]
-      : ver('quem') ? [{ id: 'quem', label: COLUNA_LABELS.quem, cls: 'w-16', ordenavel: 'quem' as const }] : []),
-    ...(ver('inicio') ? [{ id: 'inicio', label: COLUNA_LABELS.inicio, cls: 'w-28', ordenavel: 'inicio' as const }] : []),
-    ...(ver('prazo') ? [{ id: 'prazo', label: COLUNA_LABELS.prazo, cls: 'w-28', ordenavel: 'prazo' as const }] : []),
-    ...(ver('prioridade') ? [{ id: 'prioridade', label: COLUNA_LABELS.prioridade, cls: 'w-28', ordenavel: 'prioridade' as const }] : []),
+    // projeto só, quem aparece é o responsável, na posição que você escolheu.
+    ...(mostrarProjeto ? [{ id: 'projeto', label: 'Empresa', cls: 'w-44' }] : []),
+    ...visiveis
+      .filter((c) => !(mostrarProjeto && c === 'quem'))
+      .map((c): ColunaTabela => ({
+        id: c,
+        label: COLUNA_LABELS[c],
+        cls: LARGURA[c],
+        ordenavel: c,
+        movel: c,
+      })),
     // Agrupada por sprint, a lista mistura estados no mesmo grupo: aí o status
     // precisa de coluna. Agrupada por status, o grupo já é a resposta.
     ...(porSprint ? [{ id: 'status', label: 'Status', cls: 'w-32' }] : []),
-    ...(ver('tempo') ? [{ id: 'tempo', label: COLUNA_LABELS.tempo, cls: 'w-32', ordenavel: 'tempo' as const }] : []),
   ];
+
+  /** Soltou um cabeçalho em cima de outro: a coluna arrastada assume aquele lugar. */
+  const soltarColuna = (de: Coluna, para: Coluna) => {
+    if (de === para || !onReordenarColunas) return;
+    const resto = visiveis.filter((c) => c !== de);
+    const alvo = resto.indexOf(para);
+    if (alvo < 0) return;
+    // Indo para a direita, entra DEPOIS da coluna de destino; para a esquerda, antes.
+    const posicao = visiveis.indexOf(de) < visiveis.indexOf(para) ? alvo + 1 : alvo;
+    onReordenarColunas([...resto.slice(0, posicao), de, ...resto.slice(posicao)]);
+  };
+
   const colspan = colunas.length + 4;
   /** Com alguma tarefa marcada, a lista entra em modo seleção e mostra as caixas. */
   const selecionando = selecao.length > 0;
@@ -647,30 +686,59 @@ export function ListView({
                         return (
                           <th
                             key={c.id}
-                            className={`${c.cls} px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-text-muted`}
+                            // Arrastar o cabeçalho troca a coluna de lugar; a ordem
+                            // fica salva no projeto, não só nesta sessão.
+                            draggable={!!c.movel && !!onReordenarColunas}
+                            onDragStart={(e) => {
+                              if (!c.movel) return;
+                              e.dataTransfer.setData('text/coluna', c.movel);
+                              e.dataTransfer.effectAllowed = 'move';
+                              setColArrastada(c.movel);
+                            }}
+                            onDragEnd={() => { setColArrastada(null); setColAlvo(null); }}
+                            onDragOver={(e) => {
+                              if (colArrastada && c.movel && c.movel !== colArrastada) {
+                                e.preventDefault();
+                                setColAlvo(c.movel);
+                              }
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const de = (e.dataTransfer.getData('text/coluna') || colArrastada) as Coluna | '';
+                              if (de && c.movel) soltarColuna(de as Coluna, c.movel);
+                              setColArrastada(null);
+                              setColAlvo(null);
+                            }}
+                            className={`${c.cls} border-b-2 p-0 text-left text-[10px] font-semibold uppercase tracking-wide text-text-muted transition-colors ${
+                              colAlvo === c.movel && colArrastada ? 'border-b-primary' : 'border-b-transparent'
+                            } ${colArrastada === c.movel ? 'opacity-40' : ''}`}
                           >
                             {c.ordenavel ? (
+                              // O botão ocupa a célula inteira: clicar em qualquer
+                              // canto do cabeçalho ordena, não só em cima da palavra.
                               <button
                                 onClick={() => alternarOrdem(c.ordenavel!)}
                                 title={
                                   ativa && ordem?.desc
-                                    ? 'Voltar à ordem normal (prazo mais perto primeiro)'
+                                    ? 'Voltar à ordem normal (o que vence antes em cima)'
                                     : ativa
-                                      ? `Inverter: ${c.label.toLowerCase()} do maior para o menor`
-                                      : `Ordenar por ${c.label.toLowerCase()}`
+                                      ? `Inverter: ${c.label.toLowerCase()} do fim para o começo`
+                                      : `Ordenar por ${c.label.toLowerCase()}${c.movel ? ' · arraste para mudar a coluna de lugar' : ''}`
                                 }
-                                className={`group/ord inline-flex items-center gap-1 uppercase transition-colors hover:text-text-primary ${
+                                className={`flex w-full items-center gap-1 px-3 py-1.5 text-left uppercase transition-colors hover:bg-black/[0.03] hover:text-text-primary ${
                                   ativa ? 'text-text-primary' : ''
-                                }`}
+                                } ${c.movel ? 'cursor-grab active:cursor-grabbing' : ''}`}
                               >
-                                {c.label}
+                                <span className="truncate">{c.label}</span>
                                 {ativa
                                   ? (ordem?.desc
-                                    ? <ArrowDown className="h-3 w-3" />
-                                    : <ArrowUp className="h-3 w-3" />)
-                                  : <ChevronsUpDown className="h-3 w-3 opacity-0 transition-opacity group-hover/ord:opacity-60" />}
+                                    ? <ArrowDown className="h-3 w-3 shrink-0" />
+                                    : <ArrowUp className="h-3 w-3 shrink-0" />)
+                                  : <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-30" />}
                               </button>
-                            ) : c.label}
+                            ) : (
+                              <span className="block px-3 py-1.5">{c.label}</span>
+                            )}
                           </th>
                         );
                       })}

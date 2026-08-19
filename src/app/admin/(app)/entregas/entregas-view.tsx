@@ -632,6 +632,12 @@ function ProjectPanel({
               pessoas={pessoas}
               agrupar={project.visao.agrupar}
               colunas={project.visao.colunas}
+              onReordenarColunas={(colunas) => send(salvarColunas, {
+                engagement_id: project.id,
+                colunas: colunas.join(','),
+                agrupar: project.visao.agrupar,
+                cronograma: project.visao.cronogramaNoLink ? 'on' : '',
+              })}
               mostrarProjeto={escopo === 'todos'}
               onAbrirProjeto={onAbrirProjeto}
               send={send}
