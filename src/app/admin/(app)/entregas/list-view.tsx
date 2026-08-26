@@ -556,9 +556,16 @@ export function ListView({
     return [linha(t, grupo, false), ...filhas.map((f) => linha(f, grupo, true))];
   };
 
+  // "Sem sprint" vazio é faixa ocupando linha à toa. Ele volta enquanto você
+  // arrasta: é o alvo para tirar uma tarefa da sprint, e sem ele não teria
+  // para onde soltar.
+  const naTela = grupos.filter(
+    (g) => g.chave !== 'sem-sprint' || g.tarefas.length > 0 || !!arrastando,
+  );
+
   return (
     <div className="flex flex-col gap-3">
-      {grupos.map((grupo) => {
+      {naTela.map((grupo) => {
         const doGrupo = grupo.tarefas;
         // Tudo nasce fechado: a lista abre como um índice de sprints, e você
         // abre a que for mexer. O que você abriu ou fechou na mão vence.

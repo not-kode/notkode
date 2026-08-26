@@ -127,7 +127,7 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
       </div>
 
       <div className="flex flex-col gap-3">
-        {grupos.map((g) => {
+        {grupos.filter((g) => g.chave !== 'outras' || g.tarefas.length > 0).map((g) => {
           // Grupo vazio (e o de entregues) nasce fechado: uma faixa fina em vez
           // de um "nada aqui" ocupando a tela.
           const fechado = dobra[g.chave] ?? (g.tarefas.length === 0 || g.chave === 'feito');
