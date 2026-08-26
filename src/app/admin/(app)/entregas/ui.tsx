@@ -69,28 +69,25 @@ export function Sigla({ nome }: { nome: string }) {
   );
 }
 
-/** Círculo com as iniciais de quem toca a tarefa; a cor é estável por nome. */
-export function Avatar({ nome, onClick }: { nome: string | null; onClick?: () => void }) {
+/**
+ * Círculo com as iniciais de quem toca a tarefa; a cor é estável por nome.
+ *
+ * É um span, não um botão: o avatar aparece sempre dentro do botão que abre a
+ * escolha de responsável, e botão dentro de botão é HTML inválido — o React
+ * reclamava disso no console e quebrava a hidratação da página.
+ */
+export function Avatar({ nome }: { nome: string | null }) {
   if (!nome?.trim()) {
     return (
-      <button
-        onClick={onClick}
+      <span
         title="Definir responsável"
-        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-black/20 text-[10px] text-text-muted transition-colors hover:border-primary hover:text-primary"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-black/20 text-[10px] text-text-muted transition-colors"
       >
         +
-      </button>
+      </span>
     );
   }
-  return (
-    <button
-      onClick={onClick}
-      title={nome}
-      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${corDoNome(nome)}`}
-    >
-      {iniciais(nome)}
-    </button>
-  );
+  return <Sigla nome={nome} />;
 }
 
 // ── Menu suspenso ────────────────────────────────────────────────────────────
@@ -163,10 +160,16 @@ const PRIORITY_DOT: Record<Priority, string> = {
   urgente: 'bg-danger',
 };
 
+/**
+ * Só o urgente ganha cor de fundo. "Alta" é a prioridade da maioria das tarefas
+ * aqui, e uma coluna inteira de tarja âmbar não é aviso nenhum: vira ruído em
+ * cima do que realmente pede olho (prazo vencido, sprint parada). O tom da
+ * prioridade fica no pontinho.
+ */
 const PRIORITY_CHIP: Record<Priority, string> = {
   baixa: 'bg-black/[0.04] text-text-muted',
-  media: 'bg-primary/10 text-primary',
-  alta: 'bg-warning/15 text-[#B45309]',
+  media: 'bg-black/[0.04] text-text-secondary',
+  alta: 'bg-black/[0.04] text-text-secondary',
   urgente: 'bg-danger/12 text-danger',
 };
 
@@ -457,25 +460,30 @@ export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] t
 
 /**
  * Data só de ler, com o mesmo desenho do chip editável: calendário, vermelho
- * quando venceu, âmbar quando é hoje ou amanhã.
+ * quando venceu, vermelho lavado quando é hoje ou amanhã.
  *
  * whitespace-nowrap: "12 mai" quebrando em duas linhas empilhava a data e
  * esticava a altura da linha inteira da tabela.
  */
-export function DateTag({ value, atrasada, placeholder = 'prazo', curto = true }: {
+export function DateTag({ value, atrasada, quieta, placeholder = 'prazo', curto = true }: {
   value: string | null;
   atrasada?: boolean;
+  /** Data que não cobra mais nada (tarefa concluída): fica cinza, sem alarme. */
+  quieta?: boolean;
   placeholder?: string;
   curto?: boolean;
 }) {
   // "Próxima" é hoje ou amanhã, não qualquer coisa no passado: sem o piso em
   // zero, um prazo de duas semanas atrás saía em âmbar como se fosse pra já.
   const dias = value ? diffDias(hoje(), value) : null;
-  const proxima = dias !== null && !atrasada && dias >= 0 && dias <= 1;
-  const tom = atrasada
+  const proxima = !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;
+  // Prazo é assunto de vermelho: vencido no tom cheio, vencendo hoje ou amanhã
+  // num vermelho lavado. O âmbar saiu daqui porque disputava a atenção com o
+  // âmbar da sprint pausada e o da revisão, e no fim nada mais gritava.
+  const tom = atrasada && !quieta
     ? 'bg-danger/12 text-danger'
     : proxima
-      ? 'bg-warning/15 text-[#B45309]'
+      ? 'bg-danger/[0.06] text-danger/85'
       : value
         ? 'bg-black/[0.04] text-text-secondary'
         : 'text-text-muted';
@@ -492,22 +500,28 @@ export function DateTag({ value, atrasada, placeholder = 'prazo', curto = true }
 }
 
 /** Prazo como chip com calendário: vermelho quando venceu, âmbar quando é hoje ou amanhã. */
-export function DateChip({ value, onSave, atrasada, placeholder = 'prazo', curto = true }: {
+export function DateChip({ value, onSave, atrasada, quieta, placeholder = 'prazo', curto = true }: {
   value: string | null;
   onSave: (v: string) => void;
   atrasada?: boolean;
+  /** Data que não cobra mais nada (tarefa concluída): fica cinza, sem alarme. */
+  quieta?: boolean;
   placeholder?: string;
   curto?: boolean;
 }) {
   const dias = value ? diffDias(hoje(), value) : null;
-  const proxima = dias !== null && !atrasada && dias >= 0 && dias <= 1;
+  const proxima = !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;
 
   // whitespace-nowrap no chip: "12 mai" quebrando em duas linhas empilhava a data
   // e esticava a altura da linha inteira da tabela.
-  const tom = atrasada
+  //
+  // Vencido no vermelho cheio, vencendo hoje ou amanhã num vermelho lavado: o
+  // âmbar saiu daqui porque disputava a atenção com o da sprint pausada e o da
+  // revisão, e no fim nada mais gritava.
+  const tom = atrasada && !quieta
     ? 'bg-danger/12 text-danger'
     : proxima
-      ? 'bg-warning/15 text-[#B45309]'
+      ? 'bg-danger/[0.06] text-danger/85'
       : value
         ? 'bg-black/[0.04] text-text-secondary'
         : 'text-text-muted hover:bg-black/[0.04]';

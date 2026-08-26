@@ -386,12 +386,12 @@ function Linha({ task, colunas, tags, comStatus, filhas, prontas = 0, aberta = f
 
       {colunas.includes('inicio') && (
         <td className="px-3 py-2">
-          <DateTag value={task.startDate} placeholder="—" />
+          <DateTag value={task.startDate} quieta={task.status === 'feito'} placeholder="—" />
         </td>
       )}
       {colunas.includes('prazo') && (
         <td className="px-3 py-2">
-          <DateTag value={task.dueDate} placeholder="—" />
+          <DateTag value={task.dueDate} quieta={task.status === 'feito'} placeholder="—" />
         </td>
       )}
       {colunas.includes('prioridade') && (

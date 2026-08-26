@@ -15,7 +15,7 @@ import {
   deleteTask, moveTask, toggleTimer, updatePhase, updateTask,
 } from './actions';
 import {
-  PHASE_LABELS, PHASE_STATUSES, PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS,
+  PHASE_DOT, PHASE_LABELS, PHASE_STATUSES, PHASE_TOM, PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS,
   TASK_STATUSES, TASK_TOM, type PhaseStatus, type TaskStatus,
 } from './status';
 import { COLUNA_LABELS, donoDaTarefa, porPrazo } from './types';
@@ -58,7 +58,6 @@ type Grupo = {
   phaseId: string | null;
   /** Grupo de sprint aceita arrastar mesmo com phaseId nulo ("Sem sprint"). */
   aceitaSprint: boolean;
-  fechaSozinho: boolean;
   tarefas: TaskComProjeto[];
 };
 
@@ -98,9 +97,10 @@ export function ListView({
   const [selecao, setSelecao] = useState<string[]>([]);
   // Botão direito numa linha: onde abrir o menu e sobre qual tarefa.
   const [menu, setMenu] = useState<{ task: TaskComProjeto; x: number; y: number } | null>(null);
-  // Subtarefa nasce à vista, aninhada na mãe: quem lê a lista entende o que é
-  // cada tarefa sem abrir uma por uma. Aqui ficam só as que você mandou recolher.
-  const [recolhidas, setRecolhidas] = useState<string[]>([]);
+  // Subtarefa nasce escondida: a lista mostra as tarefas de verdade, e o
+  // contador ao lado do título abre as filhas de quem você for olhar. Aqui
+  // ficam só as mães que você mandou abrir.
+  const [abertas, setAbertas] = useState<string[]>([]);
   /**
    * Ordem da lista. Sem escolha sua, vale a de sempre: vence antes em cima,
    * empate pela prioridade. Clicar no nome da coluna passa a ordenar por ela e
@@ -249,16 +249,13 @@ export function ListView({
         chave: p.id,
         titulo: p.name,
         sprint: p,
-        tom: p.status === 'concluida'
-          ? 'bg-success/12 text-[#15803D]'
-          : p.status === 'em_andamento'
-            ? 'bg-primary/10 text-primary'
-            : 'bg-neutral-100 text-text-secondary',
+        // Mesma cor do chip de status: o nome da sprint já diz de longe em que
+        // pé ela está, sem precisar ler o rótulo ao lado.
+        tom: PHASE_TOM[p.status],
         dot: null,
         status: null,
         phaseId: p.id,
         aceitaSprint: true,
-        fechaSozinho: p.status === 'concluida',
         tarefas: ordenarNaSprint(raizes.filter((t) => t.phaseId === p.id)),
       })),
       {
@@ -270,7 +267,6 @@ export function ListView({
         status: null,
         phaseId: null,
         aceitaSprint: true,
-        fechaSozinho: false,
         tarefas: ordenarNaSprint(raizes.filter((t) => !t.phaseId)),
       },
     ]
@@ -283,7 +279,6 @@ export function ListView({
       status: s,
       phaseId: null,
       aceitaSprint: false,
-      fechaSozinho: s === 'feito',
       tarefas: ordenar(raizes.filter((t) => t.status === s)),
     }));
 
@@ -324,7 +319,7 @@ export function ListView({
   const linha = (t: TaskComProjeto, grupo: Grupo, filha: boolean) => {
     const atrasada = !!t.dueDate && t.dueDate < hoje() && t.status !== 'feito';
     const filhas = filha ? [] : subs(t.id);
-    const aberto = filhas.length > 0 && !recolhidas.includes(t.id);
+    const aberto = filhas.length > 0 && abertas.includes(t.id);
 
     return (
       <tr
@@ -439,7 +434,7 @@ export function ListView({
               // ninguém da lista para ir ver o que tem dentro.
               <button
                 onClick={() =>
-                  setRecolhidas((r) => (r.includes(t.id) ? r.filter((x) => x !== t.id) : [...r, t.id]))
+                  setAbertas((r) => (r.includes(t.id) ? r.filter((x) => x !== t.id) : [...r, t.id]))
                 }
                 title={aberto ? 'Esconder as subtarefas' : 'Mostrar as subtarefas'}
                 aria-expanded={aberto}
@@ -502,12 +497,12 @@ export function ListView({
 
         {ver('inicio') && (
           <td className="px-3 py-2">
-            <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} placeholder="começa" />
+            <DateChip value={t.startDate} onSave={(v) => send(updateTask, { id: t.id, start_date: v })} quieta={t.status === 'feito'} placeholder="começa" />
           </td>
         )}
         {ver('prazo') && (
           <td className="px-3 py-2">
-            <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} placeholder="termina" />
+            <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} quieta={t.status === 'feito'} placeholder="termina" />
           </td>
         )}
         {ver('prioridade') && (
@@ -555,9 +550,9 @@ export function ListView({
     );
   };
 
-  /** A tarefa e, logo abaixo, as subtarefas dela quando não estão recolhidas. */
+  /** A tarefa e, logo abaixo, as subtarefas dela quando a mãe está aberta. */
   const linhas = (t: TaskComProjeto, grupo: Grupo) => {
-    const filhas = recolhidas.includes(t.id) ? [] : ordenar(subs(t.id));
+    const filhas = abertas.includes(t.id) ? ordenar(subs(t.id)) : [];
     return [linha(t, grupo, false), ...filhas.map((f) => linha(f, grupo, true))];
   };
 
@@ -565,9 +560,9 @@ export function ListView({
     <div className="flex flex-col gap-3">
       {grupos.map((grupo) => {
         const doGrupo = grupo.tarefas;
-        // Vazio (e Done, e sprint concluída) fecha sozinho; o que você abriu ou
-        // fechou na mão vence.
-        const fechado = dobra[grupo.chave] ?? (doGrupo.length === 0 || grupo.fechaSozinho);
+        // Tudo nasce fechado: a lista abre como um índice de sprints, e você
+        // abre a que for mexer. O que você abriu ou fechou na mão vence.
+        const fechado = dobra[grupo.chave] ?? true;
         const grupoTodo = doGrupo.length > 0 && doGrupo.every((t) => marcada(t.id));
         const prontas = doGrupo.filter((t) => t.status === 'feito').length;
 
@@ -620,22 +615,6 @@ export function ListView({
                       className="text-[11px] font-semibold uppercase tracking-wide"
                     />
                   </span>
-                  <DateChip
-                    value={grupo.sprint.startDate}
-                    onSave={(v) => send(updatePhase, { id: grupo.sprint!.id, start_date: v })}
-                    placeholder="começo"
-                  />
-                  <DateChip
-                    value={grupo.sprint.endDate}
-                    onSave={(v) => send(updatePhase, { id: grupo.sprint!.id, end_date: v })}
-                    placeholder="fim"
-                  />
-                  <ChipSelect
-                    value={grupo.sprint.status}
-                    titulo="Em que pé está a sprint"
-                    onChange={(v) => send(updatePhase, { id: grupo.sprint!.id, status: v })}
-                    options={PHASE_STATUSES.map((st) => ({ value: st, label: PHASE_LABELS[st as PhaseStatus] }))}
-                  />
                 </>
               ) : (
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${grupo.tom}`}>
@@ -647,14 +626,35 @@ export function ListView({
                 {porSprint && doGrupo.length > 0 ? `${prontas}/${doGrupo.length}` : doGrupo.length}
               </span>
 
-              <div className="ml-auto flex items-center gap-3">
-                <button
-                  onClick={() => { setCriandoEm(grupo.chave); setDobra((d) => ({ ...d, [grupo.chave]: false })); }}
-                  className="inline-flex items-center gap-1 text-[12px] text-text-muted transition-colors hover:text-primary"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Tarefa
-                </button>
+              {/* À direita, na mesma ordem em toda sprint: começo, fim e em que
+                  pé ela está. O lado esquerdo fica só com o nome e o contador. */}
+              <div className="ml-auto flex items-center gap-2">
+                {grupo.sprint && (
+                  <>
+                    <DateChip
+                      value={grupo.sprint.startDate}
+                      onSave={(v) => send(updatePhase, { id: grupo.sprint!.id, start_date: v })}
+                      placeholder="começo"
+                    />
+                    <DateChip
+                      value={grupo.sprint.endDate}
+                      onSave={(v) => send(updatePhase, { id: grupo.sprint!.id, end_date: v })}
+                      placeholder="fim"
+                    />
+                    <ChipSelect
+                      value={grupo.sprint.status}
+                      titulo="Em que pé está a sprint"
+                      onChange={(v) => send(updatePhase, { id: grupo.sprint!.id, status: v })}
+                      tone={PHASE_TOM[grupo.sprint.status]}
+                      options={PHASE_STATUSES.map((st) => ({
+                        value: st, label: PHASE_LABELS[st as PhaseStatus], dot: PHASE_DOT[st as PhaseStatus],
+                      }))}
+                    />
+                    {/* Filete antes da lixeira: sem ele, apagar a sprint fica
+                        colado no chip de status e um clique torto apaga. */}
+                    <span aria-hidden className="mx-1 h-4 w-px bg-black/[0.12]" />
+                  </>
+                )}
 
                 {grupo.sprint && (
                   <button
@@ -766,10 +766,19 @@ export function ListView({
                       </tr>
                     )}
 
-                    {doGrupo.length === 0 && criandoEm !== grupo.chave && (
+                    {/* Adicionar mora no fim da lista, onde a tarefa vai nascer,
+                        e não no cabeçalho: no cabeçalho o botão pedia para abrir
+                        um grupo fechado só para ver onde a linha caiu. */}
+                    {criandoEm !== grupo.chave && (
                       <tr>
-                        <td colSpan={colspan} className="px-3 py-4 text-center text-[12px] text-text-muted">
-                          Nada aqui.
+                        <td colSpan={colspan} className="px-3 py-1.5">
+                          <button
+                            onClick={() => setCriandoEm(grupo.chave)}
+                            className="inline-flex items-center gap-1 text-[12px] text-text-muted transition-colors hover:text-primary"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            Tarefa
+                          </button>
                         </td>
                       </tr>
                     )}

@@ -11,6 +11,25 @@ export const PHASE_LABELS: Record<PhaseStatus, string> = {
   pausada: 'Pausada',
 };
 
+/**
+ * Cor do chip da sprint. Cinza para o que ainda não começou, azul para o que
+ * está andando, verde para o que fechou e âmbar para o que parou no meio: o
+ * pausado precisa saltar aos olhos, senão a sprint parada some na lista.
+ */
+export const PHASE_TOM: Record<PhaseStatus, string> = {
+  pendente: 'bg-black/[0.04] text-text-secondary',
+  em_andamento: 'bg-primary/10 text-primary',
+  concluida: 'bg-success/12 text-[#15803D]',
+  pausada: 'bg-warning/15 text-[#B45309]',
+};
+
+export const PHASE_DOT: Record<PhaseStatus, string> = {
+  pendente: 'bg-neutral-300',
+  em_andamento: 'bg-primary',
+  concluida: 'bg-success',
+  pausada: 'bg-warning',
+};
+
 // "Backlog" é o que existe mas não entrou na fila; "A fazer" é o que está
 // puxado para agora. Sem a distinção, tudo que é ideia futura polui a fila real.
 export const TASK_STATUSES = ['backlog', 'a_fazer', 'fazendo', 'revisao', 'feito'] as const;

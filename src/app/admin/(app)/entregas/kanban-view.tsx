@@ -282,6 +282,7 @@ function TaskCard({ task, phases, tags, pessoas, projeto, onAbrirProjeto, send, 
           value={task.dueDate}
           onSave={(v) => send(updateTask, { id: task.id, due_date: v })}
           atrasada={atrasada}
+          quieta={task.status === 'feito'}
         />
         <TimerChip
           segundos={task.tempoSegundos}
