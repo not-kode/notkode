@@ -11,10 +11,12 @@
 
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { TASK_DOT, type TaskStatus } from '@/app/admin/(app)/entregas/status';
+import {
+  PHASE_DOT, PHASE_LABELS, PHASE_TOM, TASK_DOT, type PhaseStatus, type TaskStatus,
+} from '@/app/admin/(app)/entregas/status';
 import { COLUNA_LABELS_CLIENTE } from '@/app/admin/(app)/entregas/types';
 import type { Coluna, PhaseView, TaskView } from '@/app/admin/(app)/entregas/types';
-import { DateTag, PriorityTag, Sigla, TagChip, hoje, somaDias } from '@/app/admin/(app)/entregas/ui';
+import { DateTag, PriorityTag, Sigla, TagChip } from '@/app/admin/(app)/entregas/ui';
 import { Gantt } from '@/app/admin/(app)/entregas/gantt';
 
 /** Status em português de cliente: ninguém de fora fala "backlog" nem "review". */
@@ -37,41 +39,7 @@ const STATUS_TOM: Record<TaskStatus, string> = {
 /** A ordem dos blocos, igual à da casa: o que está em jogo primeiro. */
 const BLOCOS: TaskStatus[] = ['a_fazer', 'fazendo', 'revisao', 'backlog', 'feito'];
 
-const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-const fmtCurto = (d: string | null): string | null => {
-  if (!d) return null;
-  const [, m, dia] = d.split('-');
-  return `${Number(dia)} ${MESES[Number(m) - 1]}`;
-};
-
 export type TagCliente = { id: string; nome: string; cor: string };
-
-const PERIODOS = [
-  { id: 'tudo', label: 'Tudo' },
-  { id: 'hoje', label: 'Hoje' },
-  { id: 'semana', label: 'Semana' },
-  { id: 'mes', label: 'Mês' },
-  { id: 'sem_prazo', label: 'Sem prazo' },
-] as const;
-type Periodo = (typeof PERIODOS)[number]['id'];
-
-/** Recorte por prazo, igual ao da casa (sem "atrasadas", que é cobrança interna). */
-function recortar(tarefas: TaskView[], periodo: Periodo): TaskView[] {
-  const hj = hoje();
-  const fimSemana = somaDias(hj, 7);
-  const mes = hj.slice(0, 7);
-
-  return tarefas.filter((t) => {
-    switch (periodo) {
-      case 'tudo': return true;
-      case 'hoje': return t.dueDate === hj;
-      case 'semana': return !!t.dueDate && t.dueDate >= hj && t.dueDate <= fimSemana;
-      case 'mes': return !!t.dueDate && t.dueDate.slice(0, 7) === mes;
-      case 'sem_prazo': return !t.dueDate;
-      default: return true;
-    }
-  });
-}
 
 const porPrazo = (a: TaskView, b: TaskView) =>
   (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999') || a.sort - b.sort;
@@ -87,7 +55,6 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
   agrupar: 'sprint' | 'status';
   cronograma: boolean;
 }) {
-  const [periodo, setPeriodo] = useState<Periodo>('tudo');
   const [dobra, setDobra] = useState<Record<string, boolean>>({});
   // As partes de uma entrega nascem escondidas aqui: quem abre o link quer
   // primeiro a lista do que foi combinado, e abre o detalhe da entrega que
@@ -107,25 +74,30 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
     return c !== 'tempo';
   });
 
-  const filtradas = recortar(macros, periodo);
+  const filtradas = macros;
   const conta = (s: TaskStatus) => macros.filter((t) => t.status === s).length;
 
   const grupos = agrupar === 'sprint' && phases.length > 0
     ? [
+      // Mesma leitura da lista da casa: a cor do nome da sprint diz em que pé
+      // ela está, e as datas ficam encostadas na direita, na mesma ordem em
+      // todas as sprints.
       ...phases.map((p) => ({
         chave: p.id,
         titulo: p.name,
-        periodo: p.startDate || p.endDate
-          ? `${fmtCurto(p.startDate) ?? '—'} a ${fmtCurto(p.endDate) ?? '—'}`
-          : null,
-        tom: 'bg-neutral-100 text-text-secondary',
+        inicio: p.startDate,
+        fim: p.endDate,
+        estado: p.status as PhaseStatus | null,
+        tom: PHASE_TOM[p.status],
         dot: null as string | null,
         tarefas: ordenar(filtradas.filter((t) => t.phaseId === p.id)),
       })),
       {
         chave: 'outras',
         titulo: 'Outras entregas',
-        periodo: null,
+        inicio: null,
+        fim: null,
+        estado: null as PhaseStatus | null,
         tom: 'bg-black/[0.03] text-text-muted',
         dot: null as string | null,
         tarefas: ordenar(filtradas.filter((t) => !t.phaseId || !phases.some((p) => p.id === t.phaseId))),
@@ -134,7 +106,9 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
     : BLOCOS.map((s) => ({
       chave: s,
       titulo: STATUS_LABELS[s],
-      periodo: null,
+      inicio: null,
+      fim: null,
+      estado: null as PhaseStatus | null,
       tom: STATUS_TOM[s],
       dot: TASK_DOT[s] as string | null,
       tarefas: ordenar(filtradas.filter((t) => t.status === s)),
@@ -150,25 +124,6 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
         <Numero titulo="Em andamento" valor={conta('fazendo')} tom="text-primary" />
         <Numero titulo="Em revisão" valor={conta('revisao')} />
         <Numero titulo="Entregues" valor={conta('feito')} tom="text-success" />
-      </div>
-
-      <div className="mb-3 flex flex-wrap items-center gap-1 rounded-md border border-black/[0.07] bg-white px-2 py-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
-        {PERIODOS.map((p) => {
-          const n = recortar(macros, p.id).length;
-          const ativo = periodo === p.id;
-          return (
-            <button
-              key={p.id}
-              onClick={() => setPeriodo(p.id)}
-              className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors ${
-                ativo ? 'bg-black/[0.06] text-text-primary' : 'text-text-muted hover:text-text-primary'
-              }`}
-            >
-              {p.label}
-              <span className="rounded-full bg-black/[0.06] px-1.5 text-[10px] tabular-nums text-text-muted">{n}</span>
-            </button>
-          );
-        })}
       </div>
 
       <div className="flex flex-col gap-3">
@@ -197,10 +152,22 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
                   {g.dot && <span className={`h-1.5 w-1.5 rounded-full ${g.dot}`} />}
                   {g.titulo}
                 </span>
-                {g.periodo && <span className="text-[11px] text-text-muted">{g.periodo}</span>}
                 <span className="text-[11px] tabular-nums text-text-muted">
                   {agrupar === 'sprint' && g.tarefas.length > 0 ? `${prontas}/${g.tarefas.length}` : g.tarefas.length}
                 </span>
+
+                {(g.inicio || g.fim || g.estado) && (
+                  <div className="ml-auto flex items-center gap-2">
+                    {g.inicio && <DateTag value={g.inicio} quieta placeholder="começo" />}
+                    {g.fim && <DateTag value={g.fim} quieta={g.estado === 'concluida'} placeholder="fim" />}
+                    {g.estado && (
+                      <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${PHASE_TOM[g.estado]}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${PHASE_DOT[g.estado]}`} />
+                        {PHASE_LABELS[g.estado]}
+                      </span>
+                    )}
+                  </div>
+                )}
               </header>
 
               {!fechado && (

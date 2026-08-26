@@ -30,6 +30,22 @@ type TaskRow = {
 };
 type TagRow = { id: string; name: string; color: string; sort: number };
 
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+/** "3 ago" — a mesma data curta dos chips da lista. */
+const fmtCurto = (d: string | null): string | null => {
+  if (!d) return null;
+  const [, m, dia] = d.split('-');
+  return `${Number(dia)} ${MESES[Number(m) - 1]}`;
+};
+
+const diffDias = (a: string, b: string) =>
+  Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
+
+/** A menor das datas, ignorando as vazias. */
+const menor = (datas: (string | null)[]) => datas.filter(Boolean).sort()[0] ?? null;
+const maior = (datas: (string | null)[]) => datas.filter(Boolean).sort().at(-1) ?? null;
+
 export default async function AcompanhamentoPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const supabase = getSupabaseAdmin();
@@ -88,16 +104,59 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
   // sido virado à mão — e é a barra que o cliente olha primeiro.
   const pct = macros.length ? Math.round((feitas / macros.length) * 100) : 0;
 
+  // Prazo do projeto: o que estiver no contrato manda; sem isso, as pontas saem
+  // do próprio cronograma (a primeira sprint a começar, a última entrega a
+  // vencer). Sem nenhuma data, o bloco simplesmente não aparece.
+  const inicio = eng.start_date ?? menor([
+    ...phases.map((p) => p.start_date),
+    ...tasks.map((t) => t.start_date),
+  ]);
+  const fim = eng.end_date ?? maior([
+    ...phases.map((p) => p.end_date),
+    ...tasks.map((t) => t.due_date),
+  ]);
+
+  const hoje = new Date().toISOString().slice(0, 10);
+  const faltam = fim ? diffDias(hoje, fim) : null;
+  /**
+   * Quanto falta, quando faltar. Prazo estourado não vira carimbo aqui: atraso
+   * é conversa nossa com o cliente, não um aviso que ele encontra sozinho
+   * abrindo o link.
+   */
+  const restante = pct === 100
+    ? 'Projeto entregue'
+    : faltam === null || faltam < 0
+      ? null
+      : faltam === 0
+        ? 'Termina hoje'
+        : faltam === 1
+          ? 'Falta 1 dia'
+          : `Faltam ${faltam} dias`;
+
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-5 py-12 sm:py-16">
-      <header className="mb-8">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-text-muted">
-          Notkode · Acompanhamento
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-text-primary">
-          {org?.name ?? 'Seu projeto'}
-        </h1>
-        {eng.title && <p className="mt-1 text-base text-text-secondary">{eng.title}</p>}
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-text-muted">
+            Notkode · Acompanhamento
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-text-primary">
+            {org?.name ?? 'Seu projeto'}
+          </h1>
+          {eng.title && <p className="mt-1 text-base text-text-secondary">{eng.title}</p>}
+        </div>
+
+        {(inicio || fim) && (
+          <div className="sm:text-right">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-text-muted">
+              Prazo do projeto
+            </p>
+            <p className="mt-2 text-base font-medium tabular-nums text-text-primary">
+              {fmtCurto(inicio) ?? '—'} a {fmtCurto(fim) ?? '—'}
+            </p>
+            {restante && <p className="mt-1 text-sm text-text-secondary">{restante}</p>}
+          </div>
+        )}
       </header>
 
       {macros.length > 0 && (
