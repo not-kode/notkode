@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import Link from 'next/link';
+import { PanelLeftClose, PanelLeftOpen, UserRound } from 'lucide-react';
 import { Logo } from '@/components/brand/logo';
 import { AdminNav, Tooltip } from './admin-nav';
 import { logoutAction } from '../actions';
@@ -12,7 +13,14 @@ const PREF_COMPACTO = 'notkode.admin.menu-compacto';
 // (abre por um botão hambúrguer na barra superior). No desktop ela encolhe para
 // uma faixa de ícones: telas largas como o quadro de tarefas precisam da largura
 // inteira, e obrigar a rolar para o lado para ver as colunas é o pior dos mundos.
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({
+  children,
+  usuario,
+}: {
+  children: React.ReactNode;
+  /** Quem está logado. null quando a sessão veio da senha geral. */
+  usuario: { nome: string } | null;
+}) {
   const [open, setOpen] = useState(false);
   const [compacto, setCompacto] = useState(false);
 
@@ -79,19 +87,36 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           {compacto && <Tooltip>Expandir menu</Tooltip>}
         </button>
 
-        <form action={logoutAction} className={`border-t border-black/[0.07] pt-3 md:mt-2 ${compacto ? '' : 'mt-auto md:mt-2'}`}>
-          <button
-            type="submit"
-            title="Sair"
-            className={`group relative flex w-full items-center rounded-md py-2 text-left text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger ${
+        <div className={`border-t border-black/[0.07] pt-3 md:mt-2 ${compacto ? '' : 'mt-auto md:mt-2'}`}>
+          {/* Quem está logado, e por onde se mexe nos acessos. Fica aqui embaixo
+              de propósito: é ajuste de conta, não uma área do CRM. */}
+          <Link
+            href="/admin/usuarios"
+            onClick={() => setOpen(false)}
+            title={usuario ? `${usuario.nome} · acessos` : 'Acessos'}
+            className={`group relative flex items-center rounded-md py-2 text-sm text-text-secondary transition-colors hover:bg-black/[0.04] hover:text-text-primary ${
               compacto ? 'justify-center px-2' : 'gap-2.5 px-3'
             }`}
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-text-muted/30" />
-            {!compacto && 'Sair'}
-            {compacto && <Tooltip>Sair</Tooltip>}
-          </button>
-        </form>
+            <UserRound className="h-4 w-4 shrink-0 text-text-muted group-hover:text-text-secondary" />
+            {!compacto && <span className="truncate">{usuario?.nome ?? 'Acesso geral'}</span>}
+            {compacto && <Tooltip>{usuario?.nome ?? 'Acesso geral'}</Tooltip>}
+          </Link>
+
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              title="Sair"
+              className={`group relative flex w-full items-center rounded-md py-2 text-left text-sm text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger ${
+                compacto ? 'justify-center px-2' : 'gap-2.5 px-3'
+              }`}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-text-muted/30" />
+              {!compacto && 'Sair'}
+              {compacto && <Tooltip>Sair</Tooltip>}
+            </button>
+          </form>
+        </div>
       </aside>
 
       {/* Conteúdo */}

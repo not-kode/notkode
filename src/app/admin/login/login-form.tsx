@@ -3,23 +3,40 @@
 import { useActionState } from 'react';
 import { loginAction } from '../actions';
 
+const CAMPO =
+  'rounded-md border border-border-subtle/30 bg-surface-base px-4 py-2.5 text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30';
+
 export function LoginForm({ next }: { next: string }) {
   const [state, formAction, pending] = useActionState(loginAction, { error: null });
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next} />
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="email" className="font-mono text-xs uppercase tracking-wider text-text-muted">
+          E-mail
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autoFocus
+          autoComplete="username"
+          className={CAMPO}
+        />
+      </div>
+
       <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="font-mono text-xs uppercase tracking-wider text-text-muted">
-          Senha de acesso
+          Senha
         </label>
         <input
           id="password"
           name="password"
           type="password"
-          autoFocus
           autoComplete="current-password"
-          className="rounded-md border border-border-subtle/30 bg-surface-base px-4 py-2.5 text-text-primary outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+          className={CAMPO}
         />
       </div>
 
