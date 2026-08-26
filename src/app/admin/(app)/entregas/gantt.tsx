@@ -73,11 +73,18 @@ const LIMITE = 14;
  * vermelha de atraso — cobrança de prazo é conversa nossa, não sinalização
  * automática numa tela que ele abre sozinho.
  */
-export function Gantt({ phases, tasks, titulo, modoCliente, send }: {
+export function Gantt({ phases, tasks, titulo, modoCliente, resumo, send }: {
   phases: PhaseView[];
   tasks: TaskView[];
   titulo?: string;
   modoCliente?: boolean;
+  /**
+   * Só as sprints na linha do tempo, sem as tarefas de dentro. É como o
+   * cronograma se lê de longe: dá para ver o projeto inteiro no tempo, em vez
+   * de vinte linhas onde cada faixa é uma tarefa de dois dias. As tarefas que
+   * não estão em sprint nenhuma continuam aparecendo, senão sumiriam da tela.
+   */
+  resumo?: boolean;
   /** Com `send`, nome e prazo viram editáveis na própria linha (só no admin). */
   send?: Send;
 }) {
@@ -96,7 +103,13 @@ export function Gantt({ phases, tasks, titulo, modoCliente, send }: {
   const macros = tasks.filter((t) => !t.parentId);
   const daEtapa = (id: string | null) => phases.find((p) => p.id === id)?.name ?? null;
 
-  for (const t of macros) {
+  // Em resumo, a linha da tarefa só aparece quando ela não tem sprint para
+  // resumi-la.
+  const soltas = resumo && phases.length > 0
+    ? macros.filter((t) => !t.phaseId || !phases.some((p) => p.id === t.phaseId))
+    : macros;
+
+  for (const t of soltas) {
     const inicio = t.startDate ?? t.dueDate;
     const fim = t.dueDate ?? t.startDate;
     if (!inicio || !fim) { semData.push({ id: t.id, titulo: t.title }); continue; }
@@ -117,8 +130,14 @@ export function Gantt({ phases, tasks, titulo, modoCliente, send }: {
   // o bloco e ficam com a barra cheia.
   for (const p of phases) {
     const suas = macros.filter((t) => t.phaseId === p.id);
-    const inicios = [p.startDate, ...suas.map((t) => t.startDate ?? t.dueDate)].filter(Boolean) as string[];
-    const fins = [p.endDate, ...suas.map((t) => t.dueDate ?? t.startDate)].filter(Boolean) as string[];
+    const inicioDelas = suas.map((t) => t.startDate ?? t.dueDate).filter(Boolean) as string[];
+    const fimDelas = suas.map((t) => t.dueDate ?? t.startDate).filter(Boolean) as string[];
+    // Quem manda na faixa são as tarefas: é o trabalho que está lá dentro. As
+    // datas da própria sprint entram quando ela ainda não tem tarefa com prazo,
+    // e no admin somam-se às delas, que é onde a data da sprint se edita.
+    const usarSoAsTarefas = resumo && inicioDelas.length > 0 && fimDelas.length > 0;
+    const inicios = (usarSoAsTarefas ? inicioDelas : [p.startDate, ...inicioDelas]).filter(Boolean) as string[];
+    const fins = (usarSoAsTarefas ? fimDelas : [p.endDate, ...fimDelas]).filter(Boolean) as string[];
     if (!inicios.length || !fins.length) continue;
     const inicio = inicios.reduce((a, b) => (a < b ? a : b));
     const fim = fins.reduce((a, b) => (a > b ? a : b));

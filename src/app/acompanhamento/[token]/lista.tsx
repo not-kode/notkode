@@ -240,7 +240,7 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
           falta"; depois o desenho, para quem quer ver o mês inteiro de uma vez. */}
       {cronograma && (
         <div className="mt-8">
-          <Gantt modoCliente titulo="Cronograma" phases={phases} tasks={tasks} />
+          <Gantt modoCliente resumo titulo="Cronograma" phases={phases} tasks={tasks} />
         </div>
       )}
     </>
