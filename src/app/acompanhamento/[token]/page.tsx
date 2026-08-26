@@ -39,8 +39,21 @@ const fmtCurto = (d: string | null): string | null => {
   return `${Number(dia)} ${MESES[Number(m) - 1]}`;
 };
 
-const diffDias = (a: string, b: string) =>
-  Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
+/**
+ * Dias úteis entre duas datas, contando o dia final e pulando sábado e domingo.
+ * Feriado não entra na conta: a lista deles muda por cidade, e errar para menos
+ * seria pior do que arredondar para o lado do trabalho.
+ */
+function diasUteis(de: string, ate: string): number {
+  let dias = 0;
+  const fim = Date.parse(`${ate}T00:00:00Z`);
+  for (let t = Date.parse(`${de}T00:00:00Z`); t <= fim; t += 86_400_000) {
+    const semana = new Date(t).getUTCDay();
+    if (semana !== 0 && semana !== 6) dias += 1;
+  }
+  // O próprio dia de hoje não é "quanto falta": entra na conta e sai de novo.
+  return Math.max(0, dias - 1);
+}
 
 /** A menor das datas, ignorando as vazias. */
 const menor = (datas: (string | null)[]) => datas.filter(Boolean).sort()[0] ?? null;
@@ -104,34 +117,37 @@ export default async function AcompanhamentoPage({ params }: { params: Promise<{
   // sido virado à mão — e é a barra que o cliente olha primeiro.
   const pct = macros.length ? Math.round((feitas / macros.length) * 100) : 0;
 
-  // Prazo do projeto: o que estiver no contrato manda; sem isso, as pontas saem
-  // do próprio cronograma (a primeira sprint a começar, a última entrega a
-  // vencer). Sem nenhuma data, o bloco simplesmente não aparece.
-  const inicio = eng.start_date ?? menor([
+  // Prazo do projeto: quem manda é o cronograma, porque é ele que diz o que
+  // ainda tem para entregar. A data do contrato entra só quando não há
+  // cronograma montado; sem nenhuma das duas, o bloco não aparece.
+  const inicio = menor([
     ...phases.map((p) => p.start_date),
     ...tasks.map((t) => t.start_date),
-  ]);
-  const fim = eng.end_date ?? maior([
+  ]) ?? eng.start_date;
+  const fim = maior([
     ...phases.map((p) => p.end_date),
     ...tasks.map((t) => t.due_date),
-  ]);
+  ]) ?? eng.end_date;
 
   const hoje = new Date().toISOString().slice(0, 10);
-  const faltam = fim ? diffDias(hoje, fim) : null;
+  const faltam = fim ? diasUteis(hoje, fim) : null;
   /**
-   * Quanto falta, quando faltar. Prazo estourado não vira carimbo aqui: atraso
-   * é conversa nossa com o cliente, não um aviso que ele encontra sozinho
-   * abrindo o link.
+   * Quanto falta, em dias úteis: é assim que o prazo é combinado na proposta
+   * ("6 semanas de dias úteis"), e contar sábado e domingo daria um número que
+   * não bate com o que a gente vendeu.
+   *
+   * Prazo estourado não vira carimbo aqui: atraso é conversa nossa com o
+   * cliente, não um aviso que ele encontra sozinho abrindo o link.
    */
   const restante = pct === 100
     ? 'Projeto entregue'
-    : faltam === null || faltam < 0
+    : faltam === null || (fim !== null && fim < hoje)
       ? null
       : faltam === 0
         ? 'Termina hoje'
         : faltam === 1
-          ? 'Falta 1 dia'
-          : `Faltam ${faltam} dias`;
+          ? 'Falta 1 dia útil'
+          : `Faltam ${faltam} dias úteis`;
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-5 py-12 sm:py-16">
