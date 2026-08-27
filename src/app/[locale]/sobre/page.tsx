@@ -34,12 +34,21 @@ export default async function SobrePage({
 
   const FOUNDERS = [
     {
-      name: 'Camila Tonelotto',
+      name: 'Walter Tonelotto N.',
+      role: t('founder3Role'),
+      bio: t('founder3Bio'),
+      linkedin: null,
+      photo: '/images/founders/walter.jpg',
+      initials: 'WT',
+      accent: '#10B981',
+    },
+    {
+      name: 'Camila Gregório',
       role: t('founder1Role'),
       bio: t('founder1Bio'),
       linkedin: 'https://www.linkedin.com/in/gregoriocamila/',
       photo: '/images/founders/camila.jpg',
-      initials: 'CT',
+      initials: 'CG',
       accent: '#3B82F6',
     },
     {
@@ -141,7 +150,7 @@ export default async function SobrePage({
             </h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-2 gap-5 lg:gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
             {FOUNDERS.map((f, i) => (
               <Reveal key={f.name} delay={i * 120}>
                 <article
@@ -161,16 +170,18 @@ export default async function SobrePage({
                     </h3>
                     <p className="font-mono text-[10px] text-text-muted mb-3 leading-snug">{f.role}</p>
                     <p className="text-[13px] text-text-secondary leading-relaxed mb-4 flex-1">{f.bio}</p>
-                    <a
-                      href={f.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-primary hover:gap-2.5 transition-all self-start"
-                    >
-                      <Linkedin className="w-3.5 h-3.5" strokeWidth={2} />
-                      LinkedIn
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </a>
+                    {f.linkedin && (
+                      <a
+                        href={f.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-primary hover:gap-2.5 transition-all self-start"
+                      >
+                        <Linkedin className="w-3.5 h-3.5" strokeWidth={2} />
+                        LinkedIn
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </a>
+                    )}
                   </div>
                 </article>
               </Reveal>

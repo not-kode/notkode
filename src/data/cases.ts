@@ -59,11 +59,6 @@ export const CASES: CaseItem[] = [
       { value: '8 semanas', label: 'time to launch' },
       { value: '+30%', label: 'ganho operacional' },
     ],
-    quote: {
-      text: 'A Notkode foi fundamental para otimizar toda a jornada do cliente e desenvolver o software ideal pra superar nosso desafio.',
-      author: 'Walter Neto',
-      role: 'CEO · AutoAgentes',
-    },
   },
   {
     slug: 'zapinside',
