@@ -148,6 +148,8 @@ export type ProjectView = {
   isInternal: boolean;
   /** Arquivado: sai da barra lateral, mas o histórico continua aqui. */
   archivedAt: string | null;
+  /** Pasta do repositório no computador: é por ela que o MCP reconhece o projeto. */
+  repoPath: string | null;
   phases: PhaseView[]; tasks: TaskView[]; tags: TagView[];
   /** Colunas visíveis e o que vai no link do cliente. */
   visao: VisaoProjeto;

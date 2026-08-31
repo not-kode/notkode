@@ -29,6 +29,19 @@ const uuids = (fd: FormData, key: string): string[] | null => {
   )].slice(0, 20);
 };
 
+/**
+ * O caminho da pasta como o banco guarda: sem barra no fim, e sempre completo —
+ * atalho do shell (`~`) não existe do lado do servidor, que é quem grava. Vazio
+ * é resposta válida: desliga o vínculo.
+ */
+function repoPathDe(fd: FormData): { caminho: string | null } | { erro: string } {
+  const caminho = str(fd, 'repo_path', 300)?.replace(/\/+$/, '') ?? null;
+  if (caminho && !caminho.startsWith('/')) {
+    return { erro: 'A pasta precisa ser o caminho completo, começando com /.' };
+  }
+  return { caminho };
+}
+
 function revalidar(): void {
   revalidatePath('/admin/entregas');
   revalidatePath('/admin');
@@ -54,12 +67,10 @@ export async function createProject(formData: FormData): Promise<{ id: string } 
   if (!interno && !organizationId) return { erro: 'Escolha de qual cliente é, ou marque como interno.' };
 
   // A pasta do repositório é o que faz a tarefa criada do terminal cair aqui:
-  // é o mesmo `repo_path` que o "projeto_daqui" do MCP lê. Opcional, e só o
-  // caminho completo serve — atalho do shell não existe do lado do servidor.
-  const repoPath = str(formData, 'repo_path', 300)?.replace(/\/+$/, '') ?? null;
-  if (repoPath && !repoPath.startsWith('/')) {
-    return { erro: 'A pasta precisa ser o caminho completo, começando com /.' };
-  }
+  // é o mesmo `repo_path` que o "projeto_daqui" do MCP lê. Opcional.
+  const pasta = repoPathDe(formData);
+  if ('erro' in pasta) return pasta;
+  const repoPath = pasta.caminho;
 
   const { data, error } = await getSupabaseAdmin()
     .from('engagements')
@@ -101,6 +112,33 @@ export async function renameProject(formData: FormData): Promise<void> {
     .eq('id', engagement_id);
 
   revalidar();
+}
+
+/**
+ * Liga (ou desliga) a pasta do computador ao projeto. É o mesmo campo que o
+ * "definir_repositorio" do MCP escreve: com ele preenchido, tarefa criada de
+ * dentro do repositório sabe de quem é sem ninguém dizer o nome do cliente.
+ */
+export async function setProjectRepo(formData: FormData): Promise<{ erro: string } | null> {
+  const engagement_id = str(formData, 'engagement_id', 64);
+  if (!engagement_id) return null;
+
+  const pasta = repoPathDe(formData);
+  if ('erro' in pasta) return pasta;
+
+  const { error } = await getSupabaseAdmin()
+    .from('engagements')
+    .update({ repo_path: pasta.caminho, updated_at: new Date().toISOString() })
+    .eq('id', engagement_id);
+
+  // Uma pasta pertence a um projeto ativo só, e o banco garante isso.
+  if (error?.message.includes('engagements_repo_path_ativo_idx')) {
+    return { erro: `A pasta ${pasta.caminho} já está ligada a outro projeto ativo.` };
+  }
+  if (error) return { erro: error.message };
+
+  revalidar();
+  return null;
 }
 
 // ── Etapas ───────────────────────────────────────────────────────────────────

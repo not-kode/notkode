@@ -12,8 +12,8 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-  createPhase, createProject, renameProject, salvarColunas, setProjectArchived, generateClientToken,
-  revokeClientToken,
+  createPhase, createProject, renameProject, salvarColunas, setProjectArchived, setProjectRepo,
+  generateClientToken, revokeClientToken,
 } from './actions';
 import {
   Archive, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
@@ -35,6 +35,13 @@ export type { PhaseView, ProjectView, TaskView } from './types';
 const PREF_VISAO = 'notkode.entregas.visao';
 const PREF_PROJETO = 'notkode.entregas.projeto';
 const PREF_LISTA_PROJETOS = 'notkode.entregas.lista-projetos';
+
+/** Os campos de uma ação de servidor, no formato que ela espera. */
+const formDataDe = (campos: Record<string, string>): FormData => {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(campos)) fd.set(k, v);
+  return fd;
+};
 
 /** Botão só de ícone, para o que se reconhece pela forma (quadro, lista). */
 const iconeCls = (ativo: boolean) =>
@@ -101,8 +108,7 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   const router = useRouter();
 
   const send: Send = (action, campos) => {
-    const fd = new FormData();
-    for (const [k, v] of Object.entries(campos)) fd.set(k, v);
+    const fd = formDataDe(campos);
     // O refresh depois da ação é cinto de segurança: a revalidação do servidor já
     // deveria trazer o dado novo, e sem ele uma falha de cache aparece como
     // "sumiu/não apareceu" na tela.
@@ -167,6 +173,22 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
     if (limpo && limpo !== (projeto.title ?? '')) {
       send(renameProject, { engagement_id: projeto.id, title: limpo });
     }
+  };
+  // A pasta do computador é o que o MCP lê para saber de quem é o repositório.
+  // Pergunta e resposta numa caixa só, como arquivar: é ajuste de exceção, não
+  // merece um formulário fixo na lateral.
+  const ligarPasta = (projeto: ProjectView) => {
+    const atual = projeto.repoPath ?? '';
+    const resposta = prompt(
+      `Pasta do repositório no computador (caminho completo). Vazio desliga o vínculo.`,
+      atual,
+    );
+    if (resposta === null || resposta.trim() === atual) return;
+    start(async () => {
+      const r = await setProjectRepo(formDataDe({ engagement_id: projeto.id, repo_path: resposta.trim() }));
+      if (r) return alert(r.erro);
+      router.refresh();
+    });
   };
   const trocarVisao = (v: 'kanban' | 'lista') => {
     setVisao(v);
@@ -459,6 +481,13 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
           em={{ x: menuProjeto.x, y: menuProjeto.y }}
           fechar={() => setMenuProjeto(null)}
           itens={[
+            // Fechamento não tem pasta: é negócio ganho esperando virar contrato.
+            ...(menuProjeto.projeto.kind === 'contrato'
+              ? [{
+                  label: menuProjeto.projeto.repoPath ? 'Trocar pasta do repo' : 'Ligar pasta do repo',
+                  onClick: () => ligarPasta(menuProjeto.projeto),
+                }]
+              : []),
             {
               label: menuProjeto.projeto.archivedAt ? 'Desarquivar projeto' : 'Arquivar projeto',
               onClick: () => {

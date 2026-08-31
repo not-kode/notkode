@@ -21,6 +21,7 @@ type EngRow = {
   organization_id: string | null;
   is_internal: boolean | null;
   archived_at: string | null;
+  repo_path: string | null;
   client_view: unknown;
   organizations: { id: string; name: string | null } | null;
 };
@@ -51,7 +52,7 @@ export default async function EntregasPage() {
   const [{ data: engData }, { data: phaseData }, { data: taskData }] = await Promise.all([
     supabase
       .from('engagements')
-      .select('id, title, lifecycle, start_date, end_date, client_token, organization_id, is_internal, archived_at, client_view, organizations(id, name)')
+      .select('id, title, lifecycle, start_date, end_date, client_token, organization_id, is_internal, archived_at, repo_path, client_view, organizations(id, name)')
       .order('created_at', { ascending: false }),
     supabase.from('project_phases').select('*').order('sort'),
     supabase.from('project_tasks').select('*').order('sort'),
@@ -95,6 +96,7 @@ export default async function EntregasPage() {
     clientUrl: e.client_token ? `${SITE_URL}/acompanhamento/${e.client_token}` : null,
     isInternal: e.is_internal ?? false,
     archivedAt: e.archived_at,
+    repoPath: e.repo_path,
     phases: phases
       .filter((p) => p.engagement_id === e.id)
       .map((p) => ({
@@ -150,6 +152,7 @@ export default async function EntregasPage() {
         clientUrl: null,
         isInternal: false,
         archivedAt: null,
+        repoPath: null,
         phases: [],
         tags: [],
         visao: VISAO_PADRAO,
