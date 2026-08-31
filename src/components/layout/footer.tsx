@@ -45,9 +45,30 @@ export function Footer() {
         <div className="flex flex-col md:items-end gap-1 font-mono text-[11px] text-text-dim">
           <span>{t('rights')}</span>
           <span>{t('cnpj')} · {t('location')}</span>
-          <Link href="/politica-privacidade" className="hover:text-primary transition-colors mt-1">
-            {t('privacyLink')}
-          </Link>
+          {/* Os perfis oficiais, linkados do site: é assim que o Google confirma
+              que a empresa do LinkedIn e o @notkodeai do Instagram são esta aqui,
+              e não os "notkode" e "no code" de outra gente. */}
+          <div className="mt-1 flex items-center gap-3">
+            <a
+              href="https://www.linkedin.com/company/notkode/"
+              target="_blank"
+              rel="me noopener noreferrer"
+              className="transition-colors hover:text-primary"
+            >
+              LinkedIn
+            </a>
+            <a
+              href="https://www.instagram.com/notkodeai/"
+              target="_blank"
+              rel="me noopener noreferrer"
+              className="transition-colors hover:text-primary"
+            >
+              Instagram
+            </a>
+            <Link href="/politica-privacidade" className="transition-colors hover:text-primary">
+              {t('privacyLink')}
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

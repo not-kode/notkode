@@ -47,7 +47,12 @@ export function OrganizationJsonLd({ description }: { description: string }) {
     // "Notkode" a uma página que o Google já conhece e confia, e por isso ajuda a
     // desfazer a autocorreção para "not code". Hoje só existe o LinkedIn; quando
     // houver Instagram ou outro perfil oficial, é só somar à lista.
-    sameAs: ['https://www.linkedin.com/company/notkode/'],
+    sameAs: [
+      'https://www.linkedin.com/company/notkode/',
+      // O @notkode do Instagram é de outra pessoa; o nosso é @notkodeai. Declarar
+      // aqui é o que evita o Google casar a empresa com o perfil errado.
+      'https://www.instagram.com/notkodeai/',
+    ],
     founder: [
       {
         '@type': 'Person',
