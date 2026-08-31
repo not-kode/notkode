@@ -9,7 +9,7 @@
 // falam português de cliente ("Em andamento", não "In progress") e o desenho do
 // cronograma fecha a página, embaixo da lista.
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 import {
   PHASE_DOT, PHASE_LABELS, PHASE_TOM, TASK_DOT, type PhaseStatus, type TaskStatus,
@@ -114,6 +114,33 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
       tarefas: ordenar(filtradas.filter((t) => t.status === s)),
     }));
 
+  /**
+   * A entrega e, quando aberta, as partes dela — descendo quantos níveis a
+   * entrega tiver, porque uma parte também pode ser dividida em partes.
+   */
+  const linhas = (t: TaskView, nivel = 0): ReactNode[] => {
+    const partes = subs(t.id);
+    // Teto de segurança contra cadeia circular no dado.
+    const aberta = nivel < 6 && abertas.includes(t.id);
+    return [
+      <Linha
+        key={t.id}
+        task={t}
+        colunas={usadas}
+        tags={tags}
+        comStatus={agrupar === 'sprint'}
+        filhas={partes.length}
+        prontas={partes.filter((f) => f.status === 'feito').length}
+        aberta={aberta}
+        nivel={nivel}
+        onAbrir={() =>
+          setAbertas((a) => (a.includes(t.id) ? a.filter((x) => x !== t.id) : [...a, t.id]))
+        }
+      />,
+      ...(aberta ? partes.flatMap((f) => linhas(f, nivel + 1)) : []),
+    ];
+  };
+
   return (
     <>
       {/* Os mesmos cartões de cima da lista da casa, sem o cronômetro e sem
@@ -189,36 +216,7 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
                       </tr>
                     </thead>
                     <tbody>
-                      {g.tarefas.flatMap((t) => {
-                        const partes = subs(t.id);
-                        const aberta = abertas.includes(t.id);
-                        return [
-                          <Linha
-                            key={t.id}
-                            task={t}
-                            colunas={usadas}
-                            tags={tags}
-                            comStatus={agrupar === 'sprint'}
-                            filhas={partes.length}
-                            prontas={partes.filter((f) => f.status === 'feito').length}
-                            aberta={aberta}
-                            onAbrir={() =>
-                              setAbertas((a) => (a.includes(t.id) ? a.filter((x) => x !== t.id) : [...a, t.id]))
-                            }
-                          />,
-                          ...(aberta ? partes.map((f) => (
-                            <Linha
-                              key={f.id}
-                              task={f}
-                              colunas={usadas}
-                              tags={tags}
-                              comStatus={agrupar === 'sprint'}
-                              filhas={0}
-                              filha
-                            />
-                          )) : []),
-                        ];
-                      })}
+                      {g.tarefas.flatMap((t) => linhas(t))}
 
                       {g.tarefas.length === 0 && (
                         <tr>
@@ -268,7 +266,7 @@ function Th({ children, className = '' }: { children: React.ReactNode; className
   );
 }
 
-function Linha({ task, colunas, tags, comStatus, filhas, prontas = 0, aberta = false, onAbrir, filha = false }: {
+function Linha({ task, colunas, tags, comStatus, filhas, prontas = 0, aberta = false, onAbrir, nivel = 0 }: {
   task: TaskView;
   colunas: Coluna[];
   tags: TagCliente[];
@@ -278,8 +276,10 @@ function Linha({ task, colunas, tags, comStatus, filhas, prontas = 0, aberta = f
   prontas?: number;
   aberta?: boolean;
   onAbrir?: () => void;
-  filha?: boolean;
+  /** Profundidade: 0 é a entrega, cada degrau abaixo recua mais um pouco. */
+  nivel?: number;
 }) {
+  const filha = nivel > 0;
   const minhasTags = tags.filter((tg) => task.tagIds.includes(tg.id));
   const pronta = task.status === 'feito';
 
@@ -310,7 +310,7 @@ function Linha({ task, colunas, tags, comStatus, filhas, prontas = 0, aberta = f
       </td>
 
       <td className="px-3 py-2">
-        <div className={`flex min-w-0 items-center gap-2 ${filha ? 'pl-5' : ''}`}>
+        <div className="flex min-w-0 items-center gap-2" style={{ paddingLeft: nivel * 20 }}>
           <span className={`text-[13px] ${
             pronta ? 'text-text-muted line-through' : filha ? 'text-text-secondary' : 'text-text-primary'
           }`}>

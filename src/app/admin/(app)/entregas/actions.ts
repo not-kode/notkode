@@ -321,25 +321,37 @@ export async function updateTask(formData: FormData): Promise<void> {
   await supabase.from('project_tasks').update(patch).eq('id', id);
 
   // Concluir a tarefa-mãe conclui as partes dela: ninguém entrega o todo e deixa
-  // pedaço aberto atrás. Reabrir NÃO reabre as filhas — o que já ficou pronto
-  // continua pronto, e reabrir uma coisa não desfaz o trabalho das outras.
+  // pedaço aberto atrás. Vale para a árvore inteira, não só para o primeiro
+  // nível — subtarefa também tem subtarefa. Reabrir NÃO reabre as filhas: o que
+  // já ficou pronto continua pronto, e reabrir uma coisa não desfaz o trabalho
+  // das outras.
   if (patch.status === 'feito') {
-    const { data: filhas } = await supabase
-      .from('project_tasks')
-      .select('id, timer_started_at')
-      .eq('parent_task_id', id)
-      .neq('status', 'feito');
+    const jaVistas = new Set([id]);
+    let camada = [id];
 
-    for (const f of (filhas ?? []) as { id: string; timer_started_at: string | null }[]) {
-      await supabase
+    // Seis descidas cobrem qualquer cronograma real e cortam cadeia circular.
+    for (let nivel = 0; nivel < 6 && camada.length > 0; nivel++) {
+      const { data: filhas } = await supabase
         .from('project_tasks')
-        .update({
-          status: 'feito',
-          done_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          ...(f.timer_started_at ? await fecharRelogio(f.id) : {}),
-        })
-        .eq('id', f.id);
+        .select('id, timer_started_at')
+        .in('parent_task_id', camada)
+        .neq('status', 'feito');
+
+      camada = [];
+      for (const f of (filhas ?? []) as { id: string; timer_started_at: string | null }[]) {
+        if (jaVistas.has(f.id)) continue;
+        jaVistas.add(f.id);
+        camada.push(f.id);
+        await supabase
+          .from('project_tasks')
+          .update({
+            status: 'feito',
+            done_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            ...(f.timer_started_at ? await fecharRelogio(f.id) : {}),
+          })
+          .eq('id', f.id);
+      }
     }
   }
 

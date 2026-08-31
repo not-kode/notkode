@@ -485,9 +485,24 @@ function recortar(tarefas: TaskComProjeto[], periodo: Periodo): TaskComProjeto[]
   };
 
   // A subtarefa acompanha a mãe: filtrar por prazo não pode esvaziar o contador
-  // de subtarefas de uma tarefa que continua na lista.
-  const raizes = new Set(tarefas.filter((t) => !t.parentId && passa(t)).map((t) => t.id));
-  return tarefas.filter((t) => (t.parentId ? raizes.has(t.parentId) : raizes.has(t.id)));
+  // de subtarefas de uma tarefa que continua na lista. Quem decide é a tarefa lá
+  // do topo da cadeia, em qualquer profundidade — antes só o primeiro nível de
+  // subtarefa sobrevivia aqui, e uma subtarefa de subtarefa sumia da tela mesmo
+  // sem filtro nenhum ligado (era criada no banco e não aparecia em lugar algum).
+  const porId = new Map(tarefas.map((t) => [t.id, t]));
+  const raiz = (t: TaskComProjeto): TaskComProjeto => {
+    let atual = t;
+    // O teto protege de cadeia circular: sem ele um dado torto trava a tela.
+    for (let i = 0; atual.parentId && i < 20; i++) {
+      const mae = porId.get(atual.parentId);
+      // Mãe fora deste escopo (outro projeto, ou apagada): a tarefa responde por
+      // si mesma em vez de desaparecer.
+      if (!mae) break;
+      atual = mae;
+    }
+    return atual;
+  };
+  return tarefas.filter((t) => passa(raiz(t)));
 }
 
 /**

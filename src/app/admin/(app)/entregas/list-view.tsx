@@ -5,7 +5,7 @@
 // SPRINT — as etapas do cronograma do projeto —, que é como se lê um ciclo de
 // entrega. Tarefa solta, sem sprint, cai num grupo próprio no fim.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowDown, ArrowUp, Check, ChevronRight, ChevronsUpDown, GripVertical, MoreHorizontal, Plus, Trash2,
@@ -136,6 +136,9 @@ export function ListView({
   const [colAlvo, setColAlvo] = useState<Coluna | null>(null);
 
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
+  /** Tudo que está pendurado numa tarefa, em qualquer profundidade. */
+  const descendentes = (id: string, visto = new Set<string>()): string[] =>
+    subs(id).flatMap((f) => (visto.has(f.id) ? [] : (visto.add(f.id), [f.id, ...descendentes(f.id, visto)])));
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
 
   // Sprint é o cronograma de UM projeto: na visão "Todos", cada tarefa pertence
@@ -250,10 +253,11 @@ export function ListView({
   // Toda ação em lote encerra a seleção: a barra sumir é o sinal de que a ação
   // foi para o banco, e barra parada na tela vira clique sem querer.
   const editarLote = (campos: Record<string, string>) => {
-    // Responsável vale para a tarefa e para as subtarefas dela: quem toca a mãe
-    // toca as filhas, mesmo as que estiverem recolhidas na hora da seleção.
+    // Responsável vale para a tarefa e para tudo que está pendurado nela: quem
+    // toca a mãe toca as filhas, e as filhas delas, mesmo o que estiver recolhido
+    // na hora da seleção.
     const ids = 'assignee' in campos
-      ? [...new Set(selecao.flatMap((id) => [id, ...subs(id).map((s) => s.id)]))]
+      ? [...new Set(selecao.flatMap((id) => [id, ...descendentes(id)]))]
       : selecao;
     send(bulkTasks, { acao: 'editar', ids: ids.join(','), ...campos });
     setSelecao([]);
@@ -335,11 +339,14 @@ export function ListView({
   /**
    * Uma linha da tabela. A mesma para tarefa e subtarefa: a filha entra
    * recuada, com o pontinho do próprio status (o grupo é o da mãe) e sem punho
-   * de arrastar — subtarefa se move mudando de mãe, não de grupo.
+   * de arrastar — subtarefa se move mudando de mãe, não de grupo. `nivel` é a
+   * profundidade: 0 é a tarefa de verdade, e cada degrau abaixo recua mais um
+   * pouco. Subtarefa também tem subtarefa, e ela precisa aparecer igual.
    */
-  const linha = (t: TaskComProjeto, grupo: Grupo, filha: boolean) => {
+  const linha = (t: TaskComProjeto, grupo: Grupo, nivel: number) => {
+    const filha = nivel > 0;
     const atrasada = !!t.dueDate && t.dueDate < hoje() && t.status !== 'feito';
-    const filhas = filha ? [] : subs(t.id);
+    const filhas = subs(t.id);
     const aberto = filhas.length > 0 && abertas.includes(t.id);
 
     return (
@@ -434,7 +441,7 @@ export function ListView({
         </td>
 
         <td className="px-3 py-2">
-          <div className={`flex min-w-0 items-center gap-2 ${filha ? 'pl-5' : ''}`}>
+          <div className="flex min-w-0 items-center gap-2" style={{ paddingLeft: nivel * 20 }}>
             {filha && (
               <span
                 title={TASK_LABELS[t.status]}
@@ -571,10 +578,15 @@ export function ListView({
     );
   };
 
-  /** A tarefa e, logo abaixo, as subtarefas dela quando a mãe está aberta. */
-  const linhas = (t: TaskComProjeto, grupo: Grupo) => {
-    const filhas = abertas.includes(t.id) ? ordenar(subs(t.id)) : [];
-    return [linha(t, grupo, false), ...filhas.map((f) => linha(f, grupo, true))];
+  /**
+   * A tarefa e, logo abaixo, o que estiver aberto dentro dela — descendo quantos
+   * níveis a tarefa tiver, porque uma subtarefa pode ter as suas.
+   */
+  const linhas = (t: TaskComProjeto, grupo: Grupo, nivel = 0): ReactNode[] => {
+    // Teto de segurança contra cadeia circular no dado: seis níveis é mais fundo
+    // do que qualquer cronograma real precisa.
+    const filhas = nivel < 6 && abertas.includes(t.id) ? ordenar(subs(t.id)) : [];
+    return [linha(t, grupo, nivel), ...filhas.flatMap((f) => linhas(f, grupo, nivel + 1))];
   };
 
   // "Sem sprint" vazio é faixa ocupando linha à toa. Ele volta enquanto você
