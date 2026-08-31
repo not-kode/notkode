@@ -409,21 +409,25 @@ export function ListView({
           {!filha && <GripVertical className="h-3.5 w-3.5" />}
         </td>
 
-        {/* Duas caixas na mesma linha (uma de marcar, outra de concluir) era a
-            maior confusão da tela. Em repouso existe UMA: a de concluir. A de
-            selecionar só aparece quando o modo seleção já está ligado — pelo
-            checkbox do grupo, ou por ⌘/Ctrl+clique numa linha. */}
-        {selecionando && (
-          <td className="py-2 pl-1 pr-0">
-            <input
-              type="checkbox"
-              checked={marcada(t.id)}
-              onChange={() => alternar(t.id)}
-              aria-label={`Selecionar ${t.title}`}
-              className="h-3.5 w-3.5 accent-primary"
-            />
-          </td>
-        )}
+        {/* Duas caixas à mostra na mesma linha (uma de marcar, outra de
+            concluir) era a maior confusão da tela. Em repouso continua existindo
+            UMA: a de concluir. A de selecionar aparece quando o mouse passa na
+            linha — antes ela só nascia com o modo seleção já ligado, e a única
+            porta de entrada era marcar o grupo inteiro em cima ou adivinhar o
+            ⌘/Ctrl+clique. Escolher três tarefas virava concluir três tarefas. */}
+        <td className="py-2 pl-1 pr-0">
+          <input
+            type="checkbox"
+            checked={marcada(t.id)}
+            onChange={() => alternar(t.id)}
+            onClick={(e) => { e.stopPropagation(); setAncora(t.id); }}
+            title="Selecionar (Shift+clique pega até a última marcada)"
+            aria-label={`Selecionar ${t.title}`}
+            className={`h-3.5 w-3.5 accent-primary transition-opacity focus-visible:opacity-100 group-hover:opacity-100 ${
+              selecionando || marcada(t.id) ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        </td>
 
         <td className="py-2 pl-2 pr-0">
           <button
@@ -630,7 +634,7 @@ export function ListView({
                     return grupoTodo ? s.filter((x) => !ids.includes(x)) : [...new Set([...s, ...ids])];
                   })
                 }
-                title="Selecionar todas deste grupo (⌘+clique marca uma a uma)"
+                title="Selecionar todas deste grupo (para escolher algumas, use a caixinha que aparece na linha)"
                 aria-label="Selecionar todas deste grupo"
                 className="h-3.5 w-3.5 accent-primary disabled:opacity-30"
               />
@@ -719,7 +723,7 @@ export function ListView({
                   <thead>
                     <tr className="border-b border-black/[0.05]">
                       <th className="w-6" />
-                      {selecionando && <th className="w-8" />}
+                      <th className="w-8" />
                       <th className="w-9" />
                       {colunas.map((c) => {
                         const ativa = !!c.ordenavel && ordem?.col === c.ordenavel;
