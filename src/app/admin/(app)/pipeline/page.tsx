@@ -4,6 +4,7 @@ import { PipelineBoard, type BoardDeal } from './board';
 import { dealTotal, dealTotalNet, dealMonthly, dealMonthlyNet, dealNota } from './deal-value';
 import { ALIQUOTA_NOTA, liquidoDaParcela, motivoDoDesconto } from '../_shared/liquido';
 import { type OrgOption, type Product } from './orgs';
+import { PageHeader } from '../_shared/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -185,15 +186,7 @@ export default async function PipelinePage() {
   return (
     <div className="flex min-h-[calc(100vh-5rem)] flex-col">
       <header className="mb-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="eyebrow mb-1">
-              <span className="status-dot" />
-              Pipeline de vendas
-            </p>
-            <h1 className="text-2xl font-semibold tracking-tight">Negócios</h1>
-          </div>
-        </div>
+        <PageHeader titulo="Pipeline" className="mb-0" />
 
         <div className="mt-4 flex flex-wrap items-stretch gap-3">
           <div className="min-w-[11rem] rounded-md border border-black/[0.06] bg-white px-4 py-3">

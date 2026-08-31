@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { PeriodFilter } from './period-filter';
 import { VisitsChart, SourceDonut, RankBars, RevenueProjection } from './charts';
 import { motivoDoDesconto } from './_shared/liquido';
+import { PageHeader } from './_shared/page-header';
 
 const brl = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const nf = (n: number) => n.toLocaleString('pt-BR');
@@ -128,13 +129,9 @@ export function DashboardView({ data }: { data: DashboardData }) {
 
   return (
     <div>
-      <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-mono text-xl font-medium tracking-tight text-text-primary">Dashboard</h1>
-          <p className="mt-1 text-sm text-text-muted">Negócio e site num lugar só.</p>
-        </div>
+      <PageHeader titulo="Dashboard" className="mb-6">
         <Suspense fallback={null}><PeriodFilter /></Suspense>
-      </header>
+      </PageHeader>
 
       {/* ════════════════ NEGÓCIO — o que importa primeiro ════════════════ */}
       <GroupLabel>Negócio · {rangeLabel}</GroupLabel>

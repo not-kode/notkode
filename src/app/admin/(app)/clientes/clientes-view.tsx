@@ -13,6 +13,7 @@ import { ModelosView, type ModeloRow } from './modelos-view';
 import { definirModeloDoContrato } from './modelos-actions';
 import { NewBriefing } from '../onboarding/new-briefing';
 import { CopyLink } from '../onboarding/copy-link';
+import { PageHeader } from '../_shared/page-header';
 import {
   AbrirComoCliente, ApagarBriefing, BriefingConteudo, BriefingDatas, CopyButton, StatusBadge,
   buildCopyBlock, progressoBriefing, rascunhoVivo,
@@ -227,15 +228,15 @@ export function ClientesView({ clients, productLabels = {}, templates = [], mode
 
   return (
     <div className="w-full">
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Clientes</h1>
-          <p className="mt-1 text-sm text-text-muted">{clients.length} cliente{clients.length === 1 ? '' : 's'} · dados cadastrais, contratos e contatos.</p>
-        </div>
+      <PageHeader
+        titulo="Clientes"
+        className="mb-4"
+        dados={<>{clients.length} cliente{clients.length === 1 ? '' : 's'}</>}
+      >
         {vista === 'clientes' && (
           <button onClick={() => setNovoCliente(true)} className="rounded-md border border-black/[0.1] bg-white px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:border-primary/40 hover:text-primary">+ Cliente</button>
         )}
-      </header>
+      </PageHeader>
 
       {/* Modelo de contrato é assunto de cliente: entra como sub-aba daqui, não
           como item novo de menu. */}

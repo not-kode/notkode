@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { promoteLead } from './actions';
 import { PararamView } from './pararam-view';
+import { PageHeader } from '../_shared/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,18 +107,13 @@ export default async function LeadsPage({
 
   return (
     <div>
-      <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Leads do site</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {aba === 'leads' ? (
-              <>{leads.length} lead{leads.length === 1 ? '' : 's'} · {pending} a promover</>
-            ) : (
-              <>quem parou no meio e onde as pessoas travam{drafts.length > 0 && <> · {drafts.length} para chamar</>}</>
-            )}
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        titulo="Leads"
+        className="mb-4"
+        dados={aba === 'leads'
+          ? <>{leads.length} lead{leads.length === 1 ? '' : 's'} · {pending} a promover</>
+          : drafts.length > 0 ? <>{drafts.length} para chamar</> : null}
+      />
 
       <nav className="mb-5 inline-flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
         {ABAS.map((a) => (

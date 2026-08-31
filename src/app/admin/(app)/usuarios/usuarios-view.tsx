@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import type { AdminUsuario } from '@/lib/admin-usuario';
 import type { TokenDaPessoa } from '@/lib/mcp-token';
 import { SENHA_MINIMA } from './regras';
+import { PageHeader } from '../_shared/page-header';
 import {
   alternarAtivo, atualizarUsuario, criarUsuario, definirSenha, excluirUsuario,
   gerarTokenMcp, revogarTokenMcp,
@@ -91,13 +92,7 @@ export function UsuariosView({
 
   return (
     <div className="flex max-w-3xl flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-sm font-semibold text-text-primary">Acessos</h1>
-          <p className="mt-0.5 text-xs text-text-muted">
-            Quem entra no CRM. A senha você define aqui e passa para a pessoa; ela pode trocar depois no próprio acesso.
-          </p>
-        </div>
+      <PageHeader titulo="Acessos" className="mb-0" dados={<>{usuarios.length} com login</>}>
         <button
           type="button"
           onClick={() => { setCriando((v) => !v); setErro(null); }}
@@ -105,7 +100,7 @@ export function UsuariosView({
         >
           {criando ? 'cancelar' : '+ novo acesso'}
         </button>
-      </div>
+      </PageHeader>
 
       <div className="flex flex-col gap-1.5 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-3">
         <p className="text-xs text-text-primary">Ligar o terminal ao CRM</p>

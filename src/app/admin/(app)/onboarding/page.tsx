@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { ONBOARDING_TEMPLATES, briefingProgress, getOnboardingTemplate } from '@/lib/onboarding-schema';
 import { OnboardingView, type BriefingRow } from './onboarding-view';
 import { NewBriefing } from './new-briefing';
+import { PageHeader } from '../_shared/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,15 +95,13 @@ export default async function OnboardingAdminPage() {
 
   return (
     <div>
-      <header className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Onboarding</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {rows.length} briefing{rows.length === 1 ? '' : 's'} · {enviados} respondido{enviados === 1 ? '' : 's'}
-          </p>
-        </div>
+      <PageHeader
+        titulo="Onboarding"
+        className="mb-6"
+        dados={<>{rows.length} briefing{rows.length === 1 ? '' : 's'} · {enviados} respondido{enviados === 1 ? '' : 's'}</>}
+      >
         <NewBriefing orgs={orgs} templates={templates} emAberto={emAberto} />
-      </header>
+      </PageHeader>
 
       <OnboardingView rows={briefings} siteUrl={SITE_URL} />
     </div>

@@ -24,6 +24,7 @@ import type {
   Agrupamento, Coluna, ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send,
   TagView, TaskComProjeto, TaskView,
 } from './types';
+import { PageHeader } from '../_shared/page-header';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
@@ -251,7 +252,7 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   if (projects.length === 0) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold">Tasks</h1>
+        <PageHeader titulo="Tasks" className="mb-0" />
         <p className="mt-6 rounded-md border border-black/[0.06] bg-white px-4 py-10 text-center text-sm text-text-muted">
           Nenhum contrato ainda. Assim que um negócio for ganho, o projeto aparece aqui para você montar o cronograma.
         </p>
@@ -264,26 +265,14 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
 
   return (
     <div>
-      {/* O topo diz DE QUEM é a tela e guarda o que é do projeto inteiro (link do
-          cliente, arquivar). Antes isso morava na mesma fileira dos controles de
-          visualização, e "revogar link" acabava do lado de "Kanban". */}
-      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="eyebrow mb-1">
-            <span className="status-dot" />
-            {geral ? 'Tudo em aberto' : 'Projeto'}
-          </p>
-          {/* O link do cliente é do projeto, então anda junto com o nome dele. */}
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate text-2xl font-semibold tracking-tight">
-              {geral ? 'Visão geral' : nomeAberto}
-            </h1>
-            {!geral && aberto && aberto.kind === 'contrato' && (
-              <ClientLink project={aberto} pending={pending} send={send} />
-            )}
-          </div>
-        </div>
-      </header>
+      {/* O título é o da tela, como em todo o CRM; de quem é o que está aberto
+          vem ao lado, como dado. O link do cliente é do projeto, então anda
+          junto com o nome dele. */}
+      <PageHeader titulo="Tasks" dados={geral ? 'Tudo em aberto' : nomeAberto}>
+        {!geral && aberto && aberto.kind === 'contrato' && (
+          <ClientLink project={aberto} pending={pending} send={send} />
+        )}
+      </PageHeader>
 
       <div className="flex flex-col gap-5 lg:flex-row">
         {/* Lista de projetos em vez de dropdown: com vinte contratos, um campo

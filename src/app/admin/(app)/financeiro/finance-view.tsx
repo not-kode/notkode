@@ -5,6 +5,7 @@ import { AutoSaveForm } from '../_shared/auto-save-form';
 import { ALIQUOTA_NOTA, liquidoDaParcela, motivoDoDesconto, parcelasPorContrato, somarLiquido, type ContratoLiquido } from '../_shared/liquido';
 import { createReceivable, deleteReceivable, generateMonthlyReceivables, markReceivablePaid, unmarkReceivable, updateReceivable } from './actions';
 import { isRecurring, monthlyDescription, monthlyDueDate, pendingMonthly } from './recurring';
+import { PageHeader } from '../_shared/page-header';
 
 export type EngView = {
   id: string; title: string | null; type: string; status: string; lifecycle: string;
@@ -236,10 +237,7 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
 
   return (
     <div className="w-full">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Financeiro</h1>
-        </div>
+      <PageHeader titulo="Financeiro" className="mb-6">
         <div className="flex items-center gap-3">
           {/* Filtro de mês global */}
           <div className="flex items-center gap-1 rounded-md border border-black/[0.08] bg-white p-1">
@@ -256,7 +254,7 @@ export function FinanceView({ engagements, receivables }: { engagements: EngView
           </div>
           <button onClick={() => setNewParcela(true)} className="rounded-md border border-black/[0.1] bg-white px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:border-primary/40 hover:text-primary">+ Parcela</button>
         </div>
-      </header>
+      </PageHeader>
 
       <div className={`mb-6 grid grid-cols-2 gap-3 ${nota.doMes > 0 ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
         <Kpi label="MRR ativo" value={brl(kpis.mrr)} tone="text-primary" count={listas.recorrentes.length} nota={sobra('mrr')} onClick={() => setDetail('mrr')} />

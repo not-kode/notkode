@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { SessionPlayer } from './player';
+import { PageHeader } from '../../_shared/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,15 +29,14 @@ export default async function SessaoPage({ params }: { params: Promise<{ id: str
 
   return (
     <div>
-      <header className="mb-6">
-        <Link href="/admin/sessoes" className="font-label text-xs text-text-muted transition-colors hover:text-primary">
-          ← Comportamento
-        </Link>
-        <h1 className="mt-1 text-2xl font-semibold">Gravação da sessão</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {entryPage ? `Entrou por ${entryPage} · ` : ''}Texto digitado aparece mascarado.
-        </p>
-      </header>
+      <Link href="/admin/sessoes" className="font-label text-xs text-text-muted transition-colors hover:text-primary">
+        ← Analytics
+      </Link>
+      <PageHeader
+        titulo="Gravação"
+        className="mb-6 mt-1"
+        dados={entryPage ? <>entrou por {entryPage}</> : null}
+      />
 
       {events.length < 2 ? (
         <p className="rounded-md border border-black/[0.06] bg-white px-4 py-10 text-center text-sm text-text-muted">

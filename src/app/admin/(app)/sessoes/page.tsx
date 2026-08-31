@@ -8,6 +8,7 @@ import { carregarFunisDeFormulario } from './form-funnel-data';
 import { FormFunnelsView } from './form-funnel-view';
 import { PeriodFilter } from '../period-filter';
 import { resolveRange } from '../period';
+import { PageHeader } from '../_shared/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,24 +49,18 @@ export default async function ComportamentoPage({
 
   return (
     <div>
-      <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="eyebrow mb-1"><span className="status-dot" />Comportamento no site</p>
-          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-          <p className="mt-1 text-sm text-text-muted">
-            {gravacoes.sessions.length} gravaç{gravacoes.sessions.length === 1 ? 'ão' : 'ões'}
-            {naoVistas > 0 && (
-              <>
-                {' · '}
-                <span className="font-medium text-primary">{naoVistas} não vista{naoVistas === 1 ? '' : 's'}</span>
-              </>
-            )}
-            {' · '}assista o que cada visitante fez, veja onde todos clicam e onde param de preencher. Texto digitado
-            fica mascarado.
-          </p>
-        </div>
+      <PageHeader
+        titulo="Analytics"
+        className="mb-4"
+        dados={<>
+          {gravacoes.sessions.length} gravaç{gravacoes.sessions.length === 1 ? 'ão' : 'ões'}
+          {naoVistas > 0 && (
+            <>{' · '}<span className="font-medium text-primary">{naoVistas} não vista{naoVistas === 1 ? '' : 's'}</span></>
+          )}
+        </>}
+      >
         {aba === 'formularios' && <Suspense fallback={null}><PeriodFilter /></Suspense>}
-      </header>
+      </PageHeader>
 
       <nav className="mb-5 inline-flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
         {ABAS.map((a) => (
