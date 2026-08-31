@@ -207,8 +207,6 @@ export function ListView({
   };
 
   const colspan = colunas.length + 4;
-  /** Com alguma tarefa marcada, a lista entra em modo seleção e mostra as caixas. */
-  const selecionando = selecao.length > 0;
 
   const valorDe = (t: TaskComProjeto, col: Coluna | 'titulo'): string | number => {
     switch (col) {
@@ -409,12 +407,11 @@ export function ListView({
           {!filha && <GripVertical className="h-3.5 w-3.5" />}
         </td>
 
-        {/* Duas caixas à mostra na mesma linha (uma de marcar, outra de
-            concluir) era a maior confusão da tela. Em repouso continua existindo
-            UMA: a de concluir. A de selecionar aparece quando o mouse passa na
-            linha — antes ela só nascia com o modo seleção já ligado, e a única
-            porta de entrada era marcar o grupo inteiro em cima ou adivinhar o
-            ⌘/Ctrl+clique. Escolher três tarefas virava concluir três tarefas. */}
+        {/* UMA caixa por linha, e ela SELECIONA. Antes a caixa à mostra era a de
+            concluir e a de selecionar vinha depois, o que fazia quem queria
+            escolher três tarefas concluir três tarefas. Marcar traz a barra de
+            ações lá embaixo, que é de onde se conclui em lote; para uma tarefa
+            só, abre a tarefa e conclui na gaveta (ou pelo botão direito). */}
         <td className="py-2 pl-1 pr-0">
           <input
             type="checkbox"
@@ -423,35 +420,27 @@ export function ListView({
             onClick={(e) => { e.stopPropagation(); setAncora(t.id); }}
             title="Selecionar (Shift+clique pega até a última marcada)"
             aria-label={`Selecionar ${t.title}`}
-            className={`h-3.5 w-3.5 accent-primary transition-opacity focus-visible:opacity-100 group-hover:opacity-100 ${
-              selecionando || marcada(t.id) ? 'opacity-100' : 'opacity-0'
-            }`}
+            className="h-3.5 w-3.5 accent-primary"
           />
         </td>
 
+        {/* Em que pé a tarefa está, em leitura: o mesmo pontinho que a lista do
+            cliente usa. Concluída vem com o visto verde, e o título riscado ao
+            lado diz o resto. */}
         <td className="py-2 pl-2 pr-0">
-          <button
-            onClick={() => send(updateTask, { id: t.id, status: t.status === 'feito' ? 'a_fazer' : 'feito' })}
-            title={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
-            aria-label={t.status === 'feito' ? 'Reabrir tarefa' : 'Marcar como concluída'}
-            className={`flex h-4 w-4 items-center justify-center rounded-[4px] border transition-colors ${
-              t.status === 'feito'
-                ? 'border-success bg-success text-white'
-                : 'border-black/25 bg-white text-transparent hover:border-success hover:text-success/40'
+          <span
+            title={TASK_LABELS[t.status]}
+            aria-label={TASK_LABELS[t.status]}
+            className={`flex h-4 w-4 items-center justify-center rounded-full ${
+              t.status === 'feito' ? 'bg-success text-white' : `${TASK_DOT[t.status]} opacity-70`
             }`}
           >
-            <Check className="h-3 w-3" strokeWidth={3} />
-          </button>
+            {t.status === 'feito' && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+          </span>
         </td>
 
         <td className="px-3 py-2">
           <div className="flex min-w-0 items-center gap-2" style={{ paddingLeft: nivel * 20 }}>
-            {filha && (
-              <span
-                title={TASK_LABELS[t.status]}
-                className={`h-1.5 w-1.5 shrink-0 rounded-full ${TASK_DOT[t.status]}`}
-              />
-            )}
             <button
               onClick={() => setAberta(t.id)}
               className={`flex min-w-0 items-center text-left transition-colors hover:text-primary ${
