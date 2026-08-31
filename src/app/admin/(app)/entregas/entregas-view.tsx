@@ -359,6 +359,14 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
                         ))}
                       </select>
                     )}
+                    {/* Opcional, mas é o que liga a pasta ao terminal: com o caminho
+                        preenchido, tarefa criada de dentro do repositório já sabe
+                        que é daqui. */}
+                    <input
+                      name="repo_path"
+                      placeholder="Pasta no computador (opcional)"
+                      className={inputCls}
+                    />
                     {erroPasta && <p className="text-[11px] text-danger">{erroPasta}</p>}
                     <div className="flex items-center gap-3">
                       <button type="submit" disabled={pending} className="font-label text-[10px] font-medium text-primary hover:underline">

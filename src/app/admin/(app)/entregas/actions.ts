@@ -53,6 +53,14 @@ export async function createProject(formData: FormData): Promise<{ id: string } 
   const organizationId = interno ? null : str(formData, 'organization_id', 64);
   if (!interno && !organizationId) return { erro: 'Escolha de qual cliente é, ou marque como interno.' };
 
+  // A pasta do repositório é o que faz a tarefa criada do terminal cair aqui:
+  // é o mesmo `repo_path` que o "projeto_daqui" do MCP lê. Opcional, e só o
+  // caminho completo serve — atalho do shell não existe do lado do servidor.
+  const repoPath = str(formData, 'repo_path', 300)?.replace(/\/+$/, '') ?? null;
+  if (repoPath && !repoPath.startsWith('/')) {
+    return { erro: 'A pasta precisa ser o caminho completo, começando com /.' };
+  }
+
   const { data, error } = await getSupabaseAdmin()
     .from('engagements')
     .insert({
@@ -62,10 +70,16 @@ export async function createProject(formData: FormData): Promise<{ id: string } 
       status: 'aguardando',
       lifecycle: 'ativo',
       is_internal: interno,
+      repo_path: repoPath,
     })
     .select('id')
     .maybeSingle();
 
+  // Uma pasta do computador pertence a um projeto ativo só, e o banco garante
+  // isso: sem esta mensagem, o erro do índice chegaria cru na tela.
+  if (error?.message.includes('engagements_repo_path_ativo_idx')) {
+    return { erro: `A pasta ${repoPath} já está ligada a outro projeto ativo.` };
+  }
   if (error) return { erro: error.message };
   revalidar();
   return { id: (data as { id: string }).id };
