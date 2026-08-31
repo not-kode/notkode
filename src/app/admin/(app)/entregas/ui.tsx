@@ -140,17 +140,30 @@ function usePosicaoMenu(aberto: boolean, botaoRef: React.RefObject<HTMLButtonEle
   return pos;
 }
 
-/** Fecha o menu quando a página rola ou a janela muda de tamanho. */
-function useFechaAoRolar(aberto: boolean, fechar: () => void) {
+/**
+ * Fecha o menu quando a página rola ou a janela muda de tamanho — o menu vai em
+ * portal com posição fixa, então rolar a tela o deixaria longe do chip.
+ *
+ * Rolar DENTRO do menu não conta: a lista de responsáveis tem barra própria, e
+ * sem esta exceção o menu se fechava sozinho na primeira rolagem (inclusive na
+ * que o navegador faz ao dar foco no campo de busca), antes de dar para clicar
+ * em alguém.
+ */
+function useFechaAoRolar(aberto: boolean, fechar: () => void, dentro?: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     if (!aberto) return;
-    window.addEventListener('scroll', fechar, true);
+    const aoRolar = (e: Event) => {
+      const alvo = e.target as Node | null;
+      if (alvo && dentro?.current?.contains(alvo)) return;
+      fechar();
+    };
+    window.addEventListener('scroll', aoRolar, true);
     window.addEventListener('resize', fechar);
     return () => {
-      window.removeEventListener('scroll', fechar, true);
+      window.removeEventListener('scroll', aoRolar, true);
       window.removeEventListener('resize', fechar);
     };
-  }, [aberto, fechar]);
+  }, [aberto, fechar, dentro]);
 }
 
 const PRIORITY_DOT: Record<Priority, string> = {
@@ -201,7 +214,7 @@ export function PriorityChip({ value, onChange, compacto }: {
   const botaoRef = useRef<HTMLButtonElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
   const pos = usePosicaoMenu(aberto, botaoRef, 128, 150);
-  useFechaAoRolar(aberto, () => setAberto(false));
+  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
 
   return (
     <div className="relative" ref={ref}>
@@ -250,7 +263,7 @@ export function MenuContexto({ em, itens, fechar }: {
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const ref = useForaDoElemento(true, fechar, menuRef);
-  useFechaAoRolar(true, fechar);
+  useFechaAoRolar(true, fechar, menuRef);
 
   // Perto da borda o menu abre para dentro, senão fica cortado pela janela.
   const left = Math.min(em.x, (typeof window !== 'undefined' ? window.innerWidth : 0) - 184);
@@ -302,9 +315,16 @@ export function PessoaSelect({ value, pessoas, onChange, compacto = false }: {
   const [busca, setBusca] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
+  const buscaRef = useRef<HTMLInputElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
   const pos = usePosicaoMenu(aberto, botaoRef, 208, 288);
-  useFechaAoRolar(aberto, () => setAberto(false));
+
+  // Foco sem rolar: `autoFocus` fazia o navegador trazer o campo para a vista, e
+  // essa rolagem fechava o menu recém-aberto antes de dar para escolher alguém.
+  useEffect(() => {
+    if (aberto && pos) buscaRef.current?.focus({ preventScroll: true });
+  }, [aberto, pos]);
+  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
 
   const termo = busca.trim().toLowerCase();
   const achadas = pessoas.filter((p) => !termo || p.nome.toLowerCase().includes(termo));
@@ -341,7 +361,7 @@ export function PessoaSelect({ value, pessoas, onChange, compacto = false }: {
           style={{ left: pos.left, top: pos.top }}
         >
           <input
-            autoFocus
+            ref={buscaRef}
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             onKeyDown={(e) => {
@@ -416,7 +436,7 @@ export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] t
   const botaoRef = useRef<HTMLButtonElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
   const pos = usePosicaoMenu(aberto, botaoRef, 176, 224);
-  useFechaAoRolar(aberto, () => setAberto(false));
+  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
   const atual = options.find((o) => o.value === value);
 
   return (
@@ -714,7 +734,7 @@ export function TagsSelect({ value, tags, onChange, onCriar, onCor, onApagar, co
   const botaoRef = useRef<HTMLButtonElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
   const pos = usePosicaoMenu(aberto, botaoRef, 224, 300);
-  useFechaAoRolar(aberto, () => setAberto(false));
+  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
 
   const marcadas = tags.filter((t) => value.includes(t.id));
   const alternar = (id: string) =>
