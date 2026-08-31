@@ -12,7 +12,8 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-  createPhase, createProject, salvarColunas, setProjectArchived, generateClientToken, revokeClientToken,
+  createPhase, createProject, renameProject, salvarColunas, setProjectArchived, generateClientToken,
+  revokeClientToken,
 } from './actions';
 import {
   Archive, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
@@ -86,6 +87,10 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   // Botão direito num projeto da lateral: arquivar é ação de exceção e não
   // precisa de um botão fixo competindo com o resto da barra.
   const [menuProjeto, setMenuProjeto] = useState<{ projeto: ProjectView; x: number; y: number } | null>(null);
+  // Renomear é edição no próprio lugar: o item da lista vira campo de texto, sem
+  // abrir formulário nem tirar a pasta da vista. Guarda o id de quem está sendo
+  // renomeado — o botão direito e o lápis do hover abrem o mesmo campo.
+  const [renomeando, setRenomeando] = useState<string | null>(null);
   // Nova pasta: onde as tarefas vão morar. Pode ser de um cliente ou interna, e
   // a escolha é a primeira pergunta do formulário, não um detalhe escondido.
   const [novaPasta, setNovaPasta] = useState(false);
@@ -154,6 +159,14 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   const abrirSoDoProjeto = (id: string) => {
     abrirProjeto(id);
     setEscopo('projeto');
+  };
+  // Nome vazio ou igual ao que já estava não vale uma ida ao banco.
+  const renomear = (projeto: ProjectView, nome: string) => {
+    setRenomeando(null);
+    const limpo = nome.trim();
+    if (limpo && limpo !== (projeto.title ?? '')) {
+      send(renameProject, { engagement_id: projeto.id, title: limpo });
+    }
   };
   const trocarVisao = (v: 'kanban' | 'lista') => {
     setVisao(v);
@@ -283,6 +296,10 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
                           ativo={p.id === aberto?.id}
                           onClick={() => abrirProjeto(p.id)}
                           onMenu={(x, y) => setMenuProjeto({ projeto: p, x, y })}
+                          renomeando={renomeando === p.id}
+                          onRenomear={() => setRenomeando(p.id)}
+                          onSalvarNome={(nome) => renomear(p, nome)}
+                          onCancelar={() => setRenomeando(null)}
                         />
                       </li>
                     ))}
@@ -386,6 +403,10 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
                             ativo={p.id === aberto?.id}
                             onClick={() => abrirProjeto(p.id)}
                             onMenu={(x, y) => setMenuProjeto({ projeto: p, x, y })}
+                            renomeando={renomeando === p.id}
+                            onRenomear={() => setRenomeando(p.id)}
+                            onSalvarNome={(nome) => renomear(p, nome)}
+                            onCancelar={() => setRenomeando(null)}
                           />
                         </li>
                       ))}
@@ -476,19 +497,47 @@ function recortar(tarefas: TaskComProjeto[], periodo: Periodo): TaskComProjeto[]
   return tarefas.filter((t) => (t.parentId ? raizes.has(t.parentId) : raizes.has(t.id)));
 }
 
-function ItemProjeto({ projeto, ativo, onClick, onMenu }: {
+function ItemProjeto({ projeto, ativo, onClick, onMenu, renomeando, onRenomear, onSalvarNome, onCancelar }: {
   projeto: ProjectView;
   ativo: boolean;
   onClick: () => void;
   /** Botão direito: arquivar e desarquivar moram aqui. */
   onMenu: (x: number, y: number) => void;
+  /** Quando ligado, o item vira campo de texto no lugar do nome. */
+  renomeando: boolean;
+  /** Duplo clique no nome: renomear é edição no próprio lugar. */
+  onRenomear: () => void;
+  onSalvarNome: (nome: string) => void;
+  onCancelar: () => void;
 }) {
   const abertas = projeto.tasks.filter((t) => t.status !== 'feito').length;
+
+  // Renomear muda o título do projeto, então é ele que entra no campo: numa
+  // pasta de cliente o rótulo da lista é o nome do cliente, que vem do cadastro
+  // dele e não se mexe por aqui.
+  if (renomeando) {
+    return (
+      <form action={(fd) => onSalvarNome(String(fd.get('nome') ?? ''))} className="px-1 py-0.5">
+        <input
+          name="nome"
+          autoFocus
+          defaultValue={projeto.title ?? ''}
+          placeholder="Nome do projeto"
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={(e) => onSalvarNome(e.currentTarget.value)}
+          onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); onCancelar(); } }}
+          className="w-full rounded-sm border border-primary/40 bg-white px-1.5 py-1 text-[13px] outline-none focus:border-primary"
+        />
+      </form>
+    );
+  }
+
   return (
     <button
       onClick={onClick}
+      onDoubleClick={(e) => { if (projeto.kind === 'contrato') { e.preventDefault(); onRenomear(); } }}
       onContextMenu={(e) => { e.preventDefault(); onMenu(e.clientX, e.clientY); }}
-      title={projeto.archivedAt ? 'Arquivado — clique com o botão direito para desarquivar' : 'Clique com o botão direito para arquivar'}
+      title={projeto.archivedAt ? 'Arquivado — clique com o botão direito para desarquivar' : 'Duplo clique para renomear, botão direito para arquivar'}
       className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors ${
         ativo
           ? 'bg-primary/10 font-semibold text-primary'

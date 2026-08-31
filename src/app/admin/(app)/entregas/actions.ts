@@ -71,6 +71,24 @@ export async function createProject(formData: FormData): Promise<{ id: string } 
   return { id: (data as { id: string }).id };
 }
 
+/**
+ * Renomeia a pasta. Mexe só no título do projeto: o nome do cliente é do
+ * cadastro dele e continua igual em todo o CRM, e nas pastas de cliente é o
+ * nome do cliente que a lista mostra.
+ */
+export async function renameProject(formData: FormData): Promise<void> {
+  const engagement_id = str(formData, 'engagement_id', 64);
+  const title = str(formData, 'title', 200);
+  if (!engagement_id || !title) return;
+
+  await getSupabaseAdmin()
+    .from('engagements')
+    .update({ title, updated_at: new Date().toISOString() })
+    .eq('id', engagement_id);
+
+  revalidar();
+}
+
 // ── Etapas ───────────────────────────────────────────────────────────────────
 
 export async function createPhase(formData: FormData): Promise<void> {
