@@ -12,11 +12,11 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-  createPhase, salvarColunas, setProjectArchived, generateClientToken, revokeClientToken,
+  createPhase, createProject, salvarColunas, setProjectArchived, generateClientToken, revokeClientToken,
 } from './actions';
 import {
   Archive, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
-  LayoutGrid, Link2, List, PanelLeftClose, PanelLeftOpen, Rows3, X,
+  LayoutGrid, Link2, List, PanelLeftClose, PanelLeftOpen, Plus, Rows3, X,
 } from 'lucide-react';
 import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS } from './types';
 import type {
@@ -62,12 +62,14 @@ type Periodo = (typeof PERIODOS)[number]['id'];
 /** Tasks, cronograma e a base de notas do cliente. */
 type Aba = 'tasks' | 'cronograma' | 'notas';
 
-export function EntregasView({ projects, comentarios, notas, pessoas }: {
+export function EntregasView({ projects, comentarios, notas, pessoas, organizacoes }: {
   projects: ProjectView[];
   comentarios: ComentarioView[];
   notas: NotaView[];
   /** Quem pode tocar tarefa: a equipe e os contatos dos clientes. */
   pessoas: Pessoa[];
+  /** Clientes cadastrados, para dizer de quem é a pasta nova. */
+  organizacoes: { id: string; nome: string }[];
 }) {
   const ativos = useMemo(() => projects.filter((p) => !p.archivedAt), [projects]);
   const arquivados = useMemo(() => projects.filter((p) => p.archivedAt), [projects]);
@@ -84,6 +86,11 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
   // Botão direito num projeto da lateral: arquivar é ação de exceção e não
   // precisa de um botão fixo competindo com o resto da barra.
   const [menuProjeto, setMenuProjeto] = useState<{ projeto: ProjectView; x: number; y: number } | null>(null);
+  // Nova pasta: onde as tarefas vão morar. Pode ser de um cliente ou da casa, e
+  // a escolha é a primeira pergunta do formulário, não um detalhe escondido.
+  const [novaPasta, setNovaPasta] = useState(false);
+  const [pastaDeCliente, setPastaDeCliente] = useState(false);
+  const [erroPasta, setErroPasta] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const router = useRouter();
@@ -282,6 +289,83 @@ export function EntregasView({ projects, comentarios, notas, pessoas }: {
                   </ul>
                 </div>
               ))}
+
+              <div>
+                {novaPasta ? (
+                  <form
+                    action={(fd) => {
+                      setErroPasta(null);
+                      start(async () => {
+                        const r = await createProject(fd);
+                        if ('erro' in r) return setErroPasta(r.erro);
+                        setNovaPasta(false);
+                        setPastaDeCliente(false);
+                        abrirProjeto(r.id);
+                        router.refresh();
+                      });
+                    }}
+                    className="flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2"
+                  >
+                    <input
+                      name="title"
+                      required
+                      autoFocus
+                      placeholder="Nome da pasta"
+                      className={inputCls}
+                    />
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1.5 text-[11px] text-text-secondary">
+                        <input
+                          type="radio"
+                          name="kind"
+                          value="casa"
+                          defaultChecked
+                          onChange={() => setPastaDeCliente(false)}
+                        />
+                        Da casa
+                      </label>
+                      <label className="flex items-center gap-1.5 text-[11px] text-text-secondary">
+                        <input
+                          type="radio"
+                          name="kind"
+                          value="cliente"
+                          onChange={() => setPastaDeCliente(true)}
+                        />
+                        De um cliente
+                      </label>
+                    </div>
+                    {pastaDeCliente && (
+                      <select name="organization_id" required className={inputCls}>
+                        <option value="">Escolha o cliente…</option>
+                        {organizacoes.map((o) => (
+                          <option key={o.id} value={o.id}>{o.nome}</option>
+                        ))}
+                      </select>
+                    )}
+                    {erroPasta && <p className="text-[11px] text-danger">{erroPasta}</p>}
+                    <div className="flex items-center gap-3">
+                      <button type="submit" disabled={pending} className="font-label text-[10px] font-medium text-primary hover:underline">
+                        {pending ? 'criando…' : 'criar'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setNovaPasta(false); setErroPasta(null); }}
+                        className="font-label text-[10px] font-medium text-text-muted hover:underline"
+                      >
+                        cancelar
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setNovaPasta(true)}
+                    className="flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] text-text-muted transition-colors hover:bg-black/[0.04] hover:text-text-primary"
+                  >
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    Nova pasta
+                  </button>
+                )}
+              </div>
 
               {arquivados.length > 0 && (
                 <div>
