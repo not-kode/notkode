@@ -122,6 +122,15 @@ export function ListView({
   // contador ao lado do título abre as filhas de quem você for olhar. Aqui
   // ficam só as mães que você mandou abrir.
   const [abertas, setAbertas] = useState<string[]>([]);
+  // Em qual tarefa está aberto o campo de nova subtarefa. Antes o único caminho
+  // era abrir a tarefa e usar o campo da gaveta, o que é caminho demais para
+  // quebrar uma entrega em partes enquanto se olha a lista.
+  const [criandoSubEm, setCriandoSubEm] = useState<string | null>(null);
+  /** Abre o campo de subtarefa numa tarefa, já mostrando o que ela tem dentro. */
+  const novaSubEm = (id: string) => {
+    setCriandoSubEm(id);
+    setAbertas((r) => (r.includes(id) ? r : [...r, id]));
+  };
   /**
    * Ordem da lista. Sem escolha sua, vale a de sempre: vence antes em cima,
    * empate pela prioridade. Clicar no nome da coluna passa a ordenar por ela e
@@ -450,6 +459,16 @@ export function ListView({
             >
               <span className="min-w-0 truncate">{t.title}</span>
             </button>
+            {/* Quebrar a tarefa em partes sem sair da lista. Aparece com o
+                mouse em cima para não encher a linha em repouso. */}
+            <button
+              onClick={() => novaSubEm(t.id)}
+              title="Nova subtarefa aqui"
+              aria-label={`Nova subtarefa em ${t.title}`}
+              className="shrink-0 rounded p-0.5 text-text-muted/60 opacity-0 transition hover:bg-black/[0.05] hover:text-primary focus-visible:opacity-100 group-hover:opacity-100"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
             {filhas.length > 0 && (
               // O contador abre e fecha as subtarefas ali mesmo, sem tirar
               // ninguém da lista para ir ver o que tem dentro.
@@ -579,7 +598,30 @@ export function ListView({
     // Teto de segurança contra cadeia circular no dado: seis níveis é mais fundo
     // do que qualquer cronograma real precisa.
     const filhas = nivel < 6 && abertas.includes(t.id) ? ordenar(subs(t.id)) : [];
-    return [linha(t, grupo, nivel), ...filhas.flatMap((f) => linhas(f, grupo, nivel + 1))];
+    return [
+      linha(t, grupo, nivel),
+      ...filhas.flatMap((f) => linhas(f, grupo, nivel + 1)),
+      // O campo entra no fim do que a tarefa já tem dentro, no recuo em que a
+      // nova subtarefa vai nascer.
+      ...(criandoSubEm === t.id ? [(
+        <tr key={`nova-sub-${t.id}`} className="border-b border-black/[0.04] bg-neutral-50/40 last:border-0">
+          <td colSpan={colspan} className="px-3 py-1.5">
+            <div style={{ paddingLeft: (nivel + 1) * 20 + 30 }}>
+              <NovaLinha
+                projectId={t.projetoId}
+                projectKind={t.projetoKind}
+                status="a_fazer"
+                phaseId={t.phaseId}
+                parentId={t.id}
+                placeholder={`Parte de "${t.title}"`}
+                send={send}
+                onFim={() => setCriandoSubEm(null)}
+              />
+            </div>
+          </td>
+        </tr>
+      )] : []),
+    ];
   };
 
   // "Sem sprint" vazio é faixa ocupando linha à toa. Ele volta enquanto você
@@ -859,6 +901,7 @@ export function ListView({
           fechar={() => setMenu(null)}
           itens={[
             { label: 'Abrir tarefa', onClick: () => setAberta(menu.task.id) },
+            { label: 'Nova subtarefa', onClick: () => novaSubEm(menu.task.id) },
             {
               label: menu.task.status === 'feito' ? 'Reabrir' : 'Marcar como concluída',
               onClick: () => send(updateTask, {
@@ -1013,11 +1056,14 @@ function BarraSelecao({ quantas, pessoas, etapas, tags, editar, apagar, limpar }
   );
 }
 
-function NovaLinha({ projectId, projectKind, status, phaseId, send, onFim }: {
+function NovaLinha({ projectId, projectKind, status, phaseId, parentId, placeholder, send, onFim }: {
   projectId: string;
   projectKind: ProjectKind;
   status: TaskStatus;
   phaseId: string | null;
+  /** Preenchido, a tarefa nasce dentro desta outra, em qualquer profundidade. */
+  parentId?: string;
+  placeholder?: string;
   send: Send;
   onFim: () => void;
 }) {
@@ -1031,6 +1077,7 @@ function NovaLinha({ projectId, projectKind, status, phaseId, send, onFim }: {
         title: limpo,
         status,
         ...(phaseId ? { phase_id: phaseId } : {}),
+        ...(parentId ? { parent_task_id: parentId } : {}),
       });
     }
     setTitulo('');
@@ -1047,7 +1094,7 @@ function NovaLinha({ projectId, projectKind, status, phaseId, send, onFim }: {
         if (e.key === 'Escape') onFim();
       }}
       onBlur={() => criar(false)}
-      placeholder={`O que precisa ser feito? (entra em ${TASK_LABELS[status].toLowerCase()})`}
+      placeholder={placeholder ?? `O que precisa ser feito? (entra em ${TASK_LABELS[status].toLowerCase()})`}
       className="w-full text-[13px] text-text-primary outline-none placeholder:text-text-muted"
     />
   );
