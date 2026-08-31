@@ -98,11 +98,10 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   // abrir formulário nem tirar a pasta da vista. Guarda o id de quem está sendo
   // renomeado — o botão direito e o lápis do hover abrem o mesmo campo.
   const [renomeando, setRenomeando] = useState<string | null>(null);
-  // Nova pasta: onde as tarefas vão morar. Pode ser de um cliente ou interna, e
-  // a escolha é a primeira pergunta do formulário, não um detalhe escondido.
+  // Nova pasta: onde as tarefas vão morar. O formulário abre numa janelinha no
+  // meio da tela — na lateral ele espremia a lista de projetos e o campo do
+  // caminho do repositório não cabia em 15rem.
   const [novaPasta, setNovaPasta] = useState(false);
-  const [pastaDeCliente, setPastaDeCliente] = useState(false);
-  const [erroPasta, setErroPasta] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   const router = useRouter();
@@ -330,88 +329,13 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
               ))}
 
               <div>
-                {novaPasta ? (
-                  <form
-                    action={(fd) => {
-                      setErroPasta(null);
-                      start(async () => {
-                        const r = await createProject(fd);
-                        if ('erro' in r) return setErroPasta(r.erro);
-                        setNovaPasta(false);
-                        setPastaDeCliente(false);
-                        abrirProjeto(r.id);
-                        router.refresh();
-                      });
-                    }}
-                    className="flex flex-col gap-2 rounded-md border border-black/[0.06] bg-[#F4F5F7] p-2"
-                  >
-                    <input
-                      name="title"
-                      required
-                      autoFocus
-                      placeholder="Nome da pasta"
-                      className={inputCls}
-                    />
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-1.5 text-[11px] text-text-secondary">
-                        <input
-                          type="radio"
-                          name="kind"
-                          value="interno"
-                          defaultChecked
-                          onChange={() => setPastaDeCliente(false)}
-                        />
-                        Interno
-                      </label>
-                      <label className="flex items-center gap-1.5 text-[11px] text-text-secondary">
-                        <input
-                          type="radio"
-                          name="kind"
-                          value="cliente"
-                          onChange={() => setPastaDeCliente(true)}
-                        />
-                        De um cliente
-                      </label>
-                    </div>
-                    {pastaDeCliente && (
-                      <select name="organization_id" required className={inputCls}>
-                        <option value="">Escolha o cliente…</option>
-                        {organizacoes.map((o) => (
-                          <option key={o.id} value={o.id}>{o.nome}</option>
-                        ))}
-                      </select>
-                    )}
-                    {/* Opcional, mas é o que liga a pasta ao terminal: com o caminho
-                        preenchido, tarefa criada de dentro do repositório já sabe
-                        que é daqui. */}
-                    <input
-                      name="repo_path"
-                      placeholder="Pasta no computador (opcional)"
-                      className={inputCls}
-                    />
-                    {erroPasta && <p className="text-[11px] text-danger">{erroPasta}</p>}
-                    <div className="flex items-center gap-3">
-                      <button type="submit" disabled={pending} className="font-label text-[10px] font-medium text-primary hover:underline">
-                        {pending ? 'criando…' : 'criar'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setNovaPasta(false); setErroPasta(null); }}
-                        className="font-label text-[10px] font-medium text-text-muted hover:underline"
-                      >
-                        cancelar
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <button
-                    onClick={() => setNovaPasta(true)}
-                    className="flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] text-text-muted transition-colors hover:bg-black/[0.04] hover:text-text-primary"
-                  >
-                    <Plus className="h-3.5 w-3.5 shrink-0" />
-                    Nova pasta
-                  </button>
-                )}
+                <button
+                  onClick={() => setNovaPasta(true)}
+                  className="flex w-full items-center gap-1.5 rounded-sm px-2 py-1.5 text-left text-[13px] text-text-muted transition-colors hover:bg-black/[0.04] hover:text-text-primary"
+                >
+                  <Plus className="h-3.5 w-3.5 shrink-0" />
+                  Nova pasta
+                </button>
               </div>
 
               {arquivados.length > 0 && (
@@ -476,6 +400,23 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
         </div>
       </div>
 
+      {novaPasta && (
+        <NovaPastaDialog
+          organizacoes={organizacoes}
+          pending={pending}
+          fechar={() => setNovaPasta(false)}
+          criar={(fd, aoErrar) => {
+            start(async () => {
+              const r = await createProject(fd);
+              if ('erro' in r) return aoErrar(r.erro);
+              setNovaPasta(false);
+              abrirProjeto(r.id);
+              router.refresh();
+            });
+          }}
+        />
+      )}
+
       {menuProjeto && (
         <MenuContexto
           em={{ x: menuProjeto.x, y: menuProjeto.y }}
@@ -532,6 +473,115 @@ function recortar(tarefas: TaskComProjeto[], periodo: Periodo): TaskComProjeto[]
   // de subtarefas de uma tarefa que continua na lista.
   const raizes = new Set(tarefas.filter((t) => !t.parentId && passa(t)).map((t) => t.id));
   return tarefas.filter((t) => (t.parentId ? raizes.has(t.parentId) : raizes.has(t.id)));
+}
+
+/**
+ * A janelinha de criar pasta. São quatro perguntas curtas — nome, de quem é, o
+ * cliente e a pasta no computador — e nenhuma delas cabia bem na coluna da
+ * lateral, que tem 15rem e é onde a lista de projetos precisa aparecer.
+ */
+function NovaPastaDialog({ organizacoes, pending, criar, fechar }: {
+  organizacoes: { id: string; nome: string }[];
+  pending: boolean;
+  criar: (fd: FormData, aoErrar: (erro: string) => void) => void;
+  fechar: () => void;
+}) {
+  const [deCliente, setDeCliente] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => { if (e.key === 'Escape') fechar(); };
+    document.addEventListener('keydown', aoTeclar);
+    return () => document.removeEventListener('keydown', aoTeclar);
+  }, [fechar]);
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button aria-label="Fechar" onClick={fechar} className="absolute inset-0 bg-black/25" />
+
+      <form
+        action={(fd) => { setErro(null); criar(fd, setErro); }}
+        className="relative w-full max-w-sm rounded-lg border border-black/[0.08] bg-white p-5 shadow-[0_16px_48px_rgba(16,24,40,0.18)]"
+      >
+        <header className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="eyebrow mb-1"><span className="status-dot" />Nova pasta</p>
+            <h2 className="text-[15px] font-semibold tracking-tight">Onde as tarefas vão morar</h2>
+          </div>
+          <button
+            type="button"
+            onClick={fechar}
+            title="Fechar"
+            className="rounded p-1 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+
+        <div className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="font-label text-[10px] uppercase tracking-wider text-text-muted">Nome</span>
+            <input name="title" required autoFocus placeholder="Ex.: Notkode — site" className={inputCls} />
+          </label>
+
+          <div className="flex flex-col gap-1">
+            <span className="font-label text-[10px] uppercase tracking-wider text-text-muted">De quem é</span>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-1.5 text-[12px] text-text-secondary">
+                <input type="radio" name="kind" value="interno" defaultChecked onChange={() => setDeCliente(false)} />
+                Interno
+              </label>
+              <label className="flex items-center gap-1.5 text-[12px] text-text-secondary">
+                <input type="radio" name="kind" value="cliente" onChange={() => setDeCliente(true)} />
+                De um cliente
+              </label>
+            </div>
+          </div>
+
+          {deCliente && (
+            <label className="flex flex-col gap-1">
+              <span className="font-label text-[10px] uppercase tracking-wider text-text-muted">Cliente</span>
+              <select name="organization_id" required className={inputCls}>
+                <option value="">Escolha o cliente…</option>
+                {organizacoes.map((o) => (
+                  <option key={o.id} value={o.id}>{o.nome}</option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {/* Opcional, mas é o que liga a pasta ao terminal: com o caminho
+              preenchido, tarefa criada de dentro do repositório já sabe que é daqui. */}
+          <label className="flex flex-col gap-1">
+            <span className="font-label text-[10px] uppercase tracking-wider text-text-muted">
+              Pasta no computador (opcional)
+            </span>
+            <input name="repo_path" placeholder="/Users/camila/repo/…" className={inputCls} />
+          </label>
+
+          {erro && <p className="text-[11px] text-danger">{erro}</p>}
+        </div>
+
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={fechar}
+            className="rounded-md px-3 py-1.5 text-[12px] font-medium text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-md bg-primary px-3 py-1.5 text-[12px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {pending ? 'Criando…' : 'Criar pasta'}
+          </button>
+        </div>
+      </form>
+    </div>,
+    document.body,
+  );
 }
 
 function ItemProjeto({ projeto, ativo, onClick, onMenu, renomeando, onRenomear, onSalvarNome, onCancelar }: {
