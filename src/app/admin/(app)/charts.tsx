@@ -11,10 +11,11 @@ import type { DayCount } from './dashboard-view';
 
 const INK = '#191918';
 const ACCENT = '#3B82F6';
-// Fundo do card (surface-base): usado como fresta entre segmentos empilhados.
-const SURFACE = '#FFFEF2';
+// Fundo do card: usado como fresta entre segmentos empilhados, então tem que
+// ser a MESMA cor do painel — senão a fresta vira um risco claro no meio da barra.
+const SURFACE = '#F4F5F7';
 
-// Paleta categórica (validada: lightness/chroma/CVD/contraste OK sobre creme).
+// Paleta categórica (validada: lightness/chroma/CVD/contraste OK sobre claro).
 const CAT = ['#2F6BEA', '#A87400', '#0E9E8B', '#CE4C6E', '#6E5AD0', '#3E8E3E'];
 // Cor fixa por origem conhecida — a cor segue a entidade, nunca o rank.
 const SOURCE_COLORS: Record<string, string> = {
@@ -42,7 +43,7 @@ function AreaTooltip({ active, payload }: { active?: boolean; payload?: { payloa
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
-    <div className="rounded-md border border-[#191918]/[0.12] bg-surface-base px-2.5 py-1.5 shadow-sm">
+    <div className="rounded-md border border-black/[0.10] bg-white px-2.5 py-1.5 shadow-sm">
       <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">{fmtDayFull(p.day)}</p>
       <p className="font-mono text-sm font-medium text-text-primary">{p.count} {p.count === 1 ? 'visita' : 'visitas'}</p>
     </div>
@@ -95,7 +96,7 @@ function ProjectionTooltip({ active, payload }: { active?: boolean; payload?: { 
   const p = payload[0].payload;
   const total = p.recebido + p.aReceber + p.pipeline;
   return (
-    <div className="rounded-md border border-[#191918]/[0.12] bg-surface-base px-2.5 py-2 shadow-sm">
+    <div className="rounded-md border border-black/[0.10] bg-white px-2.5 py-2 shadow-sm">
       <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">{p.mes}</p>
       {SERIES.map((s) =>
         p[s.key] > 0 ? (
@@ -200,7 +201,7 @@ function DonutTooltip({ active, payload, total }: { active?: boolean; payload?: 
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
-    <div className="rounded-md border border-[#191918]/[0.12] bg-surface-base px-2.5 py-1.5 shadow-sm">
+    <div className="rounded-md border border-black/[0.10] bg-white px-2.5 py-1.5 shadow-sm">
       <p className="flex items-center gap-1.5 font-mono text-[11px] font-medium text-text-primary">
         <span className="inline-block h-2 w-2 rounded-sm" style={{ background: colorFor(p.label) }} />
         {p.label}
@@ -249,7 +250,7 @@ function RankTooltip({ active, payload }: { active?: boolean; payload?: { payloa
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
-    <div className="rounded-md border border-[#191918]/[0.12] bg-surface-base px-2.5 py-1.5 shadow-sm">
+    <div className="rounded-md border border-black/[0.10] bg-white px-2.5 py-1.5 shadow-sm">
       <p className="font-mono text-[11px] font-medium text-text-primary">{p.label}</p>
       <p className="font-mono text-xs text-text-secondary">{p.count}</p>
     </div>

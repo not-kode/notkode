@@ -51,7 +51,7 @@ export function PeriodFilter() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-md border border-[#191918]/[0.12] bg-surface-base px-3 py-1.5 font-mono text-xs text-text-primary hover:border-[#191918]/25"
+        className="flex items-center gap-2 rounded-md border border-black/[0.10] bg-white px-3 py-1.5 font-mono text-xs text-text-primary hover:border-[#191918]/25"
       >
         <span className="text-text-muted">Período:</span>
         {activeLabel}
@@ -61,7 +61,7 @@ export function PeriodFilter() {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={close} />
-          <div className="absolute right-0 z-20 mt-1.5 w-52 rounded-md border border-[#191918]/[0.12] bg-surface-base p-1.5 shadow-md">
+          <div className="absolute right-0 z-20 mt-1.5 w-52 rounded-md border border-black/[0.10] bg-white p-1.5 shadow-md">
             {PRESETS.map((p) => (
               <button
                 key={p.key}

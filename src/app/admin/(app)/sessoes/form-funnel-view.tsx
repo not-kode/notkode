@@ -48,7 +48,7 @@ function FunnelRow({ step, prev, top, isDrop, isLast }: {
       </div>
 
       {origins.length > 0 && (
-        <div className="pointer-events-none absolute left-32 top-full z-30 mt-1 hidden min-w-[11rem] max-w-[16rem] rounded-md border border-[#191918]/[0.10] bg-surface-base p-2.5 shadow-lg group-hover:block sm:left-40">
+        <div className="pointer-events-none absolute left-32 top-full z-30 mt-1 hidden min-w-[11rem] max-w-[16rem] rounded-md border border-black/[0.10] bg-white p-2.5 shadow-lg group-hover:block sm:left-40">
           <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted">
             De onde vieram · {nf(step.count)}
           </p>
@@ -158,7 +158,7 @@ export function FormFunnelsView({ funnels }: { funnels: FormFunnel[] }) {
   const poucos = funnels.filter((f) => mexeramEm(f) < 5);
 
   return (
-    <section className="rounded-md border border-[#191918]/[0.08] bg-surface-base p-5">
+    <section className="rounded-md border border-[#191918]/[0.08] bg-white p-5">
       <div className="flex flex-col gap-4">
         {relevantes.map((f) => <FormFunnelCard key={f.form} funnel={f} />)}
       </div>

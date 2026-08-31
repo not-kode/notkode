@@ -64,7 +64,9 @@ export type DashboardData = {
   temDadosSite: boolean;
 };
 
-const card = 'rounded-md border border-[#191918]/[0.08] bg-surface-base';
+// Mesma pele do resto do admin: página branca, painel cinza-claro — igual às
+// colunas do pipeline. O dashboard era a única tela em creme.
+const card = 'rounded-md border border-black/[0.06] bg-[#F4F5F7]';
 
 /**
  * O valor grande é sempre o COBRADO, o mesmo do contrato. `sobra` aparece só
@@ -104,7 +106,7 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="mb-3 mt-2 flex items-center gap-3">
       <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted">{children}</span>
-      <span className="h-px flex-1 bg-[#191918]/[0.08]" />
+      <span className="h-px flex-1 bg-black/[0.06]" />
     </div>
   );
 }
@@ -125,7 +127,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
   const temReceita = n.receitaPorMes.some((m) => m.recebido + m.aReceber + m.pipeline > 0);
 
   return (
-    <div className="-mx-4 -my-6 min-h-full bg-surface-elevated px-4 py-6 md:-mx-8 md:-my-8 md:px-8 md:py-8">
+    <div>
       <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-mono text-xl font-medium tracking-tight text-text-primary">Dashboard</h1>
