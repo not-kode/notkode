@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { seoAlternates } from '@/lib/seo';
+import { OrganizationJsonLd } from '@/components/seo/organization-jsonld';
 import { Hero } from '@/components/home/hero';
 import { TrustBand } from '@/components/home/trust-band';
 import { AiActivation } from '@/components/home/ai-activation';
@@ -28,9 +29,11 @@ export default async function HomePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'Meta' });
 
   return (
     <>
+      <OrganizationJsonLd description={t('description')} />
       <Hero locale={locale} />
       <TrustBand locale={locale} />
       <AiActivation locale={locale} />

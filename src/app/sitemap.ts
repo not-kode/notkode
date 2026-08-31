@@ -5,6 +5,13 @@ import { absoluteUrl } from '@/lib/seo';
 
 type Href = Parameters<typeof absoluteUrl>[1];
 
+// Data de última mudança real de conteúdo. Antes isto era `new Date()`, então
+// todo deploy reescrevia as 52 entradas com a data da build, mesmo quando nada
+// tinha mudado. O Google compara o lastmod com o que ele vê na página, percebe
+// que a data não corresponde a mudança nenhuma e passa a ignorar o campo. É
+// para editar à mão quando as páginas mudarem de verdade.
+const CONTENT_UPDATED = new Date('2026-08-10T00:00:00Z');
+
 // Rotas estáticas do site (sem o /blog que ainda é placeholder e está noindex).
 // O path é sempre o de português e o absoluteUrl traduz por locale. Montar a URL
 // na mão colocava /en/sistemas-ia no sitemap, que responde 307 para /en/ai-systems
@@ -27,8 +34,6 @@ const ROUTES: Array<{ path: Href; changeFrequency: MetadataRoute.Sitemap[number]
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
   const entries = (
     href: Href,
     changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'],
@@ -36,7 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ) =>
     routing.locales.map((locale) => ({
       url: absoluteUrl(locale, href),
-      lastModified: now,
+      lastModified: CONTENT_UPDATED,
       changeFrequency,
       priority,
       alternates: {
