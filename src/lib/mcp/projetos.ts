@@ -168,11 +168,12 @@ export const ferramentasDeProjeto: Ferramenta[] = [
   {
     nome: 'criar_projeto',
     descricao:
-      'Cria um contrato/projeto para um cliente que já existe no sistema. Use quando fechamos um trabalho novo e ' +
-      'ele ainda não tem projeto para pendurar tarefas e cronograma.',
+      'Cria um projeto para pendurar tarefas e cronograma. Para trabalho de cliente, diga o "cliente" (organização já ' +
+      'cadastrada). Para frente da própria casa (marketing, comercial, um estudo nosso), mande "interno": true e ' +
+      'deixe o cliente de fora: o projeto nasce sem cliente e aparece no grupo Casa das entregas.',
     entrada: objeto(
       {
-        cliente: texto('Nome do cliente (organização) já cadastrado, ou o id dele.'),
+        cliente: texto('Nome do cliente (organização) já cadastrado, ou o id dele. Não use em frente interna.'),
         titulo: texto('Como o projeto se chama (ex: "Site institucional", "Agente de WhatsApp").'),
         cobranca: opcoes(['pontual', 'recorrente'], 'Como é cobrado. Padrão: pontual.'),
         valor: { type: 'number', description: 'Valor total, para trabalho pontual.' },
@@ -182,16 +183,24 @@ export const ferramentasDeProjeto: Ferramenta[] = [
         escopo: texto('O que está incluso, em texto.'),
         interno: { type: 'boolean', description: 'Frente da própria casa, sem cliente do outro lado.' },
       },
-      ['cliente', 'titulo'],
+      ['titulo'],
     ),
     async executar(args) {
-      const cliente = await acharCliente(obrigatorio(args, 'cliente'));
+      // Frente interna não tem cliente do outro lado, e inventar uma organização
+      // só para satisfazer o campo sujaria a lista de clientes. Nesse caso o
+      // projeto nasce sem organização, como os que vieram do SimbOS.
+      const interno = bool(args, 'interno') ?? false;
+      const termoDoCliente = str(args, 'cliente');
+      if (!interno && !termoDoCliente) {
+        throw new ErroDeUso('Diga o "cliente" do projeto, ou mande "interno": true se for frente da nossa casa.');
+      }
+      const cliente = termoDoCliente ? await acharCliente(termoDoCliente) : null;
       const cobranca = str(args, 'cobranca') === 'recorrente' ? 'recorrente' : 'pontual';
 
       const { data: criado, error } = await supabase()
         .from('engagements')
         .insert({
-          organization_id: cliente.id,
+          organization_id: cliente?.id ?? null,
           title: obrigatorio(args, 'titulo'),
           type: cobranca,
           status: 'aguardando',
@@ -201,13 +210,13 @@ export const ferramentasDeProjeto: Ferramenta[] = [
           valor: num(args, 'valor'),
           mrr: num(args, 'mrr'),
           scope: str(args, 'escopo'),
-          is_internal: bool(args, 'interno') ?? false,
+          is_internal: interno,
         })
         .select('id')
         .maybeSingle();
 
       if (error) throw new ErroDeUso(`Não deu para criar: ${error.message}`);
-      return { criado: true, projeto_id: criado?.id, cliente: cliente.name };
+      return { criado: true, projeto_id: criado?.id, cliente: cliente?.name ?? null, interno };
     },
   },
 
