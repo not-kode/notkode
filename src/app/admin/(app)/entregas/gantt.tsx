@@ -333,16 +333,44 @@ export function Gantt({ phases, tasks, titulo, modoCliente, resumo, send }: {
       </div>
 
       {semData.length > 0 && !modoCliente && (
-        <div className="border-t border-black/[0.06] bg-neutral-50 px-4 py-2.5">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
-            Sem data ({semData.length}) — fora do cronograma
-          </p>
-          <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-            {semData.map((t) => (
-              <li key={t.id} className="text-[12px] text-text-secondary">{t.titulo}</li>
-            ))}
-          </ul>
-        </div>
+        <SemData itens={semData} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * O que ainda não entrou no cronograma. Eram títulos em linha corrida, um do
+ * lado do outro: com quarenta tarefas virava um parágrafo de nomes onde não se
+ * achava nada. Agora é uma tarefa por linha, em colunas, e a lista começa curta
+ * porque essa fila é longa por natureza.
+ */
+function SemData({ itens }: { itens: { id: string; titulo: string }[] }) {
+  const [tudo, setTudo] = useState(false);
+  const LIMITE_SEM_DATA = 9;
+  const visiveis = tudo ? itens : itens.slice(0, LIMITE_SEM_DATA);
+  const restam = itens.length - visiveis.length;
+
+  return (
+    <div className="border-t border-black/[0.06] bg-neutral-50 px-4 py-3">
+      <p className="font-label text-[10px] uppercase tracking-wider text-text-muted">
+        Sem data ({itens.length}) — fora do cronograma
+      </p>
+      <ul className="mt-2 grid gap-x-6 gap-y-1 sm:grid-cols-2 xl:grid-cols-3">
+        {visiveis.map((t) => (
+          <li key={t.id} className="flex min-w-0 items-baseline gap-1.5 text-[12px] text-text-secondary">
+            <span className="shrink-0 text-text-muted/60">·</span>
+            <span className="truncate" title={t.titulo}>{t.titulo}</span>
+          </li>
+        ))}
+      </ul>
+      {(restam > 0 || tudo) && (
+        <button
+          onClick={() => setTudo((v) => !v)}
+          className="mt-2 text-[11px] text-primary transition-colors hover:underline"
+        >
+          {restam > 0 ? `ver as outras ${restam}` : 'mostrar menos'}
+        </button>
       )}
     </div>
   );
