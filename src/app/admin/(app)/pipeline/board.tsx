@@ -126,34 +126,8 @@ export function PipelineBoard({
     });
   }
 
-  // Ganhar tira o negócio do funil, e com ele sumia o botão de gerar o contrato:
-  // quem fechasse a venda e fechasse o card não tinha mais como voltar. Enquanto
-  // o contrato não nasce, o negócio fica aqui, à mão.
-  const ganhosSemContrato = deals.filter((d) => d.stage === 'ganho' && !d.has_contract);
-
   return (
     <>
-    {ganhosSemContrato.length > 0 && (
-      <div className="mb-3 rounded-md border border-success/25 bg-success/[0.05] px-3 py-2.5">
-        <p className="font-label text-[10px] uppercase tracking-[0.14em] text-success">
-          Ganho, falta gerar o contrato ({ganhosSemContrato.length})
-        </p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {ganhosSemContrato.map((d) => (
-            <button
-              key={d.id}
-              type="button"
-              onClick={() => setSelectedId(d.id)}
-              className="inline-flex items-center gap-2 rounded-md border border-black/[0.08] bg-white px-2.5 py-1.5 text-xs text-text-secondary transition-colors hover:border-success/50 hover:text-success"
-            >
-              <span className="font-medium text-text-primary">{d.org?.name ?? 'Negócio'}</span>
-              {dealTotal(d) > 0 && <span className="tabular-nums">{brl(dealTotal(d))}</span>}
-              <span className="font-label text-[10px] uppercase tracking-wider">gerar contrato →</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    )}
     <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-4">
       {PIPELINE_STAGES.map((stage) => {
         const cards = deals.filter((d) => d.stage === stage);
