@@ -35,6 +35,9 @@ export type { PhaseView, ProjectView, TaskView } from './types';
 const PREF_VISAO = 'notkode.entregas.visao';
 const PREF_PROJETO = 'notkode.entregas.projeto';
 const PREF_LISTA_PROJETOS = 'notkode.entregas.lista-projetos';
+const PREF_ABA = 'notkode.entregas.aba';
+const PREF_ESCOPO = 'notkode.entregas.escopo';
+const PREF_PERIODO = 'notkode.entregas.periodo';
 
 /** Os campos de uma ação de servidor, no formato que ela espera. */
 const formDataDe = (campos: Record<string, string>): FormData => {
@@ -143,6 +146,17 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
     if (projeto && projects.some((p) => p.id === projeto)) setAbertoId(projeto);
 
     if (localStorage.getItem(PREF_LISTA_PROJETOS) === 'fechada') setListaProjetos(false);
+
+    // O recorte da tela também é escolha de trabalho: quem estava vendo as
+    // tarefas de hoje, ou o cronograma, tem que voltar nele depois de um F5.
+    const abaSalva = localStorage.getItem(PREF_ABA);
+    if (abaSalva === 'tasks' || abaSalva === 'cronograma' || abaSalva === 'notas') setAba(abaSalva);
+
+    const escopoSalvo = localStorage.getItem(PREF_ESCOPO);
+    if (escopoSalvo === 'projeto' || escopoSalvo === 'todos') setEscopo(escopoSalvo);
+
+    const periodoSalvo = localStorage.getItem(PREF_PERIODO);
+    if (PERIODOS.some((p) => p.id === periodoSalvo)) setPeriodo(periodoSalvo as Periodo);
     // Só na montagem: depois disso quem manda é o clique.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -151,7 +165,7 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
     setAbertoId(id);
     localStorage.setItem(PREF_PROJETO, id);
     // Clicar num projeto é dizer "quero este": sai da visão geral sozinho.
-    setEscopo('projeto');
+    trocarEscopo('projeto');
   };
   const alternarLista = () => {
     setListaProjetos((v) => {
@@ -163,7 +177,7 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   // naquele projeto, que é o que se quer quando um nome chama a atenção.
   const abrirSoDoProjeto = (id: string) => {
     abrirProjeto(id);
-    setEscopo('projeto');
+    trocarEscopo('projeto');
   };
   // Nome vazio ou igual ao que já estava não vale uma ida ao banco.
   const renomear = (projeto: ProjectView, nome: string) => {
@@ -192,6 +206,18 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   const trocarVisao = (v: 'kanban' | 'lista') => {
     setVisao(v);
     localStorage.setItem(PREF_VISAO, v);
+  };
+  const trocarAba = (v: Aba) => {
+    setAba(v);
+    localStorage.setItem(PREF_ABA, v);
+  };
+  const trocarEscopo = (v: 'projeto' | 'todos') => {
+    setEscopo(v);
+    localStorage.setItem(PREF_ESCOPO, v);
+  };
+  const trocarPeriodo = (v: Periodo) => {
+    setPeriodo(v);
+    localStorage.setItem(PREF_PERIODO, v);
   };
 
   // Escopo "todos" ignora arquivados: arquivar existe justamente para tirar da frente.
@@ -290,7 +316,7 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
                   todos os clientes juntos. Por isso mora aqui em cima e não num
                   botão colado no nome de um cliente, onde parecia recorte dele. */}
               <button
-                onClick={() => setEscopo('todos')}
+                onClick={() => trocarEscopo('todos')}
                 className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[13px] transition-colors ${
                   escopo === 'todos'
                     ? 'bg-primary/[0.08] font-medium text-primary'
@@ -385,14 +411,14 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
               phasesDe={phasesDe}
               tagsDe={tagsDe}
               aba={aba}
-              setAba={setAba}
+              setAba={trocarAba}
               visao={visao}
               setVisao={trocarVisao}
               escopo={escopo}
-              setEscopo={setEscopo}
+              setEscopo={trocarEscopo}
               onAbrirProjeto={abrirSoDoProjeto}
               periodo={periodo}
-              setPeriodo={setPeriodo}
+              setPeriodo={trocarPeriodo}
               pending={pending}
               send={send}
             />

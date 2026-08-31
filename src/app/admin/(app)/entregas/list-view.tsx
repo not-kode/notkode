@@ -28,6 +28,9 @@ import {
 } from './ui';
 import { TaskDrawer } from './task-drawer';
 
+/** Grupos que você abriu ou fechou na mão, lembrados entre visitas. */
+const PREF_DOBRA = 'notkode.entregas.grupos';
+
 // A lista tem uma ordem só dentro do grupo, `porPrazo`: o que vence antes em
 // cima, empate pela prioridade, sem prazo no fim.
 
@@ -91,7 +94,25 @@ export function ListView({
   // Grupo aberto ou fechado, só quando você mandou. Sem dito seu vale o padrão:
   // grupo vazio nasce fechado (uma faixa fina em vez de "nada aqui" ocupando a
   // tela), e Done e sprint concluída também, que são histórico, não fila.
+  //
+  // Fica guardado no navegador: quem abriu "Fazendo" para trabalhar nele não
+  // pode perder isso num F5. É preferência de trabalho, como a visão e o filtro.
   const [dobra, setDobra] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try {
+      const salvo = localStorage.getItem(PREF_DOBRA);
+      if (salvo) setDobra(JSON.parse(salvo) as Record<string, boolean>);
+    } catch {
+      // Preferência corrompida não pode derrubar a lista: vale o padrão.
+    }
+  }, []);
+  const dobrar = (chave: string, fechado: boolean) => {
+    setDobra((d) => {
+      const novo = { ...d, [chave]: !fechado };
+      localStorage.setItem(PREF_DOBRA, JSON.stringify(novo));
+      return novo;
+    });
+  };
   const [abertaId, setAberta] = useState<string | null>(null);
   // Seleção para agir em lote: concluir dez tarefas uma a uma é trabalho à toa.
   const [selecao, setSelecao] = useState<string[]>([]);
@@ -602,7 +623,7 @@ export function ListView({
                 className="h-3.5 w-3.5 accent-primary disabled:opacity-30"
               />
               <button
-                onClick={() => setDobra((d) => ({ ...d, [grupo.chave]: !fechado }))}
+                onClick={() => dobrar(grupo.chave, fechado)}
                 aria-label={fechado ? 'Abrir grupo' : 'Fechar grupo'}
                 className="rounded p-0.5 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
               >
