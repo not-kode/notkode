@@ -172,23 +172,26 @@ export default async function EntregasPage() {
     }
   }
 
-  // Quem pode tocar tarefa. Vem de dois lugares: quem já é responsável por
-  // alguma (a equipe, sem precisar de cadastro à parte) e os contatos e empresas
-  // dos clientes, para quando a bola está com o cliente e não com a casa.
+  // Quem pode tocar tarefa. Equipe é quem tem login no sistema, e só: antes o
+  // grupo era "quem já é responsável por alguma tarefa", o que jogava cliente
+  // para dentro da casa assim que a bola ficava com ele uma vez. O resto —
+  // contatos, empresas e nomes soltos que já respondem por tarefas — é cliente.
   const { data: contatoData } = await supabase.from('contacts').select('name');
   const { data: orgData } = await supabase.from('organizations').select('id, name');
+  const { data: usuarioData } = await supabase.from('admin_users').select('nome').eq('ativo', true);
 
   const equipe = [...new Set(
-    tasks.map((t) => (t.assignee ?? '').trim()).filter(Boolean),
+    ((usuarioData ?? []) as { nome: string | null }[]).map((u) => (u.nome ?? '').trim()).filter(Boolean),
   )].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   const daCasa = new Set(equipe.map((n) => n.toLowerCase()));
-  const clientes = [...new Set(
-    [...(contatoData ?? []), ...(orgData ?? [])]
-      .map((c) => ((c as { name: string | null }).name ?? '').trim())
-      .filter(Boolean),
-  )]
-    // Nome que já aparece como responsável não se repete no grupo de baixo.
+  const clientes = [...new Set([
+    ...[...(contatoData ?? []), ...(orgData ?? [])]
+      .map((c) => ((c as { name: string | null }).name ?? '').trim()),
+    // Quem já responde por tarefa continua na lista, senão o responsável de hoje
+    // sumiria do seletor no dia em que alguém quisesse trocá-lo.
+    ...tasks.map((t) => (t.assignee ?? '').trim()),
+  ].filter(Boolean))]
     .filter((n) => !daCasa.has(n.toLowerCase()))
     .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
