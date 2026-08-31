@@ -169,8 +169,8 @@ export const ferramentasDeProjeto: Ferramenta[] = [
     nome: 'criar_projeto',
     descricao:
       'Cria um projeto para pendurar tarefas e cronograma. Para trabalho de cliente, diga o "cliente" (organização já ' +
-      'cadastrada). Para frente da própria casa (marketing, comercial, um estudo nosso), mande "interno": true e ' +
-      'deixe o cliente de fora: o projeto nasce sem cliente e aparece no grupo Casa das entregas.',
+      'cadastrada). Para frente interna (marketing, comercial, um estudo nosso), mande "interno": true e deixe o ' +
+      'cliente de fora: o projeto nasce sem cliente e aparece no grupo Interno das entregas.',
     entrada: objeto(
       {
         cliente: texto('Nome do cliente (organização) já cadastrado, ou o id dele. Não use em frente interna.'),
@@ -181,7 +181,7 @@ export const ferramentasDeProjeto: Ferramenta[] = [
         inicio: texto('Data de início (AAAA-MM-DD, "hoje", "+7").'),
         fim: texto('Data prevista de entrega.'),
         escopo: texto('O que está incluso, em texto.'),
-        interno: { type: 'boolean', description: 'Frente da própria casa, sem cliente do outro lado.' },
+        interno: { type: 'boolean', description: 'Frente interna, sem cliente do outro lado.' },
       },
       ['titulo'],
     ),
@@ -192,7 +192,7 @@ export const ferramentasDeProjeto: Ferramenta[] = [
       const interno = bool(args, 'interno') ?? false;
       const termoDoCliente = str(args, 'cliente');
       if (!interno && !termoDoCliente) {
-        throw new ErroDeUso('Diga o "cliente" do projeto, ou mande "interno": true se for frente da nossa casa.');
+        throw new ErroDeUso('Diga o "cliente" do projeto, ou mande "interno": true se for frente interna.');
       }
       const cliente = termoDoCliente ? await acharCliente(termoDoCliente) : null;
       const cobranca = str(args, 'cobranca') === 'recorrente' ? 'recorrente' : 'pontual';

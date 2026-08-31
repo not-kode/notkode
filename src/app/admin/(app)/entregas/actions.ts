@@ -39,8 +39,8 @@ function revalidar(): void {
 /**
  * Abre um projeto (a "pasta" onde as tarefas moram). Dois casos, e a tela
  * pergunta qual antes de chegar aqui: trabalho de um cliente, que se pendura na
- * organização dele, ou frente da própria casa (marketing, comercial, um estudo
- * nosso), que nasce sem cliente e cai no grupo Casa.
+ * organização dele, ou frente interna (marketing, comercial, um estudo nosso),
+ * que nasce sem cliente e cai no grupo Interno.
  *
  * Nada de valor, prazo ou cobrança: isso é contrato, se preenche depois em
  * Clientes, e exigir aqui só atrapalharia quem só quer um lugar para as tarefas.
@@ -51,7 +51,7 @@ export async function createProject(formData: FormData): Promise<{ id: string } 
 
   const interno = str(formData, 'kind', 20) !== 'cliente';
   const organizationId = interno ? null : str(formData, 'organization_id', 64);
-  if (!interno && !organizationId) return { erro: 'Escolha de qual cliente é, ou marque como frente da casa.' };
+  if (!interno && !organizationId) return { erro: 'Escolha de qual cliente é, ou marque como interno.' };
 
   const { data, error } = await getSupabaseAdmin()
     .from('engagements')

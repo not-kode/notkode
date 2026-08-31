@@ -86,7 +86,7 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   // Botão direito num projeto da lateral: arquivar é ação de exceção e não
   // precisa de um botão fixo competindo com o resto da barra.
   const [menuProjeto, setMenuProjeto] = useState<{ projeto: ProjectView; x: number; y: number } | null>(null);
-  // Nova pasta: onde as tarefas vão morar. Pode ser de um cliente ou da casa, e
+  // Nova pasta: onde as tarefas vão morar. Pode ser de um cliente ou interna, e
   // a escolha é a primeira pergunta do formulário, não um detalhe escondido.
   const [novaPasta, setNovaPasta] = useState(false);
   const [pastaDeCliente, setPastaDeCliente] = useState(false);
@@ -176,14 +176,14 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   const tagsPorProjeto = useMemo(() => new Map(projects.map((p) => [p.id, p.tags])), [projects]);
   const tagsDe = (id: string) => tagsPorProjeto.get(id) ?? [];
 
-  // Cliente de um lado, casa do outro: são dois modos de trabalho diferentes.
+  // Cliente de um lado, trabalho interno do outro: são dois modos diferentes.
   // Fechamento vem antes dos dois: é venda ganha esperando virar projeto, e o
   // que está lá dentro (contrato, briefing, primeira parcela) não pode esperar.
   const grupos = useMemo(
     () => [
       { titulo: 'Fechamentos', itens: ativos.filter((p) => p.kind === 'negocio') },
       { titulo: 'Clientes', itens: ativos.filter((p) => p.kind === 'contrato' && !p.isInternal) },
-      { titulo: 'Casa', itens: ativos.filter((p) => p.kind === 'contrato' && p.isInternal) },
+      { titulo: 'Interno', itens: ativos.filter((p) => p.kind === 'contrato' && p.isInternal) },
     ].filter((g) => g.itens.length > 0),
     [ativos],
   );
@@ -318,11 +318,11 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
                         <input
                           type="radio"
                           name="kind"
-                          value="casa"
+                          value="interno"
                           defaultChecked
                           onChange={() => setPastaDeCliente(false)}
                         />
-                        Da casa
+                        Interno
                       </label>
                       <label className="flex items-center gap-1.5 text-[11px] text-text-secondary">
                         <input
