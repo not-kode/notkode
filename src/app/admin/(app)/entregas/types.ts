@@ -174,4 +174,9 @@ export type NotaView = {
  * alguma tarefa) e os contatos e empresas dos clientes, para quando o próximo
  * passo depende do cliente e não da casa.
  */
-export type Pessoa = { nome: string; tipo: 'equipe' | 'cliente' };
+/**
+ * Quem pode responder por uma tarefa. `equipe` é quem tem login no sistema;
+ * `externo` é qualquer outro nome que já apareceu como responsável (o cliente
+ * quando a bola está com ele, um parceiro), escrito na mão uma vez.
+ */
+export type Pessoa = { nome: string; tipo: 'equipe' | 'externo' };

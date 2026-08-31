@@ -13,6 +13,25 @@ function texto(fd: FormData, campo: string, max = 160): string {
   return String(fd.get(campo) ?? '').trim().slice(0, max);
 }
 
+/**
+ * Nome de gente com inicial maiúscula, mesmo quando quem digitou não usou o
+ * shift. O nome aqui é o mesmo que aparece como responsável das tarefas e nas
+ * assinaturas: "camila" ao lado de "Camila Gregório" parecia outra pessoa.
+ * Partículas (de, da, dos, e) ficam minúsculas, como se escreve.
+ */
+const MINUSCULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'du', 'del']);
+function nomeProprio(bruto: string): string {
+  return bruto
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((palavra, i) => {
+      const min = palavra.toLocaleLowerCase('pt-BR');
+      if (i > 0 && MINUSCULAS.has(min)) return min;
+      return min.charAt(0).toLocaleUpperCase('pt-BR') + min.slice(1);
+    })
+    .join(' ');
+}
+
 function papelValido(v: string): 'admin' | 'equipe' {
   return v === 'equipe' ? 'equipe' : 'admin';
 }
@@ -23,7 +42,7 @@ function traduzir(erro: { code?: string; message: string }): string {
 }
 
 export async function criarUsuario(fd: FormData): Promise<Resultado> {
-  const nome = texto(fd, 'nome', 120);
+  const nome = nomeProprio(texto(fd, 'nome', 120));
   const email = texto(fd, 'email').toLowerCase();
   const senha = String(fd.get('senha') ?? '');
 
@@ -49,7 +68,7 @@ export async function criarUsuario(fd: FormData): Promise<Resultado> {
 
 export async function atualizarUsuario(fd: FormData): Promise<Resultado> {
   const id = texto(fd, 'id', 40);
-  const nome = texto(fd, 'nome', 120);
+  const nome = nomeProprio(texto(fd, 'nome', 120));
   const email = texto(fd, 'email').toLowerCase();
   if (!id || !nome || !email.includes('@')) return { ok: false, erro: 'Nome e e-mail são obrigatórios.' };
 

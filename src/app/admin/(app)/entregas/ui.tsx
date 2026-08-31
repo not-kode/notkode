@@ -300,9 +300,10 @@ export function MenuContexto({ em, itens, fechar }: {
  *
  * Digitar o nome toda vez fazia a mesma pessoa virar três ("Camila", "camila
  * gregório", "Cami") e nenhuma busca por responsável fechava a conta. A lista
- * traz quem já toca tarefas por aqui e os contatos dos clientes, para quando a
- * bola está com o cliente; nome que ainda não existe entra digitando, e da
- * próxima vez já aparece na lista.
+ * traz a equipe (quem tem login) e os nomes que já respondem por alguma tarefa;
+ * nome que ainda não existe entra digitando, e da próxima vez já aparece na
+ * lista. A agenda de contatos não entra: são dezenas de nomes, com a mesma
+ * pessoa aparecendo como contato e como empresa, para escolher entre três.
  */
 export function PessoaSelect({ value, pessoas, onChange, compacto = false }: {
   value: string | null;
@@ -339,7 +340,7 @@ export function PessoaSelect({ value, pessoas, onChange, compacto = false }: {
 
   const grupos: { titulo: string; itens: Pessoa[] }[] = [
     { titulo: 'Equipe', itens: achadas.filter((p) => p.tipo === 'equipe') },
-    { titulo: 'Clientes', itens: achadas.filter((p) => p.tipo === 'cliente') },
+    { titulo: 'Outros', itens: achadas.filter((p) => p.tipo === 'externo') },
   ].filter((g) => g.itens.length > 0);
 
   return (

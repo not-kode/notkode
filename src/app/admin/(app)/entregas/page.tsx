@@ -172,12 +172,12 @@ export default async function EntregasPage() {
     }
   }
 
-  // Quem pode tocar tarefa. Equipe é quem tem login no sistema, e só: antes o
-  // grupo era "quem já é responsável por alguma tarefa", o que jogava cliente
-  // para dentro da casa assim que a bola ficava com ele uma vez. O resto —
-  // contatos, empresas e nomes soltos que já respondem por tarefas — é cliente.
-  const { data: contatoData } = await supabase.from('contacts').select('name');
-  const { data: orgData } = await supabase.from('organizations').select('id, name');
+  // Quem pode tocar tarefa: a equipe (quem tem login) e os nomes que já
+  // respondem por alguma tarefa. A agenda de contatos e as empresas saíram
+  // daqui: traziam a mesma pessoa duas vezes (o contato "Bruno" e a empresa
+  // "Casa da IPE", a "Vânia" e o "Brechó da Dona Inhá") e uma lista de dezenas
+  // de nomes para escolher entre três. Nome de fora entra digitando, e da
+  // próxima vez já aparece na lista.
   const { data: usuarioData } = await supabase.from('admin_users').select('nome').eq('ativo', true);
 
   const equipe = [...new Set(
@@ -185,22 +185,17 @@ export default async function EntregasPage() {
   )].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   const daCasa = new Set(equipe.map((n) => n.toLowerCase()));
-  const clientes = [...new Set([
-    ...[...(contatoData ?? []), ...(orgData ?? [])]
-      .map((c) => ((c as { name: string | null }).name ?? '').trim()),
-    // Quem já responde por tarefa continua na lista, senão o responsável de hoje
-    // sumiria do seletor no dia em que alguém quisesse trocá-lo.
-    ...tasks.map((t) => (t.assignee ?? '').trim()),
-  ].filter(Boolean))]
+  const outros = [...new Set(tasks.map((t) => (t.assignee ?? '').trim()).filter(Boolean))]
     .filter((n) => !daCasa.has(n.toLowerCase()))
     .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   const pessoas: Pessoa[] = [
     ...equipe.map((nome) => ({ nome, tipo: 'equipe' as const })),
-    ...clientes.map((nome) => ({ nome, tipo: 'cliente' as const })),
+    ...outros.map((nome) => ({ nome, tipo: 'externo' as const })),
   ];
 
   // Para o formulário de nova pasta escolher de qual cliente ela é.
+  const { data: orgData } = await supabase.from('organizations').select('id, name');
   const organizacoes = ((orgData ?? []) as { id: string; name: string | null }[])
     .map((o) => ({ id: o.id, nome: (o.name ?? '').trim() }))
     .filter((o) => o.nome)
