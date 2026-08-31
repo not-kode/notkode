@@ -7,12 +7,19 @@
 
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
+/**
+ * Quem está do outro lado da chamada. Cada pessoa do time tem o seu token
+ * (mcp_tokens), então o que ela cria pelo terminal sai no nome dela; "quem"
+ * vem null quando a chamada usou o token geral do ambiente.
+ */
+export type Contexto = { quem: string | null };
+
 export type Ferramenta = {
   nome: string;
   descricao: string;
   /** JSON Schema dos argumentos, como o MCP espera. */
   entrada: Record<string, unknown>;
-  executar: (args: Record<string, unknown>) => Promise<unknown>;
+  executar: (args: Record<string, unknown>, contexto: Contexto) => Promise<unknown>;
 };
 
 /** Açúcar para declarar o schema sem repetir "type: object" toda hora. */

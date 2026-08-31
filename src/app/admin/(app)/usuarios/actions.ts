@@ -2,10 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { usuarioAtual } from '@/lib/admin-usuario';
+import { criarTokenPara, revogarToken } from '@/lib/mcp-token';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { SENHA_MINIMA } from './regras';
 
-type Resultado = { ok: boolean; erro?: string };
+/** "token" só volta preenchido na hora de gerar: depois disso ninguém mais lê o valor. */
+type Resultado = { ok: boolean; erro?: string; token?: string };
 
 function texto(fd: FormData, campo: string, max = 160): string {
   return String(fd.get(campo) ?? '').trim().slice(0, max);
@@ -102,6 +104,35 @@ export async function excluirUsuario(fd: FormData): Promise<Resultado> {
   const { error } = await getSupabaseAdmin().from('admin_users').delete().eq('id', id);
   if (error) return { ok: false, erro: error.message };
 
+  revalidatePath('/admin/usuarios');
+  return { ok: true };
+}
+
+// ── Acesso do terminal ─────────────────────────────────────────────────────
+// O caminho normal é a pessoa autorizar pelo navegador (OAuth, em
+// /admin/autorizar) e o token nascer sozinho. O que fica aqui é a saída manual,
+// para quando abrir o navegador não é uma opção, e a revogação, que vale para
+// os dois casos.
+
+export async function gerarTokenMcp(fd: FormData): Promise<Resultado> {
+  const id = texto(fd, 'id', 40);
+  if (!id) return { ok: false, erro: 'Usuário não encontrado.' };
+
+  try {
+    const token = await criarTokenPara(id);
+    revalidatePath('/admin/usuarios');
+    return { ok: true, token };
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : 'Não deu para gerar o token.' };
+  }
+}
+
+/** Corta um acesso de terminal: o id aqui é o do token, não o da pessoa. */
+export async function revogarTokenMcp(fd: FormData): Promise<Resultado> {
+  const id = texto(fd, 'id', 40);
+  if (!id) return { ok: false, erro: 'Acesso não encontrado.' };
+
+  await revogarToken(id);
   revalidatePath('/admin/usuarios');
   return { ok: true };
 }

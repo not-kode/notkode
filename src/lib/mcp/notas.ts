@@ -5,6 +5,7 @@ import {
   ErroDeUso, acharProjeto, acharTarefa, num, objeto, obrigatorio, opcoes, str,
   supabase, texto, type Ferramenta,
 } from './nucleo';
+import { RESPONSAVEL_PADRAO } from '@/app/admin/(app)/entregas/status';
 
 const TIPOS = ['nota', 'aprendizado', 'pessoa', 'recurso'] as const;
 
@@ -173,11 +174,11 @@ export const ferramentasDeNota: Ferramenta[] = [
         tarefa: texto('Id ou título da tarefa.'),
         texto: texto('O comentário.'),
         projeto: texto('Ajuda a achar a tarefa quando o título se repete.'),
-        autor: texto('Quem escreveu. Padrão: Camila Gregório.'),
+        autor: texto('Quem escreveu. Padrão: quem está chamando.'),
       },
       ['tarefa', 'texto'],
     ),
-    async executar(args) {
+    async executar(args, { quem }) {
       const projetoTermo = str(args, 'projeto');
       const doProjeto = projetoTermo ? await acharProjeto(projetoTermo) : null;
       const tarefa = await acharTarefa(obrigatorio(args, 'tarefa'), doProjeto?.id);
@@ -185,7 +186,7 @@ export const ferramentasDeNota: Ferramenta[] = [
       const { error } = await supabase().from('task_comments').insert({
         task_id: tarefa.id,
         content: obrigatorio(args, 'texto'),
-        author: str(args, 'autor') ?? 'Camila Gregório',
+        author: str(args, 'autor') ?? quem ?? RESPONSAVEL_PADRAO,
       });
 
       if (error) throw new ErroDeUso(`Não deu para comentar: ${error.message}`);

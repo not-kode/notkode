@@ -116,8 +116,8 @@ export const ferramentasDeTarefa: Ferramenta[] = [
   {
     nome: 'criar_tarefa',
     descricao:
-      'Cria uma tarefa num projeto. Sem responsável dito, nasce com a Camila. Para várias de uma vez, chame de novo ' +
-      'ou use "titulos".',
+      'Cria uma tarefa num projeto. Sem responsável dito, nasce no nome de quem está chamando. Para várias de uma ' +
+      'vez, chame de novo ou use "titulos".',
     entrada: objeto(
       {
         projeto: texto('Nome do cliente, título ou id.'),
@@ -135,7 +135,7 @@ export const ferramentasDeTarefa: Ferramenta[] = [
       },
       ['projeto'],
     ),
-    async executar(args) {
+    async executar(args, { quem }) {
       const alvo = await acharProjeto(obrigatorio(args, 'projeto'));
       const db = supabase();
 
@@ -175,7 +175,7 @@ export const ferramentasDeTarefa: Ferramenta[] = [
             priority: prioridade && PRIORITIES.includes(prioridade as never) ? prioridade : 'media',
             start_date: data(args, 'inicio'),
             due_date: data(args, 'prazo'),
-            assignee: str(args, 'responsavel') ?? RESPONSAVEL_PADRAO,
+            assignee: str(args, 'responsavel') ?? quem ?? RESPONSAVEL_PADRAO,
             client_visible: clienteVe ?? true,
             sort: ordem++,
           })

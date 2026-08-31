@@ -26,7 +26,9 @@ export default async function middleware(req: NextRequest) {
 
     const url = req.nextUrl.clone();
     url.pathname = '/admin/login';
-    url.search = `?next=${encodeURIComponent(pathname)}`;
+    // Leva a query junto: a tela de autorização do MCP vive dos parâmetros do
+    // OAuth, e sem eles a pessoa voltaria do login para uma página sem pedido.
+    url.search = `?next=${encodeURIComponent(pathname + req.nextUrl.search)}`;
     return NextResponse.redirect(url);
   }
 

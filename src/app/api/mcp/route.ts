@@ -6,12 +6,19 @@
 //
 // Protocolo: JSON-RPC 2.0 sobre HTTP, resposta em JSON puro (o transporte
 // "streamable http" aceita isso, e sem stream o servidor fica trivial).
-// Autenticação: Bearer com o MCP_TOKEN do ambiente. Sem token configurado, a
-// rota se recusa a responder, para não expor o CRM por acidente.
+//
+// Autenticação: Bearer. O caminho normal é o OAuth — a pessoa aponta o cliente
+// para este endereço, o 401 daqui diz onde autenticar, o navegador abre no
+// login do /admin e ela libera o acesso numa tela. Também valem o token gerado
+// à mão em /admin/usuarios e o MCP_TOKEN do ambiente, este último como chave
+// geral da casa, sem nome atrelado. Em qualquer caso o servidor sabe em nome de
+// quem trabalha, e o que for criado sai no nome certo.
 
 import { NextResponse } from 'next/server';
-import { ErroDeUso } from '@/lib/mcp/nucleo';
+import { ErroDeUso, type Contexto } from '@/lib/mcp/nucleo';
 import { acharFerramenta, todas } from '@/lib/mcp';
+import { donoDoToken } from '@/lib/mcp-token';
+import { SITE_URL } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -26,21 +33,41 @@ const resposta = (id: Pedido['id'], resultado: unknown) =>
 const erro = (id: Pedido['id'], codigo: number, mensagem: string) =>
   NextResponse.json({ jsonrpc: '2.0', id: id ?? null, error: { code: codigo, message: mensagem } });
 
-function autorizado(req: Request): boolean {
-  const esperado = process.env.MCP_TOKEN;
-  if (!esperado) return false;
+/** Quem está chamando, ou null se o token não vale. */
+async function identificar(req: Request): Promise<Contexto | null> {
   const cabecalho = req.headers.get('authorization') ?? '';
   const enviado = cabecalho.replace(/^Bearer\s+/i, '').trim();
-  return !!enviado && enviado === esperado;
+  if (!enviado) return null;
+
+  // Token pessoal: o dono vira o nome que carimba tarefa e comentário.
+  const dono = await donoDoToken(enviado);
+  if (dono) return { quem: dono.nome };
+
+  const geral = process.env.MCP_TOKEN;
+  return geral && enviado === geral ? { quem: null } : null;
 }
 
+/**
+ * 401 do jeito que o cliente MCP entende: o WWW-Authenticate aponta para a
+ * metadata do recurso (RFC 9728), e é lendo esse endereço que ele descobre
+ * sozinho onde mandar a pessoa autenticar. Sem este cabeçalho, o cliente só
+ * sabe que foi barrado e não tem como oferecer o login.
+ */
+const semToken = () =>
+  NextResponse.json(
+    { jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Token inválido ou ausente.' } },
+    {
+      status: 401,
+      headers: {
+        'WWW-Authenticate':
+          `Bearer resource_metadata="${SITE_URL}/.well-known/oauth-protected-resource"`,
+      },
+    },
+  );
+
 export async function POST(req: Request) {
-  if (!autorizado(req)) {
-    return NextResponse.json(
-      { jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Token inválido ou ausente.' } },
-      { status: 401 },
-    );
-  }
+  const contexto = await identificar(req);
+  if (!contexto) return semToken();
 
   let corpo: Pedido;
   try {
@@ -83,7 +110,7 @@ export async function POST(req: Request) {
 
       const args = (params?.arguments ?? {}) as Record<string, unknown>;
       try {
-        const saida = await ferramenta.executar(args);
+        const saida = await ferramenta.executar(args, contexto);
         return resposta(id, {
           content: [{ type: 'text', text: JSON.stringify(saida, null, 2) }],
           isError: false,
@@ -104,8 +131,15 @@ export async function POST(req: Request) {
   }
 }
 
-/** GET só para conferir que o servidor está de pé (e que o token confere). */
+/** GET só para conferir que o servidor está de pé, e em nome de quem o token fala. */
 export async function GET(req: Request) {
-  if (!autorizado(req)) return NextResponse.json({ ok: false, motivo: 'token' }, { status: 401 });
-  return NextResponse.json({ ok: true, servidor: 'notkode', ferramentas: todas.length, protocolo: VERSAO_PROTOCOLO });
+  const contexto = await identificar(req);
+  if (!contexto) return NextResponse.json({ ok: false, motivo: 'token' }, { status: 401 });
+  return NextResponse.json({
+    ok: true,
+    servidor: 'notkode',
+    quem: contexto.quem ?? 'acesso geral',
+    ferramentas: todas.length,
+    protocolo: VERSAO_PROTOCOLO,
+  });
 }

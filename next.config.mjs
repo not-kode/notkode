@@ -50,6 +50,15 @@ const nextConfig = {
         source: '/downloads/simbos/:file*',
         destination: `${SIMBOS_DOWNLOADS_ORIGIN}/:file*`,
       },
+
+      // Descoberta do OAuth do MCP. Os endereços são fixados pelas RFCs 9728 e
+      // 8414 e ficam na raiz do domínio; as rotas de verdade moram em
+      // /api/oauth. A variante com caminho no fim existe porque o cliente pode
+      // procurar pelo recurso específico (.../oauth-protected-resource/api/mcp).
+      { source: '/.well-known/oauth-protected-resource', destination: '/api/oauth/metadata/recurso' },
+      { source: '/.well-known/oauth-protected-resource/:path*', destination: '/api/oauth/metadata/recurso' },
+      { source: '/.well-known/oauth-authorization-server', destination: '/api/oauth/metadata/servidor' },
+      { source: '/.well-known/oauth-authorization-server/:path*', destination: '/api/oauth/metadata/servidor' },
     ];
   },
   async redirects() {
