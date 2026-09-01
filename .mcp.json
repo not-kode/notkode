@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "notkode": {
+      "type": "http",
+      "url": "https://notkode.com.br/api/mcp"
+    }
+  }
+}

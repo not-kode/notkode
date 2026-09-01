@@ -12,7 +12,9 @@ Use o servidor MCP `notkode` (ferramentas `criar_tarefa`, `listar_tarefas`, `atu
 - Não crie task para pedidos triviais/one-off (uma dúvida, um comando rápido, um ajuste de uma linha). Use bom senso: se o trabalho tem contexto que valeria retomar depois, cria; se é descartável, não.
 - Ao terminar uma task, mova para `revisao` (nunca `feito` — só a Camila marca como concluída).
 
-O mesmo MCP serve para o resto do CRM (contratos, cronograma, recebíveis, funil, briefings). O código dele está em `src/lib/mcp/` e a rota em `src/app/api/mcp/route.ts`; a autenticação é o `MCP_TOKEN` do ambiente.
+O mesmo MCP serve para o resto do CRM (contratos, cronograma, recebíveis, funil, briefings). O código dele está em `src/lib/mcp/` e a rota em `src/app/api/mcp/route.ts`.
+
+O servidor vem do `.mcp.json` deste repositório, então ele existe em qualquer lugar onde o repositório for aberto: terminal, Claude Code no navegador, na máquina de qualquer um da equipe. Ninguém copia token: na primeira chamada o servidor responde 401 dizendo onde autenticar, o navegador abre no login do /admin e a pessoa libera o acesso numa tela. O token nasce no nome dela, e é esse nome que carimba tarefa e comentário. Quem preferir pode gerar um token à mão em /admin/usuarios. O `MCP_TOKEN` do ambiente continua valendo como chave geral da casa, sem nome atrelado.
 
 ## Onde este projeto mora (e o que NÃO é dele)
 
