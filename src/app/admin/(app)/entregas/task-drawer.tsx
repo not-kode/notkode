@@ -16,7 +16,7 @@ import {
 import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
 import { donoDaTarefa } from './types';
 import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskView } from './types';
-import { ChipSelect, DateChip, PessoaSelect, PriorityChip, TagsSelect, TimerChip, hoje } from './ui';
+import { ChipSelect, PeriodoChip, PessoaSelect, PriorityChip, TagsSelect, TimerChip, hoje } from './ui';
 
 export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projectId, projectKind, pessoas, send, onFechar }: {
   task: TaskView;
@@ -138,11 +138,19 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
               />
             </dd>
 
-            <dt className="text-text-muted">Começa</dt>
-            <dd><DateChip value={task.startDate} onSave={(v) => send(updateTask, { id: task.id, start_date: v })} placeholder="sem começo" /></dd>
-
-            <dt className="text-text-muted">Termina</dt>
-            <dd><DateChip value={task.dueDate} onSave={(v) => send(updateTask, { id: task.id, due_date: v })} atrasada={atrasada} quieta={task.status === 'feito'} placeholder="sem fim" /></dd>
+            {/* Começo e fim na mesma janelinha: em dois chips separados, escolher
+                o começo fechava o calendário e o fim virava outra caçada. */}
+            <dt className="text-text-muted">Período</dt>
+            <dd>
+              <PeriodoChip
+                inicio={task.startDate}
+                fim={task.dueDate}
+                onInicio={(v) => send(updateTask, { id: task.id, start_date: v })}
+                onFim={(v) => send(updateTask, { id: task.id, due_date: v })}
+                atrasada={atrasada}
+                quieta={task.status === 'feito'}
+              />
+            </dd>
 
             <dt className="text-text-muted">Sprint</dt>
             <dd>

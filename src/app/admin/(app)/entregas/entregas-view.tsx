@@ -19,7 +19,8 @@ import {
   Archive, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
   LayoutGrid, Link2, List, PanelLeftClose, PanelLeftOpen, Plus, Rows3, X,
 } from 'lucide-react';
-import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS } from './types';
+import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS, semMaeNaTela } from './types';
+import type { Priority, TaskStatus } from './status';
 import type {
   Agrupamento, Coluna, ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send,
   TagView, TaskComProjeto, TaskView,
@@ -29,7 +30,10 @@ import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { Gantt } from './gantt';
 import { NotasView } from './notas-view';
-import { ChipSelect, DateChip, InlineText, MenuContexto, fmtDuracao, hoje, inputCls, somaDias } from './ui';
+import {
+  ChipSelect, DateChip, FiltroResponsavel, InlineText, MenuContexto, SEM_RESPONSAVEL,
+  fmtDuracao, fmtPeriodo, hoje, inputCls, somaDias,
+} from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
 
@@ -91,6 +95,13 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   const [visao, setVisao] = useState<'kanban' | 'lista'>('lista');
   const [escopo, setEscopo] = useState<'projeto' | 'todos'>('projeto');
   const [periodo, setPeriodo] = useState<Periodo>('tudo');
+  // '' é todo mundo; SEM_RESPONSAVEL é a fila do que ninguém pegou.
+  //
+  // Este é o único recorte que NÃO fica guardado no navegador: ele esconde
+  // tarefa de todo mundo que não é a pessoa escolhida, e voltar no dia seguinte
+  // com ele ligado faz a tela abrir vazia em projeto que está cheio de trabalho.
+  // Recarregar a página sempre devolve a tela inteira.
+  const [responsavel, setResponsavel] = useState('');
   const [verArquivados, setVerArquivados] = useState(false);
   // A lista de projetos come 15rem da largura; em "Todos" a tabela é que precisa
   // do espaço. Recolher fica guardado, como as outras preferências de trabalho.
@@ -106,11 +117,40 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   // meio da tela — na lateral ele espremia a lista de projetos e o campo do
   // caminho do repositório não cabia em 15rem.
   const [novaPasta, setNovaPasta] = useState(false);
+  // O que foi concluído nesta tela agora há pouco: fica visível mesmo quando o
+  // recorte aberto só mostra o que falta fazer. Zera ao trocar de recorte.
+  const [recemConcluidas, setRecemConcluidas] = useState<string[]>([]);
+  // O que você acabou de mudar, antes de o servidor responder. Concluir uma
+  // tarefa manda a ação e recarrega a página inteira (todas as tarefas, notas e
+  // comentários), o que leva uns dois segundos: sem isto, o clique ficava parado
+  // esse tempo todo e dava a impressão de que nada tinha acontecido.
+  const [otimista, setOtimista] = useState<Record<string, PatchOtimista>>({});
   const [pending, start] = useTransition();
 
   const router = useRouter();
 
   const send: Send = (action, campos) => {
+    const ids = (campos.ids ?? campos.id ?? '').split(',').filter(Boolean);
+
+    // Concluir dentro de um recorte que só mostra o que falta fazer ("Atrasadas")
+    // tirava a tarefa da tela no mesmo clique: ela deixa de ser atrasada na hora,
+    // e parecia que a tarefa tinha sumido em vez de ter ido para Feito. Quem você
+    // acabou de concluir fica na tela, riscada, até trocar de recorte.
+    if (campos.status === 'feito') {
+      if (ids.length > 0) setRecemConcluidas((r) => [...new Set([...r, ...ids])]);
+    }
+
+    // A tela muda já; o servidor confirma depois e o refresh substitui isto pelo
+    // dado de verdade. Se a gravação falhar, o refresh devolve o valor antigo.
+    const patch = patchDe(campos);
+    if (patch && ids.length > 0) {
+      setOtimista((o) => {
+        const novo = { ...o };
+        for (const id of ids) novo[id] = { ...novo[id], ...patch };
+        return novo;
+      });
+    }
+
     const fd = formDataDe(campos);
     // O refresh depois da ação é cinto de segurança: a revalidação do servidor já
     // deveria trazer o dado novo, e sem ele uma falha de cache aparece como
@@ -158,6 +198,9 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
 
     const periodoSalvo = localStorage.getItem(PREF_PERIODO);
     if (PERIODOS.some((p) => p.id === periodoSalvo)) setPeriodo(periodoSalvo as Periodo);
+
+    // Lixo de versão anterior, quando este filtro era lembrado: some sozinho.
+    localStorage.removeItem('notkode.entregas.responsavel');
     // Só na montagem: depois disso quem manda é o clique.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -214,23 +257,56 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   };
   const trocarEscopo = (v: 'projeto' | 'todos') => {
     setEscopo(v);
+    setRecemConcluidas([]);
     localStorage.setItem(PREF_ESCOPO, v);
   };
   const trocarPeriodo = (v: Periodo) => {
     setPeriodo(v);
+    setRecemConcluidas([]);
     localStorage.setItem(PREF_PERIODO, v);
   };
+  const trocarResponsavel = (v: string) => setResponsavel(v);
 
   // Escopo "todos" ignora arquivados: arquivar existe justamente para tirar da frente.
   const doEscopo = useMemo<TaskComProjeto[]>(() => {
     const comProjeto = (p: ProjectView): TaskComProjeto[] =>
       p.tasks.map((t) => ({
-        ...t, projetoNome: p.orgName ?? p.title ?? 'Sem nome', projetoId: p.id, projetoKind: p.kind,
+        ...t,
+        ...otimista[t.id],
+        projetoNome: p.orgName ?? p.title ?? 'Sem nome', projetoId: p.id, projetoKind: p.kind,
       }));
     return escopo === 'todos' ? ativos.flatMap(comProjeto) : aberto ? comProjeto(aberto) : [];
-  }, [escopo, ativos, aberto]);
+  }, [escopo, ativos, aberto, otimista]);
 
-  const filtradas = useMemo(() => recortar(doEscopo, periodo), [doEscopo, periodo]);
+  // Chegou dado novo do servidor: o que estava adiantado na tela já virou verdade
+  // e sai daqui. É o que evita a tela ficar presa a um valor que não gravou.
+  useEffect(() => { setOtimista({}); }, [projects]);
+
+  const doPeriodo = useMemo(
+    () => recortar(doEscopo, periodo, recemConcluidas),
+    [doEscopo, periodo, recemConcluidas],
+  );
+  const doResponsavel = useMemo(() => porResponsavel(doEscopo, responsavel), [doEscopo, responsavel]);
+  const filtradas = useMemo(() => porResponsavel(doPeriodo, responsavel), [doPeriodo, responsavel]);
+
+  // Quem aparece no menu sai das tarefas em vista, não do cadastro: uma lista
+  // com a equipe inteira para escolher entre dois nomes que existem no quadro só
+  // faria procurar. Cada filtro conta com o outro ligado, como faz o recorte de
+  // tempo aqui do lado: em "Hoje", o número ao lado do nome é o de hoje. A
+  // unidade é a tarefa-mãe, a mesma dos períodos.
+  const quemAparece = useMemo(() => contarPorResponsavel(doPeriodo), [doPeriodo]);
+
+  // Nome que não existe mais em lugar nenhum (saiu da equipe e não responde por
+  // tarefa nenhuma) deixaria a tela vazia sem explicação: aí o filtro volta para
+  // todo mundo. Nome do cadastro sem tarefa no recorte continua valendo: a tela
+  // vazia é a resposta de que ele não tem nada ali.
+  const noEscopo = useMemo(() => contarPorResponsavel(doEscopo), [doEscopo]);
+  useEffect(() => {
+    if (!responsavel || responsavel === SEM_RESPONSAVEL) return;
+    const existe = pessoas.some((p) => p.nome === responsavel) || responsavel in noEscopo.porNome;
+    if (!existe) trocarResponsavel('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [responsavel, noEscopo, pessoas]);
 
   const fasesPorProjeto = useMemo(() => new Map(projects.map((p) => [p.id, p.phases])), [projects]);
   const phasesDe = (id: string) => fasesPorProjeto.get(id) ?? [];
@@ -268,7 +344,24 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
       {/* O título é o da tela, como em todo o CRM; de quem é o que está aberto
           vem ao lado, como dado. O link do cliente é do projeto, então anda
           junto com o nome dele. */}
-      <PageHeader titulo="Tasks" dados={geral ? 'Tudo em aberto' : nomeAberto}>
+      <PageHeader
+        titulo="Tasks"
+        dados={
+          geral ? 'Tudo em aberto' : (
+            <span className="inline-flex items-center gap-2">
+              {nomeAberto}
+              {/* Quando o projeto tem data, ela vem junto do nome: a pergunta
+                  "quando isso começou e quando acaba" era respondida só pelo
+                  Gantt, uma aba adiante. */}
+              {aberto && fmtPeriodo(aberto.startDate, aberto.endDate) && (
+                <span className="font-normal normal-case tracking-normal text-text-secondary">
+                  · {fmtPeriodo(aberto.startDate, aberto.endDate)}
+                </span>
+              )}
+            </span>
+          )
+        }
+      >
         {!geral && aberto && aberto.kind === 'contrato' && (
           <ClientLink project={aberto} pending={pending} send={send} />
         )}
@@ -329,7 +422,10 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
                       <li key={p.id}>
                         <ItemProjeto
                           projeto={p}
-                          ativo={p.id === aberto?.id}
+                          // Em "Tudo em aberto" nenhum projeto está aberto: com
+                          // os dois acesos, a tela dizia que você estava dentro
+                          // de um cliente enquanto mostrava as tarefas de todos.
+                          ativo={escopo === 'projeto' && p.id === aberto?.id}
                           onClick={() => abrirProjeto(p.id)}
                           onMenu={(x, y) => setMenuProjeto({ projeto: p, x, y })}
                           renomeando={renomeando === p.id}
@@ -396,7 +492,10 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
               notas={notas}
               pessoas={pessoas}
               tarefas={filtradas}
-              tarefasDoEscopo={doEscopo}
+              tarefasDoEscopo={doResponsavel}
+              responsavel={responsavel}
+              setResponsavel={trocarResponsavel}
+              quemAparece={quemAparece}
               phasesDe={phasesDe}
               tagsDe={tagsDe}
               aba={aba}
@@ -465,14 +564,20 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   );
 }
 
-/** Recorte de tempo da lista, pelo prazo da tarefa. */
-function recortar(tarefas: TaskComProjeto[], periodo: Periodo): TaskComProjeto[] {
+/**
+ * Recorte de tempo da lista, pelo prazo da tarefa. `manter` são as tarefas que
+ * ficam na tela de qualquer jeito: o que você acabou de concluir não pode
+ * desaparecer no mesmo clique só porque deixou de estar atrasado.
+ */
+function recortar(tarefas: TaskComProjeto[], periodo: Periodo, manter: string[] = []): TaskComProjeto[] {
   const hj = hoje();
   const amanha = somaDias(hj, 1);
   const fimSemana = somaDias(hj, 7);
   const mes = hj.slice(0, 7);
 
+  const fixas = new Set(manter);
   const passa = (t: TaskComProjeto) => {
+    if (fixas.has(t.id)) return true;
     switch (periodo) {
       case 'tudo':      return true;
       case 'atrasadas': return !!t.dueDate && t.dueDate < hj && t.status !== 'feito';
@@ -485,12 +590,20 @@ function recortar(tarefas: TaskComProjeto[], periodo: Periodo): TaskComProjeto[]
   };
 
   // A subtarefa acompanha a mãe: filtrar por prazo não pode esvaziar o contador
-  // de subtarefas de uma tarefa que continua na lista. Quem decide é a tarefa lá
-  // do topo da cadeia, em qualquer profundidade — antes só o primeiro nível de
-  // subtarefa sobrevivia aqui, e uma subtarefa de subtarefa sumia da tela mesmo
-  // sem filtro nenhum ligado (era criada no banco e não aparecia em lugar algum).
+  // de subtarefas de uma tarefa que continua na lista.
+  const raiz = raizDe(tarefas);
+  return tarefas.filter((t) => passa(raiz(t)));
+}
+
+/**
+ * A tarefa lá do topo da cadeia, em qualquer profundidade. Todo filtro decide
+ * pela raiz para não partir a hierarquia no meio — antes só o primeiro nível de
+ * subtarefa sobrevivia aqui, e uma subtarefa de subtarefa sumia da tela mesmo
+ * sem filtro nenhum ligado (era criada no banco e não aparecia em lugar algum).
+ */
+function raizDe(tarefas: TaskComProjeto[]) {
   const porId = new Map(tarefas.map((t) => [t.id, t]));
-  const raiz = (t: TaskComProjeto): TaskComProjeto => {
+  return (t: TaskComProjeto): TaskComProjeto => {
     let atual = t;
     // O teto protege de cadeia circular: sem ele um dado torto trava a tela.
     for (let i = 0; atual.parentId && i < 20; i++) {
@@ -502,7 +615,79 @@ function recortar(tarefas: TaskComProjeto[], periodo: Periodo): TaskComProjeto[]
     }
     return atual;
   };
-  return tarefas.filter((t) => passa(raiz(t)));
+}
+
+/**
+ * O que dá para adiantar na tela sem esperar o servidor. São só os campos que a
+ * tela mostra direto na linha e no cartão: o resto (tags, cronômetro, subtarefa
+ * nova) muda de forma e é mais honesto esperar a resposta.
+ */
+type PatchOtimista = {
+  status?: TaskStatus; priority?: Priority; dueDate?: string | null;
+  assignee?: string | null; phaseId?: string | null; title?: string;
+};
+
+/** Os campos de uma ação de servidor traduzidos para o formato da tela. */
+function patchDe(campos: Record<string, string>): PatchOtimista | null {
+  const patch: PatchOtimista = {};
+  if (campos.status) patch.status = campos.status as TaskStatus;
+  if (campos.priority) patch.priority = campos.priority as Priority;
+  if ('due_date' in campos) patch.dueDate = campos.due_date || null;
+  if ('assignee' in campos) patch.assignee = campos.assignee || null;
+  if ('phase_id' in campos) patch.phaseId = campos.phase_id || null;
+  if (campos.title) patch.title = campos.title;
+  return Object.keys(patch).length > 0 ? patch : null;
+}
+
+const nomeDe = (t: TaskView) => (t.assignee ?? '').trim();
+
+/**
+ * Só o que é de uma pessoa: as tarefas com o nome dela, em qualquer nível, mais
+ * o que estiver pendurado nelas.
+ *
+ * Quem está filtrado nunca vê tarefa de outra pessoa. A subtarefa dela que mora
+ * numa tarefa de outro não desaparece por isso: sem a mãe na tela, ela mesma
+ * vira o cartão (é o que `semMaeNaTela` resolve). O contrário — trazer a mãe
+ * inteira porque uma subtarefa é dela — enchia o quadro de cartões com o avatar
+ * de outra pessoa, e era isso que não fazia sentido nenhum ao filtrar.
+ */
+function porResponsavel(tarefas: TaskComProjeto[], quem: string): TaskComProjeto[] {
+  if (!quem) return tarefas;
+  const dela = (t: TaskComProjeto) => (quem === SEM_RESPONSAVEL ? !nomeDe(t) : nomeDe(t) === quem);
+  const escolhidas = new Set(tarefas.filter(dela).map((t) => t.id));
+
+  // O que está pendurado numa tarefa dela acompanha: senão o contador de
+  // subtarefas do cartão passa a mentir e a árvore da lista abre vazia.
+  const porId = new Map(tarefas.map((t) => [t.id, t]));
+  const sobDela = (t: TaskComProjeto) => {
+    let atual = t;
+    // O teto protege de cadeia circular, como no recorte de tempo.
+    for (let i = 0; atual.parentId && i < 20; i++) {
+      const mae = porId.get(atual.parentId);
+      if (!mae) return false;
+      if (escolhidas.has(mae.id)) return true;
+      atual = mae;
+    }
+    return false;
+  };
+
+  return tarefas.filter((t) => escolhidas.has(t.id) || sobDela(t));
+}
+
+/**
+ * Quantas tarefas cada nome tem nas tarefas em vista. O número é o de cartões
+ * que aquele filtro deixa na tela, a mesma conta que a tela faz: clicar num nome
+ * não pode dar um número diferente do que se leu no menu.
+ */
+function contarPorResponsavel(tarefas: TaskComProjeto[]) {
+  const cartoes = (lista: TaskComProjeto[]) => lista.filter(semMaeNaTela(lista)).length;
+  const nomes = [...new Set(tarefas.map(nomeDe).filter(Boolean))];
+
+  return {
+    porNome: Object.fromEntries(nomes.map((nome) => [nome, cartoes(porResponsavel(tarefas, nome))])),
+    semResponsavel: cartoes(porResponsavel(tarefas, SEM_RESPONSAVEL)),
+    total: cartoes(tarefas),
+  };
 }
 
 /**
@@ -721,7 +906,8 @@ function Numeros({ tarefas }: { tarefas: TaskComProjeto[] }) {
 
 function ProjectPanel({
   project, comentarios, notas, pessoas, tarefas, tarefasDoEscopo, phasesDe, tagsDe, aba, setAba,
-  visao, setVisao, escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo, pending, send,
+  visao, setVisao, escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo,
+  responsavel, setResponsavel, quemAparece, pending, send,
 }: {
   project: ProjectView;
   comentarios: ComentarioView[];
@@ -740,6 +926,10 @@ function ProjectPanel({
   onAbrirProjeto: (id: string) => void;
   periodo: Periodo;
   setPeriodo: (v: Periodo) => void;
+  /** '' é todo mundo; SEM_RESPONSAVEL é a fila do que ninguém pegou. */
+  responsavel: string;
+  setResponsavel: (v: string) => void;
+  quemAparece: { porNome: Record<string, number>; semResponsavel: number; total: number };
   pending: boolean;
   send: Send;
 }) {
@@ -855,7 +1045,49 @@ function ProjectPanel({
                 </button>
               );
             })}
+
+            {/* Quem toca, no mesmo lugar do recorte de tempo: são as duas
+                perguntas da mesma barra, "para quando" e "de quem". Vale para o
+                quadro e para a lista. */}
+            <span className="mx-1 h-4 w-px shrink-0 bg-black/[0.08]" aria-hidden />
+            <FiltroResponsavel
+              value={responsavel}
+              pessoas={pessoas}
+              contagem={quemAparece.porNome}
+              semResponsavel={quemAparece.semResponsavel}
+              total={quemAparece.total}
+              onChange={setResponsavel}
+            />
+
+            {/* Um X do lado do nome: filtro de pessoa esconde o trabalho de todo
+                mundo, e sair dele tem que ser um clique óbvio, não uma volta ao
+                menu para procurar "Todo mundo". */}
+            {responsavel && (
+              <button
+                onClick={() => setResponsavel('')}
+                title="Ver as tarefas de todo mundo"
+                aria-label="Limpar o filtro de responsável"
+                className="rounded p-1 text-primary/70 transition-colors hover:bg-black/[0.05] hover:text-primary"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
+
+          {/* Tela vazia com filtro ligado precisa dizer por quê: sem isto, a
+              leitura é "as tarefas sumiram", e foi exatamente o que aconteceu. */}
+          {tarefas.length === 0 && responsavel && (
+            <p className="mb-3 flex flex-wrap items-center gap-2 rounded-md border border-primary/25 bg-primary/[0.05] px-3 py-2 text-[12px] text-text-secondary">
+              Nada de {responsavel === SEM_RESPONSAVEL ? 'ninguém em especial' : responsavel} neste recorte.
+              As tarefas continuam aqui, só estão escondidas pelo filtro.
+              <button
+                onClick={() => setResponsavel('')}
+                className="rounded-sm px-1.5 py-0.5 font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                Ver todo mundo
+              </button>
+            </p>
+          )}
 
           {visao === 'kanban' ? (
             <KanbanView

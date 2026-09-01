@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Check, MoreHorizontal, Plus } from 'lucide-react';
 import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
-import { donoDaTarefa, porPrazo } from './types';
+import { donoDaTarefa, porPrazo, semMaeNaTela } from './types';
 import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto, TaskView } from './types';
 import { ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, TagChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
@@ -42,12 +42,16 @@ export function KanbanView({ tasks, comentarios, phasesDe, tagsDe, projectId, pr
   const [abertaId, setAberta] = useState<string | null>(null);
   const subs = (id: string) => tasks.filter((t) => t.parentId === id);
   const aberta = tasks.find((t) => t.id === abertaId) ?? null;
+  // Com o filtro por responsável ligado, a subtarefa de quem está filtrado pode
+  // estar pendurada numa tarefa de outra pessoa, que não veio junto: aí é ela
+  // que vira o cartão. Sem filtro, isto é o mesmo que "não tem mãe".
+  const viraCartao = semMaeNaTela(tasks);
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {TASK_STATUSES.map((status) => {
         // Mesma ordem da lista: o que vence antes fica no topo da coluna.
-        const daColuna = tasks.filter((t) => t.status === status && !t.parentId).sort(porPrazo);
+        const daColuna = tasks.filter((t) => t.status === status && viraCartao(t)).sort(porPrazo);
         const destacada = alvo === status && arrastando;
 
         return (
@@ -256,8 +260,14 @@ function TaskCard({ task, phases, tags, pessoas, projeto, onAbrirProjeto, send, 
         />
       )}
 
-      {(etapa || projeto || subtarefas.length > 0) && (
+      {(etapa || projeto || subtarefas.length > 0 || task.parentId) && (
         <p className="mt-1.5 flex items-center gap-2 text-[11px] text-text-muted">
+          {/* Cartão que é subtarefa: só aparece assim com o filtro por
+              responsável ligado, quando a tarefa é sua e a mãe é de outra
+              pessoa. Sem o aviso, ela parece uma tarefa solta do nada. */}
+          {task.parentId && (
+            <span className="shrink-0" title="Subtarefa de uma tarefa que está fora deste filtro">↳</span>
+          )}
           {projeto && (
             <button
               onClick={onAbrirProjeto}

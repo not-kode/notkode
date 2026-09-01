@@ -18,7 +18,7 @@ import {
   PHASE_DOT, PHASE_LABELS, PHASE_STATUSES, PHASE_TOM, PRIORITIES, PRIORITY_LABELS, PRIORITY_ORDER, TASK_DOT, TASK_LABELS,
   TASK_STATUSES, TASK_TOM, type PhaseStatus, type TaskStatus,
 } from './status';
-import { COLUNA_LABELS, donoDaTarefa, porPrazo } from './types';
+import { COLUNA_LABELS, donoDaTarefa, porPrazo, semMaeNaTela } from './types';
 import type {
   Agrupamento, Coluna, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto,
 } from './types';
@@ -253,7 +253,10 @@ export function ListView({
   const ordenarNaSprint = (lista: TaskComProjeto[]) =>
     ordenar(lista).sort((a, b) => Number(a.status === 'feito') - Number(b.status === 'feito'));
 
-  const raizes = tasks.filter((t) => !t.parentId);
+  // Mesma regra do quadro: com o filtro por responsável, a subtarefa de quem
+  // está filtrado sobe para linha de topo quando a mãe (de outra pessoa) ficou
+  // fora da tela. Sem filtro, é exatamente "não tem mãe".
+  const raizes = tasks.filter(semMaeNaTela(tasks));
   const marcada = (id: string) => selecao.includes(id);
   const alternar = (id: string) =>
     setSelecao((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -450,6 +453,17 @@ export function ListView({
 
         <td className="px-3 py-2">
           <div className="flex min-w-0 items-center gap-2" style={{ paddingLeft: nivel * 20 }}>
+            {/* Subtarefa no topo da lista: acontece com o filtro por responsável
+                ligado, quando a tarefa é sua e a mãe é de outra pessoa. O aviso
+                explica por que ela aparece solta, sem a linha de cima. */}
+            {nivel === 0 && t.parentId && (
+              <span
+                title="Subtarefa de uma tarefa que está fora deste filtro"
+                className="shrink-0 text-[11px] text-text-muted"
+              >
+                ↳
+              </span>
+            )}
             <button
               onClick={() => setAberta(t.id)}
               className={`flex min-w-0 items-center text-left transition-colors hover:text-primary ${

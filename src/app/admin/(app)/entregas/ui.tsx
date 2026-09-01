@@ -6,7 +6,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, Check, ChevronDown, Pause, Play, Plus, X } from 'lucide-react';
+import { Calendar, Check, ChevronDown, Pause, Play, Plus, User, X } from 'lucide-react';
 import {
   PRIORITIES, PRIORITY_LABELS, TAG_COLORS, TAG_COLOR_LABELS, TAG_DOT, TAG_TOM, corDaTag,
   type Priority, type TagColor,
@@ -866,5 +866,265 @@ export function TagsSelect({ value, tags, onChange, onCriar, onCor, onApagar, co
         document.body,
       )}
     </div>
+  );
+}
+
+// ── Filtro por responsável ───────────────────────────────────────────────────
+
+/** Valor do filtro para "tarefa que ninguém pegou". */
+export const SEM_RESPONSAVEL = '__sem__';
+
+/**
+ * Quem toca as tarefas que a tela mostra. Fica na mesma barra do recorte de
+ * tempo e vale para o quadro e para a lista: no quadro não havia jeito nenhum
+ * de ver só o que é seu, e a coluna Fazendo de todo mundo junta não responde
+ * "o que eu tenho para hoje".
+ *
+ * A lista é a mesma do "quem toca" da tarefa: a equipe do sistema e os nomes de
+ * fora (clientes e parceiros) que já respondem por alguma tarefa. Não é a lista
+ * de quem tem tarefa no recorte aberto: procurar alguém e não achar o nome faz
+ * duvidar do filtro, enquanto ver "Walter 0" responde na hora que ele não tem
+ * nada ali. O número é sempre o do recorte em vista.
+ */
+export function FiltroResponsavel({ value, pessoas, contagem, semResponsavel, total, onChange }: {
+  /** '' é todo mundo; SEM_RESPONSAVEL é quem está sem dono. */
+  value: string;
+  /** Quem pode responder por uma tarefa: a equipe e os nomes de fora. */
+  pessoas: Pessoa[];
+  /** Quantas tarefas cada nome tem no recorte em vista. */
+  contagem: Record<string, number>;
+  semResponsavel: number;
+  total: number;
+  onChange: (v: string) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const botaoRef = useRef<HTMLButtonElement>(null);
+  const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 208, 288);
+  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
+
+  const ativo = value !== '';
+  const rotulo = value === SEM_RESPONSAVEL ? 'Sem responsável' : value || 'Todo mundo';
+
+  const escolher = (v: string) => { onChange(v); setAberto(false); };
+
+  const itemCls = (marcado: boolean, vazio: boolean) =>
+    `flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-black/[0.04] ${
+      marcado ? 'text-text-primary' : vazio ? 'text-text-muted' : 'text-text-secondary'
+    }`;
+
+  // Mesma separação do "quem toca": a casa em cima, quem é de fora embaixo. Nome
+  // que responde por tarefa mas não está no cadastro entra em "Outros" para não
+  // sumir do filtro.
+  const cadastradas = new Set(pessoas.map((p) => p.nome.toLowerCase()));
+  const avulsos: Pessoa[] = Object.keys(contagem)
+    .filter((nome) => !cadastradas.has(nome.toLowerCase()))
+    .map((nome) => ({ nome, tipo: 'externo' as const }));
+
+  const grupos: { titulo: string; itens: Pessoa[] }[] = [
+    { titulo: 'Equipe', itens: pessoas.filter((p) => p.tipo === 'equipe') },
+    {
+      titulo: 'Clientes e parceiros',
+      itens: [...pessoas.filter((p) => p.tipo === 'externo'), ...avulsos]
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    },
+  ].filter((g) => g.itens.length > 0);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        ref={botaoRef}
+        onClick={() => setAberto((v) => !v)}
+        title="Filtrar por responsável"
+        className={`inline-flex max-w-[12rem] items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${
+          ativo ? 'bg-primary/[0.08] text-primary' : 'text-text-muted hover:text-text-primary'
+        }`}
+      >
+        {value && value !== SEM_RESPONSAVEL
+          ? <Sigla nome={value} />
+          : <User className="h-3.5 w-3.5 shrink-0" />}
+        <span className="truncate">{rotulo}</span>
+        <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />
+      </button>
+
+      {aberto && pos && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-50 w-52 overflow-hidden rounded-md border border-black/[0.08] bg-white py-1 shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
+          style={{ left: pos.left, top: pos.top }}
+        >
+          <div className="max-h-64 overflow-y-auto">
+            <button onClick={() => escolher('')} className={itemCls(value === '', false)}>
+              <User className="h-3.5 w-3.5 shrink-0 text-text-muted" />
+              <span className="truncate">Todo mundo</span>
+              <span className="ml-auto shrink-0 text-[10px] tabular-nums text-text-muted">{total}</span>
+              {value === '' && <Check className="h-3 w-3 shrink-0 text-primary" />}
+            </button>
+
+            {grupos.map((g) => (
+              <div key={g.titulo}>
+                <p className="px-2.5 pb-0.5 pt-1.5 font-label text-[9px] uppercase tracking-[0.14em] text-text-muted">
+                  {g.titulo}
+                </p>
+                {g.itens.map((p) => {
+                  const quantas = contagem[p.nome] ?? 0;
+                  return (
+                    <button
+                      key={`${p.tipo}-${p.nome}`}
+                      onClick={() => escolher(p.nome)}
+                      className={itemCls(value === p.nome, quantas === 0)}
+                    >
+                      <Sigla nome={p.nome} />
+                      <span className="truncate">{p.nome}</span>
+                      <span className="ml-auto shrink-0 text-[10px] tabular-nums text-text-muted">{quantas}</span>
+                      {value === p.nome && <Check className="h-3 w-3 shrink-0 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+
+            <button
+              onClick={() => escolher(SEM_RESPONSAVEL)}
+              className={`${itemCls(value === SEM_RESPONSAVEL, semResponsavel === 0)} mt-1 border-t border-black/[0.06]`}
+            >
+              <Avatar nome={null} />
+              <span className="truncate">Sem responsável</span>
+              <span className="ml-auto shrink-0 text-[10px] tabular-nums text-text-muted">{semResponsavel}</span>
+              {value === SEM_RESPONSAVEL && <Check className="h-3 w-3 shrink-0 text-primary" />}
+            </button>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </div>
+  );
+}
+
+// ── Período (começa e termina) ───────────────────────────────────────────────
+
+/**
+ * "3 set → 12 set", "até 12 set", "de 3 set".
+ *
+ * O ano só aparece quando não é o corrente: contrato que atravessa o Ano Novo
+ * ("10 jan → 30 nov") dava a entender que começa e termina no mesmo ano.
+ */
+export function fmtPeriodo(inicio: string | null, fim: string | null): string | null {
+  const anoAtual = hoje().slice(0, 4);
+  const dia = (d: string) => {
+    const ano = d.slice(0, 4);
+    return ano === anoAtual ? fmtCurto(d) : `${fmtCurto(d)} ${ano.slice(2)}`;
+  };
+  if (inicio && fim) return `${dia(inicio)} → ${dia(fim)}`;
+  if (fim) return `até ${dia(fim)}`;
+  if (inicio) return `de ${dia(inicio)}`;
+  return null;
+}
+
+/**
+ * Começo e fim numa peça só.
+ *
+ * Antes eram dois chips separados, cada um abrindo o calendário do navegador: ao
+ * escolher o começo, o calendário fechava, e para o fim era preciso caçar o
+ * outro chip e abrir tudo de novo. Aqui os dois campos ficam à vista na mesma
+ * janelinha, que só fecha quando você quer; escolher o começo já abre o
+ * calendário do fim, que é sempre o próximo passo.
+ */
+export function PeriodoChip({ inicio, fim, onInicio, onFim, atrasada, quieta }: {
+  inicio: string | null;
+  fim: string | null;
+  onInicio: (v: string) => void;
+  onFim: (v: string) => void;
+  atrasada?: boolean;
+  /** Tarefa concluída: a data não cobra mais nada, fica cinza. */
+  quieta?: boolean;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const botaoRef = useRef<HTMLButtonElement>(null);
+  const fimRef = useRef<HTMLInputElement>(null);
+  const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 232, 200);
+  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
+
+  const dias = fim ? diffDias(hoje(), fim) : null;
+  const proxima = !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;
+  const tom = atrasada && !quieta
+    ? 'bg-danger/12 text-danger'
+    : proxima
+      ? 'bg-danger/[0.06] text-danger/85'
+      : inicio || fim
+        ? 'bg-black/[0.04] text-text-secondary'
+        : 'text-text-muted hover:bg-black/[0.04]';
+
+  const campoCls =
+    'w-full rounded-sm border border-black/[0.1] px-2 py-1 text-[12px] tabular-nums text-text-primary ' +
+    'outline-none transition-colors focus:border-primary/50';
+
+  return (
+    <span className="relative inline-flex" ref={ref}>
+      <button
+        ref={botaoRef}
+        onClick={() => setAberto((v) => !v)}
+        title={inicio || fim ? `Começa ${fmtDate(inicio) ?? '—'}, termina ${fmtDate(fim) ?? '—'}` : 'Definir começo e fim'}
+        className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors ${tom}`}
+      >
+        <Calendar className="h-3 w-3" />
+        {fmtPeriodo(inicio, fim) ?? 'sem data'}
+      </button>
+
+      {aberto && pos && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-50 w-56 rounded-md border border-black/[0.08] bg-white p-2.5 shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
+          style={{ left: pos.left, top: pos.top }}
+        >
+          <label className="mb-2 block">
+            <span className="mb-0.5 block font-label text-[9px] uppercase tracking-[0.14em] text-text-muted">Começa</span>
+            <input
+              type="date"
+              autoFocus
+              value={inicio ?? ''}
+              max={fim ?? undefined}
+              onChange={(e) => {
+                onInicio(e.target.value);
+                // O fim é sempre a pergunta seguinte: já abre o calendário dele.
+                if (e.target.value && !fim) setTimeout(() => fimRef.current?.showPicker?.(), 0);
+              }}
+              className={campoCls}
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-0.5 block font-label text-[9px] uppercase tracking-[0.14em] text-text-muted">Termina</span>
+            <input
+              ref={fimRef}
+              type="date"
+              value={fim ?? ''}
+              min={inicio ?? undefined}
+              onChange={(e) => onFim(e.target.value)}
+              className={campoCls}
+            />
+          </label>
+
+          <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-black/[0.06] pt-2">
+            <button
+              onClick={() => { if (inicio) onInicio(''); if (fim) onFim(''); }}
+              className="rounded-sm px-1.5 py-0.5 text-[11px] text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger"
+            >
+              limpar
+            </button>
+            <button
+              onClick={() => setAberto(false)}
+              className="rounded-sm bg-black/[0.06] px-2 py-0.5 text-[11px] font-medium text-text-primary transition-colors hover:bg-black/[0.1]"
+            >
+              pronto
+            </button>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </span>
   );
 }

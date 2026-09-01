@@ -57,6 +57,20 @@ export function porPrazo(a: TaskView, b: TaskView): number {
 }
 
 /**
+ * As tarefas que valem como linha da lista e cartão do quadro: as que não têm
+ * mãe, e as que têm uma mãe que ficou de fora do recorte da tela.
+ *
+ * Existe por causa do filtro por responsável: a subtarefa do Guilherme pendurada
+ * numa tarefa da Camila é o trabalho dele, e quando a tela é dele a mãe não está
+ * junto. Sem isso, filtrar pelo nome dele escondia justamente o que ele tem para
+ * fazer. Sem filtro nada muda: toda mãe está na tela, e só o topo vira cartão.
+ */
+export function semMaeNaTela(tarefas: TaskView[]): (t: TaskView) => boolean {
+  const ids = new Set(tarefas.map((t) => t.id));
+  return (t) => !t.parentId || !ids.has(t.parentId);
+}
+
+/**
  * De quem é a tarefa nova. O quadro mostra contratos e negócios ganhos ainda sem
  * contrato, e o campo muda conforme o caso — sem isso, tarefa criada dentro de
  * um negócio tentaria virar tarefa de um contrato que não existe.
