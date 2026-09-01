@@ -16,7 +16,7 @@ import {
   generateClientToken, revokeClientToken,
 } from './actions';
 import {
-  Archive, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
+  Archive, Calendar, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
   LayoutGrid, Link2, List, PanelLeftClose, PanelLeftOpen, Plus, Rows3, X,
 } from 'lucide-react';
 import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS, semMaeNaTela } from './types';
@@ -32,7 +32,7 @@ import { Gantt } from './gantt';
 import { NotasView } from './notas-view';
 import {
   ChipSelect, DateChip, FiltroResponsavel, InlineText, MenuContexto, SEM_RESPONSAVEL,
-  fmtDuracao, fmtPeriodo, hoje, inputCls, somaDias,
+  fmtDate, fmtDuracao, fmtPeriodo, hoje, inputCls, somaDias,
 } from './ui';
 
 export type { PhaseView, ProjectView, TaskView } from './types';
@@ -344,24 +344,20 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
       {/* O título é o da tela, como em todo o CRM; de quem é o que está aberto
           vem ao lado, como dado. O link do cliente é do projeto, então anda
           junto com o nome dele. */}
-      <PageHeader
-        titulo="Tasks"
-        dados={
-          geral ? 'Tudo em aberto' : (
-            <span className="inline-flex items-center gap-2">
-              {nomeAberto}
-              {/* Quando o projeto tem data, ela vem junto do nome: a pergunta
-                  "quando isso começou e quando acaba" era respondida só pelo
-                  Gantt, uma aba adiante. */}
-              {aberto && fmtPeriodo(aberto.startDate, aberto.endDate) && (
-                <span className="font-normal normal-case tracking-normal text-text-secondary">
-                  · {fmtPeriodo(aberto.startDate, aberto.endDate)}
-                </span>
-              )}
-            </span>
-          )
-        }
-      >
+      <PageHeader titulo="Tasks" dados={geral ? 'Tudo em aberto' : nomeAberto}>
+        {/* Quando isso começou e quando acaba era pergunta que só o Gantt
+            respondia, uma aba adiante. Fica na ponta direita, junto do link do
+            cliente: as duas são informação do projeto, não da lista de tarefas. */}
+        {!geral && aberto && fmtPeriodo(aberto.startDate, aberto.endDate) && (
+          <span
+            title={`Período do contrato: ${fmtDate(aberto.startDate) ?? '—'} a ${fmtDate(aberto.endDate) ?? '—'}`}
+            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-black/[0.04] px-2.5 py-1 text-[11px] font-medium tabular-nums text-text-secondary"
+          >
+            <Calendar className="h-3 w-3 shrink-0 opacity-70" />
+            {fmtPeriodo(aberto.startDate, aberto.endDate)}
+          </span>
+        )}
+
         {!geral && aberto && aberto.kind === 'contrato' && (
           <ClientLink project={aberto} pending={pending} send={send} />
         )}
