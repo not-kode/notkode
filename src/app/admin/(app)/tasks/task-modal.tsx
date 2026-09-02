@@ -368,10 +368,10 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
                   value={notas}
                   onChange={(e) => setNotas(e.target.value)}
                   onBlur={salvarNotas}
-                  // Oito linhas: cinco davam pouco mais de cem pixels e a
-                  // descrição, que é o texto mais longo da tarefa, abria como um
-                  // campo de recado. A alça no canto continua esticando mais.
-                  rows={8}
+                  // Doze linhas: a descrição é o texto mais longo da tarefa e
+                  // abria com cara de campo de recado. A alça no canto continua
+                  // esticando mais, para quando o texto passar disso.
+                  rows={12}
                   placeholder="O contexto que você vai querer na próxima vez que abrir isso."
                   className="w-full resize-y rounded-sm border border-black/[0.08] px-2.5 py-2 text-[13px] leading-relaxed text-text-primary outline-none transition-colors focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                 />
