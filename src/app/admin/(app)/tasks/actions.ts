@@ -44,7 +44,7 @@ function repoPathDe(fd: FormData): { caminho: string | null } | { erro: string }
 }
 
 function revalidar(): void {
-  revalidatePath('/admin/entregas');
+  revalidatePath('/admin/tasks');
   revalidatePath('/admin');
 }
 

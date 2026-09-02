@@ -6,7 +6,7 @@ import {
   ErroDeUso, acharEtapa, acharProjeto, acharTarefa, bool, data, hoje, lista, num,
   objeto, obrigatorio, opcoes, somaDias, str, supabase, texto, type Ferramenta,
 } from './nucleo';
-import { PRIORITIES, RESPONSAVEL_PADRAO, TASK_STATUSES } from '@/app/admin/(app)/entregas/status';
+import { PRIORITIES, RESPONSAVEL_PADRAO, TASK_STATUSES } from '@/app/admin/(app)/tasks/status';
 
 const QUANDO = ['hoje', 'atrasadas', 'semana', 'mes', 'sem_prazo', 'tudo'] as const;
 

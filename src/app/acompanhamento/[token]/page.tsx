@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import type { PhaseStatus, TaskStatus } from '@/app/admin/(app)/entregas/status';
-import type { Priority } from '@/app/admin/(app)/entregas/status';
-import { lerVisao } from '@/app/admin/(app)/entregas/types';
+import type { PhaseStatus, TaskStatus } from '@/app/admin/(app)/tasks/status';
+import type { Priority } from '@/app/admin/(app)/tasks/status';
+import { lerVisao } from '@/app/admin/(app)/tasks/types';
 import { Acompanhamento, type TagCliente } from './lista';
 
 // Acompanhamento do cliente: as entregas do projeto dele, por link com token e

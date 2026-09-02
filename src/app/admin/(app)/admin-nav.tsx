@@ -15,7 +15,7 @@ const NAV: { href: string; label: string; icon: LucideIcon; exact?: boolean }[] 
   { href: '/admin/leads',      label: 'Leads',     icon: Inbox },
   { href: '/admin/financeiro', label: 'Finance',   icon: Wallet },
   { href: '/admin/clientes',   label: 'Clients',   icon: Building2 },
-  { href: '/admin/entregas',   label: 'Tasks',     icon: CheckSquare },
+  { href: '/admin/tasks',   label: 'Tasks',     icon: CheckSquare },
   { href: '/admin/sessoes',    label: 'Analytics', icon: Activity },
 ];
 

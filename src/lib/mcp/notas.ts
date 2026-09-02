@@ -5,7 +5,7 @@ import {
   ErroDeUso, acharProjeto, acharTarefa, num, objeto, obrigatorio, opcoes, str,
   supabase, texto, type Ferramenta,
 } from './nucleo';
-import { RESPONSAVEL_PADRAO } from '@/app/admin/(app)/entregas/status';
+import { RESPONSAVEL_PADRAO } from '@/app/admin/(app)/tasks/status';
 
 const TIPOS = ['nota', 'aprendizado', 'pessoa', 'recurso'] as const;
 

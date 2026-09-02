@@ -92,7 +92,7 @@ export async function POST(req: Request) {
           '"projeto_daqui" com o diretório atual: ele diz de qual cliente é aquela pasta, e assim a tarefa não vai ' +
           'parar no projeto errado. Quase tudo aceita o nome do cliente no lugar de id, e o campo "projeto" também ' +
           'aceita o caminho da pasta direto. Comece por "panorama" para se situar, ou "detalhar_projeto" para ' +
-          'mergulhar num cliente. Tarefa criada aqui aparece na hora em notkode.com.br/admin/entregas.',
+          'mergulhar num cliente. Tarefa criada aqui aparece na hora em notkode.com.br/admin/tasks.',
       });
 
     case 'ping':

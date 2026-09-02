@@ -78,7 +78,7 @@ type Periodo = (typeof PERIODOS)[number]['id'];
 /** Tasks, cronograma e a base de notas do cliente. */
 type Aba = 'tasks' | 'cronograma' | 'notas';
 
-export function EntregasView({ projects, comentarios, anexos, notas, pessoas, organizacoes }: {
+export function TasksView({ projects, comentarios, anexos, notas, pessoas, organizacoes }: {
   projects: ProjectView[];
   comentarios: ComentarioView[];
   /** Arquivos das tarefas: sempre internos, nunca no link do cliente. */
@@ -363,7 +363,11 @@ export function EntregasView({ projects, comentarios, anexos, notas, pessoas, or
       {/* O título é o da tela, como em todo o CRM; de quem é o que está aberto
           vem ao lado, como dado. O link do cliente é do projeto, então anda
           junto com o nome dele. */}
-      <PageHeader titulo="Tasks" dados={geral ? 'Tudo em aberto' : nomeAberto}>
+      <PageHeader
+        titulo="Tasks"
+        dados={geral ? 'Tudo em aberto' : nomeAberto}
+        className="mb-4 border-b border-black/[0.06] pb-3"
+      >
         {/* Quando isso começou e quando acaba era pergunta que só o Gantt
             respondia, uma aba adiante. Fica na ponta direita, junto do link do
             cliente: as duas são informação do projeto, não da lista de tarefas. */}
@@ -427,8 +431,11 @@ export function EntregasView({ projects, comentarios, anexos, notas, pessoas, or
                 </span>
               </button>
 
-              {grupos.map((g) => (
-                <div key={g.titulo}>
+              {/* Um filete entre os blocos: Fechamentos, Clientes e Interno são
+                  três listas diferentes, e sem a linha viravam uma coluna
+                  corrida de nomes. */}
+              {grupos.map((g, i) => (
+                <div key={g.titulo} className={i > 0 ? 'border-t border-black/[0.06] pt-3' : ''}>
                   <p className="mb-1.5 px-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
                     {g.titulo}
                   </p>

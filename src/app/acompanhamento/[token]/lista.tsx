@@ -13,11 +13,11 @@ import { useState, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 import {
   PHASE_DOT, PHASE_LABELS, PHASE_TOM, TASK_DOT, type PhaseStatus, type TaskStatus,
-} from '@/app/admin/(app)/entregas/status';
-import { COLUNA_LABELS_CLIENTE } from '@/app/admin/(app)/entregas/types';
-import type { Coluna, PhaseView, TaskView } from '@/app/admin/(app)/entregas/types';
-import { DateTag, PriorityTag, Sigla, TagChip } from '@/app/admin/(app)/entregas/ui';
-import { Gantt } from '@/app/admin/(app)/entregas/gantt';
+} from '@/app/admin/(app)/tasks/status';
+import { COLUNA_LABELS_CLIENTE } from '@/app/admin/(app)/tasks/types';
+import type { Coluna, PhaseView, TaskView } from '@/app/admin/(app)/tasks/types';
+import { DateTag, PriorityTag, Sigla, TagChip } from '@/app/admin/(app)/tasks/ui';
+import { Gantt } from '@/app/admin/(app)/tasks/gantt';
 
 /** Status em português de cliente: ninguém de fora fala "backlog" nem "review". */
 const STATUS_LABELS: Record<TaskStatus, string> = {

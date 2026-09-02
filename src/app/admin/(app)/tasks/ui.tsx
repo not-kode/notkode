@@ -1056,14 +1056,18 @@ export function fmtPeriodo(inicio: string | null, fim: string | null): string | 
   return null;
 }
 
+
 /**
- * Começo e fim numa peça só.
+ * Começo e fim numa peça só, com calendário próprio.
  *
- * Antes eram dois chips separados, cada um abrindo o calendário do navegador: ao
- * escolher o começo, o calendário fechava, e para o fim era preciso caçar o
- * outro chip e abrir tudo de novo. Aqui os dois campos ficam à vista na mesma
- * janelinha, que só fecha quando você quer; escolher o começo já abre o
- * calendário do fim, que é sempre o próximo passo.
+ * Eram dois chips separados abrindo o calendário do navegador: escolher o começo
+ * fechava a caixa, e o fim virava outra caçada. A primeira tentativa aqui foi
+ * pedir ao navegador que abrisse o segundo calendário sozinho, e ele
+ * simplesmente não abre — `showPicker` só funciona colado num clique da pessoa.
+ *
+ * Então o calendário é nosso: o primeiro dia clicado é o começo, o segundo é a
+ * entrega, e a faixa entre eles fica marcada. Clicar de novo recomeça o
+ * intervalo. Nada fecha no meio do caminho.
  */
 export function PeriodoChip({ inicio, fim, onInicio, onFim, atrasada, quieta }: {
   inicio: string | null;
@@ -1077,12 +1081,35 @@ export function PeriodoChip({ inicio, fim, onInicio, onFim, atrasada, quieta }: 
   const [aberto, setAberto] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
-  const fimRef = useRef<HTMLInputElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
-  const pos = usePosicaoMenu(aberto, botaoRef, 232, 200, () => setAberto(false));
+  const pos = usePosicaoMenu(aberto, botaoRef, 268, 360, () => setAberto(false));
 
-  const dias = fim ? diffDias(hoje(), fim) : null;
-  const proxima = !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;
+  // Que mês está à vista. Abre no mês do que já está marcado, senão no atual.
+  const [mes, setMes] = useState(() => (inicio ?? fim ?? hoje()).slice(0, 7));
+  useEffect(() => {
+    if (aberto) setMes((inicio ?? fim ?? hoje()).slice(0, 7));
+  }, [aberto, inicio, fim]);
+
+  const dias = ptDiasDoMes(mes);
+  const hj = hoje();
+
+  /**
+   * Um clique no calendário. Sem começo, ou com o intervalo já fechado, o dia
+   * vira o novo começo; com o começo escolhido, vira a entrega — e se for antes
+   * do começo, os dois trocam de lugar em vez de recusar o clique.
+   */
+  const escolherDia = (d: string) => {
+    if (!inicio || (inicio && fim)) {
+      onInicio(d);
+      if (fim) onFim('');
+      return;
+    }
+    if (d < inicio) { onInicio(d); onFim(inicio); return; }
+    onFim(d);
+  };
+
+  const diasParaContar = inicio && fim ? diffDias(inicio, fim) + 1 : 0;
+  const proxima = !quieta && !!fim && !atrasada && diffDias(hj, fim) >= 0 && diffDias(hj, fim) <= 1;
   const tom = atrasada && !quieta
     ? 'bg-danger/12 text-danger'
     : proxima
@@ -1091,16 +1118,12 @@ export function PeriodoChip({ inicio, fim, onInicio, onFim, atrasada, quieta }: 
         ? 'bg-black/[0.04] text-text-secondary'
         : 'text-text-muted hover:bg-black/[0.04]';
 
-  const campoCls =
-    'w-full rounded-sm border border-black/[0.1] px-2 py-1 text-[12px] tabular-nums text-text-primary ' +
-    'outline-none transition-colors focus:border-primary/50';
-
   return (
     <span className="relative inline-flex" ref={ref}>
       <button
         ref={botaoRef}
         onClick={() => setAberto((v) => !v)}
-        title={inicio || fim ? `Começa ${fmtDate(inicio) ?? '—'}, termina ${fmtDate(fim) ?? '—'}` : 'Definir começo e fim'}
+        title={inicio || fim ? `Começa ${fmtDate(inicio) ?? '—'}, termina ${fmtDate(fim) ?? '—'}` : 'Definir começo e entrega'}
         className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors ${tom}`}
       >
         <Calendar className="h-3 w-3" />
@@ -1110,44 +1133,89 @@ export function PeriodoChip({ inicio, fim, onInicio, onFim, atrasada, quieta }: 
       {aberto && pos && createPortal(
         <div
           ref={menuRef}
-          className="fixed z-50 w-56 rounded-md border border-black/[0.08] bg-white p-2.5 shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
+          className="fixed z-50 w-[16.5rem] rounded-md border border-black/[0.08] bg-white p-2.5 shadow-[0_8px_24px_rgba(16,24,40,0.14)]"
           style={{ left: pos.left, top: pos.top }}
         >
-          <label className="mb-2 block">
-            <span className="mb-0.5 block font-label text-[9px] uppercase tracking-[0.14em] text-text-muted">Começa</span>
-            <input
-              type="date"
-              autoFocus
-              value={inicio ?? ''}
-              max={fim ?? undefined}
-              onChange={(e) => {
-                onInicio(e.target.value);
-                // O fim é sempre a pergunta seguinte: já abre o calendário dele.
-                if (e.target.value && !fim) setTimeout(() => fimRef.current?.showPicker?.(), 0);
-              }}
-              className={campoCls}
-            />
-          </label>
+          {/* As duas pontas, sempre à vista: dá para ver o que já foi escolhido
+              e qual é o próximo clique. */}
+          <div className="mb-2 grid grid-cols-2 gap-1.5">
+            {([
+              { rotulo: 'Começa', valor: inicio, ativo: !inicio || !!(inicio && fim) },
+              { rotulo: 'Entrega', valor: fim, ativo: !!inicio && !fim },
+            ] as const).map((p) => (
+              <div
+                key={p.rotulo}
+                className={`rounded-sm border px-2 py-1 ${
+                  p.ativo ? 'border-primary/40 bg-primary/[0.05]' : 'border-black/[0.07]'
+                }`}
+              >
+                <p className="font-label text-[9px] uppercase tracking-[0.14em] text-text-muted">{p.rotulo}</p>
+                <p className={`text-[12px] tabular-nums ${p.valor ? 'text-text-primary' : 'text-text-muted'}`}>
+                  {p.valor ? fmtCurto(p.valor) : '—'}
+                </p>
+              </div>
+            ))}
+          </div>
 
-          <label className="block">
-            <span className="mb-0.5 block font-label text-[9px] uppercase tracking-[0.14em] text-text-muted">Termina</span>
-            <input
-              ref={fimRef}
-              type="date"
-              value={fim ?? ''}
-              min={inicio ?? undefined}
-              onChange={(e) => onFim(e.target.value)}
-              className={campoCls}
-            />
-          </label>
+          <div className="mb-1 flex items-center justify-between">
+            <button
+              onClick={() => setMes(mesVizinho(mes, -1))}
+              aria-label="Mês anterior"
+              className="rounded p-1 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
+            >
+              <ChevronDown className="h-3.5 w-3.5 rotate-90" />
+            </button>
+            <span className="text-[12px] font-medium text-text-primary">{ptMes(mes)}</span>
+            <button
+              onClick={() => setMes(mesVizinho(mes, 1))}
+              aria-label="Próximo mês"
+              className="rounded p-1 text-text-muted transition-colors hover:bg-black/[0.05] hover:text-text-primary"
+            >
+              <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
+            </button>
+          </div>
 
-          <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-black/[0.06] pt-2">
+          <div className="grid grid-cols-7 gap-y-0.5 text-center">
+            {['d', 's', 't', 'q', 'q', 's', 's'].map((d, i) => (
+              <span key={i} className="py-1 font-label text-[9px] uppercase text-text-muted">{d}</span>
+            ))}
+
+            {dias.map((d, i) => {
+              if (!d) return <span key={`vazio-${i}`} />;
+              const naFaixa = !!inicio && !!fim && d > inicio && d < fim;
+              const ponta = d === inicio || d === fim;
+              return (
+                <button
+                  key={d}
+                  onClick={() => escolherDia(d)}
+                  className={`h-7 text-[12px] tabular-nums transition-colors ${
+                    ponta
+                      ? 'bg-primary font-semibold text-white'
+                      : naFaixa
+                        ? 'bg-primary/[0.12] text-text-primary'
+                        : 'text-text-secondary hover:bg-black/[0.05]'
+                  } ${d === inicio ? 'rounded-l-sm' : ''} ${d === fim ? 'rounded-r-sm' : ''} ${
+                    !ponta && !naFaixa ? 'rounded-sm' : ''
+                  } ${d === hj && !ponta ? 'font-semibold text-primary' : ''}`}
+                >
+                  {Number(d.slice(8))}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-2 flex items-center justify-between gap-2 border-t border-black/[0.06] pt-2">
             <button
               onClick={() => { if (inicio) onInicio(''); if (fim) onFim(''); }}
               className="rounded-sm px-1.5 py-0.5 text-[11px] text-text-muted transition-colors hover:bg-black/[0.04] hover:text-danger"
             >
               limpar
             </button>
+            {diasParaContar > 0 && (
+              <span className="text-[10px] tabular-nums text-text-muted">
+                {diasParaContar} {diasParaContar === 1 ? 'dia' : 'dias'}
+              </span>
+            )}
             <button
               onClick={() => setAberto(false)}
               className="rounded-sm bg-black/[0.06] px-2 py-0.5 text-[11px] font-medium text-text-primary transition-colors hover:bg-black/[0.1]"
@@ -1160,4 +1228,33 @@ export function PeriodoChip({ inicio, fim, onInicio, onFim, atrasada, quieta }: 
       )}
     </span>
   );
+}
+
+/** "setembro 2026", para o cabeçalho do calendário. */
+function ptMes(mes: string): string {
+  const [ano, m] = mes.split('-').map(Number);
+  const nome = new Date(Date.UTC(ano, m - 1, 1)).toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' });
+  return `${nome} ${ano}`;
+}
+
+/** O mês vizinho, em AAAA-MM. */
+function mesVizinho(mes: string, passo: number): string {
+  const [ano, m] = mes.split('-').map(Number);
+  const d = new Date(Date.UTC(ano, m - 1 + passo, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * As casas do calendário do mês: nulo nos dias do mês anterior que só existem
+ * para alinhar a primeira semana, e AAAA-MM-DD no resto.
+ */
+function ptDiasDoMes(mes: string): (string | null)[] {
+  const [ano, m] = mes.split('-').map(Number);
+  const primeiro = new Date(Date.UTC(ano, m - 1, 1));
+  const quantos = new Date(Date.UTC(ano, m, 0)).getUTCDate();
+  const casas: (string | null)[] = Array(primeiro.getUTCDay()).fill(null);
+  for (let d = 1; d <= quantos; d++) {
+    casas.push(`${mes}-${String(d).padStart(2, '0')}`);
+  }
+  return casas;
 }

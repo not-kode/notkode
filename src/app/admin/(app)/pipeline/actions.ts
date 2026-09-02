@@ -336,7 +336,7 @@ export async function winDeal(formData: FormData): Promise<void> {
   revalidatePath('/admin/pipeline');
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin/clientes');
-  revalidatePath('/admin/entregas');
+  revalidatePath('/admin/tasks');
   revalidatePath('/admin');
 }
 
@@ -355,7 +355,7 @@ export async function generateDealContract(formData: FormData): Promise<void> {
   revalidatePath('/admin/pipeline');
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin/clientes');
-  revalidatePath('/admin/entregas');
+  revalidatePath('/admin/tasks');
   revalidatePath('/admin');
 }
 

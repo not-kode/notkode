@@ -12,7 +12,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { RESPONSAVEL_PADRAO } from '../entregas/status';
+import { RESPONSAVEL_PADRAO } from '../tasks/status';
 
 type Db = SupabaseClient;
 
