@@ -26,14 +26,16 @@ import type { AnexoView, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, T
 import { ChipSelect, PeriodoChip, PessoaSelect, PriorityChip, TagsSelect, TimerChip, hoje } from './ui';
 
 /** Uma propriedade da tarefa: rótulo com ícone à esquerda, controle à direita. */
-function Campo({ icone: Icone, rotulo, children }: {
+function Campo({ icone: Icone, rotulo, children, largo = false }: {
   icone: typeof User;
   rotulo: string;
   children: React.ReactNode;
+  /** Ocupa a linha inteira da barra: para o campo que cresce sem limite. */
+  largo?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 py-1">
-      <span className="flex w-[6.5rem] shrink-0 items-center gap-1.5 text-[12px] text-text-muted">
+    <div className={`flex items-center gap-2 py-1 ${largo ? 'sm:col-span-2 xl:col-span-3' : ''}`}>
+      <span className="flex w-[6.5rem] shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] text-text-muted">
         <Icone className="h-3.5 w-3.5 shrink-0 opacity-70" />
         {rotulo}
       </span>
@@ -162,7 +164,7 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
         role="dialog"
         aria-modal="true"
         aria-label={task.title}
-        className="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-black/[0.08] bg-white shadow-[0_24px_64px_rgba(16,24,40,0.24)]"
+        className="relative flex max-h-[92vh] w-full max-w-[80rem] flex-col overflow-hidden rounded-xl border border-black/[0.08] bg-white shadow-[0_24px_64px_rgba(16,24,40,0.24)]"
       >
         {/* De onde é a tarefa, e as ações que valem para ela inteira. */}
         <header className="flex items-center gap-2 border-b border-black/[0.07] px-4 py-2.5">
@@ -221,7 +223,10 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
               />
             </div>
 
-            <div className="mb-5 grid gap-x-6 border-y border-black/[0.06] py-2 sm:grid-cols-2">
+            {/* Uma barra só, do tamanho que a tela der: em duas colunas ela
+                espremia cada campo em pouco mais de 10rem e o valor quebrava
+                embaixo do rótulo. */}
+            <div className="mb-5 grid gap-x-6 border-y border-black/[0.06] py-2 sm:grid-cols-2 xl:grid-cols-3">
               <Campo icone={Layers} rotulo="Status">
                 <ChipSelect
                   value={task.status}
@@ -277,7 +282,7 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
                 />
               </Campo>
 
-              <Campo icone={TagIcon} rotulo="Tags">
+              <Campo icone={TagIcon} rotulo="Tags" largo>
                 <TagsSelect
                   value={task.tagIds}
                   tags={tags}
