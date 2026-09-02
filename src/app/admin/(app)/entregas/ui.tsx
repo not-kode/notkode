@@ -131,6 +131,13 @@ function usePosicaoMenu(
 ) {
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
 
+  // `fechar` chega como função nova a cada render de quem chama. Guardada numa
+  // ref, ela fica fora das dependências do efeito: como dependência, o efeito
+  // reposicionava a cada render e o reposicionamento causava outro render — laço
+  // infinito, e o React derrubava a tela com "Maximum update depth exceeded".
+  const fecharRef = useRef(fechar);
+  fecharRef.current = fechar;
+
   useLayoutEffect(() => {
     if (!aberto) { setPos(null); return; }
 
@@ -139,13 +146,16 @@ function usePosicaoMenu(
       if (!b) return;
       // O gatilho saiu da vista (rolou para fora da janela): aí sim o menu
       // fecha, senão ele ficaria pairando sozinho longe do que abriu.
-      if (b.bottom < 0 || b.top > window.innerHeight) { fechar?.(); return; }
+      if (b.bottom < 0 || b.top > window.innerHeight) { fecharRef.current?.(); return; }
 
       const abaixo = b.bottom + altura < window.innerHeight;
-      setPos({
+      const novo = {
         left: Math.max(8, Math.min(b.left, window.innerWidth - largura - 8)),
         top: abaixo ? b.bottom + 4 : Math.max(8, b.top - altura - 4),
-      });
+      };
+      // Só troca o estado quando a posição mudou de verdade: um objeto novo a
+      // cada rolagem seria um render a cada pixel.
+      setPos((atual) => (atual && atual.left === novo.left && atual.top === novo.top ? atual : novo));
     };
 
     posicionar();
@@ -158,7 +168,7 @@ function usePosicaoMenu(
       window.removeEventListener('scroll', posicionar, true);
       window.removeEventListener('resize', posicionar);
     };
-  }, [aberto, botaoRef, largura, altura, fechar]);
+  }, [aberto, botaoRef, largura, altura]);
 
   return pos;
 }
