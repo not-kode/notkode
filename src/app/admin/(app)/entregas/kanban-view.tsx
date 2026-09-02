@@ -9,7 +9,7 @@ import { Check, MoreHorizontal, Plus } from 'lucide-react';
 import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './actions';
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
 import { donoDaTarefa, porPrazo, semMaeNaTela } from './types';
-import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto, TaskView } from './types';
+import type { AnexoView, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto, TaskView } from './types';
 import { ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, TagChip, TimerChip, hoje } from './ui';
 import { TaskDrawer } from './task-drawer';
 
@@ -22,9 +22,10 @@ const COLUNA_TOM: Record<TaskStatus, string> = {
   feito: 'bg-success',
 };
 
-export function KanbanView({ tasks, comentarios, phasesDe, tagsDe, projectId, projectKind, pessoas, mostrarProjeto, onAbrirProjeto, pending, send }: {
+export function KanbanView({ tasks, comentarios, anexos, phasesDe, tagsDe, projectId, projectKind, pessoas, mostrarProjeto, onAbrirProjeto, pending, send }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
+  anexos: AnexoView[];
   phasesDe: (projetoId: string) => PhaseView[];
   tagsDe: (projetoId: string) => TagView[];
   projectId: string;
@@ -139,6 +140,7 @@ export function KanbanView({ tasks, comentarios, phasesDe, tagsDe, projectId, pr
         <TaskDrawer
           task={aberta}
           comentarios={comentarios.filter((c) => c.taskId === aberta.id)}
+          anexos={anexos.filter((a) => a.taskId === aberta.id)}
           subtarefas={subs(aberta.id)}
           phases={phasesDe(aberta.projetoId)}
           tags={tagsDe(aberta.projetoId)}

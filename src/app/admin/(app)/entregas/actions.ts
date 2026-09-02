@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { nomeDoUsuarioAtual } from '@/lib/admin-usuario';
 import {
   PHASE_STATUSES, PRIORITIES, RESPONSAVEL_PADRAO, TAG_COLORS, TASK_STATUSES,
   type PhaseStatus, type Priority, type TagColor, type TaskStatus,
@@ -796,6 +797,114 @@ export async function salvarColunas(formData: FormData): Promise<void> {
     .from('engagements')
     .update({ client_view: { colunas, agrupar, cronograma: formData.get('cronograma') === 'on' } })
     .eq('id', engagement_id);
+
+  revalidar();
+}
+
+// ── Anexos da tarefa ─────────────────────────────────────────────────────────
+//
+// O arquivo vai do navegador direto para o Storage, com uma URL assinada que o
+// servidor gera aqui: passar o arquivo pela server action esbarraria no teto de
+// corpo de requisição da Vercel (4,5 MB), e o de 25 MB é o do bucket.
+//
+// O bucket é privado e nada aqui vira link público: quem baixa passa por
+// /admin/anexo/<id>, que confere a sessão antes de assinar o link. Anexo é
+// sempre interno — não existe no link de acompanhamento do cliente.
+
+const ANEXO_BUCKET = 'task-attachments';
+const ANEXO_MAX_BYTES = 25 * 1024 * 1024;
+
+/**
+ * Extensões que não entram. O download sai sempre como anexo (nunca aberto no
+ * navegador), então o que sobra de risco é o arquivo que a pessoa executa
+ * depois de baixar.
+ */
+const EXTENSOES_BLOQUEADAS = [
+  'exe', 'msi', 'bat', 'cmd', 'com', 'scr', 'pif', 'vbs', 'ps1',
+  'sh', 'bash', 'app', 'dmg', 'pkg', 'deb', 'rpm', 'jar',
+];
+
+/** Nome de arquivo que pode virar caminho de storage sem surpresa. */
+function nomeSeguro(nome: string): string {
+  return nome
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120) || 'arquivo';
+}
+
+export type UploadDeAnexo =
+  | { ok: true; path: string; url: string }
+  | { ok: false; erro: string };
+
+/** Onde gravar o arquivo e a permissão temporária para gravar lá. */
+export async function pedirUploadDeAnexo(dados: {
+  taskId: string; nome: string; tamanho: number;
+}): Promise<UploadDeAnexo> {
+  const taskId = dados.taskId?.trim();
+  const nome = (dados.nome ?? '').trim();
+  if (!taskId || !nome) return { ok: false, erro: 'Faltou a tarefa ou o nome do arquivo.' };
+
+  if (!Number.isFinite(dados.tamanho) || dados.tamanho <= 0) {
+    return { ok: false, erro: 'Arquivo vazio.' };
+  }
+  if (dados.tamanho > ANEXO_MAX_BYTES) {
+    return { ok: false, erro: 'Arquivo maior que 25 MB.' };
+  }
+
+  const ext = nome.includes('.') ? nome.split('.').pop()!.toLowerCase() : '';
+  if (EXTENSOES_BLOQUEADAS.includes(ext)) {
+    return { ok: false, erro: `Arquivo .${ext} não é aceito aqui.` };
+  }
+
+  const supabase = getSupabaseAdmin();
+  // A tarefa tem que existir: sem isto, um id inventado criaria pasta no bucket.
+  const { data: tarefa } = await supabase
+    .from('project_tasks').select('id').eq('id', taskId).maybeSingle();
+  if (!tarefa) return { ok: false, erro: 'Tarefa não encontrada.' };
+
+  const path = `${taskId}/${crypto.randomUUID()}-${nomeSeguro(nome)}`;
+  const { data, error } = await supabase.storage.from(ANEXO_BUCKET).createSignedUploadUrl(path);
+  if (error || !data) return { ok: false, erro: 'Não deu para preparar o envio.' };
+
+  return { ok: true, path: data.path, url: data.signedUrl };
+}
+
+/** Depois que o arquivo subiu: é esta linha que faz ele aparecer na tarefa. */
+export async function registrarAnexo(dados: {
+  taskId: string; path: string; nome: string; tipo: string; tamanho: number;
+}): Promise<{ ok: boolean; erro?: string }> {
+  const { taskId, path } = dados;
+  if (!taskId || !path || !path.startsWith(`${taskId}/`)) {
+    return { ok: false, erro: 'Envio inválido.' };
+  }
+
+  const { error } = await getSupabaseAdmin().from('task_attachments').insert({
+    task_id: taskId,
+    storage_path: path,
+    file_name: (dados.nome ?? '').slice(0, 300) || 'arquivo',
+    mime_type: (dados.tipo ?? '').slice(0, 150) || null,
+    size_bytes: Math.max(0, Math.trunc(dados.tamanho ?? 0)),
+    uploaded_by: (await nomeDoUsuarioAtual()) ?? RESPONSAVEL_PADRAO,
+  });
+  if (error) return { ok: false, erro: 'O arquivo subiu, mas não deu para anexar.' };
+
+  revalidar();
+  return { ok: true };
+}
+
+/** Tira o anexo da tarefa e o arquivo do bucket: um sem o outro deixa lixo. */
+export async function apagarAnexo(formData: FormData): Promise<void> {
+  const id = str(formData, 'id', 64);
+  if (!id) return;
+
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from('task_attachments').select('storage_path').eq('id', id).maybeSingle();
+  const path = (data as { storage_path: string } | null)?.storage_path;
+
+  await supabase.from('task_attachments').delete().eq('id', id);
+  if (path) await supabase.storage.from(ANEXO_BUCKET).remove([path]);
 
   revalidar();
 }

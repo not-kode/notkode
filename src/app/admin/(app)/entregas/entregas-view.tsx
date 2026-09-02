@@ -22,8 +22,8 @@ import {
 import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS, semMaeNaTela } from './types';
 import type { Priority, TaskStatus } from './status';
 import type {
-  Agrupamento, Coluna, ComentarioView, NotaView, Pessoa, PhaseView, ProjectView, Send,
-  TagView, TaskComProjeto, TaskView,
+  Agrupamento, AnexoView, Coluna, ComentarioView, NotaView, Pessoa, PhaseView, ProjectView,
+  Send, TagView, TaskComProjeto, TaskView,
 } from './types';
 import { PageHeader } from '../_shared/page-header';
 import { KanbanView } from './kanban-view';
@@ -78,9 +78,11 @@ type Periodo = (typeof PERIODOS)[number]['id'];
 /** Tasks, cronograma e a base de notas do cliente. */
 type Aba = 'tasks' | 'cronograma' | 'notas';
 
-export function EntregasView({ projects, comentarios, notas, pessoas, organizacoes }: {
+export function EntregasView({ projects, comentarios, anexos, notas, pessoas, organizacoes }: {
   projects: ProjectView[];
   comentarios: ComentarioView[];
+  /** Arquivos das tarefas: sempre internos, nunca no link do cliente. */
+  anexos: AnexoView[];
   notas: NotaView[];
   /** Quem pode tocar tarefa: a equipe e os contatos dos clientes. */
   pessoas: Pessoa[];
@@ -502,6 +504,7 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
               key={aberto.id}
               project={aberto}
               comentarios={comentarios}
+              anexos={anexos}
               notas={notas}
               pessoas={pessoas}
               tarefas={filtradas}
@@ -918,12 +921,13 @@ function Numeros({ tarefas }: { tarefas: TaskComProjeto[] }) {
 }
 
 function ProjectPanel({
-  project, comentarios, notas, pessoas, tarefas, tarefasDoEscopo, phasesDe, tagsDe, aba, setAba,
+  project, comentarios, anexos, notas, pessoas, tarefas, tarefasDoEscopo, phasesDe, tagsDe, aba, setAba,
   visao, setVisao, escopo, setEscopo, onAbrirProjeto, periodo, setPeriodo,
   responsavel, setResponsavel, quemAparece, pending, send,
 }: {
   project: ProjectView;
   comentarios: ComentarioView[];
+  anexos: AnexoView[];
   notas: NotaView[];
   pessoas: Pessoa[];
   tarefas: TaskComProjeto[];
@@ -1105,6 +1109,7 @@ function ProjectPanel({
           {visao === 'kanban' ? (
             <KanbanView
               comentarios={comentarios}
+              anexos={anexos}
               tasks={tarefas}
               phasesDe={phasesDe}
               tagsDe={tagsDe}
@@ -1119,6 +1124,7 @@ function ProjectPanel({
           ) : (
             <ListView
               comentarios={comentarios}
+              anexos={anexos}
               tasks={tarefas}
               phasesDe={phasesDe}
               tagsDe={tagsDe}

@@ -6,21 +6,24 @@
 // Clicar na tarefa abre isso. Antes o título era editável no lugar, o que dava
 // para corrigir uma palavra mas não para entender do que a tarefa trata.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Plus, Trash2, X } from 'lucide-react';
+import { Check, Paperclip, Plus, Trash2, X } from 'lucide-react';
 import {
-  apagarComentario, apagarTag, atualizarTag, createTask, criarComentario, criarTagNaTarefa,
+  apagarAnexo, apagarComentario, apagarTag, atualizarTag, createTask, criarComentario, criarTagNaTarefa,
+  pedirUploadDeAnexo, registrarAnexo,
   deleteTask, toggleTimer, updateTask,
 } from './actions';
 import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
 import { donoDaTarefa } from './types';
-import type { ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskView } from './types';
+import type { AnexoView, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskView } from './types';
 import { ChipSelect, PeriodoChip, PessoaSelect, PriorityChip, TagsSelect, TimerChip, hoje } from './ui';
 
-export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projectId, projectKind, pessoas, send, onFechar }: {
+export function TaskDrawer({ task, comentarios, anexos, subtarefas, phases, tags, projectId, projectKind, pessoas, send, onFechar }: {
   task: TaskView;
   comentarios: ComentarioView[];
+  /** Arquivos da tarefa. Internos: não existem no link do cliente. */
+  anexos: AnexoView[];
   subtarefas: TaskView[];
   phases: PhaseView[];
   tags: TagView[];
@@ -281,6 +284,8 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
             </div>
           </div>
 
+          <Anexos taskId={task.id} anexos={anexos} send={send} />
+
           {/* A conversa da tarefa: veio do SimbOS e continua aqui, porque é onde
               fica registrado o que foi decidido no meio do caminho. */}
           <div>
@@ -363,5 +368,166 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
       </aside>
     </div>,
     document.body,
+  );
+}
+
+/** "2,4 MB", "812 KB". Tamanho de arquivo se lê arredondado. */
+function fmtTamanho(bytes: number | null): string {
+  if (!bytes || bytes <= 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  return `${(kb / 1024).toFixed(1).replace('.', ',')} MB`;
+}
+
+/**
+ * Os arquivos da tarefa.
+ *
+ * O arquivo vai do navegador direto para o Storage, com uma permissão temporária
+ * que o servidor assina: passar o arquivo pela server action esbarraria no teto
+ * de 4,5 MB de corpo de requisição da Vercel, e aqui o limite é o do bucket, 25
+ * MB. Só depois que o arquivo chega é que ele é registrado na tarefa — se a rede
+ * cair no meio, sobra um arquivo solto no bucket, nunca uma linha apontando para
+ * um arquivo que não existe.
+ *
+ * Anexo é sempre interno: não aparece no link de acompanhamento do cliente.
+ */
+function Anexos({ taskId, anexos, send }: {
+  taskId: string;
+  anexos: AnexoView[];
+  send: Send;
+}) {
+  const entrada = useRef<HTMLInputElement>(null);
+  const [subindo, setSubindo] = useState<string[]>([]);
+  const [erro, setErro] = useState<string | null>(null);
+  const [arrastando, setArrastando] = useState(false);
+  // Some da lista no clique, sem esperar a volta do servidor.
+  const [removidos, setRemovidos] = useState<string[]>([]);
+
+  // Chegou lista nova do servidor: o que estava adiantado aqui já é verdade.
+  useEffect(() => { setSubindo([]); setRemovidos([]); }, [anexos.length]);
+  useEffect(() => { setRemovidos([]); setErro(null); }, [taskId]);
+
+  const visiveis = anexos.filter((a) => !removidos.includes(a.id));
+
+  const enviar = async (arquivos: FileList | File[]) => {
+    setErro(null);
+    for (const arquivo of Array.from(arquivos)) {
+      setSubindo((s) => [...s, arquivo.name]);
+      try {
+        const permissao = await pedirUploadDeAnexo({
+          taskId, nome: arquivo.name, tamanho: arquivo.size,
+        });
+        if (!permissao.ok) throw new Error(permissao.erro);
+
+        const resposta = await fetch(permissao.url, { method: 'PUT', body: arquivo });
+        if (!resposta.ok) throw new Error('O arquivo não chegou ao servidor.');
+
+        const registro = await registrarAnexo({
+          taskId, path: permissao.path, nome: arquivo.name,
+          tipo: arquivo.type, tamanho: arquivo.size,
+        });
+        if (!registro.ok) throw new Error(registro.erro ?? 'Não deu para anexar.');
+      } catch (e) {
+        setErro(e instanceof Error ? e.message : 'Não deu para anexar o arquivo.');
+      } finally {
+        setSubindo((s) => { const i = s.indexOf(arquivo.name); return i < 0 ? s : [...s.slice(0, i), ...s.slice(i + 1)]; });
+      }
+    }
+  };
+
+  return (
+    <div
+      onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
+      onDragLeave={() => setArrastando(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setArrastando(false);
+        if (e.dataTransfer.files?.length) enviar(e.dataTransfer.files);
+      }}
+      className={`rounded-md transition-colors ${arrastando ? 'bg-primary/[0.05] ring-1 ring-primary/30' : ''}`}
+    >
+      <p className="mb-1.5 flex items-center gap-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
+        Arquivos
+        {visiveis.length > 0 && (
+          <span className="rounded-full bg-black/[0.06] px-1.5 py-0.5 tabular-nums normal-case tracking-normal">
+            {visiveis.length}
+          </span>
+        )}
+        <button
+          onClick={() => entrada.current?.click()}
+          className="ml-auto inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[11px] font-medium normal-case tracking-normal text-primary transition-colors hover:bg-primary/[0.08]"
+        >
+          <Paperclip className="h-3 w-3" />
+          anexar
+        </button>
+      </p>
+
+      <input
+        ref={entrada}
+        type="file"
+        multiple
+        onChange={(e) => { if (e.target.files?.length) enviar(e.target.files); e.target.value = ''; }}
+        className="hidden"
+      />
+
+      {visiveis.length === 0 && subindo.length === 0 ? (
+        <button
+          onClick={() => entrada.current?.click()}
+          className="flex w-full items-center justify-center gap-1.5 rounded-sm border border-dashed border-black/10 py-2 text-[12px] text-text-muted transition-colors hover:border-primary/40 hover:text-primary"
+        >
+          <Paperclip className="h-3 w-3" />
+          arraste um arquivo aqui, ou clique para escolher
+        </button>
+      ) : (
+        <ul className="flex flex-col gap-1.5">
+          {visiveis.map((a) => (
+            <li
+              key={a.id}
+              className="group flex items-center gap-2 rounded-md border border-black/[0.06] bg-neutral-50 px-2.5 py-1.5"
+            >
+              <Paperclip className="h-3 w-3 shrink-0 text-text-muted" />
+              {/* Abre em outra aba: o link assinado do Storage vale um minuto e
+                  já vem como download, então a gaveta não se perde no caminho. */}
+              <a
+                href={`/admin/anexo/${a.id}`}
+                target="_blank"
+                rel="noreferrer"
+                title={`Baixar ${a.nome}`}
+                className="min-w-0 flex-1 truncate text-[12.5px] text-text-primary transition-colors hover:text-primary"
+              >
+                {a.nome}
+              </a>
+              <span className="shrink-0 text-[10px] tabular-nums text-text-muted">{fmtTamanho(a.tamanho)}</span>
+              <button
+                onClick={() => {
+                  if (confirm(`Apagar o arquivo "${a.nome}"? Não tem como desfazer.`)) {
+                    setRemovidos((r) => [...r, a.id]);
+                    send(apagarAnexo, { id: a.id });
+                  }
+                }}
+                className="shrink-0 rounded p-0.5 text-text-muted/40 opacity-0 transition hover:bg-danger/10 hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
+                aria-label={`Apagar ${a.nome}`}
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </li>
+          ))}
+
+          {subindo.map((nome) => (
+            <li
+              key={`subindo-${nome}`}
+              className="flex items-center gap-2 rounded-md border border-dashed border-black/[0.08] bg-neutral-50/60 px-2.5 py-1.5"
+            >
+              <Paperclip className="h-3 w-3 shrink-0 text-text-muted" />
+              <span className="min-w-0 flex-1 truncate text-[12.5px] text-text-secondary">{nome}</span>
+              <span className="shrink-0 text-[10px] text-text-muted">enviando…</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {erro && <p className="mt-1.5 text-[11px] text-danger">{erro}</p>}
+    </div>
   );
 }

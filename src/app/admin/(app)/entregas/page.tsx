@@ -1,7 +1,7 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { EntregasView } from './entregas-view';
 import { VISAO_PADRAO, lerVisao } from './types';
-import type { ComentarioView, NotaView, Pessoa, ProjectView, TagView } from './types';
+import type { AnexoView, ComentarioView, NotaView, Pessoa, ProjectView, TagView } from './types';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
 
 export const dynamic = 'force-dynamic';
@@ -62,11 +62,22 @@ export default async function EntregasPage() {
 
   // Conversa das tarefas e base de notas: vieram do SimbOS junto com as tarefas
   // e são leves o bastante para a tela receber tudo de uma vez.
-  const [{ data: comentarioData }, { data: notaData }] = await Promise.all([
+  const [{ data: comentarioData }, { data: notaData }, { data: anexoData }] = await Promise.all([
     supabase.from('task_comments').select('id, task_id, author, content, created_at').order('created_at'),
     supabase.from('notes').select('id, engagement_id, title, content, kind, tags, created_at, updated_at')
       .order('updated_at', { ascending: false }),
+    supabase.from('task_attachments')
+      .select('id, task_id, file_name, mime_type, size_bytes, uploaded_by, created_at')
+      .order('created_at'),
   ]);
+
+  const anexos: AnexoView[] = ((anexoData ?? []) as {
+    id: string; task_id: string; file_name: string; mime_type: string | null;
+    size_bytes: number | null; uploaded_by: string | null; created_at: string;
+  }[]).map((a) => ({
+    id: a.id, taskId: a.task_id, nome: a.file_name, tipo: a.mime_type,
+    tamanho: a.size_bytes, autor: a.uploaded_by, quando: a.created_at,
+  }));
 
   const comentarios: ComentarioView[] = ((comentarioData ?? []) as {
     id: string; task_id: string; author: string | null; content: string; created_at: string;
@@ -205,6 +216,7 @@ export default async function EntregasPage() {
     <EntregasView
       projects={[...negocios, ...visiveis]}
       comentarios={comentarios}
+      anexos={anexos}
       notas={notas}
       pessoas={pessoas}
       organizacoes={organizacoes}

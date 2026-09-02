@@ -20,7 +20,8 @@ import {
 } from './status';
 import { COLUNA_LABELS, donoDaTarefa, porPrazo, semMaeNaTela } from './types';
 import type {
-  Agrupamento, Coluna, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto,
+  Agrupamento, AnexoView, Coluna, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView,
+  TaskComProjeto,
 } from './types';
 import {
   ChipSelect, DateChip, InlineText, MenuContexto, PessoaSelect, PriorityChip, Sigla, TagsSelect,
@@ -65,11 +66,12 @@ type Grupo = {
 };
 
 export function ListView({
-  tasks, comentarios, phasesDe, tagsDe, projectId, projectKind, pessoas, mostrarProjeto,
+  tasks, comentarios, anexos, phasesDe, tagsDe, projectId, projectKind, pessoas, mostrarProjeto,
   agrupar, colunas: visiveis, onReordenarColunas, onAbrirProjeto, send,
 }: {
   tasks: TaskComProjeto[];
   comentarios: ComentarioView[];
+  anexos: AnexoView[];
   phasesDe: (projetoId: string) => PhaseView[];
   tagsDe: (projetoId: string) => TagView[];
   projectId: string;
@@ -940,6 +942,7 @@ export function ListView({
         <TaskDrawer
           task={aberta}
           comentarios={comentarios.filter((c) => c.taskId === aberta.id)}
+          anexos={anexos.filter((a) => a.taskId === aberta.id)}
           subtarefas={subs(aberta.id)}
           phases={phasesDe(aberta.projetoId)}
           tags={tagsDe(aberta.projetoId)}

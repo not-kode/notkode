@@ -172,6 +172,15 @@ export type ProjectView = {
 /** O que uma visualização precisa para editar uma tarefa. */
 export type Send = (action: (fd: FormData) => Promise<void>, campos: Record<string, string>) => void;
 
+/**
+ * Arquivo anexado a uma tarefa. Só os metadados: o arquivo mora num bucket
+ * privado e é sempre interno, nunca vai no link de acompanhamento do cliente.
+ */
+export type AnexoView = {
+  id: string; taskId: string; nome: string; tipo: string | null;
+  tamanho: number | null; autor: string | null; quando: string;
+};
+
 /** Comentário dentro de uma tarefa: o histórico da conversa sobre ela. */
 export type ComentarioView = {
   id: string; taskId: string; autor: string | null; texto: string; quando: string;
