@@ -11,7 +11,7 @@ import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
 import { donoDaTarefa, porPrazo, semMaeNaTela } from './types';
 import type { AnexoView, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto, TaskView } from './types';
 import { ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, TagChip, TimerChip, hoje } from './ui';
-import { TaskDrawer } from './task-drawer';
+import { TaskModal } from './task-modal';
 
 /** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
 const COLUNA_TOM: Record<TaskStatus, string> = {
@@ -137,7 +137,7 @@ export function KanbanView({ tasks, comentarios, anexos, phasesDe, tagsDe, proje
       })}
 
       {aberta && (
-        <TaskDrawer
+        <TaskModal
           task={aberta}
           comentarios={comentarios.filter((c) => c.taskId === aberta.id)}
           anexos={anexos.filter((a) => a.taskId === aberta.id)}
@@ -146,6 +146,7 @@ export function KanbanView({ tasks, comentarios, anexos, phasesDe, tagsDe, proje
           tags={tagsDe(aberta.projetoId)}
           projectId={aberta.projetoId}
           projectKind={aberta.projetoKind}
+          projetoNome={aberta.projetoNome}
           pessoas={pessoas}
           send={send}
           onFechar={() => setAberta(null)}

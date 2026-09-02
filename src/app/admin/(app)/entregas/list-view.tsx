@@ -27,7 +27,7 @@ import {
   ChipSelect, DateChip, InlineText, MenuContexto, PessoaSelect, PriorityChip, Sigla, TagsSelect,
   TimerChip, hoje,
 } from './ui';
-import { TaskDrawer } from './task-drawer';
+import { TaskModal } from './task-modal';
 
 /** Grupos que você abriu ou fechou na mão, lembrados entre visitas. */
 const PREF_DOBRA = 'notkode.entregas.grupos';
@@ -939,7 +939,7 @@ export function ListView({
       )}
 
       {aberta && (
-        <TaskDrawer
+        <TaskModal
           task={aberta}
           comentarios={comentarios.filter((c) => c.taskId === aberta.id)}
           anexos={anexos.filter((a) => a.taskId === aberta.id)}
@@ -948,6 +948,7 @@ export function ListView({
           tags={tagsDe(aberta.projetoId)}
           projectId={aberta.projetoId}
           projectKind={aberta.projetoKind}
+          projetoNome={aberta.projetoNome}
           pessoas={pessoas}
           send={send}
           onFechar={() => setAberta(null)}
