@@ -12,8 +12,8 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import {
-  createPhase, createProject, renameProject, salvarColunas, setProjectArchived, setProjectRepo,
-  generateClientToken, revokeClientToken,
+  bulkTasks, createPhase, createProject, deleteTask, renameProject, salvarColunas,
+  setProjectArchived, setProjectRepo, generateClientToken, revokeClientToken,
 } from './actions';
 import {
   Archive, Calendar, CheckSquare, ChevronDown, ChevronUp, Columns3, Eye, EyeOff, Layers,
@@ -125,6 +125,9 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
   // comentários), o que leva uns dois segundos: sem isto, o clique ficava parado
   // esse tempo todo e dava a impressão de que nada tinha acontecido.
   const [otimista, setOtimista] = useState<Record<string, PatchOtimista>>({});
+  // Tarefa apagada sai da tela no clique, sem esperar os dois segundos da ida ao
+  // servidor: uma linha que continua ali depois do "apagar" faz clicar de novo.
+  const [apagadas, setApagadas] = useState<string[]>([]);
   const [pending, start] = useTransition();
 
   const router = useRouter();
@@ -139,6 +142,9 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
     if (campos.status === 'feito') {
       if (ids.length > 0) setRecemConcluidas((r) => [...new Set([...r, ...ids])]);
     }
+
+    const apagando = action === deleteTask || (action === bulkTasks && campos.acao === 'apagar');
+    if (apagando && ids.length > 0) setApagadas((a) => [...new Set([...a, ...ids])]);
 
     // A tela muda já; o servidor confirma depois e o refresh substitui isto pelo
     // dado de verdade. Se a gravação falhar, o refresh devolve o valor antigo.
@@ -275,12 +281,23 @@ export function EntregasView({ projects, comentarios, notas, pessoas, organizaco
         ...otimista[t.id],
         projetoNome: p.orgName ?? p.title ?? 'Sem nome', projetoId: p.id, projetoKind: p.kind,
       }));
-    return escopo === 'todos' ? ativos.flatMap(comProjeto) : aberto ? comProjeto(aberto) : [];
-  }, [escopo, ativos, aberto, otimista]);
+    const todas = escopo === 'todos' ? ativos.flatMap(comProjeto) : aberto ? comProjeto(aberto) : [];
+    if (apagadas.length === 0) return todas;
+
+    // Apagar a mãe apaga as filhas no banco (a chave é em cascata), então na tela
+    // a árvore inteira some junto — senão a subtarefa fica órfã e vira cartão.
+    const mortas = new Set(apagadas);
+    for (let i = 0; i < 20; i++) {
+      const antes = mortas.size;
+      for (const t of todas) if (t.parentId && mortas.has(t.parentId)) mortas.add(t.id);
+      if (mortas.size === antes) break;
+    }
+    return todas.filter((t) => !mortas.has(t.id));
+  }, [escopo, ativos, aberto, otimista, apagadas]);
 
   // Chegou dado novo do servidor: o que estava adiantado na tela já virou verdade
   // e sai daqui. É o que evita a tela ficar presa a um valor que não gravou.
-  useEffect(() => { setOtimista({}); }, [projects]);
+  useEffect(() => { setOtimista({}); setApagadas([]); }, [projects]);
 
   const doPeriodo = useMemo(
     () => recortar(doEscopo, periodo, recemConcluidas),
