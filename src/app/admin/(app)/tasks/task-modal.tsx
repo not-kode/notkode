@@ -12,8 +12,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  AlignLeft, Calendar, Check, Flag, Layers, ListChecks, Paperclip, Plus, Tag as TagIcon,
-  Timer, Trash2, User, X,
+  AlignLeft, Calendar, Check, Flag, Layers, ListChecks, Maximize2, Minimize2, Paperclip, Plus,
+  Tag as TagIcon, Timer, Trash2, User, X,
 } from 'lucide-react';
 import {
   apagarAnexo, apagarComentario, apagarTag, atualizarTag, createTask, criarComentario, criarTagNaTarefa,
@@ -24,6 +24,9 @@ import { TASK_DOT, TASK_LABELS, TASK_STATUSES, TASK_TOM } from './status';
 import { donoDaTarefa } from './types';
 import type { AnexoView, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskView } from './types';
 import { ChipSelect, PeriodoChip, PessoaSelect, PriorityChip, TagsSelect, TimerChip, hoje } from './ui';
+
+/** Janela grande ou compacta: escolha de quem trabalha, lembrada no navegador. */
+const PREF_TAMANHO = 'notkode.entregas.modal-tarefa';
 
 /** O que a conversa mostra: o que foi escrito e o que foi anexado, na ordem. */
 type ItemDaConversa =
@@ -113,6 +116,20 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
   // apagado agora. Sem isto, o Enter esvaziava o campo e a conversa só mudava
   // uns segundos depois, quando a página inteira era remontada: a leitura era
   // "o comentário não foi".
+  // Aberto na tela inteira ou numa janela menor. Tamanho de janela é gosto de
+  // quem trabalha e muda com o monitor, então fica guardado no navegador em vez
+  // de virar uma decisão minha para todo mundo.
+  const [amplo, setAmplo] = useState(true);
+  useEffect(() => {
+    setAmplo(localStorage.getItem(PREF_TAMANHO) !== 'compacto');
+  }, []);
+  const trocarTamanho = () => {
+    setAmplo((v) => {
+      localStorage.setItem(PREF_TAMANHO, v ? 'compacto' : 'amplo');
+      return !v;
+    });
+  };
+
   const [pendentes, setPendentes] = useState<{ id: string; texto: string }[]>([]);
   const [removidos, setRemovidos] = useState<string[]>([]);
   const fimDaConversa = useRef<HTMLDivElement>(null);
@@ -199,7 +216,9 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
         role="dialog"
         aria-modal="true"
         aria-label={task.title}
-        className="relative flex max-h-[92vh] w-full max-w-[80rem] flex-col overflow-hidden rounded-xl border border-black/[0.08] bg-white shadow-[0_24px_64px_rgba(16,24,40,0.24)]"
+        className={`relative flex w-full flex-col overflow-hidden rounded-xl border border-black/[0.08] bg-white shadow-[0_24px_64px_rgba(16,24,40,0.24)] ${
+          amplo ? 'h-[94vh] max-w-[110rem]' : 'max-h-[86vh] max-w-[72rem]'
+        }`}
       >
         {/* De onde é a tarefa, e as ações que valem para ela inteira. */}
         <header className="flex items-center gap-2 border-b border-black/[0.07] px-4 py-2.5">
@@ -221,6 +240,14 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
             className="rounded p-1 text-text-muted/60 transition hover:bg-danger/10 hover:text-danger"
           >
             <Trash2 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={trocarTamanho}
+            title={amplo ? 'Janela menor' : 'Ocupar a tela'}
+            aria-label={amplo ? 'Janela menor' : 'Ocupar a tela'}
+            className="rounded p-1 text-text-muted transition hover:bg-black/[0.05] hover:text-text-primary"
+          >
+            {amplo ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
           <button
             onClick={onFechar}
