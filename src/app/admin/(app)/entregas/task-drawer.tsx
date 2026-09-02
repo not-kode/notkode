@@ -34,11 +34,27 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
   const [notas, setNotas] = useState(task.notes ?? '');
   const [novaSub, setNovaSub] = useState('');
   const [comentario, setComentario] = useState('');
+  // Comentário mandado agora e ainda não confirmado pelo servidor, e o que foi
+  // apagado agora. Sem isto, o Enter esvaziava o campo e a conversa só mudava
+  // uns segundos depois, quando a página inteira era remontada: a leitura era
+  // "o comentário não foi".
+  const [pendentes, setPendentes] = useState<{ id: string; texto: string }[]>([]);
+  const [removidos, setRemovidos] = useState<string[]>([]);
+
+  // Chegou conversa nova do servidor (ou uma sumiu): o que estava adiantado aqui
+  // já virou verdade. Comparo pelo tamanho porque a lista é um array novo a cada
+  // render, e olhar a referência limparia isto antes da resposta chegar.
+  useEffect(() => { setPendentes([]); setRemovidos([]); }, [comentarios.length]);
+
+  const conversa = comentarios.filter((c) => !removidos.includes(c.id));
+  const quantasNaConversa = conversa.length + pendentes.length;
 
   // Trocar de tarefa sem fechar a gaveta tem que recarregar os campos.
   useEffect(() => {
     setTitulo(task.title);
     setNotas(task.notes ?? '');
+    setPendentes([]);
+    setRemovidos([]);
   }, [task.id, task.title, task.notes]);
 
   useEffect(() => {
@@ -240,6 +256,15 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
                     </button>
                   </li>
                 ))}
+
+                {/* O que acabou de ser escrito, enquanto o servidor não confirma:
+                    mesmo balão, em tom mais baixo, para não parecer que sumiu. */}
+                {pendentes.map((p) => (
+                  <li key={p.id} className="rounded-md border border-dashed border-black/[0.08] bg-neutral-50/60 px-2.5 py-2">
+                    <p className="mb-1 text-[11px] text-text-muted">enviando…</p>
+                    <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-text-secondary">{p.texto}</p>
+                  </li>
+                ))}
               </ul>
             )}
 
@@ -261,22 +286,27 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
           <div>
             <p className="mb-1.5 flex items-center gap-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
               Conversa
-              {comentarios.length > 0 && (
+              {quantasNaConversa > 0 && (
                 <span className="rounded-full bg-black/[0.06] px-1.5 py-0.5 tabular-nums normal-case tracking-normal">
-                  {comentarios.length}
+                  {quantasNaConversa}
                 </span>
               )}
             </p>
 
-            {comentarios.length > 0 && (
+            {quantasNaConversa > 0 && (
               <ul className="mb-2 flex flex-col gap-2">
-                {comentarios.map((c) => (
+                {conversa.map((c) => (
                   <li key={c.id} className="group rounded-md border border-black/[0.06] bg-neutral-50 px-2.5 py-2">
                     <p className="mb-1 flex items-center gap-2 text-[11px] text-text-muted">
                       <span className="font-medium text-text-secondary">{c.autor ?? 'alguém'}</span>
                       {new Date(c.quando).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' })}
                       <button
-                        onClick={() => { if (confirm('Apagar este comentário?')) send(apagarComentario, { id: c.id }); }}
+                        onClick={() => {
+                          if (confirm('Apagar este comentário?')) {
+                            setRemovidos((r) => [...r, c.id]);
+                            send(apagarComentario, { id: c.id });
+                          }
+                        }}
                         className="ml-auto rounded p-0.5 text-text-muted/40 transition hover:bg-danger/10 hover:text-danger"
                         aria-label="Apagar comentário"
                       >
@@ -284,6 +314,15 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
                       </button>
                     </p>
                     <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-text-primary">{c.texto}</p>
+                  </li>
+                ))}
+
+                {/* O que acabou de ser escrito, enquanto o servidor não confirma:
+                    mesmo balão, em tom mais baixo, para não parecer que sumiu. */}
+                {pendentes.map((p) => (
+                  <li key={p.id} className="rounded-md border border-dashed border-black/[0.08] bg-neutral-50/60 px-2.5 py-2">
+                    <p className="mb-1 text-[11px] text-text-muted">enviando…</p>
+                    <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-text-secondary">{p.texto}</p>
                   </li>
                 ))}
               </ul>
@@ -297,7 +336,11 @@ export function TaskDrawer({ task, comentarios, subtarefas, phases, tags, projec
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   const limpo = comentario.trim();
-                  if (limpo) { send(criarComentario, { task_id: task.id, content: limpo }); setComentario(''); }
+                  if (limpo) {
+                    setPendentes((p) => [...p, { id: `pendente-${Date.now()}`, texto: limpo }]);
+                    send(criarComentario, { task_id: task.id, content: limpo });
+                    setComentario('');
+                  }
                 }
               }}
               rows={2}
