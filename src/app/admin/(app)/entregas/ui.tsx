@@ -363,7 +363,11 @@ export function PessoaSelect({ value, pessoas, onChange, compacto = false }: {
   const termo = busca.trim().toLowerCase();
   const achadas = pessoas.filter((p) => !termo || p.nome.toLowerCase().includes(termo));
   const nomeNovo = busca.trim();
-  const inedito = nomeNovo.length > 1 && !pessoas.some((p) => p.nome.toLowerCase() === nomeNovo.toLowerCase());
+  // Nome novo só quando NENHUM nome existente contém o que foi digitado. Antes
+  // bastava não ser igual, e escrever "Matheus" criava um responsável separado
+  // do "Matheus Tonelotto" que já estava na lista logo abaixo: a mesma pessoa
+  // virava duas, e nenhuma busca por responsável fechava a conta.
+  const inedito = nomeNovo.length > 1 && achadas.length === 0;
 
   const escolher = (nome: string) => {
     onChange(nome);
