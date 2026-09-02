@@ -122,32 +122,57 @@ function useForaDoElemento(aberto: boolean, fechar: () => void, extra?: React.Re
  * Existe porque a visão Lista rola na horizontal, e qualquer overflow recorta
  * elementos filhos: menu preso na célula aparecia cortado.
  */
-function usePosicaoMenu(aberto: boolean, botaoRef: React.RefObject<HTMLButtonElement | null>, largura: number, altura: number) {
+function usePosicaoMenu(
+  aberto: boolean,
+  botaoRef: React.RefObject<HTMLButtonElement | null>,
+  largura: number,
+  altura: number,
+  fechar?: () => void,
+) {
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
 
   useLayoutEffect(() => {
     if (!aberto) { setPos(null); return; }
-    const b = botaoRef.current?.getBoundingClientRect();
-    if (!b) return;
-    const abaixo = b.bottom + altura < window.innerHeight;
-    setPos({
-      left: Math.max(8, Math.min(b.left, window.innerWidth - largura - 8)),
-      top: abaixo ? b.bottom + 4 : Math.max(8, b.top - altura - 4),
-    });
-  }, [aberto, botaoRef, largura, altura]);
 
-  // Rolar com o menu aberto deixaria a lista longe do chip: fecha.
+    const posicionar = () => {
+      const b = botaoRef.current?.getBoundingClientRect();
+      if (!b) return;
+      // O gatilho saiu da vista (rolou para fora da janela): aí sim o menu
+      // fecha, senão ele ficaria pairando sozinho longe do que abriu.
+      if (b.bottom < 0 || b.top > window.innerHeight) { fechar?.(); return; }
+
+      const abaixo = b.bottom + altura < window.innerHeight;
+      setPos({
+        left: Math.max(8, Math.min(b.left, window.innerWidth - largura - 8)),
+        top: abaixo ? b.bottom + 4 : Math.max(8, b.top - altura - 4),
+      });
+    };
+
+    posicionar();
+    // O menu ACOMPANHA a rolagem em vez de fechar. Fechar era o comportamento
+    // antigo e atrapalhava: dentro do modal da tarefa, rolar para ver a lista de
+    // tags fechava a lista antes de dar para escolher qualquer coisa.
+    window.addEventListener('scroll', posicionar, true);
+    window.addEventListener('resize', posicionar);
+    return () => {
+      window.removeEventListener('scroll', posicionar, true);
+      window.removeEventListener('resize', posicionar);
+    };
+  }, [aberto, botaoRef, largura, altura, fechar]);
+
   return pos;
 }
 
 /**
- * Fecha o menu quando a página rola ou a janela muda de tamanho — o menu vai em
- * portal com posição fixa, então rolar a tela o deixaria longe do chip.
+ * Fecha o menu quando a página rola ou a janela muda de tamanho.
  *
- * Rolar DENTRO do menu não conta: a lista de responsáveis tem barra própria, e
- * sem esta exceção o menu se fechava sozinho na primeira rolagem (inclusive na
- * que o navegador faz ao dar foco no campo de busca), antes de dar para clicar
- * em alguém.
+ * Só o menu do botão direito usa isto: ele nasce nas coordenadas do clique, sem
+ * nada para acompanhar quando a página anda. Os menus dos chips fazem o
+ * contrário — grudam no chip e andam junto (`usePosicaoMenu`), porque fechar ao
+ * rolar impedia de escolher uma tag dentro do modal da tarefa.
+ *
+ * Rolar DENTRO do menu não conta: a lista tem barra própria, e sem esta exceção
+ * ele se fechava na primeira rolagem.
  */
 function useFechaAoRolar(aberto: boolean, fechar: () => void, dentro?: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -213,8 +238,7 @@ export function PriorityChip({ value, onChange, compacto }: {
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
-  const pos = usePosicaoMenu(aberto, botaoRef, 128, 150);
-  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 128, 150, () => setAberto(false));
 
   return (
     <div className="relative" ref={ref}>
@@ -325,7 +349,6 @@ export function PessoaSelect({ value, pessoas, onChange, compacto = false }: {
   useEffect(() => {
     if (aberto && pos) buscaRef.current?.focus({ preventScroll: true });
   }, [aberto, pos]);
-  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
 
   const termo = busca.trim().toLowerCase();
   const achadas = pessoas.filter((p) => !termo || p.nome.toLowerCase().includes(termo));
@@ -436,8 +459,7 @@ export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] t
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
-  const pos = usePosicaoMenu(aberto, botaoRef, 176, 224);
-  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 176, 224, () => setAberto(false));
   const atual = options.find((o) => o.value === value);
 
   return (
@@ -734,8 +756,7 @@ export function TagsSelect({ value, tags, onChange, onCriar, onCor, onApagar, co
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
-  const pos = usePosicaoMenu(aberto, botaoRef, 224, 300);
-  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 224, 300, () => setAberto(false));
 
   const marcadas = tags.filter((t) => value.includes(t.id));
   const alternar = (id: string) =>
@@ -901,8 +922,7 @@ export function FiltroResponsavel({ value, pessoas, contagem, semResponsavel, to
   const menuRef = useRef<HTMLDivElement>(null);
   const botaoRef = useRef<HTMLButtonElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
-  const pos = usePosicaoMenu(aberto, botaoRef, 208, 288);
-  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 208, 288, () => setAberto(false));
 
   const ativo = value !== '';
   const rotulo = value === SEM_RESPONSAVEL ? 'Sem responsável' : value || 'Todo mundo';
@@ -1045,8 +1065,7 @@ export function PeriodoChip({ inicio, fim, onInicio, onFim, atrasada, quieta }: 
   const botaoRef = useRef<HTMLButtonElement>(null);
   const fimRef = useRef<HTMLInputElement>(null);
   const ref = useForaDoElemento(aberto, () => setAberto(false), menuRef);
-  const pos = usePosicaoMenu(aberto, botaoRef, 232, 200);
-  useFechaAoRolar(aberto, () => setAberto(false), menuRef);
+  const pos = usePosicaoMenu(aberto, botaoRef, 232, 200, () => setAberto(false));
 
   const dias = fim ? diffDias(hoje(), fim) : null;
   const proxima = !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;

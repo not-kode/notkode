@@ -25,6 +25,20 @@ import { donoDaTarefa } from './types';
 import type { AnexoView, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskView } from './types';
 import { ChipSelect, PeriodoChip, PessoaSelect, PriorityChip, TagsSelect, TimerChip, hoje } from './ui';
 
+/** O que a conversa mostra: o que foi escrito e o que foi anexado, na ordem. */
+type ItemDaConversa =
+  | { tipo: 'comentario'; id: string; autor: string | null; quando: string; texto: string }
+  | { tipo: 'anexo'; id: string; autor: string | null; quando: string; nome: string; tamanho: number | null };
+
+/** "2 set, 10:54" — na conversa a hora importa tanto quanto o dia. */
+function fmtQuando(iso: string): string {
+  const d = new Date(iso);
+  const dia = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '');
+  const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const ano = d.getFullYear() === new Date().getFullYear() ? '' : ` ${String(d.getFullYear()).slice(2)}`;
+  return `${dia}${ano}, ${hora}`;
+}
+
 /** Uma propriedade da tarefa: rótulo com ícone à esquerda, controle à direita. */
 function Campo({ icone: Icone, rotulo, children, largo = false }: {
   icone: typeof User;
@@ -100,7 +114,17 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
   // render, e olhar a referência limparia isto antes da resposta chegar.
   useEffect(() => { setPendentes([]); setRemovidos([]); }, [comentarios.length]);
 
-  const conversa = comentarios.filter((c) => !removidos.includes(c.id));
+  // A conversa é uma linha do tempo só: o que foi escrito e o que foi anexado,
+  // na ordem em que aconteceu. O arquivo continua no bloco Arquivos, que é onde
+  // se procura por ele depois; aqui ele aparece como o registro de quando entrou.
+  const conversa: ItemDaConversa[] = [
+    ...comentarios
+      .filter((c) => !removidos.includes(c.id))
+      .map((c) => ({ tipo: 'comentario' as const, id: c.id, autor: c.autor, quando: c.quando, texto: c.texto })),
+    ...anexos.map((a) => ({
+      tipo: 'anexo' as const, id: a.id, autor: a.autor, quando: a.quando, nome: a.nome, tamanho: a.tamanho,
+    })),
+  ].sort((a, b) => a.quando.localeCompare(b.quando));
   const quantasNaConversa = conversa.length + pendentes.length;
 
   // A conversa abre no fim, como todo chat: o que interessa é o último recado.
@@ -391,29 +415,49 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
             <div className="min-h-[8rem] flex-1 overflow-y-auto px-3 py-3">
               {quantasNaConversa === 0 ? (
                 <p className="px-1 text-[12px] leading-relaxed text-text-muted">
-                  Nada registrado ainda. O que for combinado por aqui fica junto da tarefa.
+                  Nada registrado ainda. O que for combinado e os arquivos que entrarem
+                  ficam aqui, na ordem em que aconteceram.
                 </p>
               ) : (
                 <ul className="flex flex-col gap-2">
-                  {conversa.map((c) => (
-                    <li key={c.id} className="group rounded-md border border-black/[0.06] bg-white px-2.5 py-2">
+                  {conversa.map((item) => (
+                    <li key={`${item.tipo}-${item.id}`} className="group rounded-md border border-black/[0.06] bg-white px-2.5 py-2">
                       <p className="mb-1 flex items-center gap-2 text-[11px] text-text-muted">
-                        <span className="font-medium text-text-secondary">{c.autor ?? 'alguém'}</span>
-                        {new Date(c.quando).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' })}
+                        <span className="font-medium text-text-secondary">{item.autor ?? 'alguém'}</span>
+                        <span className="tabular-nums">{fmtQuando(item.quando)}</span>
                         <button
                           onClick={() => {
-                            if (confirm('Apagar este comentário?')) {
-                              setRemovidos((r) => [...r, c.id]);
-                              send(apagarComentario, { id: c.id });
+                            if (item.tipo === 'comentario') {
+                              if (confirm('Apagar este comentário?')) {
+                                setRemovidos((r) => [...r, item.id]);
+                                send(apagarComentario, { id: item.id });
+                              }
+                            } else if (confirm(`Apagar o arquivo "${item.nome}"? Não tem como desfazer.`)) {
+                              send(apagarAnexo, { id: item.id });
                             }
                           }}
                           className="ml-auto rounded p-0.5 text-text-muted/40 opacity-0 transition hover:bg-danger/10 hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
-                          aria-label="Apagar comentário"
+                          aria-label={item.tipo === 'comentario' ? 'Apagar comentário' : 'Apagar arquivo'}
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
                       </p>
-                      <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-text-primary">{c.texto}</p>
+
+                      {item.tipo === 'comentario' ? (
+                        <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-text-primary">{item.texto}</p>
+                      ) : (
+                        <a
+                          href={`/admin/anexo/${item.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={`Baixar ${item.nome}`}
+                          className="flex items-center gap-1.5 text-[12.5px] text-text-primary transition-colors hover:text-primary"
+                        >
+                          <Paperclip className="h-3 w-3 shrink-0 text-text-muted" />
+                          <span className="min-w-0 truncate">{item.nome}</span>
+                          <span className="shrink-0 text-[10px] tabular-nums text-text-muted">{fmtTamanho(item.tamanho)}</span>
+                        </a>
+                      )}
                     </li>
                   ))}
 
