@@ -10,7 +10,7 @@ import { createTask, deleteTask, moveTask, toggleTimer, updateTask } from './act
 import { TASK_LABELS, TASK_STATUSES, type TaskStatus } from './status';
 import { donoDaTarefa, porPrazo, semMaeNaTela } from './types';
 import type { AnexoView, ComentarioView, Pessoa, PhaseView, ProjectKind, Send, TagView, TaskComProjeto, TaskView } from './types';
-import { ChipSelect, DateChip, MenuContexto, PessoaSelect, PriorityChip, TagChip, TimerChip, hoje } from './ui';
+import { ChipSelect, MenuContexto, PeriodoChip, PessoaSelect, PriorityChip, TagChip, TimerChip, hoje } from './ui';
 import { TaskModal } from './task-modal';
 
 /** Faixa colorida no topo da coluna: dá para achar o estágio sem ler. */
@@ -291,9 +291,13 @@ function TaskCard({ task, phases, tags, pessoas, projeto, onAbrirProjeto, send, 
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <PriorityChip value={task.priority} onChange={(v) => send(updateTask, { id: task.id, priority: v })} />
-        <DateChip
-          value={task.dueDate}
-          onSave={(v) => send(updateTask, { id: task.id, due_date: v })}
+        {/* As duas pontas no cartão, não só a entrega: "de quando até quando"
+            é o que se pergunta olhando o quadro, e o começo estava só na lista. */}
+        <PeriodoChip
+          inicio={task.startDate}
+          fim={task.dueDate}
+          onInicio={(v) => send(updateTask, { id: task.id, start_date: v })}
+          onFim={(v) => send(updateTask, { id: task.id, due_date: v })}
           atrasada={atrasada}
           quieta={task.status === 'feito'}
         />

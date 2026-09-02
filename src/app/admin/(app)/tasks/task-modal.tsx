@@ -48,9 +48,17 @@ function Campo({ icone: Icone, rotulo, children, largo = false }: {
   largo?: boolean;
 }) {
   return (
-    <div className={`flex items-center gap-2 py-1 ${largo ? 'sm:col-span-2 xl:col-span-3' : ''}`}>
-      <span className="flex w-[6.5rem] shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] text-text-muted">
-        <Icone className="h-3.5 w-3.5 shrink-0 opacity-70" />
+    // Cada propriedade numa caixa própria, com filete em volta: em campos soltos
+    // lado a lado não se via onde um acabava e o outro começava, e "alta" parecia
+    // valor de "Status". O ícone vai no azul da casa, que é o que puxa o olho
+    // para o rótulo antes de ler.
+    <div
+      className={`flex items-center gap-2 rounded-sm border border-black/[0.05] bg-neutral-50/50 px-2 py-1.5 ${
+        largo ? 'sm:col-span-2 xl:col-span-3' : ''
+      }`}
+    >
+      <span className="flex w-[6rem] shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] text-text-muted">
+        <Icone className="h-3.5 w-3.5 shrink-0 text-primary" />
         {rotulo}
       </span>
       <span className="min-w-0 flex-1">{children}</span>
@@ -68,7 +76,7 @@ function Secao({ icone: Icone, titulo, contador, children }: {
   return (
     <section>
       <p className="mb-1.5 flex items-center gap-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
-        <Icone className="h-3.5 w-3.5 opacity-70" />
+        <Icone className="h-3.5 w-3.5 text-primary" />
         {titulo}
         {contador !== undefined && contador !== 0 && (
           <span className="rounded-full bg-black/[0.06] px-1.5 py-0.5 tabular-nums normal-case tracking-normal">
@@ -108,6 +116,9 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
   const [pendentes, setPendentes] = useState<{ id: string; texto: string }[]>([]);
   const [removidos, setRemovidos] = useState<string[]>([]);
   const fimDaConversa = useRef<HTMLDivElement>(null);
+  const entradaDeArquivo = useRef<HTMLInputElement>(null);
+  const [arrastando, setArrastando] = useState(false);
+  const { enviar, subindo, erro: erroDoAnexo } = useEnvioDeAnexo(task.id);
 
   // Chegou conversa nova do servidor (ou uma sumiu): o que estava adiantado aqui
   // já virou verdade. Comparo pelo tamanho porque a lista é um array novo a cada
@@ -250,7 +261,7 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
             {/* Uma barra só, do tamanho que a tela der: em duas colunas ela
                 espremia cada campo em pouco mais de 10rem e o valor quebrava
                 embaixo do rótulo. */}
-            <div className="mb-5 grid gap-x-6 border-y border-black/[0.06] py-2 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="mb-5 grid gap-1.5 sm:grid-cols-2 xl:grid-cols-3">
               <Campo icone={Layers} rotulo="Status">
                 <ChipSelect
                   value={task.status}
@@ -384,8 +395,6 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
                 </div>
               </Secao>
 
-              <Anexos taskId={task.id} anexos={anexos} send={send} />
-
               {/* Visível para o cliente: mesma chave da etapa, no nível da tarefa. */}
               <label className="flex items-center gap-2 border-t border-black/[0.06] pt-4 text-[12px] text-text-secondary">
                 <input
@@ -402,7 +411,18 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
           {/* A conversa em coluna própria, com o campo preso no rodapé: é onde
               fica registrado o que foi decidido no meio do caminho, e antes ela
               vivia no fim de uma rolagem comprida. */}
-          <aside className="flex min-h-0 w-full flex-col border-t border-black/[0.07] bg-neutral-50/60 lg:w-[21rem] lg:border-l lg:border-t-0">
+          <aside
+            onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
+            onDragLeave={() => setArrastando(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setArrastando(false);
+              if (e.dataTransfer.files?.length) enviar(e.dataTransfer.files);
+            }}
+            className={`flex min-h-0 w-full flex-col border-t border-black/[0.07] transition-colors lg:w-[23rem] lg:border-l lg:border-t-0 ${
+              arrastando ? 'bg-primary/[0.06]' : 'bg-neutral-50/60'
+            }`}
+          >
             <p className="flex items-center gap-2 border-b border-black/[0.06] px-4 py-2.5 font-label text-[10px] uppercase tracking-wider text-text-muted">
               Conversa
               {quantasNaConversa > 0 && (
@@ -416,7 +436,8 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
               {quantasNaConversa === 0 ? (
                 <p className="px-1 text-[12px] leading-relaxed text-text-muted">
                   Nada registrado ainda. O que for combinado e os arquivos que entrarem
-                  ficam aqui, na ordem em que aconteceram.
+                  ficam aqui, na ordem em que aconteceram. Dá para arrastar um arquivo
+                  para dentro desta coluna.
                 </p>
               ) : (
                 <ul className="flex flex-col gap-2">
@@ -461,12 +482,22 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
                     </li>
                   ))}
 
-                  {/* O que acabou de ser escrito, enquanto o servidor não
-                      confirma: mesmo balão, em tom mais baixo. */}
+                  {/* O que acabou de ser escrito ou anexado, enquanto o
+                      servidor não confirma: mesmo balão, em tom mais baixo. */}
                   {pendentes.map((p) => (
                     <li key={p.id} className="rounded-md border border-dashed border-black/[0.08] bg-white/60 px-2.5 py-2">
                       <p className="mb-1 text-[11px] text-text-muted">enviando…</p>
                       <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-text-secondary">{p.texto}</p>
+                    </li>
+                  ))}
+
+                  {subindo.map((nome) => (
+                    <li key={`subindo-${nome}`} className="rounded-md border border-dashed border-black/[0.08] bg-white/60 px-2.5 py-2">
+                      <p className="mb-1 text-[11px] text-text-muted">enviando…</p>
+                      <p className="flex items-center gap-1.5 text-[12.5px] text-text-secondary">
+                        <Paperclip className="h-3 w-3 shrink-0" />
+                        <span className="min-w-0 truncate">{nome}</span>
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -489,6 +520,29 @@ export function TaskModal({ task, comentarios, anexos, subtarefas, phases, tags,
                 placeholder="Escrever um comentário (Enter manda)"
                 className="w-full resize-y rounded-sm border border-black/[0.08] px-2.5 py-2 text-[13px] leading-relaxed text-text-primary outline-none transition-colors focus:border-primary/40"
               />
+
+              {/* O clipe mora aqui, junto do que se escreve: anexar é parte da
+                  conversa, e não uma lista à parte do outro lado da tela. */}
+              <div className="mt-1.5 flex items-center gap-2">
+                <button
+                  onClick={() => entradaDeArquivo.current?.click()}
+                  className="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/[0.08]"
+                >
+                  <Paperclip className="h-3 w-3" />
+                  anexar arquivo
+                </button>
+                <span className="text-[10px] text-text-muted">ou arraste aqui</span>
+              </div>
+
+              <input
+                ref={entradaDeArquivo}
+                type="file"
+                multiple
+                onChange={(e) => { if (e.target.files?.length) enviar(e.target.files); e.target.value = ''; }}
+                className="hidden"
+              />
+
+              {erroDoAnexo && <p className="mt-1.5 text-[11px] text-danger">{erroDoAnexo}</p>}
             </div>
           </aside>
         </div>
@@ -519,23 +573,24 @@ function fmtTamanho(bytes: number | null): string {
  *
  * Anexo é sempre interno: não aparece no link de acompanhamento do cliente.
  */
-function Anexos({ taskId, anexos, send }: {
-  taskId: string;
-  anexos: AnexoView[];
-  send: Send;
-}) {
-  const entrada = useRef<HTMLInputElement>(null);
+
+/**
+ * O envio de arquivo da conversa.
+ *
+ * O arquivo vai do navegador direto para o Storage, com uma permissão temporária
+ * que o servidor assina: passar o arquivo pela server action esbarraria no teto
+ * de 4,5 MB de corpo de requisição da Vercel, e aqui o limite é o do bucket, 25
+ * MB. Só depois que o arquivo chega é que ele é registrado na tarefa — se a rede
+ * cair no meio, sobra um arquivo solto no bucket, nunca uma linha apontando para
+ * um arquivo que não existe.
+ *
+ * Anexo é sempre interno: não aparece no link de acompanhamento do cliente.
+ */
+function useEnvioDeAnexo(taskId: string) {
   const [subindo, setSubindo] = useState<string[]>([]);
   const [erro, setErro] = useState<string | null>(null);
-  const [arrastando, setArrastando] = useState(false);
-  // Some da lista no clique, sem esperar a volta do servidor.
-  const [removidos, setRemovidos] = useState<string[]>([]);
 
-  // Chegou lista nova do servidor: o que estava adiantado aqui já é verdade.
-  useEffect(() => { setSubindo([]); setRemovidos([]); }, [anexos.length]);
-  useEffect(() => { setRemovidos([]); setErro(null); }, [taskId]);
-
-  const visiveis = anexos.filter((a) => !removidos.includes(a.id));
+  useEffect(() => { setErro(null); }, [taskId]);
 
   const enviar = async (arquivos: FileList | File[]) => {
     setErro(null);
@@ -558,103 +613,13 @@ function Anexos({ taskId, anexos, send }: {
       } catch (e) {
         setErro(e instanceof Error ? e.message : 'Não deu para anexar o arquivo.');
       } finally {
-        setSubindo((s) => { const i = s.indexOf(arquivo.name); return i < 0 ? s : [...s.slice(0, i), ...s.slice(i + 1)]; });
+        setSubindo((s) => {
+          const i = s.indexOf(arquivo.name);
+          return i < 0 ? s : [...s.slice(0, i), ...s.slice(i + 1)];
+        });
       }
     }
   };
 
-  return (
-    <div
-      onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
-      onDragLeave={() => setArrastando(false)}
-      onDrop={(e) => {
-        e.preventDefault();
-        setArrastando(false);
-        if (e.dataTransfer.files?.length) enviar(e.dataTransfer.files);
-      }}
-      className={`rounded-md transition-colors ${arrastando ? 'bg-primary/[0.05] ring-1 ring-primary/30' : ''}`}
-    >
-      <p className="mb-1.5 flex items-center gap-2 font-label text-[10px] uppercase tracking-wider text-text-muted">
-        Arquivos
-        {visiveis.length > 0 && (
-          <span className="rounded-full bg-black/[0.06] px-1.5 py-0.5 tabular-nums normal-case tracking-normal">
-            {visiveis.length}
-          </span>
-        )}
-        <button
-          onClick={() => entrada.current?.click()}
-          className="ml-auto inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[11px] font-medium normal-case tracking-normal text-primary transition-colors hover:bg-primary/[0.08]"
-        >
-          <Paperclip className="h-3 w-3" />
-          anexar
-        </button>
-      </p>
-
-      <input
-        ref={entrada}
-        type="file"
-        multiple
-        onChange={(e) => { if (e.target.files?.length) enviar(e.target.files); e.target.value = ''; }}
-        className="hidden"
-      />
-
-      {visiveis.length === 0 && subindo.length === 0 ? (
-        <button
-          onClick={() => entrada.current?.click()}
-          className="flex w-full items-center justify-center gap-1.5 rounded-sm border border-dashed border-black/10 py-2 text-[12px] text-text-muted transition-colors hover:border-primary/40 hover:text-primary"
-        >
-          <Paperclip className="h-3 w-3" />
-          arraste um arquivo aqui, ou clique para escolher
-        </button>
-      ) : (
-        <ul className="flex flex-col gap-1.5">
-          {visiveis.map((a) => (
-            <li
-              key={a.id}
-              className="group flex items-center gap-2 rounded-md border border-black/[0.06] bg-neutral-50 px-2.5 py-1.5"
-            >
-              <Paperclip className="h-3 w-3 shrink-0 text-text-muted" />
-              {/* Abre em outra aba: o link assinado do Storage vale um minuto e
-                  já vem como download, então a gaveta não se perde no caminho. */}
-              <a
-                href={`/admin/anexo/${a.id}`}
-                target="_blank"
-                rel="noreferrer"
-                title={`Baixar ${a.nome}`}
-                className="min-w-0 flex-1 truncate text-[12.5px] text-text-primary transition-colors hover:text-primary"
-              >
-                {a.nome}
-              </a>
-              <span className="shrink-0 text-[10px] tabular-nums text-text-muted">{fmtTamanho(a.tamanho)}</span>
-              <button
-                onClick={() => {
-                  if (confirm(`Apagar o arquivo "${a.nome}"? Não tem como desfazer.`)) {
-                    setRemovidos((r) => [...r, a.id]);
-                    send(apagarAnexo, { id: a.id });
-                  }
-                }}
-                className="shrink-0 rounded p-0.5 text-text-muted/40 opacity-0 transition hover:bg-danger/10 hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
-                aria-label={`Apagar ${a.nome}`}
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-            </li>
-          ))}
-
-          {subindo.map((nome) => (
-            <li
-              key={`subindo-${nome}`}
-              className="flex items-center gap-2 rounded-md border border-dashed border-black/[0.08] bg-neutral-50/60 px-2.5 py-1.5"
-            >
-              <Paperclip className="h-3 w-3 shrink-0 text-text-muted" />
-              <span className="min-w-0 flex-1 truncate text-[12.5px] text-text-secondary">{nome}</span>
-              <span className="shrink-0 text-[10px] text-text-muted">enviando…</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {erro && <p className="mt-1.5 text-[11px] text-danger">{erro}</p>}
-    </div>
-  );
+  return { enviar, subindo, erro };
 }
