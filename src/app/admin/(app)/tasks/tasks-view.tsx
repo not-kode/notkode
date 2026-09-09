@@ -835,7 +835,21 @@ function ItemProjeto({ projeto, ativo, onClick, onMenu, renomeando, onRenomear, 
   onSalvarNome: (nome: string) => void;
   onCancelar: () => void;
 }) {
-  const abertas = projeto.tasks.filter((t) => t.status !== 'feito').length;
+  // O badge resume a fila acionável do projeto, na mesma unidade usada por
+  // "Tudo em aberto": tarefas principais. Subtarefas aparecem dentro da mãe e
+  // não podem inflar o número (uma checklist grande parecia trabalho novo).
+  const tarefasPrincipais = projeto.tasks.filter((t) => !t.parentId);
+  const abertas = tarefasPrincipais.filter((t) => t.status !== 'feito').length;
+  const hj = hoje();
+  const paraHoje = tarefasPrincipais.filter((t) => t.status !== 'feito' && t.dueDate === hj).length;
+  const atrasadas = tarefasPrincipais.filter(
+    (t) => t.status !== 'feito' && !!t.dueDate && t.dueDate < hj,
+  ).length;
+  const resumo = [
+    `${abertas} ${abertas === 1 ? 'tarefa em aberto' : 'tarefas em aberto'}`,
+    `${paraHoje} para hoje`,
+    `${atrasadas} ${atrasadas === 1 ? 'atrasada' : 'atrasadas'}`,
+  ].join(' · ');
 
   // Renomear muda o título do projeto, então é ele que entra no campo: numa
   // pasta de cliente o rótulo da lista é o nome do cliente, que vem do cadastro
@@ -872,8 +886,14 @@ function ItemProjeto({ projeto, ativo, onClick, onMenu, renomeando, onRenomear, 
       <span className="min-w-0 flex-1 truncate">{projeto.orgName ?? projeto.title ?? 'Sem cliente'}</span>
       {abertas > 0 && (
         <span
+          title={resumo}
+          aria-label={resumo}
           className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums ${
-            ativo ? 'bg-primary/15 text-primary' : 'bg-black/[0.06] text-text-muted'
+            atrasadas > 0
+              ? 'bg-danger/10 text-danger'
+              : ativo
+                ? 'bg-primary/15 text-primary'
+                : 'bg-black/[0.06] text-text-muted'
           }`}
         >
           {abertas}
