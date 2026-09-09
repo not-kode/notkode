@@ -558,7 +558,7 @@ export function ListView({
         )}
         {ver('prazo') && (
           <td className="px-3 py-2">
-            <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} quieta={t.status === 'feito'} placeholder="termina" />
+            <DateChip value={t.dueDate} onSave={(v) => send(updateTask, { id: t.id, due_date: v })} atrasada={atrasada} destacarProxima quieta={t.status === 'feito'} placeholder="termina" />
           </td>
         )}
         {ver('prioridade') && (
@@ -730,6 +730,7 @@ export function ListView({
                     <DateChip
                       value={grupo.sprint.endDate}
                       onSave={(v) => send(updatePhase, { id: grupo.sprint!.id, end_date: v })}
+                      destacarProxima
                       placeholder="fim"
                     />
                     <ChipSelect

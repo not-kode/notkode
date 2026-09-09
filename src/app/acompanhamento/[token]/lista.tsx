@@ -186,7 +186,7 @@ export function Acompanhamento({ phases, tasks, tags, colunas, agrupar, cronogra
                 {(g.inicio || g.fim || g.estado) && (
                   <div className="ml-auto flex items-center gap-2">
                     {g.inicio && <DateTag value={g.inicio} quieta placeholder="começo" />}
-                    {g.fim && <DateTag value={g.fim} quieta={g.estado === 'concluida'} placeholder="fim" />}
+                    {g.fim && <DateTag value={g.fim} destacarProxima quieta={g.estado === 'concluida'} placeholder="fim" />}
                     {g.estado && (
                       <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${PHASE_TOM[g.estado]}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${PHASE_DOT[g.estado]}`} />
@@ -358,7 +358,7 @@ function Linha({ task, colunas, tags, comStatus, filhas, prontas = 0, aberta = f
       )}
       {colunas.includes('prazo') && (
         <td className="px-3 py-2">
-          <DateTag value={task.dueDate} quieta={task.status === 'feito'} placeholder="—" />
+          <DateTag value={task.dueDate} destacarProxima quieta={task.status === 'feito'} placeholder="—" />
         </td>
       )}
       {colunas.includes('prioridade') && (

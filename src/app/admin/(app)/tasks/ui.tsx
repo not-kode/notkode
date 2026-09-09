@@ -31,7 +31,19 @@ export const fmtCurto = (d: string | null | undefined) => {
   return `${Number(day)} ${MESES[Number(m) - 1]}`;
 };
 
-export const hoje = () => new Date().toISOString().slice(0, 10);
+/** Data de trabalho da Notkode. Não usa UTC: perto da meia-noite, UTC já é o
+ * dia seguinte no Brasil e fazia uma entrega de amanhã aparecer como hoje. */
+export const hoje = () => {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const parte = (tipo: Intl.DateTimeFormatPartTypes) =>
+    partes.find((p) => p.type === tipo)?.value ?? '';
+  return `${parte('year')}-${parte('month')}-${parte('day')}`;
+};
 
 /** Diferença em dias entre duas datas AAAA-MM-DD (b − a). */
 export const diffDias = (a: string, b: string) =>
@@ -517,14 +529,16 @@ export function ChipSelect({ value, options, onChange, tone = 'bg-black/[0.04] t
 
 /**
  * Data só de ler, com o mesmo desenho do chip editável: calendário, vermelho
- * quando venceu, vermelho lavado quando é hoje ou amanhã.
+ * quando venceu e laranja quando o prazo vence hoje ou amanhã.
  *
  * whitespace-nowrap: "12 mai" quebrando em duas linhas empilhava a data e
  * esticava a altura da linha inteira da tabela.
  */
-export function DateTag({ value, atrasada, quieta, placeholder = 'prazo', curto = true }: {
+export function DateTag({ value, atrasada, destacarProxima, quieta, placeholder = 'prazo', curto = true }: {
   value: string | null;
   atrasada?: boolean;
+  /** Só prazos finais pedem atenção; uma data de início próxima fica neutra. */
+  destacarProxima?: boolean;
   /** Data que não cobra mais nada (tarefa concluída): fica cinza, sem alarme. */
   quieta?: boolean;
   placeholder?: string;
@@ -542,14 +556,13 @@ export function DateTag({ value, atrasada, quieta, placeholder = 'prazo', curto 
   useEffect(() => { if (aberto) setMes((value ?? hoje()).slice(0, 7)); }, [aberto, value]);
 
   const dias = value ? diffDias(hoje(), value) : null;
-  const proxima = !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;
-  // Prazo é assunto de vermelho: vencido no tom cheio, vencendo hoje ou amanhã
-  // num vermelho lavado. O âmbar saiu daqui porque disputava a atenção com o
-  // âmbar da sprint pausada e o da revisão, e no fim nada mais gritava.
+  const proxima = destacarProxima && !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;
+  // Vermelho é exclusivamente prazo vencido. Hoje ou amanhã ainda está no
+  // prazo e ganha só o aviso laranja de que precisa de atenção em breve.
   const tom = atrasada && !quieta
     ? 'bg-danger/12 text-danger'
     : proxima
-      ? 'bg-danger/[0.06] text-danger/85'
+      ? 'bg-warning/15 text-[#B45309]'
       : value
         ? 'bg-black/[0.04] text-text-secondary'
         : 'text-text-muted';
@@ -565,11 +578,13 @@ export function DateTag({ value, atrasada, quieta, placeholder = 'prazo', curto 
   );
 }
 
-/** Prazo como chip com calendário: vermelho quando venceu, âmbar quando é hoje ou amanhã. */
-export function DateChip({ value, onSave, atrasada, quieta, placeholder = 'prazo', curto = true }: {
+/** Data editável: prazo vencido em vermelho e próximo em laranja. */
+export function DateChip({ value, onSave, atrasada, destacarProxima, quieta, placeholder = 'prazo', curto = true }: {
   value: string | null;
   onSave: (v: string) => void;
   atrasada?: boolean;
+  /** Só prazos finais pedem atenção; uma data de início próxima fica neutra. */
+  destacarProxima?: boolean;
   /** Data que não cobra mais nada (tarefa concluída): fica cinza, sem alarme. */
   quieta?: boolean;
   placeholder?: string;
@@ -585,18 +600,17 @@ export function DateChip({ value, onSave, atrasada, quieta, placeholder = 'prazo
   useEffect(() => { if (aberto) setMes((value ?? hoje()).slice(0, 7)); }, [aberto, value]);
 
   const dias = value ? diffDias(hoje(), value) : null;
-  const proxima = !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;
+  const proxima = destacarProxima && !quieta && dias !== null && !atrasada && dias >= 0 && dias <= 1;
 
   // whitespace-nowrap no chip: "12 mai" quebrando em duas linhas empilhava a data
   // e esticava a altura da linha inteira da tabela.
   //
-  // Vencido no vermelho cheio, vencendo hoje ou amanhã num vermelho lavado: o
-  // âmbar saiu daqui porque disputava a atenção com o da sprint pausada e o da
-  // revisão, e no fim nada mais gritava.
+  // Vermelho é exclusivamente prazo vencido. Hoje ou amanhã ainda está no
+  // prazo e ganha só o aviso laranja de que precisa de atenção em breve.
   const tom = atrasada && !quieta
     ? 'bg-danger/12 text-danger'
     : proxima
-      ? 'bg-danger/[0.06] text-danger/85'
+      ? 'bg-warning/15 text-[#B45309]'
       : value
         ? 'bg-black/[0.04] text-text-secondary'
         : 'text-text-muted hover:bg-black/[0.04]';
@@ -1222,7 +1236,7 @@ export function PeriodoChip({ inicio, fim, onInicio, onFim, atrasada, quieta }: 
   const tom = atrasada && !quieta
     ? 'bg-danger/12 text-danger'
     : proxima
-      ? 'bg-danger/[0.06] text-danger/85'
+      ? 'bg-warning/15 text-[#B45309]'
       : inicio || fim
         ? 'bg-black/[0.04] text-text-secondary'
         : 'text-text-muted hover:bg-black/[0.04]';

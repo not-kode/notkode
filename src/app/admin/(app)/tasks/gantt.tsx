@@ -302,7 +302,7 @@ export function Gantt({ phases, tasks, titulo, modoCliente, resumo, send }: {
                       }
                     >
                       {send ? (
-                        <DateChip value={b.fim} onSave={(v) => salvarPrazo(b, v)} atrasada={b.estado === 'atrasado'} />
+                        <DateChip value={b.fim} onSave={(v) => salvarPrazo(b, v)} atrasada={b.estado === 'atrasado'} destacarProxima />
                       ) : (
                         <span className={`text-[10px] tabular-nums ${tom.texto}`}>{quando}</span>
                       )}
