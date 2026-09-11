@@ -16,7 +16,7 @@ type LoginState = { error: string | null };
 function safeNext(next: FormDataEntryValue | null): string {
   const n = typeof next === 'string' ? next : '';
   // Evita open-redirect: só caminhos internos do /admin.
-  return n.startsWith('/admin') && !n.startsWith('/admin/login') ? n : '/admin/leads';
+  return n.startsWith('/admin') && !n.startsWith('/admin/login') ? n : '/admin/pipeline';
 }
 
 async function abrirSessao(uid: string, next: FormDataEntryValue | null): Promise<LoginState> {

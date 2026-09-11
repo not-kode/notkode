@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { garantirNegocioDoLead, identificado } from '@/lib/lead-para-funil';
 
 // Captura progressiva de formulário: grava o que a pessoa já preencheu (com algum
 // contato) antes de enviar. Upsert por session_id. À prova de falhas — nunca quebra o site.
@@ -76,6 +77,32 @@ export async function POST(req: Request) {
   } catch (e) {
     console.error('[lead/draft] upsert failed:', e instanceof Error ? e.message : 'unknown');
     return NextResponse.json({ ok: false });
+  }
+
+  // Identificou-se? Então já é lead, não rascunho: nasce o card no topo do
+  // funil, mesmo que o formulário nunca chegue ao fim. É o que antes dependia
+  // de alguém achar a pessoa na tela de Leads e clicar em "Promover".
+  if (identificado({ name, email, whatsapp })) {
+    const dealId = await garantirNegocioDoLead(supabase, {
+      session_id,
+      name,
+      company: row.company,
+      email,
+      whatsapp,
+      service_tag: row.service_tag,
+      needs,
+      timing,
+      description,
+      last_step: row.last_step,
+      utm_source: row.utm_source,
+    });
+    if (dealId) {
+      try {
+        await supabase.from('lead_drafts').update({ deal_id: dealId }).eq('session_id', session_id);
+      } catch {
+        /* o card existe, que é o que importa */
+      }
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { getPricingSchema } from '@/lib/lead-schemas';
 import { buildLeadEmail } from '@/lib/lead-email';
 import { emailValido, whatsappValido } from '@/lib/validacao-contato';
+import { garantirNegocioDoLead } from '@/lib/lead-para-funil';
 
 // ── Payload types ──────────────────────────────────────────────────────────
 
@@ -204,12 +205,32 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid contact' }, { status: 400 });
   }
 
-  // 1. Insert into Supabase
+  // 1. Insert into Supabase + card no funil
   let supabaseError: string | null = null;
   try {
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase.from('lead_submissions').insert(row);
+    const { data: gravado, error } = await supabase.from('lead_submissions').insert(row).select('id').single();
     if (error) supabaseError = error.message;
+
+    // O envio completo não abre um segundo card: ele COMPLETA o que o rascunho
+    // desta mesma sessão já abriu (casamento por session_id). Sem rascunho — a
+    // pessoa preencheu tudo de uma vez, ou o beacon não passou — o card nasce
+    // aqui. O lead nunca mais depende de alguém lembrar de promover.
+    const selection = (row.selection ?? {}) as Record<string, unknown>;
+    const needs = Array.isArray(selection.needs) ? (selection.needs as string[]) : null;
+    await garantirNegocioDoLead(supabase, {
+      session_id: row.session_id ?? `lead-${gravado?.id ?? Date.now()}`,
+      name: row.name,
+      company: typeof selection.company === 'string' ? selection.company : null,
+      email: row.email,
+      whatsapp: row.whatsapp,
+      service_tag: row.service_tag,
+      needs,
+      timing: typeof selection.timing === 'string' ? selection.timing : null,
+      description: row.notes,
+      lead_id: gravado?.id ?? null,
+      utm_source: row.utm_source,
+    });
   } catch (e) {
     supabaseError = e instanceof Error ? e.message : 'unknown error';
   }

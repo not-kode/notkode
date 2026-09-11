@@ -26,6 +26,19 @@ export type OrgInfo = {
   legal_rep: string | null;
 };
 
+/** Respostas do formulário do site, anexas ao card que nasceu delas. */
+export type LeadInfo = {
+  needs: string[] | null;
+  timing: string | null;
+  description: string | null;
+  /** Etapa em que a pessoa estava na última vez que o rascunho foi salvo. */
+  last_step: string | null;
+  /** Chegou ao fim do formulário, ou parou no meio. */
+  enviou: boolean;
+  /** Existe gravação da sessão para assistir. */
+  temGravacao: boolean;
+};
+
 export type DealInstallment = {
   id: string;
   description: string | null;
@@ -61,6 +74,10 @@ export type BoardDeal = {
   /** Por que o negócio foi perdido. Só existe enquanto ele está em "perdido". */
   lost_reason: string | null;
   lost_at: string | null;
+  /** Sessão do site que gerou este card (quando veio do formulário). */
+  lead_session_id: string | null;
+  /** O que a pessoa respondeu no formulário, para o card contar a história inteira. */
+  lead_info: LeadInfo | null;
 };
 
 // Filete de acento no topo de cada coluna — segue a paleta da marca.
@@ -234,6 +251,20 @@ export function PipelineBoard({
 
                   {deal.org?.name && deal.name && (
                     <p className="mt-0.5 font-label text-[11px] text-text-muted">{deal.name}</p>
+                  )}
+
+                  {/* Nasceu do formulário do site. Quem parou no meio precisa
+                      saltar aos olhos: é ligação a fazer, não lead maduro. */}
+                  {deal.lead_session_id && (
+                    <p className="mt-1 font-label text-[10px] uppercase tracking-wider">
+                      {deal.lead_info && !deal.lead_info.enviou ? (
+                        <span className="text-warning">
+                          formulário incompleto{deal.lead_info.last_step ? ` · parou em ${deal.lead_info.last_step}` : ''}
+                        </span>
+                      ) : (
+                        <span className="text-text-muted">do formulário do site</span>
+                      )}
+                    </p>
                   )}
 
                   {deal.service_tags.length > 0 && (

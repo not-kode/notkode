@@ -41,7 +41,11 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       supabase.from('events').select('label').eq('type', 'cta_click').gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
     lerTudo<{ created_at: string; session_id: string | null; referrer: string | null; utm_source: string | null; page: string | null }>((de, ate) =>
       supabase.from('events').select('created_at, session_id, referrer, utm_source, page').eq('type', 'page_view').gte('created_at', fromISO).lte('created_at', siteToISO).order('created_at').range(de, ate)),
-    supabase.from('lead_submissions').select('service_tag').gte('created_at', fromISO).lte('created_at', siteToISO),
+    // Lead agora é quem se IDENTIFICOU no formulário (nome + contato), não só
+    // quem chegou ao botão de enviar: é esse o momento em que o card nasce no
+    // funil. Contar lead_submissions aqui mostraria zero enquanto o pipeline
+    // recebe gente.
+    supabase.from('deals').select('service_tag').not('lead_session_id', 'is', null).gte('created_at', fromISO).lte('created_at', siteToISO),
     supabase.from('deals').select('*', countHead).eq('stage', 'ganho'),
     supabase.from('engagements').select('id, organization_id, lifecycle, type, mrr, start_date, end_date, repasse_valor, precisa_nota'),
     supabase.from('receivables').select('amount, status, due_date, paid_at, paid_amount, engagement_id'),

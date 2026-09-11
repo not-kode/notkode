@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { type DealStage } from './stages';
-import { PipelineBoard, type BoardDeal } from './board';
+import { PipelineBoard, type BoardDeal, type LeadInfo } from './board';
 import { dealTotal, dealTotalNet, dealMonthly, dealMonthlyNet, dealNota } from './deal-value';
 import { ALIQUOTA_NOTA, liquidoDaParcela, motivoDoDesconto } from '../_shared/liquido';
 import { type OrgOption, type Product } from './orgs';
@@ -43,6 +43,7 @@ type DealRow = {
   proposal_name: string | null;
   lost_reason: string | null;
   lost_at: string | null;
+  lead_session_id: string | null;
   contacts: { id: string; name: string | null; contact_channels: Channel[] | null } | null;
   organizations: OrgRow | null;
   deal_installments: { id: string; description: string | null; amount: number; due_date: string }[] | null;
@@ -61,7 +62,7 @@ export default async function PipelinePage() {
   const { data, error } = await supabase
     .from('deals')
     .select(
-      'id, stage, stage_changed_at, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, lost_reason, lost_at, ' +
+      'id, stage, stage_changed_at, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, lost_reason, lost_at, lead_session_id, ' +
         'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
         'organizations(id, name, site, instagram, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep), ' +
         'deal_installments(id, description, amount, due_date)',
@@ -102,6 +103,42 @@ export default async function PipelinePage() {
     ];
   });
 
+  // O que a pessoa respondeu no formulário do site, para o card mostrar de onde
+  // ela veio e o que pediu — era isto que justificava a tela de Leads separada.
+  const rows0 = (data ?? []) as unknown as DealRow[];
+  const sessoes = rows0.map((r) => r.lead_session_id).filter((s): s is string => !!s);
+  const leadInfo = new Map<string, LeadInfo>();
+  if (sessoes.length) {
+    const [{ data: draftRows }, { data: recRows }] = await Promise.all([
+      supabase
+        .from('lead_drafts')
+        .select('session_id, needs, timing, description, last_step, submitted_at')
+        .in('session_id', sessoes),
+      supabase.from('session_recordings').select('session_id').in('session_id', sessoes),
+    ]);
+    const comGravacao = new Set((recRows ?? []).map((r) => r.session_id as string));
+    for (const d of (draftRows ?? []) as {
+      session_id: string; needs: string[] | null; timing: string | null;
+      description: string | null; last_step: string | null; submitted_at: string | null;
+    }[]) {
+      leadInfo.set(d.session_id, {
+        needs: d.needs,
+        timing: d.timing,
+        description: d.description,
+        last_step: d.last_step,
+        enviou: !!d.submitted_at,
+        temGravacao: comGravacao.has(d.session_id),
+      });
+    }
+    // Sessão com gravação mas sem rascunho (preencheu tudo de uma vez) ainda
+    // merece o link do vídeo.
+    for (const sid of comGravacao) {
+      if (!leadInfo.has(sid)) {
+        leadInfo.set(sid, { needs: null, timing: null, description: null, last_step: null, enviou: true, temGravacao: true });
+      }
+    }
+  }
+
   // Negócios que já viraram contrato: o card ganho mostra "gerar contrato" só
   // enquanto ele não existe.
   const { data: vinculos } = await supabase.from('deal_engagements').select('deal_id');
@@ -126,7 +163,7 @@ export default async function PipelinePage() {
     0,
   );
 
-  const rows = (data ?? []) as unknown as DealRow[];
+  const rows = rows0;
   const deals: BoardDeal[] = rows.map((r) => ({
     id: r.id,
     stage: r.stage,
@@ -152,6 +189,8 @@ export default async function PipelinePage() {
     has_contract: comContrato.has(r.id),
     lost_reason: r.lost_reason,
     lost_at: r.lost_at,
+    lead_session_id: r.lead_session_id,
+    lead_info: r.lead_session_id ? leadInfo.get(r.lead_session_id) ?? null : null,
   }));
 
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');

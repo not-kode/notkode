@@ -9,6 +9,8 @@ import { FormFunnelsView } from './form-funnel-view';
 import { PeriodFilter } from '../period-filter';
 import { resolveRange } from '../period';
 import { PageHeader } from '../_shared/page-header';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { PararamView, type Parou } from './pararam-view';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,8 +18,9 @@ export const dynamic = 'force-dynamic';
 // formulário saem dos mesmos eventos e respondem à mesma pergunta ("o que as
 // pessoas fazem aqui"). São sub-abas de uma tela, não itens de menu.
 //
-// Aqui o funil é o desenho agregado (quantos chegaram a cada etapa). As pessoas
-// que pararam no meio, com nome e o que responderam, ficam em Leads.
+// Aqui o funil é o desenho agregado (quantos chegaram a cada etapa), e logo
+// abaixo dele quem parou no meio SEM deixar contato. Quem deixou contato não é
+// mais assunto desta tela: vira card no funil na hora, com o que já respondeu.
 
 type Aba = 'gravacoes' | 'calor' | 'formularios';
 
@@ -38,10 +41,11 @@ export default async function ComportamentoPage({
   const range = resolveRange({ range: sp.range, from: sp.from, to: sp.to });
 
   // Carrega só o que a aba aberta precisa.
-  const [gravacoes, heatmap, funis] = await Promise.all([
+  const [gravacoes, heatmap, funis, anonimos] = await Promise.all([
     carregarGravacoes(),
     aba === 'calor' ? carregarHeatmap() : Promise.resolve(null),
     aba === 'formularios' ? carregarFunisDeFormulario(range) : Promise.resolve(null),
+    aba === 'formularios' ? carregarAnonimos() : Promise.resolve([]),
   ]);
 
   const naoVistas = gravacoes.sessions.filter((s) => !s.vista).length;
@@ -92,12 +96,46 @@ export default async function ComportamentoPage({
             Por página · onde as pessoas param<span className="ml-2 normal-case tracking-normal">· {range.label}</span>
           </p>
           <FormFunnelsView funnels={funis ?? []} />
-          <p className="mt-4 text-[11px] text-text-muted">
-            Quem parou no meio, com nome e o que respondeu, fica em{' '}
-            <Link href="/admin/leads?ver=formularios" className="text-primary hover:underline">Leads · Formulários</Link>.
+
+          <p className="mb-3 mt-8 font-mono text-[11px] uppercase tracking-[0.12em] text-text-muted">
+            Mexeram e sumiram sem deixar contato
           </p>
+          <p className="mb-3 text-[11px] text-text-muted">
+            Não dá para ligar para ninguém aqui: é o que a pessoa chegou a responder antes de
+            desistir. Quem deixou nome e contato não aparece nesta lista — já entrou no{' '}
+            <Link href="/admin/pipeline" className="text-primary hover:underline">Pipeline</Link> como card.
+          </p>
+          {anonimos.length === 0 ? (
+            <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-8 text-center text-sm text-text-muted">
+              Ninguém parou no meio sem se identificar.
+            </p>
+          ) : (
+            <PararamView pessoas={anonimos} />
+          )}
         </>
       )}
     </div>
   );
+}
+
+/**
+ * Quem mexeu no formulário, não enviou e não deixou contato — por isso não virou
+ * card no funil. Serve para ler o que o público pede, não para ligar.
+ */
+async function carregarAnonimos(): Promise<Parou[]> {
+  const supabase = getSupabaseAdmin();
+  const [{ data }, { data: recData }] = await Promise.all([
+    supabase
+      .from('lead_drafts')
+      .select('session_id, service_tag, kind, name, company, email, whatsapp, needs, timing, description, last_step, updated_at')
+      .is('submitted_at', null)
+      .is('deal_id', null)
+      .order('updated_at', { ascending: false }),
+    supabase.from('session_recordings').select('session_id'),
+  ]);
+  const comGravacao = new Set((recData ?? []).map((r) => r.session_id as string));
+  return ((data ?? []) as Omit<Parou, 'temGravacao'>[]).map((d) => ({
+    ...d,
+    temGravacao: comGravacao.has(d.session_id),
+  }));
 }

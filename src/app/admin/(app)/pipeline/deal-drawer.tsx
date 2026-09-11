@@ -743,6 +743,11 @@ export function DealDrawer({
           </div>
         </AutoSaveForm>
 
+        {/* De onde este card veio. O formulário do site abre o card sozinho assim
+            que a pessoa se identifica, então o que ela respondeu precisa estar
+            aqui dentro — era isso que morava na tela de Leads. */}
+        {!isNew && deal!.lead_session_id && <OrigemDoLead deal={deal!} />}
+
         {/* Proposta e parcelas exigem o negócio já salvo (precisam do id). */}
         {!isNew && (
           <div className="mt-5 flex flex-col gap-5 border-t border-black/[0.06] px-5 py-4">
@@ -768,6 +773,60 @@ export function DealDrawer({
 
       {manageOpen && <ProductsManager products={products} onClose={() => setManageOpen(false)} />}
     </div>
+  );
+}
+
+/**
+ * O rastro do formulário do site dentro do card: o que a pessoa respondeu, até
+ * onde ela chegou e a gravação da sessão, quando existe.
+ */
+function OrigemDoLead({ deal }: { deal: BoardDeal }) {
+  const info = deal.lead_info;
+  const parouNoMeio = info != null && !info.enviou;
+
+  return (
+    <section className="mx-5 mt-5 rounded-md border border-primary/20 bg-primary/[0.03] px-4 py-3">
+      <p className="flex items-center justify-between gap-2">
+        <span className="font-label text-[10px] uppercase tracking-[0.14em] text-primary">
+          Veio do formulário do site
+        </span>
+        {parouNoMeio && (
+          <span className="rounded-full bg-warning/15 px-2 py-0.5 font-label text-[10px] text-warning">
+            parou em {info!.last_step ?? 'meio do caminho'}
+          </span>
+        )}
+      </p>
+
+      {info?.needs?.length ? (
+        <p className="mt-2 text-sm text-text-primary">
+          <span className="text-text-muted">Precisa: </span>
+          {info.needs.join(', ')}
+        </p>
+      ) : null}
+      {info?.timing && (
+        <p className="text-sm text-text-primary">
+          <span className="text-text-muted">Prazo: </span>
+          {info.timing}
+        </p>
+      )}
+      {info?.description && (
+        <p className="mt-1.5 whitespace-pre-wrap text-sm text-text-secondary">{info.description}</p>
+      )}
+      {!info?.needs?.length && !info?.timing && !info?.description && (
+        <p className="mt-1.5 text-sm text-text-muted">
+          Deixou o contato, ainda sem responder o resto.
+        </p>
+      )}
+
+      {info?.temGravacao && (
+        <a
+          href={`/admin/sessoes/${deal.lead_session_id}`}
+          className="mt-2 inline-flex items-center gap-1 font-label text-[10px] uppercase tracking-wider text-primary transition hover:underline"
+        >
+          ▶ ver gravação da sessão
+        </a>
+      )}
+    </section>
   );
 }
 

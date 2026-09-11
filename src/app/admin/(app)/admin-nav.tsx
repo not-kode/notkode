@@ -3,16 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Activity, Building2, CheckSquare, GitBranch, Inbox, LayoutDashboard, Wallet,
+  Activity, Building2, CheckSquare, GitBranch, LayoutDashboard, Wallet,
   type LucideIcon,
 } from 'lucide-react';
 
 // Rótulos em inglês: são nomes curtos de ferramenta, iguais aos que a gente já
-// usa falando ("o pipeline", "os leads"). O conteúdo das telas segue em português.
+// usa falando ("o pipeline", "o financeiro"). O conteúdo das telas segue em
+// português. Leads saiu do menu: o lead do site nasce como card no Pipeline.
 const NAV: { href: string; label: string; icon: LucideIcon; exact?: boolean }[] = [
   { href: '/admin',            label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/pipeline',   label: 'Pipeline',  icon: GitBranch },
-  { href: '/admin/leads',      label: 'Leads',     icon: Inbox },
   { href: '/admin/financeiro', label: 'Finance',   icon: Wallet },
   { href: '/admin/clientes',   label: 'Clients',   icon: Building2 },
   { href: '/admin/tasks',   label: 'Tasks',     icon: CheckSquare },
