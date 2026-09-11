@@ -399,7 +399,8 @@
   "Contact": {
     "whatsappFallbackLabel": "Prefere falar direto?",
     "whatsappFallbackCta": "Chamar no WhatsApp",
-    "whatsappFallbackMessage": "Oi! Vim pelo site da Notkode e queria falar sobre um projeto."
+    "whatsappFallbackMessage": "Oi! Vim pelo site da Notkode e queria falar sobre um projeto.",
+    "whatsappOriginLine": "Página de origem: {page}"
   },
   "Cases": {
     "metaTitle": "Cases · Notkode",

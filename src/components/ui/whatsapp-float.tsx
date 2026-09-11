@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MessageCircle } from 'lucide-react';
+import { rotuloDaPagina, whatsappHref } from './whatsapp-origem';
 
 /** Número comercial usado em todos os links de WhatsApp do site. */
 export const WHATSAPP_NUMBER = '5511951381254';
@@ -17,6 +19,7 @@ export const WHATSAPP_NUMBER = '5511951381254';
  */
 export function WhatsAppFloat() {
   const t = useTranslations('Contact');
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
 
   // Só aparece depois de um scroll curto: não compete com o hero na primeira dobra.
@@ -27,7 +30,13 @@ export function WhatsAppFloat() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsappFallbackMessage'))}`;
+  // A conversa já chega dizendo de qual página a pessoa saiu: é o que liga o
+  // lead do WhatsApp à origem dele, já que o clique em si fica anônimo.
+  const href = whatsappHref(
+    WHATSAPP_NUMBER,
+    t('whatsappFallbackMessage'),
+    t('whatsappOriginLine', { page: rotuloDaPagina(pathname ?? '') }),
+  );
 
   return (
     <a

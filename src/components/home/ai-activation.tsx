@@ -1,9 +1,17 @@
 import { getTranslations } from 'next-intl/server';
 import { Stethoscope, Map, Wrench, type LucideIcon } from 'lucide-react';
 import { Reveal } from '@/components/ui/reveal';
+import { whatsappHref } from '@/components/ui/whatsapp-origem';
 
 export async function AiActivation({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: 'Home' });
+  const tc = await getTranslations({ locale, namespace: 'Contact' });
+  // Mesma regra dos outros botões: a conversa chega dizendo de onde veio.
+  const waHref = whatsappHref(
+    '5511951381254',
+    t('activationCtaWhatsappMessage'),
+    tc('whatsappOriginLine', { page: 'Home' }),
+  );
 
   const steps: { title: string; desc: string; cmd: string; icon: LucideIcon }[] = [
     { title: t('activationStep1Title'), desc: t('activationStep1Desc'), cmd: 'diagnose', icon: Stethoscope },
@@ -62,7 +70,7 @@ export async function AiActivation({ locale }: { locale: string }) {
               {t('activationCtaText')}
             </p>
             <a
-              href={`https://wa.me/5511951381254?text=${encodeURIComponent(t('activationCtaWhatsappMessage'))}`}
+              href={waHref}
               target="_blank"
               rel="noopener noreferrer"
               data-cta="whatsapp-ativacao"
