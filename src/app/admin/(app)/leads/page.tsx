@@ -3,19 +3,63 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { promoteLead } from './actions';
 import { PararamView } from './pararam-view';
 import { PageHeader } from '../_shared/page-header';
+import { rotuloDaPagina } from '@/components/ui/whatsapp-origem';
 
 export const dynamic = 'force-dynamic';
 
-// Duas listas de gente, não uma lista e um gráfico: em "Leads" quem enviou o
+// Três listas de gente, não uma lista e um gráfico: em "Leads" quem enviou o
 // formulário, em "Formulários" quem mexeu e parou no meio (com a etapa em que
-// parou e o que já tinha respondido). O desenho do funil por página é outra
-// conversa e mora em Analytics.
-type Aba = 'leads' | 'formularios';
+// parou e o que já tinha respondido), e em "WhatsApp" quem saiu do site pela
+// conversa — que até aqui não aparecia em lugar nenhum do sistema. O desenho do
+// funil por página é outra conversa e mora em Analytics.
+type Aba = 'leads' | 'formularios' | 'whatsapp';
 
 const ABAS: { id: Aba; label: string }[] = [
   { id: 'leads', label: 'Leads' },
   { id: 'formularios', label: 'Formulários' },
+  { id: 'whatsapp', label: 'WhatsApp' },
 ];
+
+/** De onde a pessoa veio antes de cair no site: "google.com" → "Google". */
+function fmtOrigem(referrer: string | null, utmSource: string | null): string {
+  if (utmSource) return utmSource;
+  if (!referrer) return 'Direto';
+  try {
+    const host = new URL(referrer).host.replace(/^www\./, '');
+    const conhecido = host.split('.')[0];
+    return conhecido.charAt(0).toUpperCase() + conhecido.slice(1);
+  } catch {
+    return referrer;
+  }
+}
+
+/**
+ * Idioma da página onde o clique aconteceu. O evento de clique não carrega
+ * locale (só o page_view carrega), então quem responde é o próprio caminho.
+ */
+function fmtIdioma(page: string | null, locale: string | null): string {
+  if (locale) return locale.toUpperCase();
+  const seg = (page ?? '').split('/').filter(Boolean)[0];
+  return seg && /^[a-z]{2}$/.test(seg) ? seg.toUpperCase() : '—';
+}
+
+/** Qual botão foi clicado, em português. */
+const BOTOES: Record<string, string> = {
+  'whatsapp-flutuante': 'Botão flutuante',
+  'whatsapp-direto': 'Link do formulário',
+  'whatsapp-ativacao': 'CTA da home',
+};
+
+type WhatsClick = {
+  id: string;
+  created_at: string;
+  page: string | null;
+  label: string | null;
+  locale: string | null;
+  referrer: string | null;
+  utm_source: string | null;
+  session_id: string | null;
+};
 
 type LeadRow = {
   id: string;
@@ -76,24 +120,38 @@ export default async function LeadsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = (await searchParams) ?? {};
-  const aba: Aba = sp.ver === 'formularios' ? 'formularios' : 'leads';
+  const aba: Aba = sp.ver === 'formularios' ? 'formularios' : sp.ver === 'whatsapp' ? 'whatsapp' : 'leads';
 
   const supabase = getSupabaseAdmin();
-  const [{ data, error }, { data: draftData }] = await Promise.all([
+  const [{ data, error }, { data: draftData }, { data: whatsData }] = await Promise.all([
     supabase.from('lead_submissions').select('*').order('created_at', { ascending: false }),
     supabase
       .from('lead_drafts')
       .select('session_id, service_tag, kind, name, company, email, whatsapp, needs, timing, description, last_step, updated_at')
       .is('submitted_at', null)
       .order('updated_at', { ascending: false }),
+    // Cliques em WhatsApp: o lead sai do site por aqui e a conversa continua
+    // fora do sistema, então isto é o que sobra para saber que ele existiu.
+    supabase
+      .from('events')
+      .select('id, created_at, page, label, locale, referrer, utm_source, session_id')
+      .eq('type', 'cta_click')
+      .ilike('label', '%whatsapp%')
+      .order('created_at', { ascending: false })
+      .limit(100),
   ]);
 
   const leads = (data ?? []) as LeadRow[];
   const pending = leads.filter((l) => !l.promoted_at).length;
   const drafts = (draftData ?? []) as DraftRow[];
+  const whatsClicks = (whatsData ?? []) as WhatsClick[];
 
   // Quais leads/rascunhos têm gravação de sessão disponível (pra mostrar o "ver gravação").
-  const sessionIds = [...leads.map((l) => l.session_id), ...drafts.map((d) => d.session_id)].filter(
+  const sessionIds = [
+    ...leads.map((l) => l.session_id),
+    ...drafts.map((d) => d.session_id),
+    ...whatsClicks.map((c) => c.session_id),
+  ].filter(
     (s): s is string => !!s,
   );
   const recorded = new Set<string>();
@@ -112,7 +170,9 @@ export default async function LeadsPage({
         className="mb-4"
         dados={aba === 'leads'
           ? <>{leads.length} lead{leads.length === 1 ? '' : 's'} · {pending} a promover</>
-          : drafts.length > 0 ? <>{drafts.length} para chamar</> : null}
+          : aba === 'whatsapp'
+            ? whatsClicks.length > 0 ? <>{whatsClicks.length} saíram pelo WhatsApp</> : null
+            : drafts.length > 0 ? <>{drafts.length} para chamar</> : null}
       />
 
       <nav className="mb-5 inline-flex items-center gap-1 rounded-md bg-black/[0.05] p-1">
@@ -139,6 +199,63 @@ export default async function LeadsPage({
             <Link href="/admin/sessoes?ver=formularios" className="text-primary hover:underline">Analytics</Link>.
           </p>
           <PararamView pessoas={drafts.map((d) => ({ ...d, temGravacao: recorded.has(d.session_id) }))} />
+        </>
+      )}
+
+      {aba === 'whatsapp' && (
+        <>
+          <p className="mb-3 text-xs text-text-muted">
+            Clicaram para falar no WhatsApp. A conversa acontece fora do sistema, então o que dá para
+            casar é o horário: a mensagem que chegou no seu celular logo depois de um clique daqui é
+            dessa pessoa. Desde setembro de 2026 a mensagem já chega dizendo a página de origem.
+          </p>
+          {whatsClicks.length === 0 ? (
+            <p className="rounded-md border border-border-subtle/20 bg-white px-4 py-10 text-center text-sm text-text-muted">
+              Ninguém saiu pelo WhatsApp ainda.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-md border border-black/[0.06] bg-white">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead>
+                  <tr className="border-b border-black/[0.06] text-left font-mono text-[11px] uppercase tracking-wider text-text-muted">
+                    <th className="px-4 py-3 font-medium">Quando</th>
+                    <th className="px-4 py-3 font-medium">Página</th>
+                    <th className="px-4 py-3 font-medium">Botão</th>
+                    <th className="px-4 py-3 font-medium">Veio de</th>
+                    <th className="px-4 py-3 font-medium">Idioma</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {whatsClicks.map((c) => (
+                    <tr key={c.id} className="border-b border-border-subtle/10 last:border-0 align-top">
+                      <td className="whitespace-nowrap px-4 py-3 text-text-muted">{fmtDate(c.created_at)}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-text-primary">{rotuloDaPagina(c.page ?? '')}</div>
+                        <div className="text-xs text-text-muted">{c.page ?? '—'}</div>
+                        {c.session_id && recorded.has(c.session_id) && (
+                          <Link
+                            href={`/admin/sessoes/${c.session_id}`}
+                            className="mt-1 inline-flex items-center gap-1 font-label text-[10px] text-primary transition-colors hover:underline"
+                          >
+                            ▶ ver gravação
+                          </Link>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-text-secondary">
+                        {BOTOES[c.label ?? ''] ?? c.label ?? '—'}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-text-secondary">
+                        {fmtOrigem(c.referrer, c.utm_source)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-text-secondary">
+                        {fmtIdioma(c.page, c.locale)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 
