@@ -110,7 +110,7 @@ export const ferramentasDeNegocio: Ferramenta[] = [
     async executar(args) {
       const { data: linhas } = await supabase()
         .from('deals')
-        .select('id, stage, valor_pontual, mrr, expected_close, source, service_tags, notes, proposal_name, created_at, organizations(name)')
+        .select('id, stage, valor_pontual, mrr, expected_close, source, service_tags, notes, proposal_name, lost_reason, created_at, organizations(name)')
         .order('created_at', { ascending: false });
 
       const estagio = str(args, 'estagio');
@@ -129,6 +129,7 @@ export const ferramentasDeNegocio: Ferramenta[] = [
           servicos: d.service_tags,
           proposta: d.proposal_name,
           observacoes: d.notes,
+          ...(d.stage === 'perdido' ? { motivo_da_perda: d.lost_reason } : {}),
         }))
         .filter((d) => (estagio ? d.estagio === estagio : fechados || (d.estagio !== 'ganho' && d.estagio !== 'perdido')))
         .filter((d) => !cliente || (d.cliente ?? '').toLowerCase().includes(cliente));
@@ -204,6 +205,7 @@ export const ferramentasDeNegocio: Ferramenta[] = [
         mrr: { type: 'number', description: 'Mensalidade.' },
         previsao: texto('Previsão de fechamento.'),
         observacoes: texto('Observações.'),
+        motivo: texto('Por que o negócio foi perdido. Obrigatório ao marcar como perdido.'),
       },
       ['negocio'],
     ),
@@ -223,9 +225,20 @@ export const ferramentasDeNegocio: Ferramenta[] = [
 
       const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
       const estagio = str(args, 'estagio');
+      const motivo = str(args, 'motivo');
       if (estagio) {
         if (!DEAL_STAGES.includes(estagio as never)) throw new ErroDeUso(`Estágio inválido: use ${DEAL_STAGES.join(', ')}.`);
         patch.stage = estagio;
+        // Perder pede o motivo, igual à tela: é ele que faz a conta de perdidos
+        // servir para alguma coisa depois. Sair de perdido apaga os dois campos.
+        if (estagio === 'perdido') {
+          if (!motivo) throw new ErroDeUso('Diga o motivo da perda no campo "motivo".');
+          patch.lost_reason = motivo;
+          patch.lost_at = patch.updated_at;
+        } else if (alvo.stage === 'perdido') {
+          patch.lost_reason = null;
+          patch.lost_at = null;
+        }
       }
       if (args.valor !== undefined) patch.valor_pontual = num(args, 'valor') ?? 0;
       if (args.mrr !== undefined) patch.mrr = num(args, 'mrr') ?? 0;

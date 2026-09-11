@@ -41,6 +41,8 @@ type DealRow = {
   organization_id: string | null;
   proposal_path: string | null;
   proposal_name: string | null;
+  lost_reason: string | null;
+  lost_at: string | null;
   contacts: { id: string; name: string | null; contact_channels: Channel[] | null } | null;
   organizations: OrgRow | null;
   deal_installments: { id: string; description: string | null; amount: number; due_date: string }[] | null;
@@ -59,7 +61,7 @@ export default async function PipelinePage() {
   const { data, error } = await supabase
     .from('deals')
     .select(
-      'id, stage, stage_changed_at, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, ' +
+      'id, stage, stage_changed_at, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, lost_reason, lost_at, ' +
         'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
         'organizations(id, name, site, instagram, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep), ' +
         'deal_installments(id, description, amount, due_date)',
@@ -148,6 +150,8 @@ export default async function PipelinePage() {
     proposal_name: r.proposal_name,
     installments: [...(r.deal_installments ?? [])].sort((a, b) => a.due_date.localeCompare(b.due_date)),
     has_contract: comContrato.has(r.id),
+    lost_reason: r.lost_reason,
+    lost_at: r.lost_at,
   }));
 
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');

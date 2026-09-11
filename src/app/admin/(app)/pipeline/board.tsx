@@ -58,6 +58,9 @@ export type BoardDeal = {
   installments: DealInstallment[];
   /** Já tem contrato no financeiro (gerado depois de ganhar). */
   has_contract: boolean;
+  /** Por que o negócio foi perdido. Só existe enquanto ele está em "perdido". */
+  lost_reason: string | null;
+  lost_at: string | null;
 };
 
 // Filete de acento no topo de cada coluna — segue a paleta da marca.
@@ -103,12 +106,20 @@ export function PipelineBoard({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Etapa em que o novo negócio vai nascer (o "+" do cabeçalho de cada coluna).
   const [novoEm, setNovoEm] = useState<DealStage | null>(null);
+  // Perdidos não têm coluna: ficam recolhidos no rodapé do quadro, e só de lá
+  // dá para abrir o negócio de novo (ver o motivo, reabrir).
+  const [perdidosAbertos, setPerdidosAbertos] = useState(false);
   const [, startTransition] = useTransition();
 
   // Mantém o servidor como fonte da verdade após revalidação.
   useEffect(() => setDeals(initialDeals), [initialDeals]);
 
   const selected = deals.find((d) => d.id === selectedId) ?? null;
+
+  // Mais recentes primeiro: a perda de ontem é a que ainda se discute.
+  const perdidos = deals
+    .filter((d) => d.stage === 'perdido')
+    .sort((a, b) => (b.lost_at ?? '').localeCompare(a.lost_at ?? ''));
 
   // Rótulo do produto: tabela products (editável) com fallback pro código antigo.
   const productLabel = (tag: string) =>
@@ -310,6 +321,35 @@ export function PipelineBoard({
         );
       })}
     </div>
+
+    {/* Os perdidos, fora do funil mas ao alcance da mão. */}
+    {perdidos.length > 0 && (
+      <div className="border-t border-black/[0.06] pt-3">
+        <button
+          type="button"
+          onClick={() => setPerdidosAbertos((v) => !v)}
+          className="font-label text-[11px] uppercase tracking-wider text-text-muted transition-colors hover:text-danger"
+        >
+          {perdidos.length} perdido{perdidos.length === 1 ? '' : 's'} {perdidosAbertos ? '▾' : '▸'}
+        </button>
+        {perdidosAbertos && (
+          <div className="mt-2 flex flex-wrap gap-2 pb-3">
+            {perdidos.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => setSelectedId(d.id)}
+                title={d.lost_reason ?? undefined}
+                className="max-w-[18rem] truncate rounded-md border border-black/[0.08] bg-white px-2.5 py-1.5 text-left text-xs text-text-secondary transition-colors hover:border-danger/40 hover:text-text-primary"
+              >
+                <span className="font-medium text-text-primary">{d.org?.name ?? d.name ?? 'Negócio'}</span>
+                {d.lost_reason && <span className="text-text-muted"> · {d.lost_reason}</span>}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
     {selected && <DealDrawer deal={selected} products={products} orgOptions={orgOptions} onClose={() => setSelectedId(null)} />}
     {novoEm && (
       <DealDrawer

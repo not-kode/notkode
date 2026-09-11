@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { mimeDaProposta } from '@/lib/proposta-mime';
-import { DEAL_STAGES, SERVICE_TAGS, type DealStage } from './stages';
+import { DEAL_STAGES, PIPELINE_STAGES, SERVICE_TAGS, type DealStage } from './stages';
 import { normalizeOrgName, type Product } from './orgs';
 import { aoGanharNegocio, criarContratoDoNegocio } from './ganhar';
 
@@ -302,6 +302,12 @@ export async function updateDeal(formData: FormData): Promise<void> {
     if (atual && atual.stage !== stageRaw && (pedidoNaMao || atual.stage === base)) {
       patch.stage = stageRaw;
       patch.stage_changed_at = new Date().toISOString();
+      // Saiu de perdido por aqui: o motivo da perda não pode sobrar num negócio
+      // que voltou a estar vivo.
+      if (atual.stage === 'perdido') {
+        patch.lost_reason = null;
+        patch.lost_at = null;
+      }
     }
   }
   if (notes !== undefined) patch.notes = notes;
@@ -337,6 +343,60 @@ export async function winDeal(formData: FormData): Promise<void> {
   revalidatePath('/admin/financeiro');
   revalidatePath('/admin/clientes');
   revalidatePath('/admin/tasks');
+  revalidatePath('/admin');
+}
+
+/**
+ * O outro desfecho: o negócio morreu. Sai do funil como o ganho sai, com a
+ * diferença de que aqui o motivo é obrigatório — contar quantos caíram não
+ * ensina nada; saber por que caíram é o que mostra onde o funil vaza.
+ */
+export async function loseDeal(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  const motivo = String(formData.get('motivo') ?? '').trim();
+  if (!id) return;
+  if (!motivo) throw new Error('Escreva o motivo da perda antes de fechar o negócio.');
+
+  const supabase = getSupabaseAdmin();
+  const perdidoEm = new Date().toISOString();
+  const { error } = await supabase
+    .from('deals')
+    .update({
+      stage: 'perdido',
+      lost_reason: motivo,
+      lost_at: perdidoEm,
+      updated_at: perdidoEm,
+      stage_changed_at: perdidoEm,
+    })
+    .eq('id', id);
+  if (error) throw new Error(`Falha ao marcar como perdido: ${error.message}`);
+
+  revalidatePath('/admin/pipeline');
+  revalidatePath('/admin');
+}
+
+/**
+ * Desfaz a perda: o negócio volta para a coluna escolhida, sem motivo e sem data
+ * de perda — as duas só valem enquanto ele está perdido. O relógio do "parado há
+ * X dias" recomeça agora, porque a conversa também recomeça.
+ */
+export async function reopenDeal(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  const stage = String(formData.get('stage') ?? 'novo');
+  if (!id) return;
+  const destino = PIPELINE_STAGES.includes(stage as (typeof PIPELINE_STAGES)[number])
+    ? (stage as DealStage)
+    : 'novo';
+
+  const supabase = getSupabaseAdmin();
+  const agora = new Date().toISOString();
+  const { error } = await supabase
+    .from('deals')
+    .update({ stage: destino, lost_reason: null, lost_at: null, updated_at: agora, stage_changed_at: agora })
+    .eq('id', id);
+  if (error) throw new Error(`Falha ao reabrir o negócio: ${error.message}`);
+
+  revalidatePath('/admin/pipeline');
   revalidatePath('/admin');
 }
 

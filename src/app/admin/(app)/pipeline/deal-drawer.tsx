@@ -5,6 +5,8 @@ import {
   createDeal,
   updateDeal,
   winDeal,
+  loseDeal,
+  reopenDeal,
   generateDealContract,
   uploadDealProposal,
   removeDealProposal,
@@ -400,6 +402,13 @@ export function DealDrawer({
   const isNew = deal === null;
   const [savePending, startSave] = useTransition();
   const [winPending, startWin] = useTransition();
+  const [losePending, startLose] = useTransition();
+  const [reopenPending, startReopen] = useTransition();
+  // Perder pede confirmação: o formulário do motivo só aparece depois do clique,
+  // e é ele que fecha o negócio. Um botão só não tira nada do funil sem querer.
+  const [loseOpen, setLoseOpen] = useState(false);
+  const [motivo, setMotivo] = useState('');
+  const [voltarPara, setVoltarPara] = useState<DealStage>('negociacao');
   const [contratoPending, startContrato] = useTransition();
   const [manageOpen, setManageOpen] = useState(false);
   // Salvamento pendente do autosave: garante que o que foi digitado agora não se
@@ -431,6 +440,7 @@ export function DealDrawer({
   }, [products, deal]);
 
   const isWon = deal?.stage === 'ganho';
+  const isLost = deal?.stage === 'perdido';
   const currentStage = deal?.stage ?? defaultStage ?? 'novo';
   // Ganho/perdido saem das colunas; ainda assim mostramos o estágio atual no select.
   const stageOptions = PIPELINE_STAGES.includes(currentStage as (typeof PIPELINE_STAGES)[number])
@@ -462,7 +472,7 @@ export function DealDrawer({
 
             {/* Toggle Ganhar negócio — só na edição. Fecha a venda e tira do funil;
                 o contrato é o passo seguinte, com botão próprio. */}
-            {!isNew && (
+            {!isNew && !isLost && (
               <button
                 type="button"
                 role="switch"
@@ -489,6 +499,18 @@ export function DealDrawer({
                 </span>
               </button>
             )}
+
+            {/* O outro desfecho. Discreto de propósito: não compete com o ganho,
+                mas existe na mesma altura da tela, que é onde se procura. */}
+            {!isNew && !isWon && !isLost && !loseOpen && (
+              <button
+                type="button"
+                onClick={() => setLoseOpen(true)}
+                className="mt-2 block font-label text-[10px] uppercase tracking-wider text-text-muted underline decoration-dotted transition-colors hover:text-danger"
+              >
+                Marcar como perdido
+              </button>
+            )}
           </div>
           <button
             onClick={fechar}
@@ -500,6 +522,104 @@ export function DealDrawer({
             </svg>
           </button>
         </div>
+
+        {/* Confirmação da perda: o motivo é obrigatório porque é ele que dá
+            serventia à conta de perdidos depois. */}
+        {loseOpen && !isLost && (
+          <div className="mx-5 mt-4 rounded-md border border-danger/25 bg-danger/[0.05] px-4 py-3">
+            <p className="text-sm font-medium text-danger">Marcar como perdido</p>
+            <p className="mt-1 font-label text-[11px] text-text-secondary">
+              O negócio sai do funil. Por que ele caiu?
+            </p>
+            <textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              rows={2}
+              autoFocus
+              placeholder="Preço, prazo, foi com outro fornecedor, sumiu…"
+              className={inputCls + ' mt-2 resize-y'}
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                disabled={losePending || !motivo.trim()}
+                onClick={() => {
+                  const fd = new FormData();
+                  fd.set('id', deal!.id);
+                  fd.set('motivo', motivo.trim());
+                  // Mesmo cuidado do ganho: o autosave pendente grava antes, para
+                  // a etapa velha não voltar por cima da perda.
+                  startLose(async () => {
+                    await flushRef.current?.();
+                    await loseDeal(fd);
+                    setLoseOpen(false);
+                    setMotivo('');
+                  });
+                }}
+                className="rounded-md bg-danger px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-danger/90 disabled:opacity-50"
+              >
+                {losePending ? 'Fechando…' : 'Confirmar perda'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoseOpen(false);
+                  setMotivo('');
+                }}
+                className="font-label text-[11px] uppercase tracking-wider text-text-muted transition-colors hover:text-text-primary"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Desfecho perdido: o motivo fica à vista, e dá para voltar atrás. */}
+        {isLost && (
+          <div className="mx-5 mt-4 rounded-md border border-danger/25 bg-danger/[0.05] px-4 py-3">
+            <p className="flex items-center gap-2 text-sm font-medium text-danger">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+              Negócio perdido
+            </p>
+            {deal!.lost_reason && <p className="mt-1 text-sm text-text-primary">{deal!.lost_reason}</p>}
+            {deal!.lost_at && (
+              <p className="mt-0.5 font-label text-[10px] text-text-muted">
+                em {new Date(deal!.lost_at).toLocaleDateString('pt-BR')}
+              </p>
+            )}
+            <div className="mt-2.5 flex items-center gap-2">
+              <select
+                value={voltarPara}
+                onChange={(e) => setVoltarPara(e.target.value as DealStage)}
+                className={inputCls + ' w-auto py-1 text-xs'}
+              >
+                {PIPELINE_STAGES.map((st) => (
+                  <option key={st} value={st}>
+                    {STAGE_LABELS[st]}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={reopenPending}
+                onClick={() => {
+                  const fd = new FormData();
+                  fd.set('id', deal!.id);
+                  fd.set('stage', voltarPara);
+                  startReopen(async () => {
+                    await flushRef.current?.();
+                    await reopenDeal(fd);
+                  });
+                }}
+                className="rounded-md border border-black/[0.12] px-3 py-1.5 text-xs font-semibold text-text-primary transition-colors hover:border-primary/50 hover:text-primary disabled:opacity-60"
+              >
+                {reopenPending ? 'Reabrindo…' : 'Reabrir'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Desfecho ganho + próximo passo: gerar o contrato no financeiro. */}
         {isWon && (
