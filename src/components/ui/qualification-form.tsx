@@ -89,6 +89,20 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  // O que a pessoa respondeu, com a pergunta como ela viu na tela. É isso que o
+  // card do pipeline mostra, então cada formulário conta a própria história sem o
+  // admin precisar saber traduzir "centralizar" ou "urgente".
+  const respostas = () => {
+    const rotulos = (ids: string[], opcoes: QualificationOption[]) =>
+      ids.map((id) => opcoes.find((o) => o.id === id)?.label ?? id).join(', ');
+    return [
+      { pergunta: t('fieldSize'), resposta: data.companySize },
+      { pergunta: schema.needs.title, resposta: rotulos(data.needs, schema.needs.options) },
+      { pergunta: t('contextTimingLabel'), resposta: data.timing ? rotulos([data.timing], schema.context.timings) : '' },
+      { pergunta: t('contextDescriptionLabel'), resposta: data.description.trim() },
+    ].filter((r) => r.resposta);
+  };
+
   // Captura progressiva: salva o rascunho conforme a pessoa preenche/escolhe — já a
   // partir da 1ª necessidade marcada, mesmo sem contato. Assim registramos o que o
   // público pede, inclusive de quem desiste antes de se identificar.
@@ -113,6 +127,7 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
         needs: data.needs,
         timing: data.timing,
         description: data.description,
+        respostas: respostas(),
         last_step: stepLabel(STEP_IDS[step] ?? String(step + 1)),
       });
     }, 900);
@@ -159,6 +174,8 @@ export function QualificationForm({ schema }: { schema: QualificationSchema }) {
           serviceTag: schema.serviceTag,
           kind: 'qualification',
           data,
+          respostas: respostas(),
+          page: window.location.pathname,
           utm: getUtm(),
           session_id: getSessionId(),
         }),

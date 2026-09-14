@@ -97,12 +97,14 @@ export function saveLeadDraft(payload: {
   timing?: string;
   description?: string;
   last_step?: string | null;
+  /** O que a pessoa respondeu, pergunta e resposta como ela viu: vai para o card do pipeline. */
+  respostas?: { pergunta: string; resposta: string }[];
   submitted?: boolean;
 }) {
   try {
     // Teste nosso no formulário não pode virar "começou e não enviou" na tela de Leads.
     if (navigator.webdriver || isInternalDevice()) return;
-    const body = JSON.stringify({ ...payload, session_id: sessionId(), ...capturedUtm() });
+    const body = JSON.stringify({ ...payload, page: window.location.pathname, session_id: sessionId(), ...capturedUtm() });
     const blob = new Blob([body], { type: 'application/json' });
     if (navigator.sendBeacon?.('/api/lead/draft', blob)) return;
     void fetch('/api/lead/draft', { method: 'POST', body, headers: { 'Content-Type': 'application/json' }, keepalive: true }).catch(() => {});

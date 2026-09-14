@@ -7,6 +7,8 @@ import { DealDrawer } from './deal-drawer';
 import { type OrgOption, type Product } from './orgs';
 import { dealTotal, dealMonthlyNet } from './deal-value';
 import { siteHref, instagramHandle, instagramHref } from '../_shared/org-links';
+import { rotuloDaPagina } from '@/lib/rotulo-da-pagina';
+import type { Resposta } from '@/lib/lead-para-funil';
 
 export type OrgInfo = {
   id: string;
@@ -26,11 +28,8 @@ export type OrgInfo = {
   legal_rep: string | null;
 };
 
-/** Respostas do formulário do site, anexas ao card que nasceu delas. */
+/** Como foi o preenchimento do formulário do site que gerou o card. */
 export type LeadInfo = {
-  needs: string[] | null;
-  timing: string | null;
-  description: string | null;
   /** Etapa em que a pessoa estava na última vez que o rascunho foi salvo. */
   last_step: string | null;
   /** Chegou ao fim do formulário, ou parou no meio. */
@@ -76,8 +75,14 @@ export type BoardDeal = {
   lost_at: string | null;
   /** Sessão do site que gerou este card (quando veio do formulário). */
   lead_session_id: string | null;
-  /** O que a pessoa respondeu no formulário, para o card contar a história inteira. */
+  /** Como foi o preenchimento: até onde chegou e se tem gravação. */
   lead_info: LeadInfo | null;
+  /** Página do site em que o formulário foi preenchido (caminho). */
+  lead_page: string | null;
+  /** Por onde a pessoa chegou ao site (utm_source). */
+  lead_channel: string | null;
+  /** O que ela respondeu, pergunta e resposta, na ordem do formulário. */
+  lead_answers: Resposta[] | null;
 };
 
 // Filete de acento no topo de cada coluna — segue a paleta da marca.
@@ -262,7 +267,9 @@ export function PipelineBoard({
                           formulário incompleto{deal.lead_info.last_step ? ` · parou em ${deal.lead_info.last_step}` : ''}
                         </span>
                       ) : (
-                        <span className="text-text-muted">do formulário do site</span>
+                        <span className="text-text-muted">
+                          do site{deal.lead_page ? ` · ${rotuloDaPagina(deal.lead_page)}` : ''}
+                        </span>
                       )}
                     </p>
                   )}

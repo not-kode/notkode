@@ -1,10 +1,5 @@
 /**
- * De onde a pessoa clicou, escrito na própria mensagem do WhatsApp.
- *
- * O clique em WhatsApp vira evento no nosso analytics, mas o link abre uma
- * conversa qualquer no celular: não há nada que ligue aquele clique a esta
- * conversa. Então a origem viaja no único lugar que chega junto com a pessoa —
- * o texto que ela envia.
+ * Nome legível da página do site de onde o lead veio, para o card do pipeline.
  *
  * O rótulo sai do próprio caminho da página, com nome à mão só para as rotas
  * que têm nome comercial. Rota nova que ninguém lembrar de cadastrar aqui
@@ -39,7 +34,7 @@ function humanizar(slug: string): string {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Home';
 }
 
-/** Nome legível da página, para entrar na mensagem do WhatsApp. */
+/** Nome legível da página: "/pt/sistemas-ia" → "Sistemas com IA". */
 export function rotuloDaPagina(pathname: string): string {
   const caminho = semLocale(pathname);
   if (ROTULOS[caminho]) return ROTULOS[caminho];
@@ -48,13 +43,4 @@ export function rotuloDaPagina(pathname: string): string {
   const partes = caminho.split('/').filter(Boolean);
   if (partes.length > 1) return `${ROTULOS[partes[0]] ?? humanizar(partes[0])} · ${humanizar(partes[partes.length - 1])}`;
   return humanizar(caminho);
-}
-
-/**
- * Link do WhatsApp com a mensagem já escrita: o texto de sempre mais a linha de
- * origem. `numero` sem sinais, só dígitos.
- */
-export function whatsappHref(numero: string, mensagem: string, origem: string): string {
-  const texto = origem ? `${mensagem}\n\n${origem}` : mensagem;
-  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }

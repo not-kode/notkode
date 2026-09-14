@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
-import { garantirNegocioDoLead, identificado } from '@/lib/lead-para-funil';
+import { caminhoDaPagina, garantirNegocioDoLead, identificado, lerRespostas } from '@/lib/lead-para-funil';
 
 // Captura progressiva de formulário: grava o que a pessoa já preencheu (com algum
 // contato) antes de enviar. Upsert por session_id. À prova de falhas — nunca quebra o site.
@@ -47,11 +47,12 @@ export async function POST(req: Request) {
     : null;
   const timing = str(body.timing, 120);
   const description = str(body.description, 2000);
+  const respostas = lerRespostas(body.respostas);
 
   // Registra assim que a pessoa escolhe/preenche QUALQUER coisa (necessidade, prazo,
   // descrição ou contato) — mesmo antes de se identificar. Só ignora o rascunho
   // totalmente vazio. Upsert por session_id, então não duplica: atualiza o mesmo.
-  const hasAnything = !!(name || email || whatsapp || (needs && needs.length) || timing || description);
+  const hasAnything = !!(name || email || whatsapp || (needs && needs.length) || timing || description || respostas);
   if (!hasAnything) return NextResponse.json({ ok: true });
 
   const row = {
@@ -90,11 +91,9 @@ export async function POST(req: Request) {
       email,
       whatsapp,
       service_tag: row.service_tag,
-      needs,
-      timing,
-      description,
-      last_step: row.last_step,
+      pagina: caminhoDaPagina(body.page),
       utm_source: row.utm_source,
+      respostas,
     });
     if (dealId) {
       try {

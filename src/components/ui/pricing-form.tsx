@@ -212,6 +212,14 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
   // Captura progressiva: salva o rascunho já a partir da PRIMEIRA escolha, mesmo sem
   // contato. Antes só gravava quando havia nome/e-mail/WhatsApp, então perdíamos o
   // registro do que o público pede quando desiste antes de se identificar.
+  // O que a pessoa respondeu, com a pergunta como ela viu na tela: é o que o card
+  // do pipeline mostra, cada formulário com as próprias perguntas.
+  const tRespostas = useTranslations('PricingForm');
+  const respostas = () => [
+    ...summarizeSelection(schema, selection).map((s) => ({ pergunta: s.label, resposta: s.valueLabels.join(', ') })),
+    ...(notes.trim() ? [{ pergunta: tRespostas('fieldNotes'), resposta: notes.trim() }] : []),
+  ];
+
   useEffect(() => {
     if (status === 'success') return;
     const picked = summarizeSelection(schema, selection).map((s) => `${s.label}: ${s.valueLabels.join(', ')}`);
@@ -227,6 +235,7 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
         whatsapp,
         needs: picked,
         description: notes,
+        respostas: respostas(),
         last_step: stepName(step),
       });
     }, 900);
@@ -301,6 +310,8 @@ export function PricingForm({ schema }: { schema: PricingSchema }) {
       serviceTag: schema.serviceTag,
       selection,
       lead: { name, whatsapp, email, notes, company },
+      respostas: respostas(),
+      page: window.location.pathname,
       utm: getUtm(),
       session_id: getSessionId(),
     };

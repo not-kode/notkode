@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { getPricingSchema } from '@/lib/lead-schemas';
 import { buildLeadEmail } from '@/lib/lead-email';
 import { emailValido, whatsappValido } from '@/lib/validacao-contato';
-import { garantirNegocioDoLead } from '@/lib/lead-para-funil';
+import { caminhoDaPagina, garantirNegocioDoLead, lerRespostas } from '@/lib/lead-para-funil';
 
 // ── Payload types ──────────────────────────────────────────────────────────
 
@@ -217,7 +217,9 @@ export async function POST(req: Request) {
     // pessoa preencheu tudo de uma vez, ou o beacon não passou — o card nasce
     // aqui. O lead nunca mais depende de alguém lembrar de promover.
     const selection = (row.selection ?? {}) as Record<string, unknown>;
-    const needs = Array.isArray(selection.needs) ? (selection.needs as string[]) : null;
+    // Os dois formulários mandam as respostas prontas, pergunta e resposta como
+    // a pessoa viu, e a página em que estavam: é o que o card do pipeline mostra.
+    const extra = body as { respostas?: unknown; page?: unknown };
     await garantirNegocioDoLead(supabase, {
       session_id: row.session_id ?? `lead-${gravado?.id ?? Date.now()}`,
       name: row.name,
@@ -225,9 +227,8 @@ export async function POST(req: Request) {
       email: row.email,
       whatsapp: row.whatsapp,
       service_tag: row.service_tag,
-      needs,
-      timing: typeof selection.timing === 'string' ? selection.timing : null,
-      description: row.notes,
+      pagina: caminhoDaPagina(extra.page) ?? caminhoDaPagina(pageOrigin),
+      respostas: lerRespostas(extra.respostas),
       lead_id: gravado?.id ?? null,
       utm_source: row.utm_source,
     });

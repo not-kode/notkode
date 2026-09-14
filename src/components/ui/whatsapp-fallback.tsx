@@ -1,9 +1,7 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MessageCircle } from 'lucide-react';
-import { rotuloDaPagina, whatsappHref } from './whatsapp-origem';
 
 /** Número comercial usado em todos os links de WhatsApp do site. */
 export const WHATSAPP_NUMBER = '5511951381254';
@@ -18,12 +16,7 @@ export const WHATSAPP_NUMBER = '5511951381254';
  */
 export function WhatsAppFallback({ serviceTag }: { serviceTag?: string | null }) {
   const t = useTranslations('Contact');
-  const pathname = usePathname();
-  const href = whatsappHref(
-    WHATSAPP_NUMBER,
-    t('whatsappFallbackMessage'),
-    t('whatsappOriginLine', { page: rotuloDaPagina(pathname ?? '') }),
-  );
+  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(t('whatsappFallbackMessage'))}`;
 
   return (
     <p className="mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center">

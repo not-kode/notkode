@@ -44,6 +44,9 @@ type DealRow = {
   lost_reason: string | null;
   lost_at: string | null;
   lead_session_id: string | null;
+  lead_page: string | null;
+  lead_channel: string | null;
+  lead_answers: { pergunta: string; resposta: string }[] | null;
   contacts: { id: string; name: string | null; contact_channels: Channel[] | null } | null;
   organizations: OrgRow | null;
   deal_installments: { id: string; description: string | null; amount: number; due_date: string }[] | null;
@@ -62,7 +65,7 @@ export default async function PipelinePage() {
   const { data, error } = await supabase
     .from('deals')
     .select(
-      'id, stage, stage_changed_at, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, lost_reason, lost_at, lead_session_id, ' +
+      'id, stage, stage_changed_at, service_tag, service_tags, source, valor_pontual, mrr, repasse_valor, repasse_para, precisa_nota, notes, organization_id, proposal_path, proposal_name, lost_reason, lost_at, lead_session_id, lead_page, lead_channel, lead_answers, ' +
         'contacts(id, name, contact_channels(kind, value, is_primary)), ' +
         'organizations(id, name, site, instagram, legal_name, tax_id, state_registration, address_street, address_number, address_district, address_city, address_state, address_zip, legal_rep), ' +
         'deal_installments(id, description, amount, due_date)',
@@ -103,28 +106,19 @@ export default async function PipelinePage() {
     ];
   });
 
-  // O que a pessoa respondeu no formulário do site, para o card mostrar de onde
-  // ela veio e o que pediu — era isto que justificava a tela de Leads separada.
+  // Como foi o preenchimento do formulário do site: até onde a pessoa chegou e
+  // se há gravação. O que ela respondeu já vem no próprio negócio (lead_answers).
   const rows0 = (data ?? []) as unknown as DealRow[];
   const sessoes = rows0.map((r) => r.lead_session_id).filter((s): s is string => !!s);
   const leadInfo = new Map<string, LeadInfo>();
   if (sessoes.length) {
     const [{ data: draftRows }, { data: recRows }] = await Promise.all([
-      supabase
-        .from('lead_drafts')
-        .select('session_id, needs, timing, description, last_step, submitted_at')
-        .in('session_id', sessoes),
+      supabase.from('lead_drafts').select('session_id, last_step, submitted_at').in('session_id', sessoes),
       supabase.from('session_recordings').select('session_id').in('session_id', sessoes),
     ]);
     const comGravacao = new Set((recRows ?? []).map((r) => r.session_id as string));
-    for (const d of (draftRows ?? []) as {
-      session_id: string; needs: string[] | null; timing: string | null;
-      description: string | null; last_step: string | null; submitted_at: string | null;
-    }[]) {
+    for (const d of (draftRows ?? []) as { session_id: string; last_step: string | null; submitted_at: string | null }[]) {
       leadInfo.set(d.session_id, {
-        needs: d.needs,
-        timing: d.timing,
-        description: d.description,
         last_step: d.last_step,
         enviou: !!d.submitted_at,
         temGravacao: comGravacao.has(d.session_id),
@@ -133,9 +127,7 @@ export default async function PipelinePage() {
     // Sessão com gravação mas sem rascunho (preencheu tudo de uma vez) ainda
     // merece o link do vídeo.
     for (const sid of comGravacao) {
-      if (!leadInfo.has(sid)) {
-        leadInfo.set(sid, { needs: null, timing: null, description: null, last_step: null, enviou: true, temGravacao: true });
-      }
+      if (!leadInfo.has(sid)) leadInfo.set(sid, { last_step: null, enviou: true, temGravacao: true });
     }
   }
 
@@ -191,6 +183,9 @@ export default async function PipelinePage() {
     lost_at: r.lost_at,
     lead_session_id: r.lead_session_id,
     lead_info: r.lead_session_id ? leadInfo.get(r.lead_session_id) ?? null : null,
+    lead_page: r.lead_page,
+    lead_channel: r.lead_channel,
+    lead_answers: r.lead_answers,
   }));
 
   const openDeals = deals.filter((d) => d.stage !== 'ganho' && d.stage !== 'perdido');

@@ -21,6 +21,7 @@ import { ProductsManager } from './products-manager';
 import { ProductSelect } from './product-select';
 import type { BoardDeal } from './board';
 import { AutoSaveForm } from '../_shared/auto-save-form';
+import { rotuloDaPagina } from '@/lib/rotulo-da-pagina';
 
 const brl = (n: number) =>
   n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -242,19 +243,12 @@ const parseNum = (raw: string): number => {
 
 /**
  * Bloco financeiro do negócio: tipo de cobrança (à vista ou recorrente mensal),
- * valor, estágio, repasse pro gestor e nota fiscal. Com "precisa de nota" marcado,
- * mostra na hora os 6% pagos e o valor líquido (já descontando também o repasse).
- * No recorrente, as contas são sobre o valor mensal.
+ * valor, repasse pro gestor e nota fiscal. Com "precisa de nota" marcado, mostra na
+ * hora os 6% pagos e o valor líquido (já descontando também o repasse). No
+ * recorrente, as contas são sobre o valor mensal. Mora na aba Proposta: quando o
+ * lead acaba de chegar ninguém sabe nada disso ainda.
  */
-function FinanceFields({
-  deal,
-  stageOptions,
-  currentStage,
-}: {
-  deal: BoardDeal | null;
-  stageOptions: readonly string[];
-  currentStage: string;
-}) {
+function FinanceFields({ deal }: { deal: BoardDeal | null }) {
   const [billing, setBilling] = useState<'pontual' | 'recorrente'>(
     deal?.mrr != null && deal.mrr > 0 ? 'recorrente' : 'pontual',
   );
@@ -319,10 +313,6 @@ function FinanceFields({
               className={inputCls}
             />
           )}
-        </div>
-        <div>
-          <label className={labelCls}>Estágio</label>
-          <StageSelect current={currentStage} options={stageOptions} />
         </div>
       </div>
 
@@ -414,7 +404,15 @@ export function DealDrawer({
   // Salvamento pendente do autosave: garante que o que foi digitado agora não se
   // perca se o painel for fechado antes da pausa.
   const flushRef = useRef<(() => void | Promise<void>) | null>(null);
-  const fechar = () => { flushRef.current?.(); onClose(); };
+  const flushPropostaRef = useRef<(() => void | Promise<void>) | null>(null);
+  // Dados e Proposta são dois formulários, cada um salvando por si. Quem vai
+  // gravar outra coisa no negócio (ganhar, perder, gerar contrato) espera os dois.
+  const salvarPendentes = async () => {
+    await flushRef.current?.();
+    await flushPropostaRef.current?.();
+  };
+  const fechar = () => { void salvarPendentes(); onClose(); };
+  const [aba, setAba] = useState<'dados' | 'proposta'>('dados');
   // O seletor de produto não é um <input>: precisa pedir o salvamento na mão.
   const salvarAgora = () => {
     const form = document.getElementById('dealForm') as HTMLFormElement | null;
@@ -449,6 +447,8 @@ export function DealDrawer({
 
   const title = isNew ? 'Novo negócio' : deal!.org?.name ?? deal!.name ?? 'Negócio';
   const eyebrow = isNew ? `Novo em ${STAGE_LABELS[currentStage as DealStage]}` : STAGE_LABELS[deal!.stage];
+  // O valor aparece na própria aba, para não precisar abrir a Proposta só para ver.
+  const valorResumo = deal?.mrr ? `${brl(deal.mrr)}/mês` : deal?.valor_pontual ? brl(deal.valor_pontual) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -462,7 +462,8 @@ export function DealDrawer({
       {/* Painel */}
       <aside className="relative flex h-full w-full max-w-[26rem] flex-col overflow-y-auto border-l border-black/[0.06] bg-white shadow-xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-black/[0.06] bg-white px-5 py-4">
+        <div className={`sticky top-0 z-10 border-b border-black/[0.06] bg-white px-5 pt-4 ${isNew ? 'pb-4' : ''}`}>
+        <div className="flex items-start justify-between gap-3">
           <div>
             <p className="eyebrow mb-1">
               <span className="status-dot" />
@@ -484,7 +485,7 @@ export function DealDrawer({
                   // Espera o autosave pendente gravar antes: as duas gravações
                   // correndo juntas faziam a etapa velha voltar por cima do ganho.
                   startWin(async () => {
-                    await flushRef.current?.();
+                    await salvarPendentes();
                     await winDeal(fd);
                   });
                 }}
@@ -523,6 +524,37 @@ export function DealDrawer({
           </button>
         </div>
 
+        {/* Duas abas: o que é da pessoa e da conversa, e o que é da proposta.
+            Valor, repasse e nota ninguém sabe quando o lead acaba de chegar. */}
+        {!isNew && (
+          <div role="tablist" className="mt-3 flex gap-5">
+            {([
+              ['dados', 'Dados'],
+              ['proposta', 'Proposta'],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={aba === key}
+                onClick={() => setAba(key)}
+                className={[
+                  '-mb-px border-b-2 pb-2 font-label text-[11px] uppercase tracking-wider transition-colors',
+                  aba === key
+                    ? 'border-primary text-text-primary'
+                    : 'border-transparent text-text-muted hover:text-text-secondary',
+                ].join(' ')}
+              >
+                {label}
+                {key === 'proposta' && valorResumo && (
+                  <span className="ml-1.5 normal-case tracking-normal text-text-muted">{valorResumo}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+        </div>
+
         {/* Confirmação da perda: o motivo é obrigatório porque é ele que dá
             serventia à conta de perdidos depois. */}
         {loseOpen && !isLost && (
@@ -550,7 +582,7 @@ export function DealDrawer({
                   // Mesmo cuidado do ganho: o autosave pendente grava antes, para
                   // a etapa velha não voltar por cima da perda.
                   startLose(async () => {
-                    await flushRef.current?.();
+                    await salvarPendentes();
                     await loseDeal(fd);
                     setLoseOpen(false);
                     setMotivo('');
@@ -609,7 +641,7 @@ export function DealDrawer({
                   fd.set('id', deal!.id);
                   fd.set('stage', voltarPara);
                   startReopen(async () => {
-                    await flushRef.current?.();
+                    await salvarPendentes();
                     await reopenDeal(fd);
                   });
                 }}
@@ -648,7 +680,7 @@ export function DealDrawer({
                     const fd = new FormData();
                     fd.set('id', deal!.id);
                     startContrato(async () => {
-                      await flushRef.current?.();
+                      await salvarPendentes();
                       await generateDealContract(fd);
                     });
                   }}
@@ -661,8 +693,11 @@ export function DealDrawer({
           </div>
         )}
 
-        {/* Mesmos campos para criar e editar. Na edição não há botão de salvar:
-            o formulário grava sozinho a cada alteração. */}
+        {/* Aba Dados. Em cima o que todo negócio tem; embaixo o que muda de um
+            lead para outro, as respostas do formulário que ele preencheu. Na
+            edição não há botão de salvar: o formulário grava sozinho. As abas só
+            escondem, não desmontam, para nada digitado se perder na troca. */}
+        <div className={aba === 'dados' ? '' : 'hidden'}>
         <AutoSaveForm
           id="dealForm"
           auto={!isNew}
@@ -672,7 +707,7 @@ export function DealDrawer({
               ? startSave(async () => { await createDeal(fd); onClose(); })
               : updateDeal(fd)
           }
-          className="flex flex-col gap-4 px-5 pt-4"
+          className="flex flex-col gap-4 px-5 py-4"
         >
           {!isNew && (
             <>
@@ -729,30 +764,58 @@ export function DealDrawer({
             />
           </div>
 
-          <FinanceFields deal={deal} stageOptions={stageOptions} currentStage={currentStage} />
+          <div>
+            <label className={labelCls}>Etapa</label>
+            <StageSelect current={currentStage} options={stageOptions} />
+          </div>
+
+          {/* O que muda de um lead para outro: de onde veio e o que respondeu. */}
+          {!isNew && deal!.lead_session_id && <OrigemDoLead deal={deal!} />}
 
           <div>
-            <label className={labelCls}>Notas</label>
+            <label className={labelCls}>Notas da equipe</label>
             <textarea
               name="notes"
               defaultValue={deal?.notes ?? ''}
-              rows={5}
+              rows={4}
               className={inputCls + ' resize-y'}
-              placeholder="Contexto do negócio, origem da indicação, condições, próximos passos…"
+              placeholder="O que foi conversado, indicação, próximos passos…"
             />
           </div>
+
+          {/* Na criação não há aba: quem já chega com valor combinado preenche
+              aqui, e quem não sabe nem abre. */}
+          {isNew && (
+            <details className="rounded-md border border-black/[0.06] px-3 py-2">
+              <summary className="cursor-pointer font-label text-[10px] uppercase tracking-[0.12em] text-text-muted">
+                Proposta e valores (se já souber)
+              </summary>
+              <div className="mt-3 flex flex-col gap-4">
+                <FinanceFields deal={null} />
+              </div>
+            </details>
+          )}
         </AutoSaveForm>
+        </div>
 
-        {/* De onde este card veio. O formulário do site abre o card sozinho assim
-            que a pessoa se identifica, então o que ela respondeu precisa estar
-            aqui dentro — era isso que morava na tela de Leads. */}
-        {!isNew && deal!.lead_session_id && <OrigemDoLead deal={deal!} />}
-
-        {/* Proposta e parcelas exigem o negócio já salvo (precisam do id). */}
+        {/* Aba Proposta: a proposta enviada, os valores dela e as parcelas. Exige
+            o negócio já salvo (precisa do id). Os valores são um formulário à
+            parte, que só manda os campos dele. */}
         {!isNew && (
-          <div className="mt-5 flex flex-col gap-5 border-t border-black/[0.06] px-5 py-4">
+          <div className={`flex flex-col gap-5 px-5 py-4 ${aba === 'proposta' ? '' : 'hidden'}`}>
             <ProposalSection deal={deal!} />
-            <InstallmentsSection deal={deal!} />
+            <AutoSaveForm
+              id="dealProposta"
+              flushRef={flushPropostaRef}
+              action={updateDeal}
+              className="flex flex-col gap-4 border-t border-black/[0.06] pt-4"
+            >
+              <input type="hidden" name="id" value={deal!.id} />
+              <FinanceFields deal={deal} />
+            </AutoSaveForm>
+            <div className="border-t border-black/[0.06] pt-4">
+              <InstallmentsSection deal={deal!} />
+            </div>
           </div>
         )}
 
@@ -777,18 +840,20 @@ export function DealDrawer({
 }
 
 /**
- * O rastro do formulário do site dentro do card: o que a pessoa respondeu, até
- * onde ela chegou e a gravação da sessão, quando existe.
+ * O rastro do formulário do site dentro do card: de qual página e por onde a
+ * pessoa veio, tudo o que ela respondeu (cada formulário pergunta coisas
+ * diferentes, então a lista é a dele), até onde chegou e a gravação da sessão.
  */
 function OrigemDoLead({ deal }: { deal: BoardDeal }) {
   const info = deal.lead_info;
   const parouNoMeio = info != null && !info.enviou;
+  const respostas = deal.lead_answers ?? [];
 
   return (
-    <section className="mx-5 mt-5 rounded-md border border-primary/20 bg-primary/[0.03] px-4 py-3">
+    <section className="rounded-md border border-primary/20 bg-primary/[0.03] px-4 py-3">
       <p className="flex items-center justify-between gap-2">
         <span className="font-label text-[10px] uppercase tracking-[0.14em] text-primary">
-          Veio do formulário do site
+          Formulário do site
         </span>
         {parouNoMeio && (
           <span className="rounded-full bg-warning/15 px-2 py-0.5 font-label text-[10px] text-warning">
@@ -797,22 +862,32 @@ function OrigemDoLead({ deal }: { deal: BoardDeal }) {
         )}
       </p>
 
-      {info?.needs?.length ? (
-        <p className="mt-2 text-sm text-text-primary">
-          <span className="text-text-muted">Precisa: </span>
-          {info.needs.join(', ')}
-        </p>
-      ) : null}
-      {info?.timing && (
-        <p className="text-sm text-text-primary">
-          <span className="text-text-muted">Prazo: </span>
-          {info.timing}
+      {(deal.lead_page || deal.lead_channel) && (
+        <p className="mt-1 text-[12px] text-text-secondary">
+          {deal.lead_page && (
+            <>
+              Página <strong className="font-medium text-text-primary">{rotuloDaPagina(deal.lead_page)}</strong>
+            </>
+          )}
+          {deal.lead_page && deal.lead_channel && ' · '}
+          {deal.lead_channel && (
+            <>
+              chegou por <strong className="font-medium text-text-primary">{deal.lead_channel}</strong>
+            </>
+          )}
         </p>
       )}
-      {info?.description && (
-        <p className="mt-1.5 whitespace-pre-wrap text-sm text-text-secondary">{info.description}</p>
-      )}
-      {!info?.needs?.length && !info?.timing && !info?.description && (
+
+      {respostas.length > 0 ? (
+        <dl className="mt-2.5 flex flex-col gap-2 border-t border-primary/10 pt-2.5">
+          {respostas.map((r, i) => (
+            <div key={i}>
+              <dt className="font-label text-[10px] uppercase tracking-[0.1em] text-text-muted">{r.pergunta}</dt>
+              <dd className="whitespace-pre-wrap text-sm text-text-primary">{r.resposta}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
         <p className="mt-1.5 text-sm text-text-muted">
           Deixou o contato, ainda sem responder o resto.
         </p>
