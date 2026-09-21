@@ -203,3 +203,17 @@ export type NotaView = {
  * quando a bola está com ele, um parceiro), escrito na mão uma vez.
  */
 export type Pessoa = { nome: string; tipo: 'equipe' | 'externo' };
+
+/**
+ * Resumo de um projeto sem carregar as tarefas dele: é o que a lista lateral
+ * precisa para mostrar o número de cada cliente enquanto a tela só traz do
+ * projeto aberto. Vem da view project_task_counters.
+ */
+export type ContagemProjeto = {
+  /** Tudo que existe, incluindo subtarefa e concluída: diz se o projeto tem entrega. */
+  total: number;
+  /** Tarefas principais em aberto, que é o número do badge. */
+  abertas: number;
+  paraHoje: number;
+  atrasadas: number;
+};

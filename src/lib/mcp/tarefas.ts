@@ -3,12 +3,15 @@
 // fechando conforme entrega.
 
 import {
-  ErroDeUso, acharEtapa, acharProjeto, acharTarefa, bool, data, hoje, lista, num,
-  objeto, obrigatorio, opcoes, somaDias, str, supabase, texto, type Ferramenta,
+  ErroDeUso, acharEtapa, acharProjeto, acharTarefa, bool, data, emBlocos, hoje, lista,
+  num, objeto, obrigatorio, opcoes, somaDias, str, supabase, texto, type Ferramenta,
 } from './nucleo';
 import { PRIORITIES, RESPONSAVEL_PADRAO, TASK_STATUSES } from '@/app/admin/(app)/tasks/status';
 
 const QUANDO = ['hoje', 'atrasadas', 'semana', 'mes', 'sem_prazo', 'tudo'] as const;
+
+/** Dia 1 do mês de uma data AAAA-MM-DD, para o recorte "mês" fechar certo. */
+const primeiroDoMes = (d: string) => `${d.slice(0, 7)}-01`;
 
 type TarefaRow = {
   // Tarefa de contrato tem engagement_id; a do checklist de um negócio ganho que
@@ -56,9 +59,33 @@ export const ferramentasDeTarefa: Ferramenta[] = [
       const projetoTermo = str(args, 'projeto');
       const alvo = projetoTermo ? await acharProjeto(projetoTermo) : null;
 
-      let q = db.from('project_tasks').select('*').order('sort');
-      if (alvo) q = q.eq('engagement_id', alvo.id);
-      const { data: linhas } = await q;
+      const hj = hoje();
+      const quando = str(args, 'quando') ?? 'tudo';
+      const responsavel = str(args, 'responsavel')?.toLowerCase();
+      const status = str(args, 'status');
+      const incluirFeitas = bool(args, 'incluir_feitas') === true;
+      const limite = Math.min(Math.max(num(args, 'limite') ?? 100, 1), 500);
+
+      // Os recortes vão para o banco, não para a memória: pedir todas as
+      // tarefas do sistema para filtrar aqui dentro dava no limite de mil
+      // linhas do PostgREST, e o que ficava de fora era justamente o mais novo.
+      const linhas = await emBlocos<TarefaRow>((de, ate) => {
+        let q = db.from('project_tasks').select('*').order('sort').range(de, ate);
+        if (alvo) q = q.eq('engagement_id', alvo.id);
+        if (status) q = q.eq('status', status);
+        else if (!incluirFeitas) q = q.neq('status', 'feito');
+        if (responsavel) q = q.ilike('assignee', `%${responsavel}%`);
+        switch (quando) {
+          case 'hoje': return q.eq('due_date', hj);
+          // Atrasada é o que venceu e ainda não foi entregue: sem o status aqui,
+          // o filtro traria de volta tudo que já foi fechado com prazo vencido.
+          case 'atrasadas': return q.lt('due_date', hj).neq('status', 'feito');
+          case 'semana': return q.gte('due_date', hj).lte('due_date', somaDias(hj, 7));
+          case 'mes': return q.gte('due_date', primeiroDoMes(hj)).lt('due_date', primeiroDoMes(somaDias(primeiroDoMes(hj), 31)));
+          case 'sem_prazo': return q.is('due_date', null);
+          default: return q;
+        }
+      });
 
       const { data: engs } = await db.from('engagements').select('id, title, organizations(name)');
       const nomeDoProjeto = new Map(
@@ -73,29 +100,7 @@ export const ferramentasDeTarefa: Ferramenta[] = [
         nomeDoProjeto.set(d.id, `Fechamento · ${d.organizations?.name ?? 'negócio ganho'}`);
       }
 
-      const hj = hoje();
-      const quando = str(args, 'quando') ?? 'tudo';
-      const responsavel = str(args, 'responsavel')?.toLowerCase();
-      const status = str(args, 'status');
-      const incluirFeitas = bool(args, 'incluir_feitas') === true;
-      const limite = Math.min(Math.max(num(args, 'limite') ?? 100, 1), 500);
-
-      const passaPrazo = (t: TarefaRow) => {
-        switch (quando) {
-          case 'hoje': return t.due_date === hj;
-          case 'atrasadas': return !!t.due_date && t.due_date < hj && t.status !== 'feito';
-          case 'semana': return !!t.due_date && t.due_date >= hj && t.due_date <= somaDias(hj, 7);
-          case 'mes': return !!t.due_date && t.due_date.slice(0, 7) === hj.slice(0, 7);
-          case 'sem_prazo': return !t.due_date;
-          default: return true;
-        }
-      };
-
-      const todas = (linhas ?? []) as TarefaRow[];
-      const filtradas = todas
-        .filter((t) => (status ? t.status === status : incluirFeitas || t.status !== 'feito'))
-        .filter((t) => !responsavel || (t.assignee ?? '').toLowerCase().includes(responsavel))
-        .filter(passaPrazo)
+      const filtradas = linhas
         .sort((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'));
 
       return {

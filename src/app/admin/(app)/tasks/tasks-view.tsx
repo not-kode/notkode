@@ -22,8 +22,8 @@ import {
 import { COLUNAS, COLUNAS_DO_CLIENTE, COLUNA_LABELS, semMaeNaTela } from './types';
 import type { Priority, TaskStatus } from './status';
 import type {
-  Agrupamento, AnexoView, Coluna, ComentarioView, NotaView, Pessoa, PhaseView, ProjectView,
-  Send, TagView, TaskComProjeto, TaskView,
+  Agrupamento, AnexoView, Coluna, ComentarioView, ContagemProjeto, NotaView, Pessoa, PhaseView,
+  ProjectView, Send, TagView, TaskComProjeto, TaskView,
 } from './types';
 import { PageHeader } from '../_shared/page-header';
 import { KanbanView } from './kanban-view';
@@ -78,8 +78,19 @@ type Periodo = (typeof PERIODOS)[number]['id'];
 /** Tasks, cronograma e a base de notas do cliente. */
 type Aba = 'tasks' | 'cronograma' | 'notas';
 
-export function TasksView({ projects, comentarios, anexos, notas, pessoas, organizacoes }: {
+export function TasksView({
+  projects, contagens, abertoId, escopo, comentarios, anexos, notas, pessoas, organizacoes,
+}: {
+  /**
+   * Todos os projetos da lista, mas só o aberto (ou todos, na visão geral) vem
+   * com as tarefas carregadas: quem precisa de número sem ter as tarefas em mãos
+   * usa "contagens".
+   */
   projects: ProjectView[];
+  contagens: Record<string, ContagemProjeto>;
+  /** Projeto aberto. Mora na URL porque é o servidor que decide o que buscar. */
+  abertoId: string | null;
+  escopo: 'projeto' | 'todos';
   comentarios: ComentarioView[];
   /** Arquivos das tarefas: sempre internos, nunca no link do cliente. */
   anexos: AnexoView[];
@@ -92,10 +103,8 @@ export function TasksView({ projects, comentarios, anexos, notas, pessoas, organ
   const ativos = useMemo(() => projects.filter((p) => !p.archivedAt), [projects]);
   const arquivados = useMemo(() => projects.filter((p) => p.archivedAt), [projects]);
 
-  const [abertoId, setAbertoId] = useState<string | null>(ativos[0]?.id ?? projects[0]?.id ?? null);
   const [aba, setAba] = useState<Aba>('tasks');
   const [visao, setVisao] = useState<'kanban' | 'lista'>('lista');
-  const [escopo, setEscopo] = useState<'projeto' | 'todos'>('projeto');
   const [periodo, setPeriodo] = useState<Periodo>('tudo');
   // '' é todo mundo; SEM_RESPONSAVEL é a fila do que ninguém pegou.
   //
@@ -191,8 +200,15 @@ export function TasksView({ projects, comentarios, anexos, notas, pessoas, organ
     const salvo = localStorage.getItem(PREF_VISAO);
     if (salvo === 'kanban' || salvo === 'lista') setVisao(salvo);
 
-    const projeto = localStorage.getItem(PREF_PROJETO);
-    if (projeto && projects.some((p) => p.id === projeto)) setAbertoId(projeto);
+    // Recarregar a página não pode jogar você em outro cliente: sem projeto na
+    // URL, volta para o último aberto (e para o escopo em que você estava).
+    const url = new URLSearchParams(window.location.search);
+    if (!url.has('p') && !url.has('escopo')) {
+      const projeto = localStorage.getItem(PREF_PROJETO);
+      const escopoSalvo = localStorage.getItem(PREF_ESCOPO) === 'todos' ? 'todos' : 'projeto';
+      const valido = projeto && projects.some((p) => p.id === projeto) ? projeto : abertoId;
+      if (escopoSalvo === 'todos' || (valido && valido !== abertoId)) irPara(valido, escopoSalvo);
+    }
 
     if (localStorage.getItem(PREF_LISTA_PROJETOS) === 'fechada') setListaProjetos(false);
 
@@ -200,9 +216,6 @@ export function TasksView({ projects, comentarios, anexos, notas, pessoas, organ
     // tarefas de hoje, ou o cronograma, tem que voltar nele depois de um F5.
     const abaSalva = localStorage.getItem(PREF_ABA);
     if (abaSalva === 'tasks' || abaSalva === 'cronograma' || abaSalva === 'notas') setAba(abaSalva);
-
-    const escopoSalvo = localStorage.getItem(PREF_ESCOPO);
-    if (escopoSalvo === 'projeto' || escopoSalvo === 'todos') setEscopo(escopoSalvo);
 
     const periodoSalvo = localStorage.getItem(PREF_PERIODO);
     if (PERIODOS.some((p) => p.id === periodoSalvo)) setPeriodo(periodoSalvo as Periodo);
@@ -213,11 +226,23 @@ export function TasksView({ projects, comentarios, anexos, notas, pessoas, organ
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Projeto aberto e escopo vivem na URL: é por eles que o servidor sabe quais
+  // tarefas buscar. Antes eram estado do navegador, com a tela recebendo as
+  // tarefas de todos os clientes de uma vez — o que estourava o limite de mil
+  // linhas do banco e escondia as tarefas mais novas.
+  const irPara = (id: string | null, esc: 'projeto' | 'todos') => {
+    const busca = new URLSearchParams();
+    if (id) busca.set('p', id);
+    if (esc === 'todos') busca.set('escopo', 'todos');
+    setRecemConcluidas([]);
+    localStorage.setItem(PREF_ESCOPO, esc);
+    if (id) localStorage.setItem(PREF_PROJETO, id);
+    start(() => { router.replace(`/admin/tasks?${busca.toString()}`); });
+  };
+
   const abrirProjeto = (id: string) => {
-    setAbertoId(id);
-    localStorage.setItem(PREF_PROJETO, id);
     // Clicar num projeto é dizer "quero este": sai da visão geral sozinho.
-    trocarEscopo('projeto');
+    irPara(id, 'projeto');
   };
   const alternarLista = () => {
     setListaProjetos((v) => {
@@ -263,11 +288,7 @@ export function TasksView({ projects, comentarios, anexos, notas, pessoas, organ
     setAba(v);
     localStorage.setItem(PREF_ABA, v);
   };
-  const trocarEscopo = (v: 'projeto' | 'todos') => {
-    setEscopo(v);
-    setRecemConcluidas([]);
-    localStorage.setItem(PREF_ESCOPO, v);
-  };
+  const trocarEscopo = (v: 'projeto' | 'todos') => irPara(abertoId, v);
   const trocarPeriodo = (v: Periodo) => {
     setPeriodo(v);
     setRecemConcluidas([]);
@@ -427,7 +448,7 @@ export function TasksView({ projects, comentarios, anexos, notas, pessoas, organ
                 <CheckSquare className="h-3.5 w-3.5 shrink-0" />
                 Tudo em aberto
                 <span className="ml-auto text-[11px] tabular-nums text-text-muted">
-                  {ativos.flatMap((p) => p.tasks).filter((t) => !t.parentId && t.status !== 'feito').length}
+                  {ativos.reduce((n, p) => n + (contagens[p.id]?.abertas ?? 0), 0)}
                 </span>
               </button>
 
@@ -450,6 +471,7 @@ export function TasksView({ projects, comentarios, anexos, notas, pessoas, organ
                           ativo={escopo === 'projeto' && p.id === aberto?.id}
                           onClick={() => abrirProjeto(p.id)}
                           onMenu={(x, y) => setMenuProjeto({ projeto: p, x, y })}
+                          contagem={contagens[p.id]}
                           renomeando={renomeando === p.id}
                           onRenomear={() => setRenomeando(p.id)}
                           onSalvarNome={(nome) => renomear(p, nome)}
@@ -490,6 +512,7 @@ export function TasksView({ projects, comentarios, anexos, notas, pessoas, organ
                             ativo={p.id === aberto?.id}
                             onClick={() => abrirProjeto(p.id)}
                             onMenu={(x, y) => setMenuProjeto({ projeto: p, x, y })}
+                            contagem={contagens[p.id]}
                             renomeando={renomeando === p.id}
                             onRenomear={() => setRenomeando(p.id)}
                             onSalvarNome={(nome) => renomear(p, nome)}
@@ -822,12 +845,14 @@ function NovaPastaDialog({ organizacoes, pending, criar, fechar }: {
   );
 }
 
-function ItemProjeto({ projeto, ativo, onClick, onMenu, renomeando, onRenomear, onSalvarNome, onCancelar }: {
+function ItemProjeto({ projeto, ativo, onClick, onMenu, contagem, renomeando, onRenomear, onSalvarNome, onCancelar }: {
   projeto: ProjectView;
   ativo: boolean;
   onClick: () => void;
   /** Botão direito: arquivar e desarquivar moram aqui. */
   onMenu: (x: number, y: number) => void;
+  /** Números deste projeto, contados no banco. */
+  contagem: ContagemProjeto | undefined;
   /** Quando ligado, o item vira campo de texto no lugar do nome. */
   renomeando: boolean;
   /** Duplo clique no nome: renomear é edição no próprio lugar. */
@@ -838,13 +863,22 @@ function ItemProjeto({ projeto, ativo, onClick, onMenu, renomeando, onRenomear, 
   // O badge resume a fila acionável do projeto, na mesma unidade usada por
   // "Tudo em aberto": tarefas principais. Subtarefas aparecem dentro da mãe e
   // não podem inflar o número (uma checklist grande parecia trabalho novo).
-  const tarefasPrincipais = projeto.tasks.filter((t) => !t.parentId);
-  const abertas = tarefasPrincipais.filter((t) => t.status !== 'feito').length;
+  // O número vem contado do banco, porque a tela só tem em mãos as tarefas do
+  // projeto aberto e os outros itens da lista também precisam mostrar o seu.
+  // Quando as tarefas estão aqui, elas é que mandam: concluir uma tem que
+  // baixar o número no mesmo clique, sem esperar a volta do servidor.
   const hj = hoje();
-  const paraHoje = tarefasPrincipais.filter((t) => t.status !== 'feito' && t.dueDate === hj).length;
-  const atrasadas = tarefasPrincipais.filter(
-    (t) => t.status !== 'feito' && !!t.dueDate && t.dueDate < hj,
-  ).length;
+  const tarefasPrincipais = projeto.tasks.filter((t) => !t.parentId);
+  const naTela = tarefasPrincipais.length > 0;
+  const abertas = naTela
+    ? tarefasPrincipais.filter((t) => t.status !== 'feito').length
+    : contagem?.abertas ?? 0;
+  const paraHoje = naTela
+    ? tarefasPrincipais.filter((t) => t.status !== 'feito' && t.dueDate === hj).length
+    : contagem?.paraHoje ?? 0;
+  const atrasadas = naTela
+    ? tarefasPrincipais.filter((t) => t.status !== 'feito' && !!t.dueDate && t.dueDate < hj).length
+    : contagem?.atrasadas ?? 0;
   const resumo = [
     `${abertas} ${abertas === 1 ? 'tarefa em aberto' : 'tarefas em aberto'}`,
     `${paraHoje} para hoje`,

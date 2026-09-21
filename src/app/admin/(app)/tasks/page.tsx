@@ -1,7 +1,8 @@
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { emBlocos } from '@/lib/mcp/nucleo';
 import { TasksView } from './tasks-view';
 import { VISAO_PADRAO, lerVisao } from './types';
-import type { AnexoView, ComentarioView, NotaView, Pessoa, ProjectView, TagView } from './types';
+import type { AnexoView, ComentarioView, ContagemProjeto, NotaView, Pessoa, ProjectView, TagView } from './types';
 import type { PhaseStatus, Priority, TaskStatus } from './status';
 
 export const dynamic = 'force-dynamic';
@@ -46,57 +47,102 @@ type DealRow = {
   organizations: { name: string | null } | { name: string | null }[] | null;
 };
 
-export default async function EntregasPage() {
+export default async function EntregasPage({ searchParams }: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const supabase = getSupabaseAdmin();
+  const sp = (await searchParams) ?? {};
+  // Qual projeto está aberto e se a tela está na visão geral vêm da URL, porque
+  // é o servidor que decide QUAIS tarefas buscar. Antes ele trazia as de todos
+  // os clientes e o navegador escondia o resto: passado de mil tarefas no total,
+  // o banco cortava a consulta e as mais novas sumiam da tela.
+  const escopoTodos = sp.escopo === 'todos';
+  const pedido = sp.p ?? null;
 
-  const [{ data: engData }, { data: phaseData }, { data: taskData }] = await Promise.all([
+  const [{ data: engData }, { data: phaseData }, { data: contagemData }] = await Promise.all([
     supabase
       .from('engagements')
       .select('id, title, lifecycle, start_date, end_date, client_token, organization_id, is_internal, archived_at, repo_path, client_view, organizations(id, name)')
       .order('created_at', { ascending: false }),
     supabase.from('project_phases').select('*').order('sort'),
-    supabase.from('project_tasks').select('*').order('sort'),
+    supabase.from('project_task_counters').select('*'),
   ]);
+
+  const contagens: Record<string, ContagemProjeto> = {};
+  for (const c of (contagemData ?? []) as {
+    owner_id: string; total: number; abertas: number; para_hoje: number; atrasadas: number;
+  }[]) {
+    contagens[c.owner_id] = {
+      total: Number(c.total), abertas: Number(c.abertas),
+      paraHoje: Number(c.para_hoje), atrasadas: Number(c.atrasadas),
+    };
+  }
+
+  const engRows = (engData ?? []) as unknown as EngRow[];
+  const comEtapa = new Set(((phaseData ?? []) as PhaseRow[]).map((p) => p.engagement_id));
+
+  // Contrato encerrado sem nenhuma tarefa/etapa é ruído: não tem entrega para
+  // acompanhar. Some da lista, mas volta assim que ganhar um cronograma.
+  const naLista = engRows.filter(
+    (e) => e.lifecycle !== 'encerrado' || (contagens[e.id]?.total ?? 0) > 0 || comEtapa.has(e.id),
+  );
+  const ativosIds = naLista.filter((e) => !e.archived_at).map((e) => e.id);
+  const todosIds = new Set(engRows.map((e) => e.id));
+  // Owner que não é contrato é negócio ganho: o checklist do fechamento.
+  const dealIds = Object.keys(contagens).filter((id) => !todosIds.has(id));
+  // O projeto aberto tem que ser decidido aqui: é ele que diz quais tarefas
+  // buscar. Sem nada na URL, abre o primeiro da lista, como a tela sempre fez.
+  const abertoId = pedido && (todosIds.has(pedido) || dealIds.includes(pedido))
+    ? pedido
+    : ativosIds[0] ?? engRows[0]?.id ?? null;
+
+  // Aqui está o ponto da mudança: em "Tudo em aberto" a busca é a lista inteira,
+  // em blocos para não bater no teto de mil; num projeto, só as tarefas dele.
+  // Um negócio ganho é dono pelo deal_id, um contrato pelo engagement_id.
+  const taskData = !escopoTodos && !abertoId ? [] : await emBlocos<TaskRow>((de, ate) => {
+    const q = supabase.from('project_tasks').select('*').order('sort').range(de, ate);
+    return escopoTodos ? q : q.or(`engagement_id.eq.${abertoId},deal_id.eq.${abertoId}`);
+  });
 
   const { data: tagData } = await supabase.from('project_tags').select('*').order('sort');
 
   // Conversa das tarefas e base de notas: vieram do SimbOS junto com as tarefas
   // e são leves o bastante para a tela receber tudo de uma vez.
-  const [{ data: comentarioData }, { data: notaData }, { data: anexoData }] = await Promise.all([
-    supabase.from('task_comments').select('id, task_id, author, content, created_at').order('created_at'),
-    supabase.from('notes').select('id, engagement_id, title, content, kind, tags, created_at, updated_at')
-      .order('updated_at', { ascending: false }),
-    supabase.from('task_attachments')
+  const [comentarioData, notaData, anexoData] = await Promise.all([
+    emBlocos<{ id: string; task_id: string; author: string | null; content: string; created_at: string }>(
+      (de, ate) => supabase.from('task_comments')
+        .select('id, task_id, author, content, created_at').order('created_at').range(de, ate)),
+    emBlocos<{
+      id: string; engagement_id: string | null; title: string; content: string | null;
+      kind: string; tags: string[] | null; created_at: string; updated_at: string;
+    }>((de, ate) => supabase.from('notes')
+      .select('id, engagement_id, title, content, kind, tags, created_at, updated_at')
+      .order('updated_at', { ascending: false }).range(de, ate)),
+    emBlocos<{
+      id: string; task_id: string; file_name: string; mime_type: string | null;
+      size_bytes: number | null; uploaded_by: string | null; created_at: string;
+    }>((de, ate) => supabase.from('task_attachments')
       .select('id, task_id, file_name, mime_type, size_bytes, uploaded_by, created_at')
-      .order('created_at'),
+      .order('created_at').range(de, ate)),
   ]);
 
-  const anexos: AnexoView[] = ((anexoData ?? []) as {
-    id: string; task_id: string; file_name: string; mime_type: string | null;
-    size_bytes: number | null; uploaded_by: string | null; created_at: string;
-  }[]).map((a) => ({
+  const anexos: AnexoView[] = anexoData.map((a) => ({
     id: a.id, taskId: a.task_id, nome: a.file_name, tipo: a.mime_type,
     tamanho: a.size_bytes, autor: a.uploaded_by, quando: a.created_at,
   }));
 
-  const comentarios: ComentarioView[] = ((comentarioData ?? []) as {
-    id: string; task_id: string; author: string | null; content: string; created_at: string;
-  }[]).map((c) => ({ id: c.id, taskId: c.task_id, autor: c.author, texto: c.content, quando: c.created_at }));
+  const comentarios: ComentarioView[] = comentarioData.map((c) => ({ id: c.id, taskId: c.task_id, autor: c.author, texto: c.content, quando: c.created_at }));
 
-  const notas: NotaView[] = ((notaData ?? []) as {
-    id: string; engagement_id: string | null; title: string; content: string | null;
-    kind: string; tags: string[] | null; created_at: string; updated_at: string;
-  }[]).map((n) => ({
+  const notas: NotaView[] = notaData.map((n) => ({
     id: n.id, projetoId: n.engagement_id, titulo: n.title, conteudo: n.content,
     tipo: n.kind, tags: n.tags ?? [], criadaEm: n.created_at, atualizadaEm: n.updated_at,
   }));
 
-  const engs = (engData ?? []) as unknown as EngRow[];
   const phases = (phaseData ?? []) as PhaseRow[];
-  const tasks = (taskData ?? []) as TaskRow[];
+  const tasks = taskData;
   const tagRows = (tagData ?? []) as TagRow[];
 
-  const projects: ProjectView[] = engs.map((e) => ({
+  const projects: ProjectView[] = naLista.map((e) => ({
     id: e.id,
     title: e.title,
     orgName: e.organizations?.name ?? null,
@@ -132,17 +178,12 @@ export default async function EntregasPage() {
     visao: lerVisao(e.client_view),
   }));
 
-  // Contrato encerrado sem nenhuma tarefa/etapa é ruído: não tem entrega para
-  // acompanhar. Some da lista, mas volta assim que ganhar um cronograma.
-  const visiveis = projects.filter(
-    (p) => p.lifecycle !== 'encerrado' || p.phases.length > 0 || p.tasks.length > 0,
-  );
-
   // Negócio ganho que ainda não virou contrato: o checklist do fechamento nasce
   // preso a ele, e sem isso essas tarefas não apareceriam em lugar nenhum. Some
   // daqui no clique de "Gerar contrato", que leva as tarefas para o contrato.
+  // Quem tem checklist vem dos contadores: as tarefas em si só são buscadas
+  // quando o fechamento é o projeto aberto.
   const daqueles = tasks.filter((t) => t.deal_id);
-  const dealIds = [...new Set(daqueles.map((t) => t.deal_id as string))];
   const negocios: ProjectView[] = [];
   if (dealIds.length > 0) {
     const { data: dealData } = await supabase
@@ -195,8 +236,14 @@ export default async function EntregasPage() {
     ((usuarioData ?? []) as { nome: string | null }[]).map((u) => (u.nome ?? '').trim()).filter(Boolean),
   )].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
+  // Os nomes de fora vêm da view: dependiam de ter todas as tarefas carregadas,
+  // e agora a tela carrega só as do projeto aberto.
+  const { data: responsavelData } = await supabase.from('task_assignee_names').select('nome');
+
   const daCasa = new Set(equipe.map((n) => n.toLowerCase()));
-  const outros = [...new Set(tasks.map((t) => (t.assignee ?? '').trim()).filter(Boolean))]
+  const outros = [...new Set(
+    ((responsavelData ?? []) as { nome: string | null }[]).map((r) => (r.nome ?? '').trim()).filter(Boolean),
+  )]
     .filter((n) => !daCasa.has(n.toLowerCase()))
     .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
@@ -214,7 +261,10 @@ export default async function EntregasPage() {
 
   return (
     <TasksView
-      projects={[...negocios, ...visiveis]}
+      projects={[...negocios, ...projects]}
+      contagens={contagens}
+      abertoId={abertoId}
+      escopo={escopoTodos ? 'todos' : 'projeto'}
       comentarios={comentarios}
       anexos={anexos}
       notas={notas}

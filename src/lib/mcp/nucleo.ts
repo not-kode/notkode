@@ -98,6 +98,25 @@ export const somaDias = (d: string, n: number): string =>
 
 export const supabase = () => getSupabaseAdmin();
 
+/**
+ * O PostgREST devolve no máximo mil linhas por consulta e corta o resto sem
+ * avisar: em setembro de 2026 as tarefas passaram de mil e as mais novas
+ * simplesmente sumiam de quem pedia todas de uma vez. Quem precisa da lista
+ * inteira pede por aqui, que busca em blocos até o banco acabar de responder.
+ */
+export async function emBlocos<T>(
+  consulta: (de: number, ate: number) => PromiseLike<{ data: T[] | null }>,
+): Promise<T[]> {
+  const BLOCO = 1000;
+  const tudo: T[] = [];
+  for (let de = 0; ; de += BLOCO) {
+    const { data } = await consulta(de, de + BLOCO - 1);
+    const linhas = data ?? [];
+    tudo.push(...linhas);
+    if (linhas.length < BLOCO) return tudo;
+  }
+}
+
 // ── Achar as coisas por nome ────────────────────────────────────────────────
 //
 // Ninguém decora uuid. Todas as ferramentas aceitam id OU um pedaço do nome, e
