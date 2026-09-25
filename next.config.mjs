@@ -61,6 +61,15 @@ const nextConfig = {
       { source: '/.well-known/oauth-authorization-server/:path*', destination: '/api/oauth/metadata/servidor' },
     ];
   },
+  // Materiais que a Camila manda por link (CTA dos Reels): páginas estáticas em
+  // public/materiais, fora do menu e do sitemap. Não entram no robots.txt de
+  // propósito: com disallow o Google não lê o noindex e pode listar a URL mesmo
+  // assim. O cabeçalho reforça o <meta robots> de cada página.
+  async headers() {
+    return [
+      { source: '/materiais/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
+    ];
+  },
   async redirects() {
     return [
       { source: '/admin/mapa-de-calor', destination: '/admin/sessoes?ver=calor', permanent: false },

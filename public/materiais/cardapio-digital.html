@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prompt do Cardápio Digital</title>
+<meta name="description" content="O prompt base pra criar o cardápio ou catálogo digital do seu negócio com IA.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;600&family=Silkscreen&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<header><div class="wrap">
+  <span class="tag">material gratuito</span>
+  <h1>O prompt do <mark>cardápio digital</mark></h1>
+  <p>A estrutura que eu uso pra pedir pra IA um cardápio ou catálogo online, com pedido direto no WhatsApp. Serve pra comida, doces, roupa, artesanato, o que você vender.</p>
+</div></header>
+
+<main class="wrap">
+  <div class="how">
+    <b>como usar</b>
+    <p>1. Copia o prompt. 2. Troca tudo que está entre <mark>[colchetes]</mark> pelas informações do seu negócio. 3. Cola numa IA que escreve código: ChatGPT, Claude, Codex, Lovable ou a que você já usa.</p>
+  </div>
+
+  <div class="step">passo 01</div>
+  <h2>O prompt base</h2>
+  <p class="muted">Quanto mais detalhe você der sobre o seu negócio, menos genérico fica o resultado.</p>
+  <div class="win">
+    <div class="bar"><i></i><i></i><i></i><span>prompt-base.txt</span><button>copiar</button></div>
+<pre>Quero que você crie um cardápio digital (catálogo online) para o meu negócio.
+
+SOBRE O NEGÓCIO
+Nome: [nome do negócio]
+Nicho: [ex.: marmitas caseiras, doces, roupas, velas artesanais]
+O que eu vendo: [liste os produtos ou as categorias, com preço se já tiver]
+Onde atendo: [cidade, bairros ou "envio para todo o Brasil"]
+Como a pessoa compra: pedido pelo WhatsApp no número [55 + DDD + número, só números]
+Dias e horário de pedido: [ex.: segunda a sexta, até as 10h]
+Pagamento e entrega: [ex.: Pix ou cartão na entrega, taxa de R$ 5 no bairro]
+
+COMO QUERO O CATÁLOGO
+- Página única, pensada primeiro para celular.
+- No topo: nome, uma frase curta sobre o negócio e um botão de WhatsApp.
+- Produtos separados por categoria, cada um com foto, nome, descrição curta e preço.
+- Um botão "Pedir" em cada produto, que abre o WhatsApp com a mensagem pronta: "Olá! Quero pedir: [nome do produto]".
+- Um carrinho simples, para a pessoa escolher vários itens e mandar o pedido inteiro de uma vez pelo WhatsApp, com o total.
+- Rodapé com Instagram, endereço (se tiver) e horário.
+- Estilo visual: [ex.: aconchegante e caseiro / moderno e minimalista / colorido e divertido].
+- Cores da marca: [ex.: verde-oliva e creme, ou "escolha você"].
+- Os produtos devem ficar num arquivo separado e fácil de editar, para eu mudar preço, foto ou produto sem mexer no resto do código.
+
+ENTREGA
+- Faça em HTML, CSS e JavaScript puros, pronto para publicar de graça (Vercel ou Netlify).
+- Onde eu ainda não tiver foto, use uma imagem de exemplo e me diga o nome do arquivo para eu trocar depois.
+- No final, me explique em passos simples: como trocar as fotos, como editar produtos e preços e como colocar o site no ar.</pre>
+  </div>
+
+  <div class="step">passo 02</div>
+  <h2>Tirar a cara de <mark class="p">template</mark></h2>
+  <p class="muted">Na primeira versão costuma sair bonito, mas genérico. Manda esse segundo prompt na mesma conversa.</p>
+  <div class="win">
+    <div class="bar"><i></i><i></i><i></i><span>deixar-com-a-minha-cara.txt</span><button>copiar</button></div>
+<pre>O catálogo está funcionando, mas ficou genérico. Agora quero que ele tenha a cara do meu negócio:
+
+- Referências visuais que eu gosto: [cole links ou descreva perfis, sites ou marcas que você admira].
+- O clima que eu quero passar: [ex.: comida de vó, delicado e feminino, urbano e ousado].
+- Reescreva os textos no meu jeito de falar. É assim que eu falo com as minhas clientes: [cole 2 ou 3 mensagens reais suas].
+- Coloque em destaque o meu produto mais pedido: [nome do produto].
+- Fuja do visual de template: nada de cards todos iguais com sombra. Quero um layout com personalidade, com tipografia marcante e bom uso das fotos.
+
+Mantenha tudo funcionando bem no celular e não mude a lógica do carrinho e do WhatsApp.</pre>
+  </div>
+
+  <div class="step">passo 03</div>
+  <h2>Colocar no ar</h2>
+  <ul class="tips">
+    <li>O jeito mais fácil: entra em <b>app.netlify.com/drop</b> e arrasta a pasta do site. Em 1 minuto você tem um link pra colocar na bio.</li>
+    <li>Quer trocar alguma coisa depois? Pede pra própria IA: "muda o preço do [produto] para R$ [valor]" e publica de novo.</li>
+  </ul>
+
+  <h3>Dicas que fazem diferença</h3>
+  <ul class="tips">
+    <li><b>Foto real vende mais</b> do que foto de banco de imagem. Pode ser do celular, perto da janela, com luz natural.</li>
+    <li><b>Número do WhatsApp</b> sempre com 55 e DDD, sem espaço nem traço. Ex.: 5511999998888.</li>
+    <li><b>Descrição curta</b>: 1 linha dizendo o que tem e por que é bom. Ninguém lê parágrafo em cardápio.</li>
+    <li>Se algo não funcionar, descreve o problema pra IA do jeito que você falaria com uma pessoa. Ela corrige.</li>
+  </ul>
+
+  <footer>
+    Feito por Camila, <a href="https://instagram.com/c4msg">@c4msg</a>. Me segue que tem mais coisa assim pra você construir com IA.
+  </footer>
+</main>
+<div class="toast">Copiado!</div>
+<script src="copiar.js"></script>
+</body>
+</html>
